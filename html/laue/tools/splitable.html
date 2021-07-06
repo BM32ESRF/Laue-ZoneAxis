@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>laue.tools.splitable API documentation</title>
+<meta name="description" content="** Permet de separer les differents grains d&#39;un diagramme. **
+…" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>laue.tools.splitable</code></h1>
+</header>
+<section id="section-intro">
+<h2 id="permet-de-separer-les-differents-grains-dun-diagramme"><strong> Permet de separer les differents grains d'un diagramme. </strong></h2>
+<p>Pour separer les grains d'un diagramme, les etapes sont les suivantes:</p>
+<ol>
+<li>Chercher les <strong>axes de zone</strong>.</li>
+<li>Chercher les spots aux <strong>intersections</strong> des axes de zones.
+(Pour la suite on ne considere plus que ces spots.)</li>
+<li>Construire un <strong>graphe</strong> qui relie les spots qui partagent un meme axe de zone.</li>
+<li>Supprimer les aretes non pertinantes.<ol>
+<li>On parcours chaque arete du graphe.</li>
+<li>Si il n'y a pas de voisins communs parmis les voisins des 2 somet de cette arete.</li>
+<li>On supprime cette arete.</li>
+</ol>
+</li>
+<li>Extraire les <strong>composantes connexes</strong> du graphe.</li>
+<li>Associer les axes de zone aux sous-graphes conexes.</li>
+</ol>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+
+&#34;&#34;&#34;
+** Permet de separer les differents grains d&#39;un diagramme. **
+------------------------------------------------------------
+
+Pour separer les grains d&#39;un diagramme, les etapes sont les suivantes:
+
+1. Chercher les **axes de zone**.
+2. Chercher les spots aux **intersections** des axes de zones.
+    (Pour la suite on ne considere plus que ces spots.)
+3. Construire un **graphe** qui relie les spots qui partagent un meme axe de zone.
+4. Supprimer les aretes non pertinantes.
+    1. On parcours chaque arete du graphe.
+    2. Si il n&#39;y a pas de voisins communs parmis les voisins des 2 somet de cette arete.
+    3. On supprime cette arete.
+5. Extraire les **composantes connexes** du graphe.
+6. Associer les axes de zone aux sous-graphes conexes.
+&#34;&#34;&#34;
+
+import math
+
+
+class Splitable:
+    &#34;&#34;&#34;
+    Interface pour la classe ``laue.diagram.LaueDiagram``.
+    &#34;&#34;&#34;
+    def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08):
+        &#34;&#34;&#34;
+        ** Recherche des spots qui appartiennent a un meme grain. **
+
+        L&#39;algorithme est le suivant:
+
+        - Creation d&#39;un graphe dont les somets sont des spots.
+            - Selection des spots interressants.
+                - Selection des spots qui sont a des intersection d&#39;axes de zone.
+                - Trie des spots par nombre d&#39;axes de zone decroissant.
+                - Selection des ``spots_max`` spots qui intersectent suffisement d&#39;axes.
+            - Creation des aretes.
+                - Pour chaque paire de somets (paire de spots).
+                    - Si il sont lies par un axe de zone.
+                        - Alors on les relie avec une arete dont le poid est la
+                        qualite du meilleur axe de zone qui passe par ces 2 spots.
+        - Supression de certaines aretes.
+            - Reperage des paires de spots qui apartiennent a des grains differents.
+                - Pour chaque paire de somets (paire de spots).
+                    - Si les 2 spots sont trop proche (distance &lt; ``distance_max``).
+                        - Alors on repere cette paire de spots.
+                    - Si par ces 2 spots passe 2 axes de zone angulairement &lt; ``angle_max``.
+                        - Alors on repere cette paire de spots.
+            - Tant qu&#39;il existe au moin un chemin permetant de relier une paire de spots marque.
+                - On cherche l&#39;arete qui, si on l&#39;a retire, permet de reduire le plus fortement
+                le nombre de paire de somet marque qui sont encore relies.
+                - Parmis les aretes quandidates, on supprime celle qui est lie a l&#39;axe de
+                zone de plus mauvaise qualite.
+        - Creation des clusters.
+            - On extrait toutes les composantes conexes du graphe.
+            - On elimine les composantes qui ne contienent qu&#39;un seul sommet.
+            - **return** les composantes conexes restantes.
+
+        Notes
+        -----
+        Les spots trouves sont souvent des spots ayant un indice de Miller
+        relativement faible.
+
+        Returns
+        -------
+        list
+            Chaque element est un &#39;cluster&#39; de spots qui ont une forte probabilite
+            d&#39;appartenir a un meme grain. Par contre, il n&#39;y a aucune garantie
+            que 2 clusters appartienent chacuns a 2 grains differents.
+            Les cluster sont des ``set`` de spot de type ``laue.spot.Spot``.
+
+        Parameters
+        ----------
+        angle_max : float
+            L&#39;angle maximal entre 2 axes de zones. (en radian)
+            Si par un spot, il passe 2 axes de zonnes angulairement plus seres
+            que cet angle limite, alors ces 2 axes ne sont comptes que comme 1 seul.
+            en consequence, plus cet angle est grand, moins on est selectif sur les spots.
+            Ce meme angle intervient ailleur. Si il existe 2 axes de zones passants chacuns
+            par un spots differents, que ces 2 axes sont angulairement plus sere
+            que ``angle_max``, et que ces 2 spots sont relies par un autre axe de zone,
+            alors ces 2 spots se retrouveront dans des clusters differents.
+        spots_max : int
+            Le nombre maximum total de spots consideres. Plus ce nombre est grand
+            plus il y a des chance qu&#39;il y ai une solution mais moins cette solution
+            aura des chances d&#39;etre pertinante. Le temps de calcul est aussi quadratiquement
+            lie au nombre de sommets.
+        distance_max : float
+            2 spots qui sont separes d&#39;une distance inferieure a ce parametre se retrouveront
+            dans des clusters differents. Cette distance est la distance euclidiene du plan
+            gnomonic (en mm).
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; type(diag.find_subsets())
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; len(diag.find_subsets()) # nbr de clusters
+        1
+        &gt;&gt;&gt; type(diag.find_subsets().pop())
+        &lt;class &#39;set&#39;&gt;
+        &gt;&gt;&gt; len(diag.find_subsets().pop()) # nbr de spot dans le premier cluster
+        3
+        &gt;&gt;&gt; type(diag.find_subsets().pop().pop())
+        &lt;class &#39;laue.spot.Spot&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def count_variant_axis(spot):
+            &#34;&#34;&#34;
+            Compte le nombre d&#39;axes de zone qui different beaucoup.
+            (ie considere 2 axes proche comme un seul axe)
+            &#34;&#34;&#34;
+            axes = spot.find_zone_axes()
+            if not axes:
+                return 0
+            if len(axes) == 1:
+                return 1
+            axes = list(axes)
+            nbr_near = (distance_axis(axes, axes, weight=1) &lt; angle_max).sum()
+            nbr = len(axes) - (nbr_near-len(axes))//2
+            return nbr
+
+        def simul_remove_axis(graph, axis, excluded):
+            &#34;&#34;&#34;
+            Retire les aretes liess a cet axe, puis regarde ce que ca donne.
+            &#34;&#34;&#34;
+            graph_bis = graph.copy()
+            for spot1, spot2, axis_found in graph.edges.data(&#34;axis&#34;):
+                if axis_found is axis:
+                    graph_bis.remove_edge(spot1, spot2)
+            excluded_bis = [edge for edge in excluded if networkx.algorithms.has_path(graph_bis, *edge)]
+            return excluded_bis, graph_bis
+
+        assert isinstance(angle_max, float), \
+            f&#34;&#39;angle_max&#39; has to be a float, not a {type(angle_max).__name__}.&#34;
+        assert isinstance(spots_max, int), \
+            f&#34;&#39;spots_max&#39; has to be an integer, not a {type(spots_max).__name__}.&#34;
+        assert isinstance(distance_max, float), \
+            f&#34;&#39;distance_max&#39; has to be of type float, not {type(distance_max).__name__}.&#34;
+        assert 0 &lt; angle_max &lt;= math.pi/4, (&#34;L&#39;angle doit etre exprime en radian. &#34;
+            f&#34;Il doit etre dans l&#39;intervalle ]0, pi/4]. Or il vaut {angle_max}.&#34;)
+        assert 2 &lt;= spots_max, \
+            f&#34;Il faut au moins considerer 2 spots, {spots_max} c&#39;est pas possible.&#34;
+        assert 0 &lt; distance_max &lt; .3, (&#34;La distance de sepration des grains est exprimee &#34;
+            &#34;en mm dans le plan gnomonic. Elle doit etre comprise entre ]0, .3]. &#34;
+            f&#34;Or elle vaut {distance_max}, ce qui sort de cet intervalle.&#34;)
+
+        from laue.zone_axis import distance as distance_axis
+        from laue.spot import distance as distance_pic
+        import networkx
+
+        # Creation des noeuds du graphe.
+        if self.experiment.verbose &gt;= 2:
+            print(&#34;\tExtraction des noeuds.&#34;)
+        graph = networkx.Graph()
+        spots_at_cross = self.select_spots(n=20, sort=lambda spot: -count_variant_axis(spot))
+        max_cross = count_variant_axis(spots_at_cross[0])
+        limit = math.sqrt(max(2**2, max_cross)) # Permet d&#39;eviter &#39;ValueError: math domain error&#39;
+        spots_at_cross = [spot for spot in spots_at_cross if count_variant_axis(spot) &gt;= limit]
+        graph.add_nodes_from(spots_at_cross)
+
+        # Ajout grossier de certaine aretes.
+        if self.experiment.verbose &gt;= 2:
+            print(&#34;\tAjout des aretes.&#34;)
+        excluded = [] # La liste des neuds appartenant a des grains differents.
+        axes = set() # La liste des axes de zone consideres.
+        for i, spot1 in enumerate(spots_at_cross[:-1]): # On faite toutes les combinaisons
+            for spot2 in spots_at_cross[i+1:]: # de 2 sommets possibles.
+
+                ## Exclusion des spots trop proches.
+                if distance_pic(spot1, spot2, space=&#34;gnomonic&#34;) &lt; distance_max:
+                    excluded.append((spot1, spot2))
+                    continue
+
+                ## On ne relie pas les spots qui n&#39;ont pas d&#39;axe commun.
+                common_axes = spot1.find_zone_axes() &amp; spot2.find_zone_axes()
+                if not common_axes:
+                    continue
+
+                ## Exclusion des spots ayant 2 axes de zone paralleles.
+                axes1, axes2 = list(spot1.find_zone_axes()-common_axes), list(spot2.find_zone_axes()-common_axes)
+                if axes1 and axes2 and distance_axis(axes1, axes2, weight=1).min() &lt; angle_max: # tolerance angulaire de pi/32
+                    excluded.append((spot1, spot2))
+                    continue
+
+                best_axis = sorted(common_axes, key=lambda axis: axis.get_quality())[-1]
+                axes.add(best_axis)
+                graph.add_edge(spot1, spot2, quality=best_axis.get_quality(), axis=best_axis)
+
+        # Suppression des aretes en trop afin de discosier les grains.
+        if self.experiment.verbose &gt;= 2:
+            print(&#34;\tSuppression des aretes en trop.&#34;)
+
+        excluded = [edge for edge in excluded if networkx.algorithms.has_path(graph, *edge)]
+        while excluded:
+            predictions = [(*simul_remove_axis(graph, axis, excluded), axis) for axis in axes]
+            best_len = min(len(excluded_bis) for excluded_bis, _, _ in predictions)
+            predictions = [p for p in predictions if len(p[0]) == best_len]
+            costs = [axis.get_quality() for _, _, axis in predictions]
+            min_quality = min(costs)
+            predictions = [p for p in predictions if p[2].get_quality() == min_quality]
+            excluded, graph, axis = predictions.pop()
+            axes.remove(axis)
+
+        # Creation des clusters.
+        conn = list(networkx.algorithms.connected_components(graph))
+        conn = sorted(conn, key=lambda con: len(con), reverse=True)
+        conn = [con for con in conn if len(con) &gt;= 2]
+        if self.experiment.verbose:
+            print(f&#34;\tOK: Les grain sont separes en {len(conn)} familles.&#34;)
+        return conn</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="laue.tools.splitable.Splitable"><code class="flex name class">
+<span>class <span class="ident">Splitable</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Interface pour la classe <code><a title="laue.diagram.LaueDiagram" href="../diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Splitable:
+    &#34;&#34;&#34;
+    Interface pour la classe ``laue.diagram.LaueDiagram``.
+    &#34;&#34;&#34;
+    def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08):
+        &#34;&#34;&#34;
+        ** Recherche des spots qui appartiennent a un meme grain. **
+
+        L&#39;algorithme est le suivant:
+
+        - Creation d&#39;un graphe dont les somets sont des spots.
+            - Selection des spots interressants.
+                - Selection des spots qui sont a des intersection d&#39;axes de zone.
+                - Trie des spots par nombre d&#39;axes de zone decroissant.
+                - Selection des ``spots_max`` spots qui intersectent suffisement d&#39;axes.
+            - Creation des aretes.
+                - Pour chaque paire de somets (paire de spots).
+                    - Si il sont lies par un axe de zone.
+                        - Alors on les relie avec une arete dont le poid est la
+                        qualite du meilleur axe de zone qui passe par ces 2 spots.
+        - Supression de certaines aretes.
+            - Reperage des paires de spots qui apartiennent a des grains differents.
+                - Pour chaque paire de somets (paire de spots).
+                    - Si les 2 spots sont trop proche (distance &lt; ``distance_max``).
+                        - Alors on repere cette paire de spots.
+                    - Si par ces 2 spots passe 2 axes de zone angulairement &lt; ``angle_max``.
+                        - Alors on repere cette paire de spots.
+            - Tant qu&#39;il existe au moin un chemin permetant de relier une paire de spots marque.
+                - On cherche l&#39;arete qui, si on l&#39;a retire, permet de reduire le plus fortement
+                le nombre de paire de somet marque qui sont encore relies.
+                - Parmis les aretes quandidates, on supprime celle qui est lie a l&#39;axe de
+                zone de plus mauvaise qualite.
+        - Creation des clusters.
+            - On extrait toutes les composantes conexes du graphe.
+            - On elimine les composantes qui ne contienent qu&#39;un seul sommet.
+            - **return** les composantes conexes restantes.
+
+        Notes
+        -----
+        Les spots trouves sont souvent des spots ayant un indice de Miller
+        relativement faible.
+
+        Returns
+        -------
+        list
+            Chaque element est un &#39;cluster&#39; de spots qui ont une forte probabilite
+            d&#39;appartenir a un meme grain. Par contre, il n&#39;y a aucune garantie
+            que 2 clusters appartienent chacuns a 2 grains differents.
+            Les cluster sont des ``set`` de spot de type ``laue.spot.Spot``.
+
+        Parameters
+        ----------
+        angle_max : float
+            L&#39;angle maximal entre 2 axes de zones. (en radian)
+            Si par un spot, il passe 2 axes de zonnes angulairement plus seres
+            que cet angle limite, alors ces 2 axes ne sont comptes que comme 1 seul.
+            en consequence, plus cet angle est grand, moins on est selectif sur les spots.
+            Ce meme angle intervient ailleur. Si il existe 2 axes de zones passants chacuns
+            par un spots differents, que ces 2 axes sont angulairement plus sere
+            que ``angle_max``, et que ces 2 spots sont relies par un autre axe de zone,
+            alors ces 2 spots se retrouveront dans des clusters differents.
+        spots_max : int
+            Le nombre maximum total de spots consideres. Plus ce nombre est grand
+            plus il y a des chance qu&#39;il y ai une solution mais moins cette solution
+            aura des chances d&#39;etre pertinante. Le temps de calcul est aussi quadratiquement
+            lie au nombre de sommets.
+        distance_max : float
+            2 spots qui sont separes d&#39;une distance inferieure a ce parametre se retrouveront
+            dans des clusters differents. Cette distance est la distance euclidiene du plan
+            gnomonic (en mm).
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; type(diag.find_subsets())
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; len(diag.find_subsets()) # nbr de clusters
+        1
+        &gt;&gt;&gt; type(diag.find_subsets().pop())
+        &lt;class &#39;set&#39;&gt;
+        &gt;&gt;&gt; len(diag.find_subsets().pop()) # nbr de spot dans le premier cluster
+        3
+        &gt;&gt;&gt; type(diag.find_subsets().pop().pop())
+        &lt;class &#39;laue.spot.Spot&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def count_variant_axis(spot):
+            &#34;&#34;&#34;
+            Compte le nombre d&#39;axes de zone qui different beaucoup.
+            (ie considere 2 axes proche comme un seul axe)
+            &#34;&#34;&#34;
+            axes = spot.find_zone_axes()
+            if not axes:
+                return 0
+            if len(axes) == 1:
+                return 1
+            axes = list(axes)
+            nbr_near = (distance_axis(axes, axes, weight=1) &lt; angle_max).sum()
+            nbr = len(axes) - (nbr_near-len(axes))//2
+            return nbr
+
+        def simul_remove_axis(graph, axis, excluded):
+            &#34;&#34;&#34;
+            Retire les aretes liess a cet axe, puis regarde ce que ca donne.
+            &#34;&#34;&#34;
+            graph_bis = graph.copy()
+            for spot1, spot2, axis_found in graph.edges.data(&#34;axis&#34;):
+                if axis_found is axis:
+                    graph_bis.remove_edge(spot1, spot2)
+            excluded_bis = [edge for edge in excluded if networkx.algorithms.has_path(graph_bis, *edge)]
+            return excluded_bis, graph_bis
+
+        assert isinstance(angle_max, float), \
+            f&#34;&#39;angle_max&#39; has to be a float, not a {type(angle_max).__name__}.&#34;
+        assert isinstance(spots_max, int), \
+            f&#34;&#39;spots_max&#39; has to be an integer, not a {type(spots_max).__name__}.&#34;
+        assert isinstance(distance_max, float), \
+            f&#34;&#39;distance_max&#39; has to be of type float, not {type(distance_max).__name__}.&#34;
+        assert 0 &lt; angle_max &lt;= math.pi/4, (&#34;L&#39;angle doit etre exprime en radian. &#34;
+            f&#34;Il doit etre dans l&#39;intervalle ]0, pi/4]. Or il vaut {angle_max}.&#34;)
+        assert 2 &lt;= spots_max, \
+            f&#34;Il faut au moins considerer 2 spots, {spots_max} c&#39;est pas possible.&#34;
+        assert 0 &lt; distance_max &lt; .3, (&#34;La distance de sepration des grains est exprimee &#34;
+            &#34;en mm dans le plan gnomonic. Elle doit etre comprise entre ]0, .3]. &#34;
+            f&#34;Or elle vaut {distance_max}, ce qui sort de cet intervalle.&#34;)
+
+        from laue.zone_axis import distance as distance_axis
+        from laue.spot import distance as distance_pic
+        import networkx
+
+        # Creation des noeuds du graphe.
+        if self.experiment.verbose &gt;= 2:
+            print(&#34;\tExtraction des noeuds.&#34;)
+        graph = networkx.Graph()
+        spots_at_cross = self.select_spots(n=20, sort=lambda spot: -count_variant_axis(spot))
+        max_cross = count_variant_axis(spots_at_cross[0])
+        limit = math.sqrt(max(2**2, max_cross)) # Permet d&#39;eviter &#39;ValueError: math domain error&#39;
+        spots_at_cross = [spot for spot in spots_at_cross if count_variant_axis(spot) &gt;= limit]
+        graph.add_nodes_from(spots_at_cross)
+
+        # Ajout grossier de certaine aretes.
+        if self.experiment.verbose &gt;= 2:
+            print(&#34;\tAjout des aretes.&#34;)
+        excluded = [] # La liste des neuds appartenant a des grains differents.
+        axes = set() # La liste des axes de zone consideres.
+        for i, spot1 in enumerate(spots_at_cross[:-1]): # On faite toutes les combinaisons
+            for spot2 in spots_at_cross[i+1:]: # de 2 sommets possibles.
+
+                ## Exclusion des spots trop proches.
+                if distance_pic(spot1, spot2, space=&#34;gnomonic&#34;) &lt; distance_max:
+                    excluded.append((spot1, spot2))
+                    continue
+
+                ## On ne relie pas les spots qui n&#39;ont pas d&#39;axe commun.
+                common_axes = spot1.find_zone_axes() &amp; spot2.find_zone_axes()
+                if not common_axes:
+                    continue
+
+                ## Exclusion des spots ayant 2 axes de zone paralleles.
+                axes1, axes2 = list(spot1.find_zone_axes()-common_axes), list(spot2.find_zone_axes()-common_axes)
+                if axes1 and axes2 and distance_axis(axes1, axes2, weight=1).min() &lt; angle_max: # tolerance angulaire de pi/32
+                    excluded.append((spot1, spot2))
+                    continue
+
+                best_axis = sorted(common_axes, key=lambda axis: axis.get_quality())[-1]
+                axes.add(best_axis)
+                graph.add_edge(spot1, spot2, quality=best_axis.get_quality(), axis=best_axis)
+
+        # Suppression des aretes en trop afin de discosier les grains.
+        if self.experiment.verbose &gt;= 2:
+            print(&#34;\tSuppression des aretes en trop.&#34;)
+
+        excluded = [edge for edge in excluded if networkx.algorithms.has_path(graph, *edge)]
+        while excluded:
+            predictions = [(*simul_remove_axis(graph, axis, excluded), axis) for axis in axes]
+            best_len = min(len(excluded_bis) for excluded_bis, _, _ in predictions)
+            predictions = [p for p in predictions if len(p[0]) == best_len]
+            costs = [axis.get_quality() for _, _, axis in predictions]
+            min_quality = min(costs)
+            predictions = [p for p in predictions if p[2].get_quality() == min_quality]
+            excluded, graph, axis = predictions.pop()
+            axes.remove(axis)
+
+        # Creation des clusters.
+        conn = list(networkx.algorithms.connected_components(graph))
+        conn = sorted(conn, key=lambda con: len(con), reverse=True)
+        conn = [con for con in conn if len(con) &gt;= 2]
+        if self.experiment.verbose:
+            print(f&#34;\tOK: Les grain sont separes en {len(conn)} familles.&#34;)
+        return conn</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="laue.diagram.LaueDiagram" href="../diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.tools.splitable.Splitable.find_subsets"><code class="name flex">
+<span>def <span class="ident">find_subsets</span></span>(<span>self, *, angle_max=0.1308996938995747, spots_max=20, distance_max=0.08)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recherche des spots qui appartiennent a un meme grain. </strong></p>
+<p>L'algorithme est le suivant:</p>
+<ul>
+<li>Creation d'un graphe dont les somets sont des spots.<ul>
+<li>Selection des spots interressants.<ul>
+<li>Selection des spots qui sont a des intersection d'axes de zone.</li>
+<li>Trie des spots par nombre d'axes de zone decroissant.</li>
+<li>Selection des <code>spots_max</code> spots qui intersectent suffisement d'axes.</li>
+</ul>
+</li>
+<li>Creation des aretes.<ul>
+<li>Pour chaque paire de somets (paire de spots).<ul>
+<li>Si il sont lies par un axe de zone.<ul>
+<li>Alors on les relie avec une arete dont le poid est la
+qualite du meilleur axe de zone qui passe par ces 2 spots.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Supression de certaines aretes.<ul>
+<li>Reperage des paires de spots qui apartiennent a des grains differents.<ul>
+<li>Pour chaque paire de somets (paire de spots).<ul>
+<li>Si les 2 spots sont trop proche (distance &lt; <code>distance_max</code>).<ul>
+<li>Alors on repere cette paire de spots.</li>
+</ul>
+</li>
+<li>Si par ces 2 spots passe 2 axes de zone angulairement &lt; <code>angle_max</code>.<ul>
+<li>Alors on repere cette paire de spots.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Tant qu'il existe au moin un chemin permetant de relier une paire de spots marque.<ul>
+<li>On cherche l'arete qui, si on l'a retire, permet de reduire le plus fortement
+le nombre de paire de somet marque qui sont encore relies.</li>
+<li>Parmis les aretes quandidates, on supprime celle qui est lie a l'axe de
+zone de plus mauvaise qualite.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Creation des clusters.<ul>
+<li>On extrait toutes les composantes conexes du graphe.</li>
+<li>On elimine les composantes qui ne contienent qu'un seul sommet.</li>
+<li><strong>return</strong> les composantes conexes restantes.</li>
+</ul>
+</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<p>Les spots trouves sont souvent des spots ayant un indice de Miller
+relativement faible.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>Chaque element est un 'cluster' de spots qui ont une forte probabilite
+d'appartenir a un meme grain. Par contre, il n'y a aucune garantie
+que 2 clusters appartienent chacuns a 2 grains differents.
+Les cluster sont des <code>set</code> de spot de type <code><a title="laue.spot.Spot" href="../spot.html#laue.spot.Spot">Spot</a></code>.</dd>
+</dl>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>angle_max</code></strong> :&ensp;<code>float</code></dt>
+<dd>L'angle maximal entre 2 axes de zones. (en radian)
+Si par un spot, il passe 2 axes de zonnes angulairement plus seres
+que cet angle limite, alors ces 2 axes ne sont comptes que comme 1 seul.
+en consequence, plus cet angle est grand, moins on est selectif sur les spots.
+Ce meme angle intervient ailleur. Si il existe 2 axes de zones passants chacuns
+par un spots differents, que ces 2 axes sont angulairement plus sere
+que <code>angle_max</code>, et que ces 2 spots sont relies par un autre axe de zone,
+alors ces 2 spots se retrouveront dans des clusters differents.</dd>
+<dt><strong><code>spots_max</code></strong> :&ensp;<code>int</code></dt>
+<dd>Le nombre maximum total de spots consideres. Plus ce nombre est grand
+plus il y a des chance qu'il y ai une solution mais moins cette solution
+aura des chances d'etre pertinante. Le temps de calcul est aussi quadratiquement
+lie au nombre de sommets.</dd>
+<dt><strong><code>distance_max</code></strong> :&ensp;<code>float</code></dt>
+<dd>2 spots qui sont separes d'une distance inferieure a ce parametre se retrouveront
+dans des clusters differents. Cette distance est la distance euclidiene du plan
+gnomonic (en mm).</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; type(diag.find_subsets())
+&lt;class 'list'&gt;
+&gt;&gt;&gt; len(diag.find_subsets()) # nbr de clusters
+1
+&gt;&gt;&gt; type(diag.find_subsets().pop())
+&lt;class 'set'&gt;
+&gt;&gt;&gt; len(diag.find_subsets().pop()) # nbr de spot dans le premier cluster
+3
+&gt;&gt;&gt; type(diag.find_subsets().pop().pop())
+&lt;class 'laue.spot.Spot'&gt;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08):
+    &#34;&#34;&#34;
+    ** Recherche des spots qui appartiennent a un meme grain. **
+
+    L&#39;algorithme est le suivant:
+
+    - Creation d&#39;un graphe dont les somets sont des spots.
+        - Selection des spots interressants.
+            - Selection des spots qui sont a des intersection d&#39;axes de zone.
+            - Trie des spots par nombre d&#39;axes de zone decroissant.
+            - Selection des ``spots_max`` spots qui intersectent suffisement d&#39;axes.
+        - Creation des aretes.
+            - Pour chaque paire de somets (paire de spots).
+                - Si il sont lies par un axe de zone.
+                    - Alors on les relie avec une arete dont le poid est la
+                    qualite du meilleur axe de zone qui passe par ces 2 spots.
+    - Supression de certaines aretes.
+        - Reperage des paires de spots qui apartiennent a des grains differents.
+            - Pour chaque paire de somets (paire de spots).
+                - Si les 2 spots sont trop proche (distance &lt; ``distance_max``).
+                    - Alors on repere cette paire de spots.
+                - Si par ces 2 spots passe 2 axes de zone angulairement &lt; ``angle_max``.
+                    - Alors on repere cette paire de spots.
+        - Tant qu&#39;il existe au moin un chemin permetant de relier une paire de spots marque.
+            - On cherche l&#39;arete qui, si on l&#39;a retire, permet de reduire le plus fortement
+            le nombre de paire de somet marque qui sont encore relies.
+            - Parmis les aretes quandidates, on supprime celle qui est lie a l&#39;axe de
+            zone de plus mauvaise qualite.
+    - Creation des clusters.
+        - On extrait toutes les composantes conexes du graphe.
+        - On elimine les composantes qui ne contienent qu&#39;un seul sommet.
+        - **return** les composantes conexes restantes.
+
+    Notes
+    -----
+    Les spots trouves sont souvent des spots ayant un indice de Miller
+    relativement faible.
+
+    Returns
+    -------
+    list
+        Chaque element est un &#39;cluster&#39; de spots qui ont une forte probabilite
+        d&#39;appartenir a un meme grain. Par contre, il n&#39;y a aucune garantie
+        que 2 clusters appartienent chacuns a 2 grains differents.
+        Les cluster sont des ``set`` de spot de type ``laue.spot.Spot``.
+
+    Parameters
+    ----------
+    angle_max : float
+        L&#39;angle maximal entre 2 axes de zones. (en radian)
+        Si par un spot, il passe 2 axes de zonnes angulairement plus seres
+        que cet angle limite, alors ces 2 axes ne sont comptes que comme 1 seul.
+        en consequence, plus cet angle est grand, moins on est selectif sur les spots.
+        Ce meme angle intervient ailleur. Si il existe 2 axes de zones passants chacuns
+        par un spots differents, que ces 2 axes sont angulairement plus sere
+        que ``angle_max``, et que ces 2 spots sont relies par un autre axe de zone,
+        alors ces 2 spots se retrouveront dans des clusters differents.
+    spots_max : int
+        Le nombre maximum total de spots consideres. Plus ce nombre est grand
+        plus il y a des chance qu&#39;il y ai une solution mais moins cette solution
+        aura des chances d&#39;etre pertinante. Le temps de calcul est aussi quadratiquement
+        lie au nombre de sommets.
+    distance_max : float
+        2 spots qui sont separes d&#39;une distance inferieure a ce parametre se retrouveront
+        dans des clusters differents. Cette distance est la distance euclidiene du plan
+        gnomonic (en mm).
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; type(diag.find_subsets())
+    &lt;class &#39;list&#39;&gt;
+    &gt;&gt;&gt; len(diag.find_subsets()) # nbr de clusters
+    1
+    &gt;&gt;&gt; type(diag.find_subsets().pop())
+    &lt;class &#39;set&#39;&gt;
+    &gt;&gt;&gt; len(diag.find_subsets().pop()) # nbr de spot dans le premier cluster
+    3
+    &gt;&gt;&gt; type(diag.find_subsets().pop().pop())
+    &lt;class &#39;laue.spot.Spot&#39;&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    def count_variant_axis(spot):
+        &#34;&#34;&#34;
+        Compte le nombre d&#39;axes de zone qui different beaucoup.
+        (ie considere 2 axes proche comme un seul axe)
+        &#34;&#34;&#34;
+        axes = spot.find_zone_axes()
+        if not axes:
+            return 0
+        if len(axes) == 1:
+            return 1
+        axes = list(axes)
+        nbr_near = (distance_axis(axes, axes, weight=1) &lt; angle_max).sum()
+        nbr = len(axes) - (nbr_near-len(axes))//2
+        return nbr
+
+    def simul_remove_axis(graph, axis, excluded):
+        &#34;&#34;&#34;
+        Retire les aretes liess a cet axe, puis regarde ce que ca donne.
+        &#34;&#34;&#34;
+        graph_bis = graph.copy()
+        for spot1, spot2, axis_found in graph.edges.data(&#34;axis&#34;):
+            if axis_found is axis:
+                graph_bis.remove_edge(spot1, spot2)
+        excluded_bis = [edge for edge in excluded if networkx.algorithms.has_path(graph_bis, *edge)]
+        return excluded_bis, graph_bis
+
+    assert isinstance(angle_max, float), \
+        f&#34;&#39;angle_max&#39; has to be a float, not a {type(angle_max).__name__}.&#34;
+    assert isinstance(spots_max, int), \
+        f&#34;&#39;spots_max&#39; has to be an integer, not a {type(spots_max).__name__}.&#34;
+    assert isinstance(distance_max, float), \
+        f&#34;&#39;distance_max&#39; has to be of type float, not {type(distance_max).__name__}.&#34;
+    assert 0 &lt; angle_max &lt;= math.pi/4, (&#34;L&#39;angle doit etre exprime en radian. &#34;
+        f&#34;Il doit etre dans l&#39;intervalle ]0, pi/4]. Or il vaut {angle_max}.&#34;)
+    assert 2 &lt;= spots_max, \
+        f&#34;Il faut au moins considerer 2 spots, {spots_max} c&#39;est pas possible.&#34;
+    assert 0 &lt; distance_max &lt; .3, (&#34;La distance de sepration des grains est exprimee &#34;
+        &#34;en mm dans le plan gnomonic. Elle doit etre comprise entre ]0, .3]. &#34;
+        f&#34;Or elle vaut {distance_max}, ce qui sort de cet intervalle.&#34;)
+
+    from laue.zone_axis import distance as distance_axis
+    from laue.spot import distance as distance_pic
+    import networkx
+
+    # Creation des noeuds du graphe.
+    if self.experiment.verbose &gt;= 2:
+        print(&#34;\tExtraction des noeuds.&#34;)
+    graph = networkx.Graph()
+    spots_at_cross = self.select_spots(n=20, sort=lambda spot: -count_variant_axis(spot))
+    max_cross = count_variant_axis(spots_at_cross[0])
+    limit = math.sqrt(max(2**2, max_cross)) # Permet d&#39;eviter &#39;ValueError: math domain error&#39;
+    spots_at_cross = [spot for spot in spots_at_cross if count_variant_axis(spot) &gt;= limit]
+    graph.add_nodes_from(spots_at_cross)
+
+    # Ajout grossier de certaine aretes.
+    if self.experiment.verbose &gt;= 2:
+        print(&#34;\tAjout des aretes.&#34;)
+    excluded = [] # La liste des neuds appartenant a des grains differents.
+    axes = set() # La liste des axes de zone consideres.
+    for i, spot1 in enumerate(spots_at_cross[:-1]): # On faite toutes les combinaisons
+        for spot2 in spots_at_cross[i+1:]: # de 2 sommets possibles.
+
+            ## Exclusion des spots trop proches.
+            if distance_pic(spot1, spot2, space=&#34;gnomonic&#34;) &lt; distance_max:
+                excluded.append((spot1, spot2))
+                continue
+
+            ## On ne relie pas les spots qui n&#39;ont pas d&#39;axe commun.
+            common_axes = spot1.find_zone_axes() &amp; spot2.find_zone_axes()
+            if not common_axes:
+                continue
+
+            ## Exclusion des spots ayant 2 axes de zone paralleles.
+            axes1, axes2 = list(spot1.find_zone_axes()-common_axes), list(spot2.find_zone_axes()-common_axes)
+            if axes1 and axes2 and distance_axis(axes1, axes2, weight=1).min() &lt; angle_max: # tolerance angulaire de pi/32
+                excluded.append((spot1, spot2))
+                continue
+
+            best_axis = sorted(common_axes, key=lambda axis: axis.get_quality())[-1]
+            axes.add(best_axis)
+            graph.add_edge(spot1, spot2, quality=best_axis.get_quality(), axis=best_axis)
+
+    # Suppression des aretes en trop afin de discosier les grains.
+    if self.experiment.verbose &gt;= 2:
+        print(&#34;\tSuppression des aretes en trop.&#34;)
+
+    excluded = [edge for edge in excluded if networkx.algorithms.has_path(graph, *edge)]
+    while excluded:
+        predictions = [(*simul_remove_axis(graph, axis, excluded), axis) for axis in axes]
+        best_len = min(len(excluded_bis) for excluded_bis, _, _ in predictions)
+        predictions = [p for p in predictions if len(p[0]) == best_len]
+        costs = [axis.get_quality() for _, _, axis in predictions]
+        min_quality = min(costs)
+        predictions = [p for p in predictions if p[2].get_quality() == min_quality]
+        excluded, graph, axis = predictions.pop()
+        axes.remove(axis)
+
+    # Creation des clusters.
+    conn = list(networkx.algorithms.connected_components(graph))
+    conn = sorted(conn, key=lambda con: len(con), reverse=True)
+    conn = [con for con in conn if len(con) &gt;= 2]
+    if self.experiment.verbose:
+        print(f&#34;\tOK: Les grain sont separes en {len(conn)} familles.&#34;)
+    return conn</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#permet-de-separer-les-differents-grains-dun-diagramme">Permet de separer les differents grains d'un diagramme.</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="laue.tools" href="index.html">laue.tools</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="laue.tools.splitable.Splitable" href="#laue.tools.splitable.Splitable">Splitable</a></code></h4>
+<ul class="">
+<li><code><a title="laue.tools.splitable.Splitable.find_subsets" href="#laue.tools.splitable.Splitable.find_subsets">find_subsets</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,1712 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>laue.zone_axis API documentation</title>
+<meta name="description" content="** Represente un axe de zone. **
+…" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>laue.zone_axis</code></h1>
+</header>
+<section id="section-intro">
+<h2 id="represente-un-axe-de-zone"><strong> Represente un axe de zone. </strong></h2>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Un axe de zone n'est rien d'autre qu'un ensemble de spots
+alignes dans un plan gnomonic et qui s'inscrit dans un diagramme.</li>
+</ul>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+
+&#34;&#34;&#34;
+** Represente un axe de zone. **
+--------------------------------
+
+Notes
+-----
+* Un axe de zone n&#39;est rien d&#39;autre qu&#39;un ensemble de spots
+alignes dans un plan gnomonic et qui s&#39;inscrit dans un diagramme.
+&#34;&#34;&#34;
+
+import collections
+import math
+
+import numpy as np
+try:
+    import numexpr
+except ImportError:
+    numexpr = None
+try:
+    import psutil # Pour acceder a la memoire disponible.
+except ImportError:
+    psutil = None
+
+
+__pdoc__ = {&#34;ZoneAxis.__contains__&#34;: True,
+            &#34;ZoneAxis.__hash__&#34;: True,
+            &#34;ZoneAxis.__iter__&#34;: True,
+            &#34;ZoneAxis.__len__&#34;: True}
+
+
+def distance(axis1, axis2, *, weight=.5):
+    r&#34;&#34;&#34;
+    ** Calcule la distance entre plusieurs axes de zones. **
+
+    Parameters
+    ----------
+    axis1 : laue.zone_axis.ZoneAxis, tuple, list, np.ndarray
+        Un ou plusieurs axes. Cette fonction accepte une liste
+        d&#39;axes de facon a pouvoir faire tous les calculs d&#39;un
+        seul coup. Cela fait gagner grandement en efficacite.
+        Un axe peut etre represente par un tuple a 2 elements, chaque
+        element etant respectivement l&#39;angle et la distance de la droite
+        a l&#39;origine.
+    axis2 : laue.zone_axis.ZoneAxis, tuple, list, np.ndarray
+        Un ou plusieurs axes.
+        Les distances calculees seront les distances entre toutes
+        les combinaisons possibles d&#39;axes entre ``axis1`` et ``axis2``.
+    weight : float
+        * Importance de l&#39;angle entre les droites plutot que
+        leurs distances par rapport a l&#39;origine.
+        * 0.0 =&gt; Seule la distance compte:
+        \[ dist = \lvert d1-d2 \rvert \]
+        * 0.5 =&gt; L&#39;angle et la distance comptent pareillement:
+        \[ dist = \sqrt{\lambda^2.(\pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert )^2 + (1-\lambda)^2.(d1-d2)^2} \]
+        * 1.0 =&gt; Seule l&#39;angle compte:
+        \[ dist = \pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert \]
+
+    Returns
+    -------
+    float, np.ndarray
+        * Les distances entre les droites:
+            * Si axis1 et axis2 sont unique (pas un cluster)
+                la distance renvoyee est un simple flottant, image
+                de la distance separant ces 2 droites.
+            * Si axis1 et axis2 sont tous 2 des clusters regroupants
+                plusieurs axes, la matrice de distances entre les 2
+                clusteur est renvoyee sous la forme d&#39;une array numpy.
+                ``dist(ax1, ax2) = mat[ax1, ax2]``
+            * Si l&#39;un des 2 arguments seulement est un cluster, alors
+                le vecteur des distances qui separent chacuns des axes
+                du cluster a l&#39;axe isole est renvoye.
+
+    Examples
+    -------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; from laue.zone_axis import distance
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; axes = next(iter(
+    ...     laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+    ...     )).find_zone_axes()
+    &gt;&gt;&gt; axes.sort(key=lambda axis: axis.get_quality())
+    &gt;&gt;&gt; ax1, ax2, *axes = axes
+    &gt;&gt;&gt; np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
+    array([[-2.719  ,  0.2432 ],
+           [ 0.02063,  0.0799 ]], dtype=float16)
+    &gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=0.0))
+    0.1632
+    &gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=1.0))
+    2.738
+    &gt;&gt;&gt; np.float16(distance(ax1, ax2))
+    1.372
+    &gt;&gt;&gt; type(distance(ax1, axes))
+    &lt;class &#39;numpy.ndarray&#39;&gt;
+    &gt;&gt;&gt; distance(ax1, axes).shape
+    (7,)
+    &gt;&gt;&gt; type(distance(axes, axes))
+    &lt;class &#39;numpy.ndarray&#39;&gt;
+    &gt;&gt;&gt; distance(axes, axes).shape
+    (7, 7)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    assert isinstance(axis1, (ZoneAxis, np.ndarray, list, tuple)), \
+        f&#34;&#39;axis1&#39; has to be a ZoneAxis or axis container, not a {type(axis1).__name__}.&#34;
+    if isinstance(axis1, (np.ndarray, list)):
+        assert len(axis1), &#34;La liste des axes doit contenir au moins 1 element.&#34;
+        assert all(isinstance(axis, (ZoneAxis, tuple, np.ndarray)) for axis in axis1)
+        assert all(len(axis) == 2 for axis in axis1 if not isinstance(axis, ZoneAxis))
+    if isinstance(axis1, tuple):
+        assert len(axis1) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(axis1)}.&#34;
+        assert all(isinstance(c, (float, int)) for c in axis1)
+    assert isinstance(axis2, (ZoneAxis, np.ndarray, list, tuple)), \
+        f&#34;&#39;axis2&#39; has to be a ZoneAxis or axis container, not a {type(axis2).__name__}.&#34;
+    if isinstance(axis2, (np.ndarray, list)):
+        assert len(axis2), &#34;La liste des axes doit contenir au moins 1 element.&#34;
+        assert all(isinstance(axis, (ZoneAxis, tuple, np.ndarray)) for axis in axis2)
+        assert all(len(axis) == 2 for axis in axis2 if not isinstance(axis, ZoneAxis))
+    if isinstance(axis2, tuple):
+        assert len(axis2) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(axis2)}.&#34;
+        assert all(isinstance(c, (float, int)) for c in axis2)
+    assert isinstance(weight, (float, int)), \
+        f&#34;&#39;weight&#39; has to be a number not a {type(weight).__name__}.&#34;
+    assert 0 &lt;= weight &lt;= 1, f&#34;&#39;weight&#39; must be in [0, 1], not {weight}.&#34;
+
+    # Simplification du probleme.
+    if isinstance(axis1, (ZoneAxis, tuple)) and isinstance(axis2, (ZoneAxis, tuple)):
+        return distance(
+            np.array([axis1]),
+            np.array([axis2]),
+            weight=weight)[0, 0]
+    if isinstance(axis1, (ZoneAxis, tuple)):
+        return distance(
+            np.array([axis1]),
+            axis2,
+            weight=weight)[0, :]
+    if isinstance(axis2, (ZoneAxis, tuple)):
+        return distance(
+            axis1,
+            np.array([axis2]),
+            weight=weight)[:, 0]
+
+    # Calcul des distances
+    meth = lambda axis: axis.get_polar_coords() if isinstance(axis, ZoneAxis) else axis
+    angle1, dist1 = np.array([meth(axis) for axis in axis1], dtype=np.float32).transpose()
+    angle2, dist2 = np.array([meth(axis) for axis in axis2], dtype=np.float32).transpose()
+    angle1, angle2 = np.meshgrid(angle1, angle2, indexing=&#34;ij&#34;, copy=False)
+    dist1, dist2 = np.meshgrid(dist1, dist2, indexing=&#34;ij&#34;, copy=False)
+    pi = np.float32(np.pi)
+
+    if weight == 0:
+        return np.abs(dist2-dist1)
+    if weight == 1:
+        return pi - np.abs(np.abs(angle2-angle1) - pi)
+    if numexpr is not None:
+        return numexpr.evaluate(&#34;sqrt(weight**2*(pi - abs(abs(angle2-angle1) - pi))**2 &#34;
+                                &#34;+ (1-weight)**2*(dist2-dist1)**2)&#34;)
+    return np.sqrt(
+        weight**2*(pi - np.abs(np.abs(angle2-angle1) - pi))**2
+      + (1-weight)**2*(dist2-dist1)**2)
+
+
+class ZoneAxis:
+    &#34;&#34;&#34;
+    Un axe de zone seul.
+    &#34;&#34;&#34;
+    def __init__(self, diagram, spots_ind, identifier, angle, dist):
+        &#34;&#34;&#34;
+        Notes
+        -----
+        * L&#39;utilisateur n&#39;a pas a generer des objets issus de cette classe.
+        Ils sont generes automatiquement par des instances de ``laue.diagram.LaueDiagram``.
+        * Il n&#39;y a pas de verifications faites sur les entrees car l&#39;utilisateur
+        ne doit pas toucher a l&#39;initialisateur. La performance devient priorite.
+
+        Parameters
+        ----------
+        diagram : laue.diagram.LaueDiagram
+            C&#39;est le diagramme pere dans lequel est contenu l&#39;axe de zone.
+            C&#39;est aussi lui qui contient vraiment les spots.
+        spots_ind : iterable
+            C&#39;est la totalite des indices des spots qui constituent cet axe de zone.
+            Les &#39;vrais&#39; instances de spots (de type ``laue.spot.Spot``) sont accessiblent
+            via le parametre ``diagram``.
+        identifier : int
+            Identifiant unique de l&#39;axe de zone. Cet identifiant est unique au
+            sein d&#39;un diagramme mais pas forcement au sein d&#39;une experience.
+        theta : float
+            Angle entre l&#39;axe ``x`` et le vecteur normal a cet axe passant par l&#39;origine.
+        dist : float
+            Distance entre cette droite et l&#39;origine.
+        &#34;&#34;&#34;
+        self.diagram = diagram
+        self.spots = collections.OrderedDict(
+            (
+                (ind, diagram[ind])
+                for ind in sorted(spots_ind)
+            ))
+        self.identifier = identifier
+        self.angle = angle
+        self.dist = dist
+
+    def dist_mean(self):
+        &#34;&#34;&#34;
+        ** La moyenne des distances entre les points et l&#39;axe. **
+
+        Returns
+        -------
+        float
+            La moyenne des distances. Voir ``laue.geometry.Transformer.dist_line``.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import numpy
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; np.float16(axis.dist_mean())
+        5.054e-05
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        theta_vect, dist_vect = self.get_polar_coords()
+        theta_vect, dist_vect = np.array([theta_vect]), np.array([dist_vect])
+        x_vect, y_vect = np.array([spot.get_gnomonic() for spot in self]).transpose()
+        return self.diagram.experiment.transformer.dist_line(
+            theta_vect, dist_vect, x_vect, y_vect).mean()
+
+    def get_polar_coords(self):
+        &#34;&#34;&#34;
+        ** Recupere l&#39;angle et la distance representant l&#39;axe. **
+
+        Returns
+        -------
+        angle : float
+            Le meme angle que celui donne a l&#39;initialisateur.
+        dist : float
+            La meme distance que celle donnee a l&#39;imitialisateur.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; angle, dist = axis.get_polar_coords()
+        &gt;&gt;&gt; np.float16(angle), np.float16(dist)
+        (-0.504, 0.0664)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.angle, self.dist
+
+    def get_quality(self):
+        &#34;&#34;&#34;
+        ** Estime la qualite de cet axe de zone. **
+
+        Returns
+        -------
+        float
+            * Une grandeur qui permet d&#39;estimet le nombre
+                et la proximite des spots lies a cet axe.
+                * 0.0 =&gt; Axes de zone tres mauvais.
+                * 0.5 =&gt; Axe de zone moyen.
+                * 1.0 =&gt; Axe de zone exeptionel.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import numpy as np
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; qualities = sorted(axis.get_quality() for axis in diag.find_zone_axes())
+        &gt;&gt;&gt; np.array(qualities, dtype=np.float16)
+        array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
+               0.8496], dtype=float16)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def dmean_2_score(dmean, d_max=.0117):
+            &#34;&#34;&#34;
+            f([0, d_min/4[) = [1, .9[
+            f([d_min/4, d_max[) = [.9, .2[
+            f([d_max, +oo[) = [.2, 0[
+            &#34;&#34;&#34; 
+            d_min = d_max / 4
+            
+            if dmean &lt; d_min:
+                return 1 - ((1-.9)/d_min)*dmean
+            slope = (.9-.2)/(d_max-d_min)
+            if dmean &lt; d_max:
+                return .9 - slope*(dmean-d_min)
+            return .2*math.exp(-(slope/.2)*(dmean-d_max))
+
+        def nbr_2_score(nbr, nbr_min=7):
+            &#34;&#34;&#34;
+            f(nbr_min) = 0.1
+            f(2*nbr_min) = 0.8
+            f(+00) = 1
+            &#34;&#34;&#34;
+            nbr_max = 2 * nbr_min
+            a, b = .1, .8
+            lna = math.log((1-a)/a)
+            lnb = math.log((1-b)/b)
+            mu = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
+            lamb = lna / (mu - nbr_min)
+            return 1 / (1 + math.exp(-lamb*(nbr-mu)))
+
+        nbr_weight = .75 # Importance du nombre de points par raport a la proximite.
+        return nbr_weight*nbr_2_score(len(self)) + (1-nbr_weight)*dmean_2_score(self.dist_mean())
+
+    def plot_gnomonic(self, axe_pyplot):
+        &#34;&#34;&#34;
+        ** Affiche un axe de zone dans le plan gnomonic. **
+
+        Parameters
+        ----------
+        axe_pyplot : Axe
+            Axe matplotlib qui supporte la methode ``.axline``.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import matplotlib.pyplot as plt
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; fig = plt.figure()
+        &gt;&gt;&gt; axe = fig.add_subplot()
+        &gt;&gt;&gt; axis.plot_gnomonic(axe)
+        &lt;AxesSubplot:&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        normal = np.array([math.cos(self.angle), math.sin(self.angle)])
+        director = np.array([math.sin(self.angle), -math.cos(self.angle)])
+        point1 = self.dist * normal
+        point2 = point1 + director
+        axe_pyplot.axline(point1, point2, lw=0.5, color=&#34;gray&#34;, clip_box=((-.1, -.1), (.1, .1)))
+        return axe_pyplot
+
+    def plot_xy(self, axe_pyplot):
+        &#34;&#34;&#34;
+        ** Affiche un axe de zone tordu dans le plan de la camera. **
+
+        Parameters
+        ----------
+        axe_pyplot : Axe
+            Axe matplotlib qui supporte la methode ``.plot``.
+        &#34;&#34;&#34;
+        raise NotImplementedError
+
+    def __contains__(self, spot):
+        &#34;&#34;&#34;
+        ** Verifie que le spot est dans l&#39;axe de zone. **
+
+        Parameters
+        ----------
+        spot : laue.spot.Spot, int
+            L&#39;instance de spot dont on cherche a savoir
+            si il est present ou pas. Ou bien son indice
+            au sein de ``laue.diagram.LaueDiagram``.
+
+        Returns
+        -------
+        boolean
+            True si le spot est lie a cet axe de zone, False sinon.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; axis
+        ZoneAxis(spots_ind=(2, 5, 8, 12, 22, 25, 27, 29, 31, 33, 35, 38, 39, 42), identifier=1, angle=-0.5040, dist=0.0664)
+        &gt;&gt;&gt; spot2, spot3 = diag[2], diag[3]
+        &gt;&gt;&gt; spot2 in axis
+        True
+        &gt;&gt;&gt; spot3 in axis
+        False
+        &gt;&gt;&gt; 2 in axis
+        True
+        &gt;&gt;&gt; 3 in axis
+        False
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if isinstance(spot, int):
+            return spot in self.spots
+
+        from laue.spot import Spot
+        if isinstance(spot, Spot):
+            return spot in self.spots.values()
+
+        raise AssertionError(&#34;&#39;spot&#39; has to be an instance of &#34;
+            f&#34;Spot or int, not {type(spot).__name__}.&#34;)
+
+    def __hash__(self):
+        &#34;&#34;&#34;
+        ** Permet de faire des tables de hachage. **
+
+        Returns
+        -------
+        int
+            Identifiant &#34;unique&#34; (du moins le plus possible) representant cet axe de zone.
+        &#34;&#34;&#34;
+        return hash((self.diagram, self.identifier))
+
+    def __iter__(self):
+        &#34;&#34;&#34;
+        ** Cede les spots de cet axe. **
+
+        Yields
+        ------
+        spot : laue.spot.Spot
+            Les spots de cet axe de zone par indice croissant.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; for spot in axis:
+        ...     pass
+        ...
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        yield from self.spots.values()
+
+    def __len__(self):
+        &#34;&#34;&#34;
+        ** Renvoie le nombre de points contenus dans cet axe de zone. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; len(axis)
+        14
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return len(self.spots)
+
+    def __str__(self):
+        &#34;&#34;&#34;
+        ** Renvoie une jolie representation de l&#39;axe. **
+        &#34;&#34;&#34;
+        return (&#34;Axe de zone:\n&#34;
+                f&#34;\tdiagram: {self.diagram.get_id()}\n&#34;
+                f&#34;\tspots: {tuple(self.spots.keys())}\n&#34;)
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        ** Renvoie une chaine evaluable de self. **
+        &#34;&#34;&#34;
+        return (&#34;ZoneAxis(&#34;
+                # f&#34;diagram={repr(self.diagram)}, &#34; # Affichage bien trop gourmand.
+                f&#34;spots_ind={tuple(self.spots.keys())}, &#34;
+                f&#34;identifier={self.identifier}, &#34;
+                f&#34;angle={self.angle:.4f}, &#34;
+                f&#34;dist={self.dist:.4f})&#34;)
+
+
+def _get_zone_axes_pickle(args):
+    &#34;&#34;&#34;
+    ** Help for ``LaueDiagram.find_zone_axes``. **
+
+    * Aucune verification n&#39;est faite car l&#39;utilisateur ne doit pas
+    y mettre les pieds.
+
+    Returns
+    -------
+    angles : iterable
+        Vecteur des angles des droites.
+    dists : iterable
+        Vecteur des distances des droites.
+    axes_spots_ind : iterable
+        Vecteur des ensembles de spots lies a chaque droites.
+    spots_axes_ind : iterable
+        Vecteur des indices des droites passant par chaque spot.
+    &#34;&#34;&#34;
+    transformer, gnomonics, dmax, nbr, tol = args
+
+    from laue.geometry import ind2comb
+
+    # Parsing des arguments
+    if isinstance(transformer, bytes): # Si il est serialise.
+        import cloudpickle
+        transformer = cloudpickle.loads(transformer) # On le deserialise.
+
+    # Recherches des axes de zone.
+    angles, dists = transformer.hough_reduce(
+        *transformer.hough(*gnomonics),
+        nbr=nbr, tol=tol) # Recuperation des axes.
+    if len(angles) &lt;= 1: # Si on a pas trouver suffisement de choses.
+        return (), (), (), ((),)*gnomonics.shape[-1]
+
+    # Attribution des points aux droites.
+    axes_spots_ind = [set() for _ in range(len(angles))] # A chaque droite, c&#39;est les spots qu&#39;elle possede.
+    spots_axes_ind = [set() for _ in range(gnomonics.shape[-1])]
+    x_inters, y_inters = transformer.inter_lines(angles, dists)
+    xg_spots, yg_spots = gnomonics
+
+    ## Recuperation des points aux intersections.
+    
+    ### Calcul des points les plus proche pour chaque intersections.
+    used_memory = len(x_inters)*len(xg_spots)*8 # Taille de la matrice de distance en octet.
+    if psutil is not None and psutil.virtual_memory().available &gt; 2*used_memory:
+        xg_spots_mesh, x_inters_mesh = np.meshgrid(xg_spots, x_inters, copy=False)
+        yg_spots_mesh, y_inters_mesh = np.meshgrid(yg_spots, y_inters, copy=False)
+        if numexpr is not None: # d[inter, gnomo]
+            distances = numexpr.evaluate(
+                &#34;sqrt((xg_spots_mesh-x_inters_mesh)**2 + (yg_spots_mesh-y_inters_mesh)**2)&#34;)
+        else:
+            distances = np.sqrt((xg_spots_mesh-x_inters_mesh)**2 + (yg_spots_mesh-y_inters_mesh)**2)
+        nearest_spots = np.argmin(distances, axis=1) # Pour chaque intersections, son spot le plus proche.
+        del distances, xg_spots_mesh, x_inters_mesh, yg_spots_mesh, y_inters_mesh
+    else: # Si il n&#39;y a pas suffisement de RAM.
+        nearest_spots = np.array([ # attention &#39;numexpr&#39; est 7 fois plus lent.
+            np.argmin(np.sqrt((xg_spots-x_inter)**2 + (yg_spots-y_inter)**2))
+            for x_inter, y_inter in zip(x_inters, y_inters)], dtype=int)
+
+    ### Selection des bons candidats.
+    spots_left = [] # Les spots non references.
+    for spot_ind, (xg_pic, yg_pic) in enumerate(zip(xg_spots, yg_spots)):
+        inters_cand = np.argwhere(nearest_spots == spot_ind)
+        adds_inter = inters_cand[
+            (x_inters[inters_cand]-xg_pic)**2
+          + (y_inters[inters_cand]-yg_pic)**2
+          &lt; dmax**2]
+        if adds_inter.any():
+            _adds_axes_1, _adds_axes_2 = ind2comb(adds_inter, n=len(angles))
+            adds_axes = set(_adds_axes_1) | set(_adds_axes_2)
+            for add_axis in adds_axes:
+                axes_spots_ind[add_axis].add(spot_ind)
+            spots_axes_ind[spot_ind].update(adds_axes) # f&#34;le spot num {spot_ind} est l&#39;intersections des axes {adds_axes}.&#34;
+        else:
+            spots_left.append(spot_ind)
+
+    ## Recuperation des points colles a un seul axe.
+    spots_left = np.array(spots_left, dtype=int) # Les indices des spots restants.
+
+    used_memory = len(spots_left)*len(angles)*8 # Taille memoire de la matrice de distances.
+    if psutil is not None and psutil.virtual_memory().available &gt; 2*used_memory:
+        distances = transformer.dist_line( # d[line, point]
+            angles, dists, xg_spots[spots_left], yg_spots[spots_left])
+        axis_ind = np.argmin(distances, axis=0) # A chaque points, indice de la droite la plus proche.
+        close_spots = distances.min(axis=0) &lt; dmax # La matrice des points suffisement proches.
+        del distances
+        for axis_ind, spot_left in zip(axis_ind[close_spots], spots_left[close_spots]):
+            axes_spots_ind[axis_ind].add(spot_left)
+            spots_axes_ind[spot_left].add(axis_ind)   
+    else: # Si il n&#39;y a pas suffisement de RAM.
+        for spot_left, xg_pic, yg_pic in zip(spots_left, xg_spots[spots_left], yg_spots[spots_left]):
+            xg_pic, yg_pic = np.array([xg_pic], dtype=np.float32), np.array([yg_pic], dtype=np.float32)
+            distances = transformer.dist_line(angles, dists, xg_pic, yg_pic) # d[line, point]
+            axis_ind = np.argmin(distances[:, 0])
+            if distances[axis_ind] &lt; dmax:
+                axes_spots_ind[axis_ind].add(spot_left)
+                spots_axes_ind[spot_left].add(axis_ind)
+
+    # Suppression des axes qui contiennent pas suffisement de points.
+    mask_axes_to_keep = np.array([len(spots_ind) for spots_ind in axes_spots_ind]) &gt;= nbr
+    ind_axes_to_keep = set(np.argwhere(mask_axes_to_keep)[:, 0])
+    spots_axes_ind = [axes_ind &amp; ind_axes_to_keep for axes_ind in spots_axes_ind]
+    axes_spots_ind = [spots_ind for axis_ind, spots_ind
+                     in enumerate(axes_spots_ind)
+                     if axis_ind in ind_axes_to_keep]
+    angles, dists = angles[mask_axes_to_keep], dists[mask_axes_to_keep]
+
+    # Changement des anciens par les nouveaux indices de droites.
+    old_to_new = {
+        old_axis_ind: new_axis_ind
+        for new_axis_ind, old_axis_ind
+        in enumerate(sorted(set.union(*spots_axes_ind)))}
+    spots_axes_ind = [
+        {old_to_new[old_axis_ind] for old_axis_ind in old_axes_ind}
+        for old_axes_ind in spots_axes_ind]
+
+    return angles, dists, axes_spots_ind, spots_axes_ind</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="laue.zone_axis.distance"><code class="name flex">
+<span>def <span class="ident">distance</span></span>(<span>axis1, axis2, *, weight=0.5)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Calcule la distance entre plusieurs axes de zones. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>axis1</code></strong> :&ensp;<code><a title="laue.zone_axis.ZoneAxis" href="#laue.zone_axis.ZoneAxis">ZoneAxis</a>, tuple, list, np.ndarray</code></dt>
+<dd>Un ou plusieurs axes. Cette fonction accepte une liste
+d'axes de facon a pouvoir faire tous les calculs d'un
+seul coup. Cela fait gagner grandement en efficacite.
+Un axe peut etre represente par un tuple a 2 elements, chaque
+element etant respectivement l'angle et la distance de la droite
+a l'origine.</dd>
+<dt><strong><code>axis2</code></strong> :&ensp;<code><a title="laue.zone_axis.ZoneAxis" href="#laue.zone_axis.ZoneAxis">ZoneAxis</a>, tuple, list, np.ndarray</code></dt>
+<dd>Un ou plusieurs axes.
+Les distances calculees seront les distances entre toutes
+les combinaisons possibles d'axes entre <code>axis1</code> et <code>axis2</code>.</dd>
+<dt><strong><code>weight</code></strong> :&ensp;<code>float</code></dt>
+<dd>
+<ul>
+<li>Importance de l'angle entre les droites plutot que
+leurs distances par rapport a l'origine.</li>
+<li>0.0 =&gt; Seule la distance compte:
+<span><span class="MathJax_Preview"> dist = \lvert d1-d2 \rvert </span><script type="math/tex; mode=display"> dist = \lvert d1-d2 \rvert </script></span></li>
+<li>0.5 =&gt; L'angle et la distance comptent pareillement:
+<span><span class="MathJax_Preview"> dist = \sqrt{\lambda^2.(\pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert )^2 + (1-\lambda)^2.(d1-d2)^2} </span><script type="math/tex; mode=display"> dist = \sqrt{\lambda^2.(\pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert )^2 + (1-\lambda)^2.(d1-d2)^2} </script></span></li>
+<li>1.0 =&gt; Seule l'angle compte:
+<span><span class="MathJax_Preview"> dist = \pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert </span><script type="math/tex; mode=display"> dist = \pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert </script></span></li>
+</ul>
+</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float, np.ndarray</code></dt>
+<dd>
+<ul>
+<li>Les distances entre les droites:<ul>
+<li>Si axis1 et axis2 sont unique (pas un cluster)
+la distance renvoyee est un simple flottant, image
+de la distance separant ces 2 droites.</li>
+<li>Si axis1 et axis2 sont tous 2 des clusters regroupants
+plusieurs axes, la matrice de distances entre les 2
+clusteur est renvoyee sous la forme d'une array numpy.
+<code>dist(ax1, ax2) = mat[ax1, ax2]</code></li>
+<li>Si l'un des 2 arguments seulement est un cluster, alors
+le vecteur des distances qui separent chacuns des axes
+du cluster a l'axe isole est renvoye.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt; from laue.zone_axis import distance
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; axes = next(iter(
+...     laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)
+...     )).find_zone_axes()
+&gt;&gt;&gt; axes.sort(key=lambda axis: axis.get_quality())
+&gt;&gt;&gt; ax1, ax2, *axes = axes
+&gt;&gt;&gt; np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
+array([[-2.719  ,  0.2432 ],
+       [ 0.02063,  0.0799 ]], dtype=float16)
+&gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=0.0))
+0.1632
+&gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=1.0))
+2.738
+&gt;&gt;&gt; np.float16(distance(ax1, ax2))
+1.372
+&gt;&gt;&gt; type(distance(ax1, axes))
+&lt;class 'numpy.ndarray'&gt;
+&gt;&gt;&gt; distance(ax1, axes).shape
+(7,)
+&gt;&gt;&gt; type(distance(axes, axes))
+&lt;class 'numpy.ndarray'&gt;
+&gt;&gt;&gt; distance(axes, axes).shape
+(7, 7)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def distance(axis1, axis2, *, weight=.5):
+    r&#34;&#34;&#34;
+    ** Calcule la distance entre plusieurs axes de zones. **
+
+    Parameters
+    ----------
+    axis1 : laue.zone_axis.ZoneAxis, tuple, list, np.ndarray
+        Un ou plusieurs axes. Cette fonction accepte une liste
+        d&#39;axes de facon a pouvoir faire tous les calculs d&#39;un
+        seul coup. Cela fait gagner grandement en efficacite.
+        Un axe peut etre represente par un tuple a 2 elements, chaque
+        element etant respectivement l&#39;angle et la distance de la droite
+        a l&#39;origine.
+    axis2 : laue.zone_axis.ZoneAxis, tuple, list, np.ndarray
+        Un ou plusieurs axes.
+        Les distances calculees seront les distances entre toutes
+        les combinaisons possibles d&#39;axes entre ``axis1`` et ``axis2``.
+    weight : float
+        * Importance de l&#39;angle entre les droites plutot que
+        leurs distances par rapport a l&#39;origine.
+        * 0.0 =&gt; Seule la distance compte:
+        \[ dist = \lvert d1-d2 \rvert \]
+        * 0.5 =&gt; L&#39;angle et la distance comptent pareillement:
+        \[ dist = \sqrt{\lambda^2.(\pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert )^2 + (1-\lambda)^2.(d1-d2)^2} \]
+        * 1.0 =&gt; Seule l&#39;angle compte:
+        \[ dist = \pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert \]
+
+    Returns
+    -------
+    float, np.ndarray
+        * Les distances entre les droites:
+            * Si axis1 et axis2 sont unique (pas un cluster)
+                la distance renvoyee est un simple flottant, image
+                de la distance separant ces 2 droites.
+            * Si axis1 et axis2 sont tous 2 des clusters regroupants
+                plusieurs axes, la matrice de distances entre les 2
+                clusteur est renvoyee sous la forme d&#39;une array numpy.
+                ``dist(ax1, ax2) = mat[ax1, ax2]``
+            * Si l&#39;un des 2 arguments seulement est un cluster, alors
+                le vecteur des distances qui separent chacuns des axes
+                du cluster a l&#39;axe isole est renvoye.
+
+    Examples
+    -------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; from laue.zone_axis import distance
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; axes = next(iter(
+    ...     laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+    ...     )).find_zone_axes()
+    &gt;&gt;&gt; axes.sort(key=lambda axis: axis.get_quality())
+    &gt;&gt;&gt; ax1, ax2, *axes = axes
+    &gt;&gt;&gt; np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
+    array([[-2.719  ,  0.2432 ],
+           [ 0.02063,  0.0799 ]], dtype=float16)
+    &gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=0.0))
+    0.1632
+    &gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=1.0))
+    2.738
+    &gt;&gt;&gt; np.float16(distance(ax1, ax2))
+    1.372
+    &gt;&gt;&gt; type(distance(ax1, axes))
+    &lt;class &#39;numpy.ndarray&#39;&gt;
+    &gt;&gt;&gt; distance(ax1, axes).shape
+    (7,)
+    &gt;&gt;&gt; type(distance(axes, axes))
+    &lt;class &#39;numpy.ndarray&#39;&gt;
+    &gt;&gt;&gt; distance(axes, axes).shape
+    (7, 7)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    assert isinstance(axis1, (ZoneAxis, np.ndarray, list, tuple)), \
+        f&#34;&#39;axis1&#39; has to be a ZoneAxis or axis container, not a {type(axis1).__name__}.&#34;
+    if isinstance(axis1, (np.ndarray, list)):
+        assert len(axis1), &#34;La liste des axes doit contenir au moins 1 element.&#34;
+        assert all(isinstance(axis, (ZoneAxis, tuple, np.ndarray)) for axis in axis1)
+        assert all(len(axis) == 2 for axis in axis1 if not isinstance(axis, ZoneAxis))
+    if isinstance(axis1, tuple):
+        assert len(axis1) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(axis1)}.&#34;
+        assert all(isinstance(c, (float, int)) for c in axis1)
+    assert isinstance(axis2, (ZoneAxis, np.ndarray, list, tuple)), \
+        f&#34;&#39;axis2&#39; has to be a ZoneAxis or axis container, not a {type(axis2).__name__}.&#34;
+    if isinstance(axis2, (np.ndarray, list)):
+        assert len(axis2), &#34;La liste des axes doit contenir au moins 1 element.&#34;
+        assert all(isinstance(axis, (ZoneAxis, tuple, np.ndarray)) for axis in axis2)
+        assert all(len(axis) == 2 for axis in axis2 if not isinstance(axis, ZoneAxis))
+    if isinstance(axis2, tuple):
+        assert len(axis2) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(axis2)}.&#34;
+        assert all(isinstance(c, (float, int)) for c in axis2)
+    assert isinstance(weight, (float, int)), \
+        f&#34;&#39;weight&#39; has to be a number not a {type(weight).__name__}.&#34;
+    assert 0 &lt;= weight &lt;= 1, f&#34;&#39;weight&#39; must be in [0, 1], not {weight}.&#34;
+
+    # Simplification du probleme.
+    if isinstance(axis1, (ZoneAxis, tuple)) and isinstance(axis2, (ZoneAxis, tuple)):
+        return distance(
+            np.array([axis1]),
+            np.array([axis2]),
+            weight=weight)[0, 0]
+    if isinstance(axis1, (ZoneAxis, tuple)):
+        return distance(
+            np.array([axis1]),
+            axis2,
+            weight=weight)[0, :]
+    if isinstance(axis2, (ZoneAxis, tuple)):
+        return distance(
+            axis1,
+            np.array([axis2]),
+            weight=weight)[:, 0]
+
+    # Calcul des distances
+    meth = lambda axis: axis.get_polar_coords() if isinstance(axis, ZoneAxis) else axis
+    angle1, dist1 = np.array([meth(axis) for axis in axis1], dtype=np.float32).transpose()
+    angle2, dist2 = np.array([meth(axis) for axis in axis2], dtype=np.float32).transpose()
+    angle1, angle2 = np.meshgrid(angle1, angle2, indexing=&#34;ij&#34;, copy=False)
+    dist1, dist2 = np.meshgrid(dist1, dist2, indexing=&#34;ij&#34;, copy=False)
+    pi = np.float32(np.pi)
+
+    if weight == 0:
+        return np.abs(dist2-dist1)
+    if weight == 1:
+        return pi - np.abs(np.abs(angle2-angle1) - pi)
+    if numexpr is not None:
+        return numexpr.evaluate(&#34;sqrt(weight**2*(pi - abs(abs(angle2-angle1) - pi))**2 &#34;
+                                &#34;+ (1-weight)**2*(dist2-dist1)**2)&#34;)
+    return np.sqrt(
+        weight**2*(pi - np.abs(np.abs(angle2-angle1) - pi))**2
+      + (1-weight)**2*(dist2-dist1)**2)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="laue.zone_axis.ZoneAxis"><code class="flex name class">
+<span>class <span class="ident">ZoneAxis</span></span>
+<span>(</span><span>diagram, spots_ind, identifier, angle, dist)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Un axe de zone seul.</p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>L'utilisateur n'a pas a generer des objets issus de cette classe.
+Ils sont generes automatiquement par des instances de <code><a title="laue.diagram.LaueDiagram" href="diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code>.</li>
+<li>Il n'y a pas de verifications faites sur les entrees car l'utilisateur
+ne doit pas toucher a l'initialisateur. La performance devient priorite.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>diagram</code></strong> :&ensp;<code><a title="laue.diagram.LaueDiagram" href="diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code></dt>
+<dd>C'est le diagramme pere dans lequel est contenu l'axe de zone.
+C'est aussi lui qui contient vraiment les spots.</dd>
+<dt><strong><code>spots_ind</code></strong> :&ensp;<code>iterable</code></dt>
+<dd>C'est la totalite des indices des spots qui constituent cet axe de zone.
+Les 'vrais' instances de spots (de type <code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code>) sont accessiblent
+via le parametre <code>diagram</code>.</dd>
+<dt><strong><code>identifier</code></strong> :&ensp;<code>int</code></dt>
+<dd>Identifiant unique de l'axe de zone. Cet identifiant est unique au
+sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
+<dt><strong><code>theta</code></strong> :&ensp;<code>float</code></dt>
+<dd>Angle entre l'axe <code>x</code> et le vecteur normal a cet axe passant par l'origine.</dd>
+<dt><strong><code>dist</code></strong> :&ensp;<code>float</code></dt>
+<dd>Distance entre cette droite et l'origine.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ZoneAxis:
+    &#34;&#34;&#34;
+    Un axe de zone seul.
+    &#34;&#34;&#34;
+    def __init__(self, diagram, spots_ind, identifier, angle, dist):
+        &#34;&#34;&#34;
+        Notes
+        -----
+        * L&#39;utilisateur n&#39;a pas a generer des objets issus de cette classe.
+        Ils sont generes automatiquement par des instances de ``laue.diagram.LaueDiagram``.
+        * Il n&#39;y a pas de verifications faites sur les entrees car l&#39;utilisateur
+        ne doit pas toucher a l&#39;initialisateur. La performance devient priorite.
+
+        Parameters
+        ----------
+        diagram : laue.diagram.LaueDiagram
+            C&#39;est le diagramme pere dans lequel est contenu l&#39;axe de zone.
+            C&#39;est aussi lui qui contient vraiment les spots.
+        spots_ind : iterable
+            C&#39;est la totalite des indices des spots qui constituent cet axe de zone.
+            Les &#39;vrais&#39; instances de spots (de type ``laue.spot.Spot``) sont accessiblent
+            via le parametre ``diagram``.
+        identifier : int
+            Identifiant unique de l&#39;axe de zone. Cet identifiant est unique au
+            sein d&#39;un diagramme mais pas forcement au sein d&#39;une experience.
+        theta : float
+            Angle entre l&#39;axe ``x`` et le vecteur normal a cet axe passant par l&#39;origine.
+        dist : float
+            Distance entre cette droite et l&#39;origine.
+        &#34;&#34;&#34;
+        self.diagram = diagram
+        self.spots = collections.OrderedDict(
+            (
+                (ind, diagram[ind])
+                for ind in sorted(spots_ind)
+            ))
+        self.identifier = identifier
+        self.angle = angle
+        self.dist = dist
+
+    def dist_mean(self):
+        &#34;&#34;&#34;
+        ** La moyenne des distances entre les points et l&#39;axe. **
+
+        Returns
+        -------
+        float
+            La moyenne des distances. Voir ``laue.geometry.Transformer.dist_line``.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import numpy
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; np.float16(axis.dist_mean())
+        5.054e-05
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        theta_vect, dist_vect = self.get_polar_coords()
+        theta_vect, dist_vect = np.array([theta_vect]), np.array([dist_vect])
+        x_vect, y_vect = np.array([spot.get_gnomonic() for spot in self]).transpose()
+        return self.diagram.experiment.transformer.dist_line(
+            theta_vect, dist_vect, x_vect, y_vect).mean()
+
+    def get_polar_coords(self):
+        &#34;&#34;&#34;
+        ** Recupere l&#39;angle et la distance representant l&#39;axe. **
+
+        Returns
+        -------
+        angle : float
+            Le meme angle que celui donne a l&#39;initialisateur.
+        dist : float
+            La meme distance que celle donnee a l&#39;imitialisateur.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; angle, dist = axis.get_polar_coords()
+        &gt;&gt;&gt; np.float16(angle), np.float16(dist)
+        (-0.504, 0.0664)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.angle, self.dist
+
+    def get_quality(self):
+        &#34;&#34;&#34;
+        ** Estime la qualite de cet axe de zone. **
+
+        Returns
+        -------
+        float
+            * Une grandeur qui permet d&#39;estimet le nombre
+                et la proximite des spots lies a cet axe.
+                * 0.0 =&gt; Axes de zone tres mauvais.
+                * 0.5 =&gt; Axe de zone moyen.
+                * 1.0 =&gt; Axe de zone exeptionel.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import numpy as np
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; qualities = sorted(axis.get_quality() for axis in diag.find_zone_axes())
+        &gt;&gt;&gt; np.array(qualities, dtype=np.float16)
+        array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
+               0.8496], dtype=float16)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def dmean_2_score(dmean, d_max=.0117):
+            &#34;&#34;&#34;
+            f([0, d_min/4[) = [1, .9[
+            f([d_min/4, d_max[) = [.9, .2[
+            f([d_max, +oo[) = [.2, 0[
+            &#34;&#34;&#34; 
+            d_min = d_max / 4
+            
+            if dmean &lt; d_min:
+                return 1 - ((1-.9)/d_min)*dmean
+            slope = (.9-.2)/(d_max-d_min)
+            if dmean &lt; d_max:
+                return .9 - slope*(dmean-d_min)
+            return .2*math.exp(-(slope/.2)*(dmean-d_max))
+
+        def nbr_2_score(nbr, nbr_min=7):
+            &#34;&#34;&#34;
+            f(nbr_min) = 0.1
+            f(2*nbr_min) = 0.8
+            f(+00) = 1
+            &#34;&#34;&#34;
+            nbr_max = 2 * nbr_min
+            a, b = .1, .8
+            lna = math.log((1-a)/a)
+            lnb = math.log((1-b)/b)
+            mu = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
+            lamb = lna / (mu - nbr_min)
+            return 1 / (1 + math.exp(-lamb*(nbr-mu)))
+
+        nbr_weight = .75 # Importance du nombre de points par raport a la proximite.
+        return nbr_weight*nbr_2_score(len(self)) + (1-nbr_weight)*dmean_2_score(self.dist_mean())
+
+    def plot_gnomonic(self, axe_pyplot):
+        &#34;&#34;&#34;
+        ** Affiche un axe de zone dans le plan gnomonic. **
+
+        Parameters
+        ----------
+        axe_pyplot : Axe
+            Axe matplotlib qui supporte la methode ``.axline``.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import matplotlib.pyplot as plt
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; fig = plt.figure()
+        &gt;&gt;&gt; axe = fig.add_subplot()
+        &gt;&gt;&gt; axis.plot_gnomonic(axe)
+        &lt;AxesSubplot:&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        normal = np.array([math.cos(self.angle), math.sin(self.angle)])
+        director = np.array([math.sin(self.angle), -math.cos(self.angle)])
+        point1 = self.dist * normal
+        point2 = point1 + director
+        axe_pyplot.axline(point1, point2, lw=0.5, color=&#34;gray&#34;, clip_box=((-.1, -.1), (.1, .1)))
+        return axe_pyplot
+
+    def plot_xy(self, axe_pyplot):
+        &#34;&#34;&#34;
+        ** Affiche un axe de zone tordu dans le plan de la camera. **
+
+        Parameters
+        ----------
+        axe_pyplot : Axe
+            Axe matplotlib qui supporte la methode ``.plot``.
+        &#34;&#34;&#34;
+        raise NotImplementedError
+
+    def __contains__(self, spot):
+        &#34;&#34;&#34;
+        ** Verifie que le spot est dans l&#39;axe de zone. **
+
+        Parameters
+        ----------
+        spot : laue.spot.Spot, int
+            L&#39;instance de spot dont on cherche a savoir
+            si il est present ou pas. Ou bien son indice
+            au sein de ``laue.diagram.LaueDiagram``.
+
+        Returns
+        -------
+        boolean
+            True si le spot est lie a cet axe de zone, False sinon.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; axis
+        ZoneAxis(spots_ind=(2, 5, 8, 12, 22, 25, 27, 29, 31, 33, 35, 38, 39, 42), identifier=1, angle=-0.5040, dist=0.0664)
+        &gt;&gt;&gt; spot2, spot3 = diag[2], diag[3]
+        &gt;&gt;&gt; spot2 in axis
+        True
+        &gt;&gt;&gt; spot3 in axis
+        False
+        &gt;&gt;&gt; 2 in axis
+        True
+        &gt;&gt;&gt; 3 in axis
+        False
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if isinstance(spot, int):
+            return spot in self.spots
+
+        from laue.spot import Spot
+        if isinstance(spot, Spot):
+            return spot in self.spots.values()
+
+        raise AssertionError(&#34;&#39;spot&#39; has to be an instance of &#34;
+            f&#34;Spot or int, not {type(spot).__name__}.&#34;)
+
+    def __hash__(self):
+        &#34;&#34;&#34;
+        ** Permet de faire des tables de hachage. **
+
+        Returns
+        -------
+        int
+            Identifiant &#34;unique&#34; (du moins le plus possible) representant cet axe de zone.
+        &#34;&#34;&#34;
+        return hash((self.diagram, self.identifier))
+
+    def __iter__(self):
+        &#34;&#34;&#34;
+        ** Cede les spots de cet axe. **
+
+        Yields
+        ------
+        spot : laue.spot.Spot
+            Les spots de cet axe de zone par indice croissant.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; for spot in axis:
+        ...     pass
+        ...
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        yield from self.spots.values()
+
+    def __len__(self):
+        &#34;&#34;&#34;
+        ** Renvoie le nombre de points contenus dans cet axe de zone. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; len(axis)
+        14
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return len(self.spots)
+
+    def __str__(self):
+        &#34;&#34;&#34;
+        ** Renvoie une jolie representation de l&#39;axe. **
+        &#34;&#34;&#34;
+        return (&#34;Axe de zone:\n&#34;
+                f&#34;\tdiagram: {self.diagram.get_id()}\n&#34;
+                f&#34;\tspots: {tuple(self.spots.keys())}\n&#34;)
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        ** Renvoie une chaine evaluable de self. **
+        &#34;&#34;&#34;
+        return (&#34;ZoneAxis(&#34;
+                # f&#34;diagram={repr(self.diagram)}, &#34; # Affichage bien trop gourmand.
+                f&#34;spots_ind={tuple(self.spots.keys())}, &#34;
+                f&#34;identifier={self.identifier}, &#34;
+                f&#34;angle={self.angle:.4f}, &#34;
+                f&#34;dist={self.dist:.4f})&#34;)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.zone_axis.ZoneAxis.__contains__"><code class="name flex">
+<span>def <span class="ident">__contains__</span></span>(<span>self, spot)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Verifie que le spot est dans l'axe de zone. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>spot</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a>, int</code></dt>
+<dd>L'instance de spot dont on cherche a savoir
+si il est present ou pas. Ou bien son indice
+au sein de <code><a title="laue.diagram.LaueDiagram" href="diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>boolean</code></dt>
+<dd>True si le spot est lie a cet axe de zone, False sinon.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+&gt;&gt;&gt; axis
+ZoneAxis(spots_ind=(2, 5, 8, 12, 22, 25, 27, 29, 31, 33, 35, 38, 39, 42), identifier=1, angle=-0.5040, dist=0.0664)
+&gt;&gt;&gt; spot2, spot3 = diag[2], diag[3]
+&gt;&gt;&gt; spot2 in axis
+True
+&gt;&gt;&gt; spot3 in axis
+False
+&gt;&gt;&gt; 2 in axis
+True
+&gt;&gt;&gt; 3 in axis
+False
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __contains__(self, spot):
+    &#34;&#34;&#34;
+    ** Verifie que le spot est dans l&#39;axe de zone. **
+
+    Parameters
+    ----------
+    spot : laue.spot.Spot, int
+        L&#39;instance de spot dont on cherche a savoir
+        si il est present ou pas. Ou bien son indice
+        au sein de ``laue.diagram.LaueDiagram``.
+
+    Returns
+    -------
+    boolean
+        True si le spot est lie a cet axe de zone, False sinon.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+    &gt;&gt;&gt; axis
+    ZoneAxis(spots_ind=(2, 5, 8, 12, 22, 25, 27, 29, 31, 33, 35, 38, 39, 42), identifier=1, angle=-0.5040, dist=0.0664)
+    &gt;&gt;&gt; spot2, spot3 = diag[2], diag[3]
+    &gt;&gt;&gt; spot2 in axis
+    True
+    &gt;&gt;&gt; spot3 in axis
+    False
+    &gt;&gt;&gt; 2 in axis
+    True
+    &gt;&gt;&gt; 3 in axis
+    False
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    if isinstance(spot, int):
+        return spot in self.spots
+
+    from laue.spot import Spot
+    if isinstance(spot, Spot):
+        return spot in self.spots.values()
+
+    raise AssertionError(&#34;&#39;spot&#39; has to be an instance of &#34;
+        f&#34;Spot or int, not {type(spot).__name__}.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="laue.zone_axis.ZoneAxis.__hash__"><code class="name flex">
+<span>def <span class="ident">__hash__</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Permet de faire des tables de hachage. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>Identifiant "unique" (du moins le plus possible) representant cet axe de zone.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __hash__(self):
+    &#34;&#34;&#34;
+    ** Permet de faire des tables de hachage. **
+
+    Returns
+    -------
+    int
+        Identifiant &#34;unique&#34; (du moins le plus possible) representant cet axe de zone.
+    &#34;&#34;&#34;
+    return hash((self.diagram, self.identifier))</code></pre>
+</details>
+</dd>
+<dt id="laue.zone_axis.ZoneAxis.__iter__"><code class="name flex">
+<span>def <span class="ident">__iter__</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Cede les spots de cet axe. </strong></p>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><strong><code>spot</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code></dt>
+<dd>Les spots de cet axe de zone par indice croissant.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+&gt;&gt;&gt; for spot in axis:
+...     pass
+...
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __iter__(self):
+    &#34;&#34;&#34;
+    ** Cede les spots de cet axe. **
+
+    Yields
+    ------
+    spot : laue.spot.Spot
+        Les spots de cet axe de zone par indice croissant.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+    &gt;&gt;&gt; for spot in axis:
+    ...     pass
+    ...
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    yield from self.spots.values()</code></pre>
+</details>
+</dd>
+<dt id="laue.zone_axis.ZoneAxis.__len__"><code class="name flex">
+<span>def <span class="ident">__len__</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Renvoie le nombre de points contenus dans cet axe de zone. </strong></p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+&gt;&gt;&gt; len(axis)
+14
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __len__(self):
+    &#34;&#34;&#34;
+    ** Renvoie le nombre de points contenus dans cet axe de zone. **
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+    &gt;&gt;&gt; len(axis)
+    14
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return len(self.spots)</code></pre>
+</details>
+</dd>
+<dt id="laue.zone_axis.ZoneAxis.dist_mean"><code class="name flex">
+<span>def <span class="ident">dist_mean</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> La moyenne des distances entre les points et l'axe. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>La moyenne des distances. Voir <code><a title="laue.geometry.Transformer.dist_line" href="geometry.html#laue.geometry.Transformer.dist_line">Transformer.dist_line()</a></code>.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+&gt;&gt;&gt; np.float16(axis.dist_mean())
+5.054e-05
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dist_mean(self):
+    &#34;&#34;&#34;
+    ** La moyenne des distances entre les points et l&#39;axe. **
+
+    Returns
+    -------
+    float
+        La moyenne des distances. Voir ``laue.geometry.Transformer.dist_line``.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+    &gt;&gt;&gt; np.float16(axis.dist_mean())
+    5.054e-05
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    theta_vect, dist_vect = self.get_polar_coords()
+    theta_vect, dist_vect = np.array([theta_vect]), np.array([dist_vect])
+    x_vect, y_vect = np.array([spot.get_gnomonic() for spot in self]).transpose()
+    return self.diagram.experiment.transformer.dist_line(
+        theta_vect, dist_vect, x_vect, y_vect).mean()</code></pre>
+</details>
+</dd>
+<dt id="laue.zone_axis.ZoneAxis.get_polar_coords"><code class="name flex">
+<span>def <span class="ident">get_polar_coords</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere l'angle et la distance representant l'axe. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>angle</code></strong> :&ensp;<code>float</code></dt>
+<dd>Le meme angle que celui donne a l'initialisateur.</dd>
+<dt><strong><code>dist</code></strong> :&ensp;<code>float</code></dt>
+<dd>La meme distance que celle donnee a l'imitialisateur.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+&gt;&gt;&gt; angle, dist = axis.get_polar_coords()
+&gt;&gt;&gt; np.float16(angle), np.float16(dist)
+(-0.504, 0.0664)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_polar_coords(self):
+    &#34;&#34;&#34;
+    ** Recupere l&#39;angle et la distance representant l&#39;axe. **
+
+    Returns
+    -------
+    angle : float
+        Le meme angle que celui donne a l&#39;initialisateur.
+    dist : float
+        La meme distance que celle donnee a l&#39;imitialisateur.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+    &gt;&gt;&gt; angle, dist = axis.get_polar_coords()
+    &gt;&gt;&gt; np.float16(angle), np.float16(dist)
+    (-0.504, 0.0664)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return self.angle, self.dist</code></pre>
+</details>
+</dd>
+<dt id="laue.zone_axis.ZoneAxis.get_quality"><code class="name flex">
+<span>def <span class="ident">get_quality</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Estime la qualite de cet axe de zone. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>
+<ul>
+<li>Une grandeur qui permet d'estimet le nombre
+et la proximite des spots lies a cet axe.<ul>
+<li>0.0 =&gt; Axes de zone tres mauvais.</li>
+<li>0.5 =&gt; Axe de zone moyen.</li>
+<li>1.0 =&gt; Axe de zone exeptionel.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; qualities = sorted(axis.get_quality() for axis in diag.find_zone_axes())
+&gt;&gt;&gt; np.array(qualities, dtype=np.float16)
+array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
+       0.8496], dtype=float16)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_quality(self):
+    &#34;&#34;&#34;
+    ** Estime la qualite de cet axe de zone. **
+
+    Returns
+    -------
+    float
+        * Une grandeur qui permet d&#39;estimet le nombre
+            et la proximite des spots lies a cet axe.
+            * 0.0 =&gt; Axes de zone tres mauvais.
+            * 0.5 =&gt; Axe de zone moyen.
+            * 1.0 =&gt; Axe de zone exeptionel.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; qualities = sorted(axis.get_quality() for axis in diag.find_zone_axes())
+    &gt;&gt;&gt; np.array(qualities, dtype=np.float16)
+    array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
+           0.8496], dtype=float16)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    def dmean_2_score(dmean, d_max=.0117):
+        &#34;&#34;&#34;
+        f([0, d_min/4[) = [1, .9[
+        f([d_min/4, d_max[) = [.9, .2[
+        f([d_max, +oo[) = [.2, 0[
+        &#34;&#34;&#34; 
+        d_min = d_max / 4
+        
+        if dmean &lt; d_min:
+            return 1 - ((1-.9)/d_min)*dmean
+        slope = (.9-.2)/(d_max-d_min)
+        if dmean &lt; d_max:
+            return .9 - slope*(dmean-d_min)
+        return .2*math.exp(-(slope/.2)*(dmean-d_max))
+
+    def nbr_2_score(nbr, nbr_min=7):
+        &#34;&#34;&#34;
+        f(nbr_min) = 0.1
+        f(2*nbr_min) = 0.8
+        f(+00) = 1
+        &#34;&#34;&#34;
+        nbr_max = 2 * nbr_min
+        a, b = .1, .8
+        lna = math.log((1-a)/a)
+        lnb = math.log((1-b)/b)
+        mu = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
+        lamb = lna / (mu - nbr_min)
+        return 1 / (1 + math.exp(-lamb*(nbr-mu)))
+
+    nbr_weight = .75 # Importance du nombre de points par raport a la proximite.
+    return nbr_weight*nbr_2_score(len(self)) + (1-nbr_weight)*dmean_2_score(self.dist_mean())</code></pre>
+</details>
+</dd>
+<dt id="laue.zone_axis.ZoneAxis.plot_gnomonic"><code class="name flex">
+<span>def <span class="ident">plot_gnomonic</span></span>(<span>self, axe_pyplot)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Affiche un axe de zone dans le plan gnomonic. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>axe_pyplot</code></strong> :&ensp;<code>Axe</code></dt>
+<dd>Axe matplotlib qui supporte la methode <code>.axline</code>.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt;
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+&gt;&gt;&gt;
+&gt;&gt;&gt; fig = plt.figure()
+&gt;&gt;&gt; axe = fig.add_subplot()
+&gt;&gt;&gt; axis.plot_gnomonic(axe)
+&lt;AxesSubplot:&gt;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_gnomonic(self, axe_pyplot):
+    &#34;&#34;&#34;
+    ** Affiche un axe de zone dans le plan gnomonic. **
+
+    Parameters
+    ----------
+    axe_pyplot : Axe
+        Axe matplotlib qui supporte la methode ``.axline``.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import matplotlib.pyplot as plt
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; fig = plt.figure()
+    &gt;&gt;&gt; axe = fig.add_subplot()
+    &gt;&gt;&gt; axis.plot_gnomonic(axe)
+    &lt;AxesSubplot:&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    normal = np.array([math.cos(self.angle), math.sin(self.angle)])
+    director = np.array([math.sin(self.angle), -math.cos(self.angle)])
+    point1 = self.dist * normal
+    point2 = point1 + director
+    axe_pyplot.axline(point1, point2, lw=0.5, color=&#34;gray&#34;, clip_box=((-.1, -.1), (.1, .1)))
+    return axe_pyplot</code></pre>
+</details>
+</dd>
+<dt id="laue.zone_axis.ZoneAxis.plot_xy"><code class="name flex">
+<span>def <span class="ident">plot_xy</span></span>(<span>self, axe_pyplot)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Affiche un axe de zone tordu dans le plan de la camera. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>axe_pyplot</code></strong> :&ensp;<code>Axe</code></dt>
+<dd>Axe matplotlib qui supporte la methode <code>.plot</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_xy(self, axe_pyplot):
+    &#34;&#34;&#34;
+    ** Affiche un axe de zone tordu dans le plan de la camera. **
+
+    Parameters
+    ----------
+    axe_pyplot : Axe
+        Axe matplotlib qui supporte la methode ``.plot``.
+    &#34;&#34;&#34;
+    raise NotImplementedError</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#represente-un-axe-de-zone">Represente un axe de zone.</a></li>
+<li><a href="#notes">Notes</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="laue" href="index.html">laue</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="laue.zone_axis.distance" href="#laue.zone_axis.distance">distance</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="laue.zone_axis.ZoneAxis" href="#laue.zone_axis.ZoneAxis">ZoneAxis</a></code></h4>
+<ul class="two-column">
+<li><code><a title="laue.zone_axis.ZoneAxis.__contains__" href="#laue.zone_axis.ZoneAxis.__contains__">__contains__</a></code></li>
+<li><code><a title="laue.zone_axis.ZoneAxis.__hash__" href="#laue.zone_axis.ZoneAxis.__hash__">__hash__</a></code></li>
+<li><code><a title="laue.zone_axis.ZoneAxis.__iter__" href="#laue.zone_axis.ZoneAxis.__iter__">__iter__</a></code></li>
+<li><code><a title="laue.zone_axis.ZoneAxis.__len__" href="#laue.zone_axis.ZoneAxis.__len__">__len__</a></code></li>
+<li><code><a title="laue.zone_axis.ZoneAxis.dist_mean" href="#laue.zone_axis.ZoneAxis.dist_mean">dist_mean</a></code></li>
+<li><code><a title="laue.zone_axis.ZoneAxis.get_polar_coords" href="#laue.zone_axis.ZoneAxis.get_polar_coords">get_polar_coords</a></code></li>
+<li><code><a title="laue.zone_axis.ZoneAxis.get_quality" href="#laue.zone_axis.ZoneAxis.get_quality">get_quality</a></code></li>
+<li><code><a title="laue.zone_axis.ZoneAxis.plot_gnomonic" href="#laue.zone_axis.ZoneAxis.plot_gnomonic">plot_gnomonic</a></code></li>
+<li><code><a title="laue.zone_axis.ZoneAxis.plot_xy" href="#laue.zone_axis.ZoneAxis.plot_xy">plot_xy</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

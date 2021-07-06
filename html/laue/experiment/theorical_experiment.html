@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>laue.experiment.theorical_experiment API documentation</title>
+<meta name="description" content="** Manipule un lot de simule de diagrammes. **
+…" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>laue.experiment.theorical_experiment</code></h1>
+</header>
+<section id="section-intro">
+<h2 id="manipule-un-lot-de-simule-de-diagrammes"><strong> Manipule un lot de simule de diagrammes. </strong></h2>
+<p>Fait la meme chose que <code><a title="laue.experiment.base_experiment.Experiment" href="base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></code>
+a la difference que les donnees sont des donnes simulee et non pas experimentales.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+
+&#34;&#34;&#34;
+** Manipule un lot de simule de diagrammes. **
+---------------------------------------------
+
+Fait la meme chose que ``laue.experiment.base_experiment.Experiment``
+a la difference que les donnees sont des donnes simulee et non pas experimentales.
+&#34;&#34;&#34;
+
+import itertools
+
+import numpy as np
+
+from laue.diagram import LaueDiagram
+from laue.spot import Spot
+from laue.experiment.base_experiment import Experiment
+from laue.tools.image import create_image
+
+
+class TheoricalExperiment(Experiment):
+    &#34;&#34;&#34;
+    ** Permet de travailler sur des donnees theoriques. **
+    &#34;&#34;&#34;
+    def __init__(self, positions=(), miller_inds=None, intensities=None, **kwargs):
+        &#34;&#34;&#34;
+        Parameters
+        ----------
+        positions : iterable
+            Les positions des pics pour chacuns des diagrammes.
+            Chaque element de ``positions`` contient donc les
+            positions des spots du diagramme considere,
+            d&#39;abord selon x, puis selon y. Ces elements peuvent
+            etre de type ``list``, ``tuple`` ou ``np.ndarray``.
+        miller_inds : iterable
+            La liste des 3 indices de miller (hkl) pour chaque diagramme.
+            L&#39;ordre des elements des ``miller_inds`` doit etre strictement
+            le meme que celui de ``positions``. La valeur None indique que
+            les indices ne sont pas connus.
+        intensities : iterable
+            La liste des intensites de chacuns des spots. Les
+            valeurs fournis ici se retrouverons dans ``laue.spot.Spot.get_intensity``.
+        **kwargs
+            Ils sont transmis a ``laue.experiment.base_experiment.Experiment.__init__``.
+        &#34;&#34;&#34;
+        assert hasattr(positions, &#34;__iter__&#34;), (&#34;&#39;positions&#39; must to be iterable. &#34;
+            f&#34;It can not be of type {type(positions).__name__}.&#34;)
+        if miller_inds is None:
+            miller_inds = itertools.cycle((None,))
+        assert hasattr(miller_inds, &#34;__iter__&#34;), (&#34;&#39;miller_inds&#39; must to be iterable. &#34;
+            f&#34;It can not be of type {type(miller_inds).__name__}.&#34;)
+        if intensities is None:
+            intensities = itertools.cycle((None,))
+        assert hasattr(intensities, &#34;__iter__&#34;), (&#34;&#39;intensities&#39; must to be iterable. &#34;
+            f&#34;It can not be of type {type(intensities).__name__}.&#34;)
+
+        images = (
+            create_image(
+                diag.get_positions(),
+                intensities=[spot.get_intensity() for spot in diag],
+                shape=self.get_images_shape())
+            for diag in self)
+
+        Experiment.__init__(self, images=images, **kwargs)
+        self.positions = positions
+        self.miller_inds = miller_inds
+        self.intensities = intensities
+
+    def get_diagrams(self, *, tense_flow=False):
+        &#34;&#34;&#34;
+        Fait la meme chose que ``laue.experiment.base_experiment.Experiment.get_diagrams``.
+        Seulement les diagrammes ne sont pas crees a partir d&#39;images
+        mais a partir des donnees simulees.
+        &#34;&#34;&#34;
+        from laue.tools.multi_core import prevent_generator_size
+
+        def update_len(func):
+            &#34;&#34;&#34;
+            Tient a jour la longueur de l&#39;experience.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                for i, element in enumerate(func(*func_args, **func_kwargs)):
+                    yield element
+                self._len = i + 1
+
+            return decorate
+
+        @update_len
+        @prevent_generator_size(min_size=1)
+        def _diagram_extractor(self):
+            &#34;&#34;&#34;
+            Premiere vraie lecture. Cede les diagrammes.
+            &#34;&#34;&#34;
+            spot_im = np.array([[0]], dtype=np.uint16)
+            distortion = 1.0
+
+            for diag_num, (position, miller_ind, intensity) in enumerate(
+                    zip(self.positions, self.miller_inds, self.intensities)):
+                # Verifications generales.
+                if not isinstance(position, (np.ndarray, list, tuple)):
+                    raise TypeError(f&#34;Les positions des pics du {diag_num+1}eme diagramme &#34;
+                        f&#34;ne sont de type {type(positions).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+                position = np.array(list(position), dtype=np.float32)
+                if position.ndim != 2:
+                    raise ValueError(f&#34;Les positions des pics du {diag_num+1}eme diagramme &#34;
+                        &#34;sont incomprehensible. Il doit y avoir la liste des x et des y, ce &#34;
+                        f&#34;qui fait un tableau a 2 dimensions. Or il y a {position.ndim} dimensions.&#34;)
+                if position.shape[1] == 2 and position.shape[0] != 2:
+                    position = position.transpose()
+                if miller_ind is not None and not isinstance(miller_ind, (np.ndarray, list, tuple)):
+                    raise TypeError(f&#34;Les indices de miller des pics du {diag_num+1}eme diagramme &#34;
+                        f&#34;ne sont de type {type(miller_ind).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+                if miller_ind is not None and len(miller_ind) != position.shape[1]:
+                    raise ValueError(f&#34;Les positions du {diag_num+1}eme diagramme laissent sous-entendre &#34;
+                        f&#34;qu&#39;il y a {position.shape[1]} spots. Or {len(miller_ind)} triplet d&#39;indices de miller sont fournis.&#34;)
+                if intensity is not None and not isinstance(intensity, (np.ndarray, list, tuple)):
+                    raise TypeError(f&#34;Les intensites des pics du {diag_num+1}eme diagramme &#34;
+                        f&#34;ne sont de type {type(intensity).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+                if intensity is not None and len(intensity) != position.shape[1]:
+                    raise ValueError(f&#34;Les positions du {diag_num+1}eme diagramme laissent sous-entendre &#34;
+                        f&#34;qu&#39;il y a {position.shape[1]} spots. Or {len(intensity)} intensitees sont fournies.&#34;)
+
+                miller_ind = miller_ind if miller_ind is not None else itertools.cycle((None,))
+                intensity = intensity if intensity is not None else itertools.cycle((1.0,))
+                name = f&#34;diagram_{diag_num}&#34;
+                laue_diagram = LaueDiagram(name, spots=[], experiment=self)
+
+                for i, (pos_x, pos_y, hkl, inten) in enumerate(zip(*position, miller_ind, intensity)):
+                    # Verifications pour les pics.
+                    if hkl is not None and not isinstance(hkl, (np.ndarray, list, tuple)):
+                        raise TypeError(f&#34;Les indices hkl du {i+1}eme spot du {diag_num+1}eme diagramme &#34;
+                            f&#34;sont de type {type(hkl).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+                    hkl = np.array(hkl, dtype=int)
+                    if hkl is not None and hkl.shape != (3,):
+                        raise ValueError(f&#34;Les indices hkl du {i+1}eme spot du {diag_num+1}eme diagramme &#34;
+                            f&#34;ne sont pas 3, ils sont {hkl.shape}. C&#39;est difficile a separer en 3 entiers!&#34;)
+                    if not isinstance(inten, (int, float)):
+                        raise ValueError(f&#34;Les intensitee doivent etre des nombre, pas des {type(inten).__name__}.&#34;)
+                    
+                    hkl = tuple(hkl) if hkl is not None else hkl
+                    bbox = (pos_x, pos_y, 1, 1)
+                    laue_diagram.spots.append(Spot(
+                        bbox=bbox, spot_im=spot_im, distortion=distortion, diagram=laue_diagram
+                        ))
+                    laue_diagram.spots[-1].intensity = inten
+                    laue_diagram.spots[-1].position = (pos_x, pos_y)
+                    laue_diagram.spots[-1].hkl = hkl
+
+                yield laue_diagram
+
+        if self._diagrams_iterator is None:
+            self._diagrams_iterator = iter(_diagram_extractor(self))
+
+        from laue.tools.multi_core import RecallingIterator
+        return (
+            (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
+            if tense_flow else set(RecallingIterator(self._diagrams_iterator, mother=self)))
+
+    def get_images_shape(self):
+        &#34;&#34;&#34;
+        ** Recupere les dimensions des fausses images. **
+
+        Returns
+        -------
+        tuple
+            (2048, 2048) valeur par defaut pour les donnes simulees.
+        &#34;&#34;&#34;
+        return (2048, 2048)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="laue.experiment.theorical_experiment.TheoricalExperiment"><code class="flex name class">
+<span>class <span class="ident">TheoricalExperiment</span></span>
+<span>(</span><span>positions=(), miller_inds=None, intensities=None, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Permet de travailler sur des donnees theoriques. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>positions</code></strong> :&ensp;<code>iterable</code></dt>
+<dd>Les positions des pics pour chacuns des diagrammes.
+Chaque element de <code>positions</code> contient donc les
+positions des spots du diagramme considere,
+d'abord selon x, puis selon y. Ces elements peuvent
+etre de type <code>list</code>, <code>tuple</code> ou <code>np.ndarray</code>.</dd>
+<dt><strong><code>miller_inds</code></strong> :&ensp;<code>iterable</code></dt>
+<dd>La liste des 3 indices de miller (hkl) pour chaque diagramme.
+L'ordre des elements des <code>miller_inds</code> doit etre strictement
+le meme que celui de <code>positions</code>. La valeur None indique que
+les indices ne sont pas connus.</dd>
+<dt><strong><code>intensities</code></strong> :&ensp;<code>iterable</code></dt>
+<dd>La liste des intensites de chacuns des spots. Les
+valeurs fournis ici se retrouverons dans <code><a title="laue.spot.Spot.get_intensity" href="../spot.html#laue.spot.Spot.get_intensity">Spot.get_intensity()</a></code>.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Ils sont transmis a <code><a title="laue.experiment.base_experiment.Experiment" href="base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TheoricalExperiment(Experiment):
+    &#34;&#34;&#34;
+    ** Permet de travailler sur des donnees theoriques. **
+    &#34;&#34;&#34;
+    def __init__(self, positions=(), miller_inds=None, intensities=None, **kwargs):
+        &#34;&#34;&#34;
+        Parameters
+        ----------
+        positions : iterable
+            Les positions des pics pour chacuns des diagrammes.
+            Chaque element de ``positions`` contient donc les
+            positions des spots du diagramme considere,
+            d&#39;abord selon x, puis selon y. Ces elements peuvent
+            etre de type ``list``, ``tuple`` ou ``np.ndarray``.
+        miller_inds : iterable
+            La liste des 3 indices de miller (hkl) pour chaque diagramme.
+            L&#39;ordre des elements des ``miller_inds`` doit etre strictement
+            le meme que celui de ``positions``. La valeur None indique que
+            les indices ne sont pas connus.
+        intensities : iterable
+            La liste des intensites de chacuns des spots. Les
+            valeurs fournis ici se retrouverons dans ``laue.spot.Spot.get_intensity``.
+        **kwargs
+            Ils sont transmis a ``laue.experiment.base_experiment.Experiment.__init__``.
+        &#34;&#34;&#34;
+        assert hasattr(positions, &#34;__iter__&#34;), (&#34;&#39;positions&#39; must to be iterable. &#34;
+            f&#34;It can not be of type {type(positions).__name__}.&#34;)
+        if miller_inds is None:
+            miller_inds = itertools.cycle((None,))
+        assert hasattr(miller_inds, &#34;__iter__&#34;), (&#34;&#39;miller_inds&#39; must to be iterable. &#34;
+            f&#34;It can not be of type {type(miller_inds).__name__}.&#34;)
+        if intensities is None:
+            intensities = itertools.cycle((None,))
+        assert hasattr(intensities, &#34;__iter__&#34;), (&#34;&#39;intensities&#39; must to be iterable. &#34;
+            f&#34;It can not be of type {type(intensities).__name__}.&#34;)
+
+        images = (
+            create_image(
+                diag.get_positions(),
+                intensities=[spot.get_intensity() for spot in diag],
+                shape=self.get_images_shape())
+            for diag in self)
+
+        Experiment.__init__(self, images=images, **kwargs)
+        self.positions = positions
+        self.miller_inds = miller_inds
+        self.intensities = intensities
+
+    def get_diagrams(self, *, tense_flow=False):
+        &#34;&#34;&#34;
+        Fait la meme chose que ``laue.experiment.base_experiment.Experiment.get_diagrams``.
+        Seulement les diagrammes ne sont pas crees a partir d&#39;images
+        mais a partir des donnees simulees.
+        &#34;&#34;&#34;
+        from laue.tools.multi_core import prevent_generator_size
+
+        def update_len(func):
+            &#34;&#34;&#34;
+            Tient a jour la longueur de l&#39;experience.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                for i, element in enumerate(func(*func_args, **func_kwargs)):
+                    yield element
+                self._len = i + 1
+
+            return decorate
+
+        @update_len
+        @prevent_generator_size(min_size=1)
+        def _diagram_extractor(self):
+            &#34;&#34;&#34;
+            Premiere vraie lecture. Cede les diagrammes.
+            &#34;&#34;&#34;
+            spot_im = np.array([[0]], dtype=np.uint16)
+            distortion = 1.0
+
+            for diag_num, (position, miller_ind, intensity) in enumerate(
+                    zip(self.positions, self.miller_inds, self.intensities)):
+                # Verifications generales.
+                if not isinstance(position, (np.ndarray, list, tuple)):
+                    raise TypeError(f&#34;Les positions des pics du {diag_num+1}eme diagramme &#34;
+                        f&#34;ne sont de type {type(positions).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+                position = np.array(list(position), dtype=np.float32)
+                if position.ndim != 2:
+                    raise ValueError(f&#34;Les positions des pics du {diag_num+1}eme diagramme &#34;
+                        &#34;sont incomprehensible. Il doit y avoir la liste des x et des y, ce &#34;
+                        f&#34;qui fait un tableau a 2 dimensions. Or il y a {position.ndim} dimensions.&#34;)
+                if position.shape[1] == 2 and position.shape[0] != 2:
+                    position = position.transpose()
+                if miller_ind is not None and not isinstance(miller_ind, (np.ndarray, list, tuple)):
+                    raise TypeError(f&#34;Les indices de miller des pics du {diag_num+1}eme diagramme &#34;
+                        f&#34;ne sont de type {type(miller_ind).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+                if miller_ind is not None and len(miller_ind) != position.shape[1]:
+                    raise ValueError(f&#34;Les positions du {diag_num+1}eme diagramme laissent sous-entendre &#34;
+                        f&#34;qu&#39;il y a {position.shape[1]} spots. Or {len(miller_ind)} triplet d&#39;indices de miller sont fournis.&#34;)
+                if intensity is not None and not isinstance(intensity, (np.ndarray, list, tuple)):
+                    raise TypeError(f&#34;Les intensites des pics du {diag_num+1}eme diagramme &#34;
+                        f&#34;ne sont de type {type(intensity).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+                if intensity is not None and len(intensity) != position.shape[1]:
+                    raise ValueError(f&#34;Les positions du {diag_num+1}eme diagramme laissent sous-entendre &#34;
+                        f&#34;qu&#39;il y a {position.shape[1]} spots. Or {len(intensity)} intensitees sont fournies.&#34;)
+
+                miller_ind = miller_ind if miller_ind is not None else itertools.cycle((None,))
+                intensity = intensity if intensity is not None else itertools.cycle((1.0,))
+                name = f&#34;diagram_{diag_num}&#34;
+                laue_diagram = LaueDiagram(name, spots=[], experiment=self)
+
+                for i, (pos_x, pos_y, hkl, inten) in enumerate(zip(*position, miller_ind, intensity)):
+                    # Verifications pour les pics.
+                    if hkl is not None and not isinstance(hkl, (np.ndarray, list, tuple)):
+                        raise TypeError(f&#34;Les indices hkl du {i+1}eme spot du {diag_num+1}eme diagramme &#34;
+                            f&#34;sont de type {type(hkl).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+                    hkl = np.array(hkl, dtype=int)
+                    if hkl is not None and hkl.shape != (3,):
+                        raise ValueError(f&#34;Les indices hkl du {i+1}eme spot du {diag_num+1}eme diagramme &#34;
+                            f&#34;ne sont pas 3, ils sont {hkl.shape}. C&#39;est difficile a separer en 3 entiers!&#34;)
+                    if not isinstance(inten, (int, float)):
+                        raise ValueError(f&#34;Les intensitee doivent etre des nombre, pas des {type(inten).__name__}.&#34;)
+                    
+                    hkl = tuple(hkl) if hkl is not None else hkl
+                    bbox = (pos_x, pos_y, 1, 1)
+                    laue_diagram.spots.append(Spot(
+                        bbox=bbox, spot_im=spot_im, distortion=distortion, diagram=laue_diagram
+                        ))
+                    laue_diagram.spots[-1].intensity = inten
+                    laue_diagram.spots[-1].position = (pos_x, pos_y)
+                    laue_diagram.spots[-1].hkl = hkl
+
+                yield laue_diagram
+
+        if self._diagrams_iterator is None:
+            self._diagrams_iterator = iter(_diagram_extractor(self))
+
+        from laue.tools.multi_core import RecallingIterator
+        return (
+            (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
+            if tense_flow else set(RecallingIterator(self._diagrams_iterator, mother=self)))
+
+    def get_images_shape(self):
+        &#34;&#34;&#34;
+        ** Recupere les dimensions des fausses images. **
+
+        Returns
+        -------
+        tuple
+            (2048, 2048) valeur par defaut pour les donnes simulees.
+        &#34;&#34;&#34;
+        return (2048, 2048)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="laue.experiment.base_experiment.Experiment" href="base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.experiment.theorical_experiment.TheoricalExperiment.get_diagrams"><code class="name flex">
+<span>def <span class="ident">get_diagrams</span></span>(<span>self, *, tense_flow=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fait la meme chose que <code><a title="laue.experiment.base_experiment.Experiment.get_diagrams" href="base_experiment.html#laue.experiment.base_experiment.Experiment.get_diagrams">Experiment.get_diagrams()</a></code>.
+Seulement les diagrammes ne sont pas crees a partir d'images
+mais a partir des donnees simulees.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_diagrams(self, *, tense_flow=False):
+    &#34;&#34;&#34;
+    Fait la meme chose que ``laue.experiment.base_experiment.Experiment.get_diagrams``.
+    Seulement les diagrammes ne sont pas crees a partir d&#39;images
+    mais a partir des donnees simulees.
+    &#34;&#34;&#34;
+    from laue.tools.multi_core import prevent_generator_size
+
+    def update_len(func):
+        &#34;&#34;&#34;
+        Tient a jour la longueur de l&#39;experience.
+        &#34;&#34;&#34;
+        def decorate(*func_args, **func_kwargs):
+            for i, element in enumerate(func(*func_args, **func_kwargs)):
+                yield element
+            self._len = i + 1
+
+        return decorate
+
+    @update_len
+    @prevent_generator_size(min_size=1)
+    def _diagram_extractor(self):
+        &#34;&#34;&#34;
+        Premiere vraie lecture. Cede les diagrammes.
+        &#34;&#34;&#34;
+        spot_im = np.array([[0]], dtype=np.uint16)
+        distortion = 1.0
+
+        for diag_num, (position, miller_ind, intensity) in enumerate(
+                zip(self.positions, self.miller_inds, self.intensities)):
+            # Verifications generales.
+            if not isinstance(position, (np.ndarray, list, tuple)):
+                raise TypeError(f&#34;Les positions des pics du {diag_num+1}eme diagramme &#34;
+                    f&#34;ne sont de type {type(positions).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+            position = np.array(list(position), dtype=np.float32)
+            if position.ndim != 2:
+                raise ValueError(f&#34;Les positions des pics du {diag_num+1}eme diagramme &#34;
+                    &#34;sont incomprehensible. Il doit y avoir la liste des x et des y, ce &#34;
+                    f&#34;qui fait un tableau a 2 dimensions. Or il y a {position.ndim} dimensions.&#34;)
+            if position.shape[1] == 2 and position.shape[0] != 2:
+                position = position.transpose()
+            if miller_ind is not None and not isinstance(miller_ind, (np.ndarray, list, tuple)):
+                raise TypeError(f&#34;Les indices de miller des pics du {diag_num+1}eme diagramme &#34;
+                    f&#34;ne sont de type {type(miller_ind).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+            if miller_ind is not None and len(miller_ind) != position.shape[1]:
+                raise ValueError(f&#34;Les positions du {diag_num+1}eme diagramme laissent sous-entendre &#34;
+                    f&#34;qu&#39;il y a {position.shape[1]} spots. Or {len(miller_ind)} triplet d&#39;indices de miller sont fournis.&#34;)
+            if intensity is not None and not isinstance(intensity, (np.ndarray, list, tuple)):
+                raise TypeError(f&#34;Les intensites des pics du {diag_num+1}eme diagramme &#34;
+                    f&#34;ne sont de type {type(intensity).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+            if intensity is not None and len(intensity) != position.shape[1]:
+                raise ValueError(f&#34;Les positions du {diag_num+1}eme diagramme laissent sous-entendre &#34;
+                    f&#34;qu&#39;il y a {position.shape[1]} spots. Or {len(intensity)} intensitees sont fournies.&#34;)
+
+            miller_ind = miller_ind if miller_ind is not None else itertools.cycle((None,))
+            intensity = intensity if intensity is not None else itertools.cycle((1.0,))
+            name = f&#34;diagram_{diag_num}&#34;
+            laue_diagram = LaueDiagram(name, spots=[], experiment=self)
+
+            for i, (pos_x, pos_y, hkl, inten) in enumerate(zip(*position, miller_ind, intensity)):
+                # Verifications pour les pics.
+                if hkl is not None and not isinstance(hkl, (np.ndarray, list, tuple)):
+                    raise TypeError(f&#34;Les indices hkl du {i+1}eme spot du {diag_num+1}eme diagramme &#34;
+                        f&#34;sont de type {type(hkl).__name__}. Or seul np.ndarray, list ou tuple sont admis.&#34;)
+                hkl = np.array(hkl, dtype=int)
+                if hkl is not None and hkl.shape != (3,):
+                    raise ValueError(f&#34;Les indices hkl du {i+1}eme spot du {diag_num+1}eme diagramme &#34;
+                        f&#34;ne sont pas 3, ils sont {hkl.shape}. C&#39;est difficile a separer en 3 entiers!&#34;)
+                if not isinstance(inten, (int, float)):
+                    raise ValueError(f&#34;Les intensitee doivent etre des nombre, pas des {type(inten).__name__}.&#34;)
+                
+                hkl = tuple(hkl) if hkl is not None else hkl
+                bbox = (pos_x, pos_y, 1, 1)
+                laue_diagram.spots.append(Spot(
+                    bbox=bbox, spot_im=spot_im, distortion=distortion, diagram=laue_diagram
+                    ))
+                laue_diagram.spots[-1].intensity = inten
+                laue_diagram.spots[-1].position = (pos_x, pos_y)
+                laue_diagram.spots[-1].hkl = hkl
+
+            yield laue_diagram
+
+    if self._diagrams_iterator is None:
+        self._diagrams_iterator = iter(_diagram_extractor(self))
+
+    from laue.tools.multi_core import RecallingIterator
+    return (
+        (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
+        if tense_flow else set(RecallingIterator(self._diagrams_iterator, mother=self)))</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.theorical_experiment.TheoricalExperiment.get_images_shape"><code class="name flex">
+<span>def <span class="ident">get_images_shape</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere les dimensions des fausses images. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple</code></dt>
+<dd>(2048, 2048) valeur par defaut pour les donnes simulees.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_images_shape(self):
+    &#34;&#34;&#34;
+    ** Recupere les dimensions des fausses images. **
+
+    Returns
+    -------
+    tuple
+        (2048, 2048) valeur par defaut pour les donnes simulees.
+    &#34;&#34;&#34;
+    return (2048, 2048)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="laue.experiment.base_experiment.Experiment" href="base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></b></code>:
+<ul class="hlist">
+<li><code><a title="laue.experiment.base_experiment.Experiment.__getitem__" href="base_experiment.html#laue.experiment.base_experiment.Experiment.__getitem__">__getitem__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.__iter__" href="base_experiment.html#laue.experiment.base_experiment.Experiment.__iter__">__iter__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.__len__" href="base_experiment.html#laue.experiment.base_experiment.Experiment.__len__">__len__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.clean" href="base_experiment.html#laue.experiment.base_experiment.Experiment.clean">clean</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.find_zone_axes" href="base_experiment.html#laue.experiment.base_experiment.Experiment.find_zone_axes">find_zone_axes</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.get_mean" href="base_experiment.html#laue.experiment.base_experiment.Experiment.get_mean">get_mean</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.read_images" href="base_experiment.html#laue.experiment.base_experiment.Experiment.read_images">read_images</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.save_file" href="base_experiment.html#laue.experiment.base_experiment.Experiment.save_file">save_file</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.set_calibration" href="base_experiment.html#laue.experiment.base_experiment.Experiment.set_calibration">set_calibration</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#manipule-un-lot-de-simule-de-diagrammes">Manipule un lot de simule de diagrammes.</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="laue.experiment" href="index.html">laue.experiment</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="laue.experiment.theorical_experiment.TheoricalExperiment" href="#laue.experiment.theorical_experiment.TheoricalExperiment">TheoricalExperiment</a></code></h4>
+<ul class="">
+<li><code><a title="laue.experiment.theorical_experiment.TheoricalExperiment.get_diagrams" href="#laue.experiment.theorical_experiment.TheoricalExperiment.get_diagrams">get_diagrams</a></code></li>
+<li><code><a title="laue.experiment.theorical_experiment.TheoricalExperiment.get_images_shape" href="#laue.experiment.theorical_experiment.TheoricalExperiment.get_images_shape">get_images_shape</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

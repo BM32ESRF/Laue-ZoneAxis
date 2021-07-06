@@ -1,0 +1,1767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>laue.spot API documentation</title>
+<meta name="description" content="** Represente un spot dans un diagramme de Laue. **
+…" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>laue.spot</code></h1>
+</header>
+<section id="section-intro">
+<h2 id="represente-un-spot-dans-un-diagramme-de-laue"><strong> Represente un spot dans un diagramme de Laue. </strong></h2>
+<p>L'avantage d'avoir un objet dedie aux spots, c'est que ca permet
+d'avoir un code vraiment plus clair, ce qui est privilegie a une performance
+legerement amoindrie.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+
+&#34;&#34;&#34;
+** Represente un spot dans un diagramme de Laue. **
+---------------------------------------------------
+
+L&#39;avantage d&#39;avoir un objet dedie aux spots, c&#39;est que ca permet
+d&#39;avoir un code vraiment plus clair, ce qui est privilegie a une performance
+legerement amoindrie.
+&#34;&#34;&#34;
+
+import math
+
+import numpy as np
+
+
+__pdoc__ = {&#34;Spot.__hash__&#34;: True,
+            &#34;Spot.__sub__&#34;: True,
+            &#34;Spot.clean&#34;: False}
+
+
+def distance(spot1, spot2, *, space=&#34;camera&#34;):
+    &#34;&#34;&#34;
+    ** Calcul la distance entre plusieur spots. **
+
+    C&#39;est une generalisation de la methode ``Spot.__sub__``.
+
+    Parameters
+    ----------
+    spot1 : Spot, tuple, list, np.ndarray
+        Un spot ou une liste de spots. Cette fonction accepte une liste
+        de spots pour pouvoir faire tous les calculs d&#39;un seul coup et gagner
+        grandement en temps de calcul.
+        Un spot peu etre representer par un tuple a 2 elements, chaque element
+        etant la premiere et la seconde coordonnees du spot dans l&#39;espace considere.
+    spot2 : Spot, tuple, list, np.ndarray
+        Un spot ou une autre liste de spots. Les distances calculees seront les distances
+        entre toutes les combinaison possible de spots entre ``spot1`` et ``spot2``.
+        Un spot peu etre representer par un tuple a 2 elements, chaque element
+        etant la premiere et la seconde coordonnees du spot dans l&#39;espace considere.
+    space : str
+        * &#34;camera&#34; =&gt; Distance euclidienne (en pixel) dans le plan de la camera.
+        * &#34;gnomonic&#34; =&gt; Distance euclidienne (en mm) dans le plan gnomonic.
+        * &#34;angle&#34; =&gt; Cosine distance (en degre) entre les vecteurs ``uq`` (axe de reflexion).
+
+    Returns
+    -------
+    float, np.ndarray
+        - Les distances entre les spots:
+            - Si spot1 et spot2 sont des spots unique et non pas des listes,
+            un flotant est renvoye, image de la distance entre ces 2 spots.
+            - Si spot1 et spot2 sont tous deux des listes, retourne la matrice de
+            distance entre les spots. ``dist(p1, p2) == mat[p1, p2]``
+            - Si l&#39;un des 2 spots est une liste et l&#39;autre un spot, retourne
+            la liste des distance qui separe ce spot unique a tous les autres.
+
+    Examples
+    -------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; from laue.spot import distance
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; spot1, spot2 = diag[:2]
+    &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
+    ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; distance(spot1, spot2)
+    93.99273
+    &gt;&gt;&gt; distance(spot1, diag[:5])
+    array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
+          dtype=float32)
+    &gt;&gt;&gt; distance(diag[:5], diag[:10]).shape
+    (5, 10)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    assert isinstance(spot1, (Spot, np.ndarray, list, tuple)), \
+        f&#34;&#39;spot1&#39; has to be a Spot or list, not a {type(spot1).__name__}.&#34;
+    if isinstance(spot1, (np.ndarray, list)):
+        assert len(spot1), &#34;La liste des spots doit contenir au moins 1 element.&#34;
+        assert all(isinstance(spot, (Spot, tuple, np.ndarray)) for spot in spot1)
+        assert all(len(spot) == 2 for spot in spot1 if hasattr(spot, &#34;__iter__&#34;))
+    if isinstance(spot1, tuple):
+        assert len(spot1) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(spot1)}.&#34;
+        assert all(isinstance(c, (float, int)) for c in spot1)
+    assert isinstance(spot2, (Spot, np.ndarray, list, tuple)), \
+        f&#34;&#39;spot2&#39; has to be a Spot or list, not a {type(spot2).__name__}.&#34;
+    if isinstance(spot2, (np.ndarray, list)):
+        assert len(spot2), &#34;La liste des spots doit contenir au moins 1 element.&#34;
+        assert all(isinstance(spot, (Spot, tuple, np.ndarray)) for spot in spot2)
+        assert all(len(spot) == 2 for spot in spot2 if hasattr(spot, &#34;__iter__&#34;))
+    if isinstance(spot2, tuple):
+        assert len(spot2) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(spot2)}.&#34;
+        assert all(isinstance(c, (float, int)) for c in spot2)
+    assert space in {&#34;camera&#34;, &#34;gnomonic&#34;, &#34;angle&#34;}, f&#34;&#39;space&#39; can not be {repr(space)}.&#34;
+
+    # Simplification du probleme.
+    if isinstance(spot1, (Spot, tuple)) and isinstance(spot2, (Spot, tuple)):
+        return distance(
+            np.array([spot1]),
+            np.array([spot2]),
+            space=space)[0, 0]
+    if isinstance(spot1, (Spot, tuple)):
+        return distance(
+            np.array([spot1]),
+            spot2,
+            space=space)[0, :]
+    if isinstance(spot2, (Spot, tuple)):
+        return distance(
+            spot1,
+            np.array([spot2]),
+            space=space)[:, 0]
+
+    try:
+        import numexpr
+    except ImportError:
+        numexpr = None
+
+    # Cas ou l&#39;on doit calculer une matrice de distances.
+    if space == &#34;angle&#34;:
+        raise NotImplementedError
+
+    if space == &#34;camera&#34;:
+        meth = lambda spot: spot.get_position() if isinstance(spot, Spot) else spot
+    elif space == &#34;gnomonic&#34;:
+        meth = lambda spot: spot.get_gnomonic() if isinstance(spot, Spot) else spot
+    x1, y1 = np.array([meth(spot) for spot in spot1], dtype=np.float32).transpose()
+    x2, y2 = np.array([meth(spot) for spot in spot2], dtype=np.float32).transpose()
+    x1, x2 = np.meshgrid(x1, x2, indexing=&#34;ij&#34;, copy=False)
+    y1, y2 = np.meshgrid(y1, y2, indexing=&#34;ij&#34;, copy=False)
+
+    if numexpr is not None:
+        return numexpr.evaluate(&#34;sqrt((x1-x2)**2 + (y1-y2)**2)&#34;)
+    return np.sqrt((x1-x2)**2 + (y1-y2)**2)
+
+
+class Spot:
+    &#34;&#34;&#34;
+    Represente un spot sur un diagramme de laue.
+    &#34;&#34;&#34;
+    def __init__(self, bbox, spot_im, distortion, diagram):
+        &#34;&#34;&#34;
+        ** Initialisation du spot. **
+
+        Notes
+        -----
+        * L&#39;utilisateur n&#39;a pas a generer des objets issus de cette classe.
+        Ils sont generes automatiquement par des instances de
+        ``laue.experiment.base_experiment.Experiment`` et ``laue.diagram.LaueDiagram``.
+        * Il n&#39;y a pas de verifications faites sur les entrees car l&#39;utilisateur
+        ne doit pas toucher a l&#39;initialisateur. La performance passe donc avant
+        l&#39;enorme mefiance envers les humains.
+
+        Parameters
+        ----------
+        bbox : tuple
+            Bounding Boxe (x, y, w, h) du spot dans l&#39;image.
+        spot_im : np.ndarray(np.uint16)
+            Le bout de l&#39;image en niveau de gris qui represente le spot.
+            Le fond diffus doit etre deja enleve de l&#39;image.
+        distortion : float
+            Le facteur de distortion accessible par l&#39;accesseur ``Spot.get_distortion``.
+        diagram : LaueDiagram
+            Le diagram qui contient ces spots. De sorte a pouvoir remonter.
+        &#34;&#34;&#34;
+        # Constantes.
+        self.x, self.y, self.w, self.h = bbox
+        self.spot_im = spot_im
+        self.distortion = distortion # Facteur de diformite.
+        self.diagram = diagram # Le contenaur.
+
+        # Declaration des variables futur.
+        self.intensity = None # Intensite du spot.
+        self.position = None # Coordonnees x, y du baricentre dans le plan de la camera.
+        self.gnomonic = None # Coordonnees x, y du baricentre projete dans le plan gnomonic.
+        self.twicetheta_chi = None # Angles du rayon diffractes ayant engendre ce point.
+        self.quality = None # Beautee du point.
+        self.hkl = None # Les 3 indices de Miller h, k et l.
+        self.axes = None
+
+    def clean(self):
+        &#34;&#34;&#34;
+        ** Vide les attributs recaculables. **
+
+        Cela permet de rafraichir la valeur des attribut qui dependent
+        d&#39;une grandeur exterieur qui aurait changee. (Comme par example
+        les parametres de set_calibration.)
+        &#34;&#34;&#34;
+        self.gnomonic = None # Si jamais la set_calibration change.
+        self.twicetheta_chi = None # Si jamais la set_calibration change.
+        self.intensity = None # Si jamais l&#39;image change.
+        self.position = None # Si jamais l&#39;image change.
+        self.quality = None # Car on vient de changer &#39;self.intensity&#39;.
+        self.axes = None # Car si la projection gnomonique change, tout change.
+
+    def get_bbox(self):
+        &#34;&#34;&#34;
+        ** Retourne les coordonnees de la boite. **
+
+        Les coordonnees sont exprimes en pxl dans le plan de la camera.
+
+        Returns
+        -------
+        tuple
+            x, y, w, h
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; spot.get_bbox()
+        (1368, 1873, 6, 5)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.x, self.y, self.w, self.h
+
+    def get_distortion(self):
+        r&#34;&#34;&#34;
+        ** Scalaire qui caracterise la rondeur de la tache. **
+
+        Il est defini comme:
+        \[ \frac{girth}{2 . \sqrt{\pi . area}} \]
+
+        Returns
+        -------
+        float
+            1.0 =&gt; Tache bien ronde, &gt;&gt; 1 =&gt; Tache biscornue.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; round(spot.get_distortion(), 4)
+        1.1804
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.distortion
+
+    def get_gnomonic(self):
+        &#34;&#34;&#34;
+        ** Cherche les coordonnees dans le plan gnomonic **
+
+        Returns
+        -------
+        tuple
+            Les coordonnees x, y de la tache dans le plan gnomonic (en mm). de type (float, float)
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; import numpy as np
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; np.round(spot.get_gnomonic(), 4)
+        array([ 0.3137, -0.4409])
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self.gnomonic is not None:
+            return self.gnomonic
+        detector_parameters = self.diagram.experiment.set_calibration()
+        xg, yg = self.diagram.experiment.transformer.cam_to_gnomonic(
+            *self.get_position(), detector_parameters)
+        self.gnomonic = (xg, yg)
+        return self.gnomonic
+
+    def get_hkl(self):
+        &#34;&#34;&#34;
+        ** Recupere les indices de Miller. **
+
+        Returns
+        -------
+        tuple
+            Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
+
+    def get_intensity(self):
+        &#34;&#34;&#34;
+        ** Calcul l&#39;intensite de la tache. **
+
+        Returns
+        -------
+        int
+            La somme des pixels qui constituent la tache.
+            Seules les valeurs au dessus du fond diffus sont considerees.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; spot.get_intensity()
+        814
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self.intensity is not None:
+            return self.intensity
+        self.intensity = self.spot_im.sum()
+        return self.intensity
+
+    def get_position(self):
+        &#34;&#34;&#34;
+        ** Calcul le centre d&#39;inertie de la tache. **
+
+        Returns
+        -------
+        tuple
+            Les coordonnees x, y du centre de gravite de la tache (en pxl). de type (float, float).
+
+        Examples
+        --------
+        &gt;&gt;&gt; import numpy as np
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; np.round(spot.get_position(), 4)
+        array([1370.5172, 1874.7801])
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self.position is not None:
+            return self.position
+        x, y = (self.spot_im/self.get_intensity() * np.array(np.meshgrid(
+                np.arange(self.x, self.x+self.w), np.arange(self.y, self.y+self.h)))
+                ).reshape((2, -1)).sum(axis=1)
+        self.position = (x, y)
+        return x, y
+
+    def get_quality(self):
+        &#34;&#34;&#34;
+        ** Estime la qualite du point. **
+
+        Returns
+        -------
+        float
+            * Une grandeur qui permet d&#39;estimer l&#39;intensite et la rondeur du spot.
+                - 0.1 =&gt; Tres moche, peu intense et tout disordu.
+                - 3 =&gt; Tres joli, intense et rond.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; round(spot.get_quality(), 2)
+        0.34
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self.quality is not None:
+            return self.quality
+
+        self.quality = math.log(self.get_intensity()) / self.get_distortion()**18
+        return self.quality
+
+    def get_twicetheta_chi(self):
+        &#34;&#34;&#34;
+        ** Cherche les angles du rayon reflechi. **
+
+        Returns
+        -------
+        twicetheta : float
+            L&#39;angle entre l&#39;axe ``x`` (ie axe du rayon incident) et la
+            projection sur le plan ``(x, y)`` de l&#39;axe du rayon reflechit.
+        chi : float
+            L&#39;angle entre l&#39;axe ``y`` et la projection sur le plan
+            ``(y, z)`` de l&#39;axe du rayon reflechit.
+        &#34;&#34;&#34;
+        raise NotImplementedError
+
+    def find_zone_axes(self):
+        &#34;&#34;&#34;
+        ** Renvoi les axes de zone qui contienent ce point. **
+
+        returns
+        -------
+        set
+            L&#39;ensemble des axes de zone de type ``laue.zone_axis.ZoneAxis``
+            tel que ce spot appartient a ces axes. Si ce spot
+            est lie a aucun axe, un ensemble vide est renvoye.
+            Si ce spot est a l&#39;intersection de plusieurs axes,
+            l&#39;ensemble contiendra plusieurs elements.
+
+        Examples
+        -------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; spot = diag.select_spots(n=1, sort=&#34;quality&#34;).pop()
+        &gt;&gt;&gt; type(spot.find_zone_axes())
+        &lt;class &#39;set&#39;&gt;
+        &gt;&gt;&gt; type(spot.find_zone_axes().pop())
+        &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self.axes is not None:
+            return self.axes
+        self.diagram.find_zone_axes()
+        return self.axes
+
+    def plot_gnomonic(self, axe_pyplot):
+        &#34;&#34;&#34;
+        ** Affiche ce spot dans le plan gnomonic. **
+
+        Parameters
+        ----------
+        axe_pyplot : Axe
+            Axe matplotlib qui supporte la methode ``.scatter``.
+        &#34;&#34;&#34;
+        axe_pyplot.scatter(*self.get_gnomonic(), color=&#34;black&#34;)
+        return axe_pyplot
+
+    def plot_xy(self, axe_pyplot):
+        &#34;&#34;&#34;
+        ** Affiche ce spot dans le plan de la camera. **
+
+        Parameters
+        ----------
+        axe_pyplot : Axe
+            Axe matplotlib qui supporte les methodes ``.plot`` et ``.scatter``.
+        &#34;&#34;&#34;
+        x, y, w, h = self.get_bbox()
+        axe_pyplot.plot(
+            [x-.5, x+w-.5, x+w-.5, x-.5, x-.5],
+            [y-.5, y-.5, y+h-.5, y+h-.5, y-.5],
+            color=&#34;grey&#34;)
+        axe_pyplot.scatter(*self.get_position(), color=&#34;black&#34;)
+        return axe_pyplot
+
+    def __hash__(self):
+        &#34;&#34;&#34;
+        ** Permet de faire des tables de hachage. **
+
+        Returns
+        -------
+        int
+            Identifiant &#34;unique&#34; (du moins le plus possible) representant ce spot.
+        &#34;&#34;&#34;
+        return hash((*self.get_position(), self.get_intensity()))
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        ** Renvoie un representation evaluable de self. **
+        &#34;&#34;&#34;
+        return (f&#34;Spot(bbox={(self.x, self.y, self.w, self.h)}, &#34;
+                # f&#34;spot_im={repr(self.spot_im)}, &#34; # On le met pas car c&#39;est tres moche...
+                f&#34;distortion={self.get_distortion():.4f})&#34;)
+                # il manque diagram=... mais fait des boucles infinies.
+
+    def __str__(self):
+        &#34;&#34;&#34;
+        ** Offre une jolie representation. **
+        &#34;&#34;&#34;
+        x, y = self.get_position()
+        return (&#34;Spot:\n&#34;
+                f&#34;\tposition: x={x}, y={y}\n&#34;
+                f&#34;\tintensity: {self.get_intensity()}\n&#34;
+                f&#34;\tdistortion: {self.get_distortion()}\n&#34;
+                f&#34;\tquality: {self.get_quality()}\n&#34;)
+
+    def __sub__(self, other):
+        &#34;&#34;&#34;
+        ** Calcul la distance entre 2 taches. **
+
+        Notes
+        -----
+        * La metrique utilisee est la metrique euclidienne
+        dans le plan de la camera. Voir ``distance``.
+        * Permet par example de construire facilement une matrice
+        des distances avec ``np.meshgrid``.
+
+        Returns
+        -------
+        float
+            La distance en mm.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; spot1, spot2 = diag[:2]
+        &gt;&gt;&gt; round(spot1 - spot2)
+        94
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return distance(self, other, space=&#34;camera&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="laue.spot.distance"><code class="name flex">
+<span>def <span class="ident">distance</span></span>(<span>spot1, spot2, *, space='camera')</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Calcul la distance entre plusieur spots. </strong></p>
+<p>C'est une generalisation de la methode <code><a title="laue.spot.Spot.__sub__" href="#laue.spot.Spot.__sub__">Spot.__sub__()</a></code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>spot1</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="#laue.spot.Spot">Spot</a>, tuple, list, np.ndarray</code></dt>
+<dd>Un spot ou une liste de spots. Cette fonction accepte une liste
+de spots pour pouvoir faire tous les calculs d'un seul coup et gagner
+grandement en temps de calcul.
+Un spot peu etre representer par un tuple a 2 elements, chaque element
+etant la premiere et la seconde coordonnees du spot dans l'espace considere.</dd>
+<dt><strong><code>spot2</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="#laue.spot.Spot">Spot</a>, tuple, list, np.ndarray</code></dt>
+<dd>Un spot ou une autre liste de spots. Les distances calculees seront les distances
+entre toutes les combinaison possible de spots entre <code>spot1</code> et <code>spot2</code>.
+Un spot peu etre representer par un tuple a 2 elements, chaque element
+etant la premiere et la seconde coordonnees du spot dans l'espace considere.</dd>
+<dt><strong><code>space</code></strong> :&ensp;<code>str</code></dt>
+<dd>
+<ul>
+<li>"camera" =&gt; Distance euclidienne (en pixel) dans le plan de la camera.</li>
+<li>"gnomonic" =&gt; Distance euclidienne (en mm) dans le plan gnomonic.</li>
+<li>"angle" =&gt; Cosine distance (en degre) entre les vecteurs <code>uq</code> (axe de reflexion).</li>
+</ul>
+</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float, np.ndarray</code></dt>
+<dd>
+<ul>
+<li>Les distances entre les spots:<ul>
+<li>Si spot1 et spot2 sont des spots unique et non pas des listes,
+un flotant est renvoye, image de la distance entre ces 2 spots.</li>
+<li>Si spot1 et spot2 sont tous deux des listes, retourne la matrice de
+distance entre les spots. <code>dist(p1, p2) == mat[p1, p2]</code></li>
+<li>Si l'un des 2 spots est une liste et l'autre un spot, retourne
+la liste des distance qui separe ce spot unique a tous les autres.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; from laue.spot import distance
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; spot1, spot2 = diag[:2]
+&gt;&gt;&gt; spot1.get_position(), spot2.get_position()
+((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
+&gt;&gt;&gt;
+&gt;&gt;&gt; distance(spot1, spot2)
+93.99273
+&gt;&gt;&gt; distance(spot1, diag[:5])
+array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
+      dtype=float32)
+&gt;&gt;&gt; distance(diag[:5], diag[:10]).shape
+(5, 10)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def distance(spot1, spot2, *, space=&#34;camera&#34;):
+    &#34;&#34;&#34;
+    ** Calcul la distance entre plusieur spots. **
+
+    C&#39;est une generalisation de la methode ``Spot.__sub__``.
+
+    Parameters
+    ----------
+    spot1 : Spot, tuple, list, np.ndarray
+        Un spot ou une liste de spots. Cette fonction accepte une liste
+        de spots pour pouvoir faire tous les calculs d&#39;un seul coup et gagner
+        grandement en temps de calcul.
+        Un spot peu etre representer par un tuple a 2 elements, chaque element
+        etant la premiere et la seconde coordonnees du spot dans l&#39;espace considere.
+    spot2 : Spot, tuple, list, np.ndarray
+        Un spot ou une autre liste de spots. Les distances calculees seront les distances
+        entre toutes les combinaison possible de spots entre ``spot1`` et ``spot2``.
+        Un spot peu etre representer par un tuple a 2 elements, chaque element
+        etant la premiere et la seconde coordonnees du spot dans l&#39;espace considere.
+    space : str
+        * &#34;camera&#34; =&gt; Distance euclidienne (en pixel) dans le plan de la camera.
+        * &#34;gnomonic&#34; =&gt; Distance euclidienne (en mm) dans le plan gnomonic.
+        * &#34;angle&#34; =&gt; Cosine distance (en degre) entre les vecteurs ``uq`` (axe de reflexion).
+
+    Returns
+    -------
+    float, np.ndarray
+        - Les distances entre les spots:
+            - Si spot1 et spot2 sont des spots unique et non pas des listes,
+            un flotant est renvoye, image de la distance entre ces 2 spots.
+            - Si spot1 et spot2 sont tous deux des listes, retourne la matrice de
+            distance entre les spots. ``dist(p1, p2) == mat[p1, p2]``
+            - Si l&#39;un des 2 spots est une liste et l&#39;autre un spot, retourne
+            la liste des distance qui separe ce spot unique a tous les autres.
+
+    Examples
+    -------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; from laue.spot import distance
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; spot1, spot2 = diag[:2]
+    &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
+    ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; distance(spot1, spot2)
+    93.99273
+    &gt;&gt;&gt; distance(spot1, diag[:5])
+    array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
+          dtype=float32)
+    &gt;&gt;&gt; distance(diag[:5], diag[:10]).shape
+    (5, 10)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    assert isinstance(spot1, (Spot, np.ndarray, list, tuple)), \
+        f&#34;&#39;spot1&#39; has to be a Spot or list, not a {type(spot1).__name__}.&#34;
+    if isinstance(spot1, (np.ndarray, list)):
+        assert len(spot1), &#34;La liste des spots doit contenir au moins 1 element.&#34;
+        assert all(isinstance(spot, (Spot, tuple, np.ndarray)) for spot in spot1)
+        assert all(len(spot) == 2 for spot in spot1 if hasattr(spot, &#34;__iter__&#34;))
+    if isinstance(spot1, tuple):
+        assert len(spot1) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(spot1)}.&#34;
+        assert all(isinstance(c, (float, int)) for c in spot1)
+    assert isinstance(spot2, (Spot, np.ndarray, list, tuple)), \
+        f&#34;&#39;spot2&#39; has to be a Spot or list, not a {type(spot2).__name__}.&#34;
+    if isinstance(spot2, (np.ndarray, list)):
+        assert len(spot2), &#34;La liste des spots doit contenir au moins 1 element.&#34;
+        assert all(isinstance(spot, (Spot, tuple, np.ndarray)) for spot in spot2)
+        assert all(len(spot) == 2 for spot in spot2 if hasattr(spot, &#34;__iter__&#34;))
+    if isinstance(spot2, tuple):
+        assert len(spot2) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(spot2)}.&#34;
+        assert all(isinstance(c, (float, int)) for c in spot2)
+    assert space in {&#34;camera&#34;, &#34;gnomonic&#34;, &#34;angle&#34;}, f&#34;&#39;space&#39; can not be {repr(space)}.&#34;
+
+    # Simplification du probleme.
+    if isinstance(spot1, (Spot, tuple)) and isinstance(spot2, (Spot, tuple)):
+        return distance(
+            np.array([spot1]),
+            np.array([spot2]),
+            space=space)[0, 0]
+    if isinstance(spot1, (Spot, tuple)):
+        return distance(
+            np.array([spot1]),
+            spot2,
+            space=space)[0, :]
+    if isinstance(spot2, (Spot, tuple)):
+        return distance(
+            spot1,
+            np.array([spot2]),
+            space=space)[:, 0]
+
+    try:
+        import numexpr
+    except ImportError:
+        numexpr = None
+
+    # Cas ou l&#39;on doit calculer une matrice de distances.
+    if space == &#34;angle&#34;:
+        raise NotImplementedError
+
+    if space == &#34;camera&#34;:
+        meth = lambda spot: spot.get_position() if isinstance(spot, Spot) else spot
+    elif space == &#34;gnomonic&#34;:
+        meth = lambda spot: spot.get_gnomonic() if isinstance(spot, Spot) else spot
+    x1, y1 = np.array([meth(spot) for spot in spot1], dtype=np.float32).transpose()
+    x2, y2 = np.array([meth(spot) for spot in spot2], dtype=np.float32).transpose()
+    x1, x2 = np.meshgrid(x1, x2, indexing=&#34;ij&#34;, copy=False)
+    y1, y2 = np.meshgrid(y1, y2, indexing=&#34;ij&#34;, copy=False)
+
+    if numexpr is not None:
+        return numexpr.evaluate(&#34;sqrt((x1-x2)**2 + (y1-y2)**2)&#34;)
+    return np.sqrt((x1-x2)**2 + (y1-y2)**2)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="laue.spot.Spot"><code class="flex name class">
+<span>class <span class="ident">Spot</span></span>
+<span>(</span><span>bbox, spot_im, distortion, diagram)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Represente un spot sur un diagramme de laue.</p>
+<p><strong> Initialisation du spot. </strong></p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>L'utilisateur n'a pas a generer des objets issus de cette classe.
+Ils sont generes automatiquement par des instances de
+<code><a title="laue.experiment.base_experiment.Experiment" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></code> et <code><a title="laue.diagram.LaueDiagram" href="diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code>.</li>
+<li>Il n'y a pas de verifications faites sur les entrees car l'utilisateur
+ne doit pas toucher a l'initialisateur. La performance passe donc avant
+l'enorme mefiance envers les humains.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>bbox</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>Bounding Boxe (x, y, w, h) du spot dans l'image.</dd>
+<dt><strong><code>spot_im</code></strong> :&ensp;<code>np.ndarray(np.uint16)</code></dt>
+<dd>Le bout de l'image en niveau de gris qui represente le spot.
+Le fond diffus doit etre deja enleve de l'image.</dd>
+<dt><strong><code>distortion</code></strong> :&ensp;<code>float</code></dt>
+<dd>Le facteur de distortion accessible par l'accesseur <code><a title="laue.spot.Spot.get_distortion" href="#laue.spot.Spot.get_distortion">Spot.get_distortion()</a></code>.</dd>
+<dt><strong><code>diagram</code></strong> :&ensp;<code>LaueDiagram</code></dt>
+<dd>Le diagram qui contient ces spots. De sorte a pouvoir remonter.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Spot:
+    &#34;&#34;&#34;
+    Represente un spot sur un diagramme de laue.
+    &#34;&#34;&#34;
+    def __init__(self, bbox, spot_im, distortion, diagram):
+        &#34;&#34;&#34;
+        ** Initialisation du spot. **
+
+        Notes
+        -----
+        * L&#39;utilisateur n&#39;a pas a generer des objets issus de cette classe.
+        Ils sont generes automatiquement par des instances de
+        ``laue.experiment.base_experiment.Experiment`` et ``laue.diagram.LaueDiagram``.
+        * Il n&#39;y a pas de verifications faites sur les entrees car l&#39;utilisateur
+        ne doit pas toucher a l&#39;initialisateur. La performance passe donc avant
+        l&#39;enorme mefiance envers les humains.
+
+        Parameters
+        ----------
+        bbox : tuple
+            Bounding Boxe (x, y, w, h) du spot dans l&#39;image.
+        spot_im : np.ndarray(np.uint16)
+            Le bout de l&#39;image en niveau de gris qui represente le spot.
+            Le fond diffus doit etre deja enleve de l&#39;image.
+        distortion : float
+            Le facteur de distortion accessible par l&#39;accesseur ``Spot.get_distortion``.
+        diagram : LaueDiagram
+            Le diagram qui contient ces spots. De sorte a pouvoir remonter.
+        &#34;&#34;&#34;
+        # Constantes.
+        self.x, self.y, self.w, self.h = bbox
+        self.spot_im = spot_im
+        self.distortion = distortion # Facteur de diformite.
+        self.diagram = diagram # Le contenaur.
+
+        # Declaration des variables futur.
+        self.intensity = None # Intensite du spot.
+        self.position = None # Coordonnees x, y du baricentre dans le plan de la camera.
+        self.gnomonic = None # Coordonnees x, y du baricentre projete dans le plan gnomonic.
+        self.twicetheta_chi = None # Angles du rayon diffractes ayant engendre ce point.
+        self.quality = None # Beautee du point.
+        self.hkl = None # Les 3 indices de Miller h, k et l.
+        self.axes = None
+
+    def clean(self):
+        &#34;&#34;&#34;
+        ** Vide les attributs recaculables. **
+
+        Cela permet de rafraichir la valeur des attribut qui dependent
+        d&#39;une grandeur exterieur qui aurait changee. (Comme par example
+        les parametres de set_calibration.)
+        &#34;&#34;&#34;
+        self.gnomonic = None # Si jamais la set_calibration change.
+        self.twicetheta_chi = None # Si jamais la set_calibration change.
+        self.intensity = None # Si jamais l&#39;image change.
+        self.position = None # Si jamais l&#39;image change.
+        self.quality = None # Car on vient de changer &#39;self.intensity&#39;.
+        self.axes = None # Car si la projection gnomonique change, tout change.
+
+    def get_bbox(self):
+        &#34;&#34;&#34;
+        ** Retourne les coordonnees de la boite. **
+
+        Les coordonnees sont exprimes en pxl dans le plan de la camera.
+
+        Returns
+        -------
+        tuple
+            x, y, w, h
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; spot.get_bbox()
+        (1368, 1873, 6, 5)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.x, self.y, self.w, self.h
+
+    def get_distortion(self):
+        r&#34;&#34;&#34;
+        ** Scalaire qui caracterise la rondeur de la tache. **
+
+        Il est defini comme:
+        \[ \frac{girth}{2 . \sqrt{\pi . area}} \]
+
+        Returns
+        -------
+        float
+            1.0 =&gt; Tache bien ronde, &gt;&gt; 1 =&gt; Tache biscornue.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; round(spot.get_distortion(), 4)
+        1.1804
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.distortion
+
+    def get_gnomonic(self):
+        &#34;&#34;&#34;
+        ** Cherche les coordonnees dans le plan gnomonic **
+
+        Returns
+        -------
+        tuple
+            Les coordonnees x, y de la tache dans le plan gnomonic (en mm). de type (float, float)
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; import numpy as np
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; np.round(spot.get_gnomonic(), 4)
+        array([ 0.3137, -0.4409])
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self.gnomonic is not None:
+            return self.gnomonic
+        detector_parameters = self.diagram.experiment.set_calibration()
+        xg, yg = self.diagram.experiment.transformer.cam_to_gnomonic(
+            *self.get_position(), detector_parameters)
+        self.gnomonic = (xg, yg)
+        return self.gnomonic
+
+    def get_hkl(self):
+        &#34;&#34;&#34;
+        ** Recupere les indices de Miller. **
+
+        Returns
+        -------
+        tuple
+            Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
+
+    def get_intensity(self):
+        &#34;&#34;&#34;
+        ** Calcul l&#39;intensite de la tache. **
+
+        Returns
+        -------
+        int
+            La somme des pixels qui constituent la tache.
+            Seules les valeurs au dessus du fond diffus sont considerees.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; spot.get_intensity()
+        814
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self.intensity is not None:
+            return self.intensity
+        self.intensity = self.spot_im.sum()
+        return self.intensity
+
+    def get_position(self):
+        &#34;&#34;&#34;
+        ** Calcul le centre d&#39;inertie de la tache. **
+
+        Returns
+        -------
+        tuple
+            Les coordonnees x, y du centre de gravite de la tache (en pxl). de type (float, float).
+
+        Examples
+        --------
+        &gt;&gt;&gt; import numpy as np
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; np.round(spot.get_position(), 4)
+        array([1370.5172, 1874.7801])
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self.position is not None:
+            return self.position
+        x, y = (self.spot_im/self.get_intensity() * np.array(np.meshgrid(
+                np.arange(self.x, self.x+self.w), np.arange(self.y, self.y+self.h)))
+                ).reshape((2, -1)).sum(axis=1)
+        self.position = (x, y)
+        return x, y
+
+    def get_quality(self):
+        &#34;&#34;&#34;
+        ** Estime la qualite du point. **
+
+        Returns
+        -------
+        float
+            * Une grandeur qui permet d&#39;estimer l&#39;intensite et la rondeur du spot.
+                - 0.1 =&gt; Tres moche, peu intense et tout disordu.
+                - 3 =&gt; Tres joli, intense et rond.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot
+        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        &gt;&gt;&gt; round(spot.get_quality(), 2)
+        0.34
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self.quality is not None:
+            return self.quality
+
+        self.quality = math.log(self.get_intensity()) / self.get_distortion()**18
+        return self.quality
+
+    def get_twicetheta_chi(self):
+        &#34;&#34;&#34;
+        ** Cherche les angles du rayon reflechi. **
+
+        Returns
+        -------
+        twicetheta : float
+            L&#39;angle entre l&#39;axe ``x`` (ie axe du rayon incident) et la
+            projection sur le plan ``(x, y)`` de l&#39;axe du rayon reflechit.
+        chi : float
+            L&#39;angle entre l&#39;axe ``y`` et la projection sur le plan
+            ``(y, z)`` de l&#39;axe du rayon reflechit.
+        &#34;&#34;&#34;
+        raise NotImplementedError
+
+    def find_zone_axes(self):
+        &#34;&#34;&#34;
+        ** Renvoi les axes de zone qui contienent ce point. **
+
+        returns
+        -------
+        set
+            L&#39;ensemble des axes de zone de type ``laue.zone_axis.ZoneAxis``
+            tel que ce spot appartient a ces axes. Si ce spot
+            est lie a aucun axe, un ensemble vide est renvoye.
+            Si ce spot est a l&#39;intersection de plusieurs axes,
+            l&#39;ensemble contiendra plusieurs elements.
+
+        Examples
+        -------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; spot = diag.select_spots(n=1, sort=&#34;quality&#34;).pop()
+        &gt;&gt;&gt; type(spot.find_zone_axes())
+        &lt;class &#39;set&#39;&gt;
+        &gt;&gt;&gt; type(spot.find_zone_axes().pop())
+        &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self.axes is not None:
+            return self.axes
+        self.diagram.find_zone_axes()
+        return self.axes
+
+    def plot_gnomonic(self, axe_pyplot):
+        &#34;&#34;&#34;
+        ** Affiche ce spot dans le plan gnomonic. **
+
+        Parameters
+        ----------
+        axe_pyplot : Axe
+            Axe matplotlib qui supporte la methode ``.scatter``.
+        &#34;&#34;&#34;
+        axe_pyplot.scatter(*self.get_gnomonic(), color=&#34;black&#34;)
+        return axe_pyplot
+
+    def plot_xy(self, axe_pyplot):
+        &#34;&#34;&#34;
+        ** Affiche ce spot dans le plan de la camera. **
+
+        Parameters
+        ----------
+        axe_pyplot : Axe
+            Axe matplotlib qui supporte les methodes ``.plot`` et ``.scatter``.
+        &#34;&#34;&#34;
+        x, y, w, h = self.get_bbox()
+        axe_pyplot.plot(
+            [x-.5, x+w-.5, x+w-.5, x-.5, x-.5],
+            [y-.5, y-.5, y+h-.5, y+h-.5, y-.5],
+            color=&#34;grey&#34;)
+        axe_pyplot.scatter(*self.get_position(), color=&#34;black&#34;)
+        return axe_pyplot
+
+    def __hash__(self):
+        &#34;&#34;&#34;
+        ** Permet de faire des tables de hachage. **
+
+        Returns
+        -------
+        int
+            Identifiant &#34;unique&#34; (du moins le plus possible) representant ce spot.
+        &#34;&#34;&#34;
+        return hash((*self.get_position(), self.get_intensity()))
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        ** Renvoie un representation evaluable de self. **
+        &#34;&#34;&#34;
+        return (f&#34;Spot(bbox={(self.x, self.y, self.w, self.h)}, &#34;
+                # f&#34;spot_im={repr(self.spot_im)}, &#34; # On le met pas car c&#39;est tres moche...
+                f&#34;distortion={self.get_distortion():.4f})&#34;)
+                # il manque diagram=... mais fait des boucles infinies.
+
+    def __str__(self):
+        &#34;&#34;&#34;
+        ** Offre une jolie representation. **
+        &#34;&#34;&#34;
+        x, y = self.get_position()
+        return (&#34;Spot:\n&#34;
+                f&#34;\tposition: x={x}, y={y}\n&#34;
+                f&#34;\tintensity: {self.get_intensity()}\n&#34;
+                f&#34;\tdistortion: {self.get_distortion()}\n&#34;
+                f&#34;\tquality: {self.get_quality()}\n&#34;)
+
+    def __sub__(self, other):
+        &#34;&#34;&#34;
+        ** Calcul la distance entre 2 taches. **
+
+        Notes
+        -----
+        * La metrique utilisee est la metrique euclidienne
+        dans le plan de la camera. Voir ``distance``.
+        * Permet par example de construire facilement une matrice
+        des distances avec ``np.meshgrid``.
+
+        Returns
+        -------
+        float
+            La distance en mm.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; spot1, spot2 = diag[:2]
+        &gt;&gt;&gt; round(spot1 - spot2)
+        94
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return distance(self, other, space=&#34;camera&#34;)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.spot.Spot.__hash__"><code class="name flex">
+<span>def <span class="ident">__hash__</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Permet de faire des tables de hachage. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>Identifiant "unique" (du moins le plus possible) representant ce spot.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __hash__(self):
+    &#34;&#34;&#34;
+    ** Permet de faire des tables de hachage. **
+
+    Returns
+    -------
+    int
+        Identifiant &#34;unique&#34; (du moins le plus possible) representant ce spot.
+    &#34;&#34;&#34;
+    return hash((*self.get_position(), self.get_intensity()))</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.__sub__"><code class="name flex">
+<span>def <span class="ident">__sub__</span></span>(<span>self, other)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Calcul la distance entre 2 taches. </strong></p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>La metrique utilisee est la metrique euclidienne
+dans le plan de la camera. Voir <code><a title="laue.spot.distance" href="#laue.spot.distance">distance()</a></code>.</li>
+<li>Permet par example de construire facilement une matrice
+des distances avec <code>np.meshgrid</code>.</li>
+</ul>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>La distance en mm.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; spot1, spot2 = diag[:2]
+&gt;&gt;&gt; round(spot1 - spot2)
+94
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __sub__(self, other):
+    &#34;&#34;&#34;
+    ** Calcul la distance entre 2 taches. **
+
+    Notes
+    -----
+    * La metrique utilisee est la metrique euclidienne
+    dans le plan de la camera. Voir ``distance``.
+    * Permet par example de construire facilement une matrice
+    des distances avec ``np.meshgrid``.
+
+    Returns
+    -------
+    float
+        La distance en mm.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; spot1, spot2 = diag[:2]
+    &gt;&gt;&gt; round(spot1 - spot2)
+    94
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return distance(self, other, space=&#34;camera&#34;)</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.find_zone_axes"><code class="name flex">
+<span>def <span class="ident">find_zone_axes</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Renvoi les axes de zone qui contienent ce point. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>set</code></dt>
+<dd>L'ensemble des axes de zone de type <code><a title="laue.zone_axis.ZoneAxis" href="zone_axis.html#laue.zone_axis.ZoneAxis">ZoneAxis</a></code>
+tel que ce spot appartient a ces axes. Si ce spot
+est lie a aucun axe, un ensemble vide est renvoye.
+Si ce spot est a l'intersection de plusieurs axes,
+l'ensemble contiendra plusieurs elements.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; spot = diag.select_spots(n=1, sort=&quot;quality&quot;).pop()
+&gt;&gt;&gt; type(spot.find_zone_axes())
+&lt;class 'set'&gt;
+&gt;&gt;&gt; type(spot.find_zone_axes().pop())
+&lt;class 'laue.zone_axis.ZoneAxis'&gt;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_zone_axes(self):
+    &#34;&#34;&#34;
+    ** Renvoi les axes de zone qui contienent ce point. **
+
+    returns
+    -------
+    set
+        L&#39;ensemble des axes de zone de type ``laue.zone_axis.ZoneAxis``
+        tel que ce spot appartient a ces axes. Si ce spot
+        est lie a aucun axe, un ensemble vide est renvoye.
+        Si ce spot est a l&#39;intersection de plusieurs axes,
+        l&#39;ensemble contiendra plusieurs elements.
+
+    Examples
+    -------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; spot = diag.select_spots(n=1, sort=&#34;quality&#34;).pop()
+    &gt;&gt;&gt; type(spot.find_zone_axes())
+    &lt;class &#39;set&#39;&gt;
+    &gt;&gt;&gt; type(spot.find_zone_axes().pop())
+    &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    if self.axes is not None:
+        return self.axes
+    self.diagram.find_zone_axes()
+    return self.axes</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.get_bbox"><code class="name flex">
+<span>def <span class="ident">get_bbox</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Retourne les coordonnees de la boite. </strong></p>
+<p>Les coordonnees sont exprimes en pxl dans le plan de la camera.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple</code></dt>
+<dd>x, y, w, h</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+&gt;&gt;&gt; spot
+Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+&gt;&gt;&gt; spot.get_bbox()
+(1368, 1873, 6, 5)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_bbox(self):
+    &#34;&#34;&#34;
+    ** Retourne les coordonnees de la boite. **
+
+    Les coordonnees sont exprimes en pxl dans le plan de la camera.
+
+    Returns
+    -------
+    tuple
+        x, y, w, h
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+    &gt;&gt;&gt; spot
+    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    &gt;&gt;&gt; spot.get_bbox()
+    (1368, 1873, 6, 5)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return self.x, self.y, self.w, self.h</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.get_distortion"><code class="name flex">
+<span>def <span class="ident">get_distortion</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Scalaire qui caracterise la rondeur de la tache. </strong></p>
+<p>Il est defini comme:
+<span><span class="MathJax_Preview"> \frac{girth}{2 . \sqrt{\pi . area}} </span><script type="math/tex; mode=display"> \frac{girth}{2 . \sqrt{\pi . area}} </script></span></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>1.0 =&gt; Tache bien ronde, &gt;&gt; 1 =&gt; Tache biscornue.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+&gt;&gt;&gt; spot
+Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+&gt;&gt;&gt; round(spot.get_distortion(), 4)
+1.1804
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_distortion(self):
+    r&#34;&#34;&#34;
+    ** Scalaire qui caracterise la rondeur de la tache. **
+
+    Il est defini comme:
+    \[ \frac{girth}{2 . \sqrt{\pi . area}} \]
+
+    Returns
+    -------
+    float
+        1.0 =&gt; Tache bien ronde, &gt;&gt; 1 =&gt; Tache biscornue.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+    &gt;&gt;&gt; spot
+    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    &gt;&gt;&gt; round(spot.get_distortion(), 4)
+    1.1804
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return self.distortion</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.get_gnomonic"><code class="name flex">
+<span>def <span class="ident">get_gnomonic</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Cherche les coordonnees dans le plan gnomonic </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple</code></dt>
+<dd>Les coordonnees x, y de la tache dans le plan gnomonic (en mm). de type (float, float)</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; spot = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))[0]
+&gt;&gt;&gt; spot
+Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+&gt;&gt;&gt; np.round(spot.get_gnomonic(), 4)
+array([ 0.3137, -0.4409])
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_gnomonic(self):
+    &#34;&#34;&#34;
+    ** Cherche les coordonnees dans le plan gnomonic **
+
+    Returns
+    -------
+    tuple
+        Les coordonnees x, y de la tache dans le plan gnomonic (en mm). de type (float, float)
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))[0]
+    &gt;&gt;&gt; spot
+    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    &gt;&gt;&gt; np.round(spot.get_gnomonic(), 4)
+    array([ 0.3137, -0.4409])
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    if self.gnomonic is not None:
+        return self.gnomonic
+    detector_parameters = self.diagram.experiment.set_calibration()
+    xg, yg = self.diagram.experiment.transformer.cam_to_gnomonic(
+        *self.get_position(), detector_parameters)
+    self.gnomonic = (xg, yg)
+    return self.gnomonic</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.get_hkl"><code class="name flex">
+<span>def <span class="ident">get_hkl</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere les indices de Miller. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple</code></dt>
+<dd>Les 3 indices de Miller h, k et l dans un tuple (int, int, int).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_hkl(self):
+    &#34;&#34;&#34;
+    ** Recupere les indices de Miller. **
+
+    Returns
+    -------
+    tuple
+        Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
+    &#34;&#34;&#34;
+    raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.get_intensity"><code class="name flex">
+<span>def <span class="ident">get_intensity</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Calcul l'intensite de la tache. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>La somme des pixels qui constituent la tache.
+Seules les valeurs au dessus du fond diffus sont considerees.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+&gt;&gt;&gt; spot
+Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+&gt;&gt;&gt; spot.get_intensity()
+814
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_intensity(self):
+    &#34;&#34;&#34;
+    ** Calcul l&#39;intensite de la tache. **
+
+    Returns
+    -------
+    int
+        La somme des pixels qui constituent la tache.
+        Seules les valeurs au dessus du fond diffus sont considerees.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+    &gt;&gt;&gt; spot
+    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    &gt;&gt;&gt; spot.get_intensity()
+    814
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    if self.intensity is not None:
+        return self.intensity
+    self.intensity = self.spot_im.sum()
+    return self.intensity</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.get_position"><code class="name flex">
+<span>def <span class="ident">get_position</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Calcul le centre d'inertie de la tache. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple</code></dt>
+<dd>Les coordonnees x, y du centre de gravite de la tache (en pxl). de type (float, float).</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+&gt;&gt;&gt; spot
+Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+&gt;&gt;&gt; np.round(spot.get_position(), 4)
+array([1370.5172, 1874.7801])
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_position(self):
+    &#34;&#34;&#34;
+    ** Calcul le centre d&#39;inertie de la tache. **
+
+    Returns
+    -------
+    tuple
+        Les coordonnees x, y du centre de gravite de la tache (en pxl). de type (float, float).
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+    &gt;&gt;&gt; spot
+    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    &gt;&gt;&gt; np.round(spot.get_position(), 4)
+    array([1370.5172, 1874.7801])
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    if self.position is not None:
+        return self.position
+    x, y = (self.spot_im/self.get_intensity() * np.array(np.meshgrid(
+            np.arange(self.x, self.x+self.w), np.arange(self.y, self.y+self.h)))
+            ).reshape((2, -1)).sum(axis=1)
+    self.position = (x, y)
+    return x, y</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.get_quality"><code class="name flex">
+<span>def <span class="ident">get_quality</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Estime la qualite du point. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>
+<ul>
+<li>Une grandeur qui permet d'estimer l'intensite et la rondeur du spot.<ul>
+<li>0.1 =&gt; Tres moche, peu intense et tout disordu.</li>
+<li>3 =&gt; Tres joli, intense et rond.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+&gt;&gt;&gt; spot
+Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+&gt;&gt;&gt; round(spot.get_quality(), 2)
+0.34
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_quality(self):
+    &#34;&#34;&#34;
+    ** Estime la qualite du point. **
+
+    Returns
+    -------
+    float
+        * Une grandeur qui permet d&#39;estimer l&#39;intensite et la rondeur du spot.
+            - 0.1 =&gt; Tres moche, peu intense et tout disordu.
+            - 3 =&gt; Tres joli, intense et rond.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+    &gt;&gt;&gt; spot
+    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    &gt;&gt;&gt; round(spot.get_quality(), 2)
+    0.34
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    if self.quality is not None:
+        return self.quality
+
+    self.quality = math.log(self.get_intensity()) / self.get_distortion()**18
+    return self.quality</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.get_twicetheta_chi"><code class="name flex">
+<span>def <span class="ident">get_twicetheta_chi</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Cherche les angles du rayon reflechi. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>twicetheta</code></strong> :&ensp;<code>float</code></dt>
+<dd>L'angle entre l'axe <code>x</code> (ie axe du rayon incident) et la
+projection sur le plan <code>(x, y)</code> de l'axe du rayon reflechit.</dd>
+<dt><strong><code>chi</code></strong> :&ensp;<code>float</code></dt>
+<dd>L'angle entre l'axe <code>y</code> et la projection sur le plan
+<code>(y, z)</code> de l'axe du rayon reflechit.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_twicetheta_chi(self):
+    &#34;&#34;&#34;
+    ** Cherche les angles du rayon reflechi. **
+
+    Returns
+    -------
+    twicetheta : float
+        L&#39;angle entre l&#39;axe ``x`` (ie axe du rayon incident) et la
+        projection sur le plan ``(x, y)`` de l&#39;axe du rayon reflechit.
+    chi : float
+        L&#39;angle entre l&#39;axe ``y`` et la projection sur le plan
+        ``(y, z)`` de l&#39;axe du rayon reflechit.
+    &#34;&#34;&#34;
+    raise NotImplementedError</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.plot_gnomonic"><code class="name flex">
+<span>def <span class="ident">plot_gnomonic</span></span>(<span>self, axe_pyplot)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Affiche ce spot dans le plan gnomonic. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>axe_pyplot</code></strong> :&ensp;<code>Axe</code></dt>
+<dd>Axe matplotlib qui supporte la methode <code>.scatter</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_gnomonic(self, axe_pyplot):
+    &#34;&#34;&#34;
+    ** Affiche ce spot dans le plan gnomonic. **
+
+    Parameters
+    ----------
+    axe_pyplot : Axe
+        Axe matplotlib qui supporte la methode ``.scatter``.
+    &#34;&#34;&#34;
+    axe_pyplot.scatter(*self.get_gnomonic(), color=&#34;black&#34;)
+    return axe_pyplot</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.plot_xy"><code class="name flex">
+<span>def <span class="ident">plot_xy</span></span>(<span>self, axe_pyplot)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Affiche ce spot dans le plan de la camera. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>axe_pyplot</code></strong> :&ensp;<code>Axe</code></dt>
+<dd>Axe matplotlib qui supporte les methodes <code>.plot</code> et <code>.scatter</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_xy(self, axe_pyplot):
+    &#34;&#34;&#34;
+    ** Affiche ce spot dans le plan de la camera. **
+
+    Parameters
+    ----------
+    axe_pyplot : Axe
+        Axe matplotlib qui supporte les methodes ``.plot`` et ``.scatter``.
+    &#34;&#34;&#34;
+    x, y, w, h = self.get_bbox()
+    axe_pyplot.plot(
+        [x-.5, x+w-.5, x+w-.5, x-.5, x-.5],
+        [y-.5, y-.5, y+h-.5, y+h-.5, y-.5],
+        color=&#34;grey&#34;)
+    axe_pyplot.scatter(*self.get_position(), color=&#34;black&#34;)
+    return axe_pyplot</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#represente-un-spot-dans-un-diagramme-de-laue">Represente un spot dans un diagramme de Laue.</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="laue" href="index.html">laue</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="laue.spot.distance" href="#laue.spot.distance">distance</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="laue.spot.Spot" href="#laue.spot.Spot">Spot</a></code></h4>
+<ul class="two-column">
+<li><code><a title="laue.spot.Spot.__hash__" href="#laue.spot.Spot.__hash__">__hash__</a></code></li>
+<li><code><a title="laue.spot.Spot.__sub__" href="#laue.spot.Spot.__sub__">__sub__</a></code></li>
+<li><code><a title="laue.spot.Spot.find_zone_axes" href="#laue.spot.Spot.find_zone_axes">find_zone_axes</a></code></li>
+<li><code><a title="laue.spot.Spot.get_bbox" href="#laue.spot.Spot.get_bbox">get_bbox</a></code></li>
+<li><code><a title="laue.spot.Spot.get_distortion" href="#laue.spot.Spot.get_distortion">get_distortion</a></code></li>
+<li><code><a title="laue.spot.Spot.get_gnomonic" href="#laue.spot.Spot.get_gnomonic">get_gnomonic</a></code></li>
+<li><code><a title="laue.spot.Spot.get_hkl" href="#laue.spot.Spot.get_hkl">get_hkl</a></code></li>
+<li><code><a title="laue.spot.Spot.get_intensity" href="#laue.spot.Spot.get_intensity">get_intensity</a></code></li>
+<li><code><a title="laue.spot.Spot.get_position" href="#laue.spot.Spot.get_position">get_position</a></code></li>
+<li><code><a title="laue.spot.Spot.get_quality" href="#laue.spot.Spot.get_quality">get_quality</a></code></li>
+<li><code><a title="laue.spot.Spot.get_twicetheta_chi" href="#laue.spot.Spot.get_twicetheta_chi">get_twicetheta_chi</a></code></li>
+<li><code><a title="laue.spot.Spot.plot_gnomonic" href="#laue.spot.Spot.plot_gnomonic">plot_gnomonic</a></code></li>
+<li><code><a title="laue.spot.Spot.plot_xy" href="#laue.spot.Spot.plot_xy">plot_xy</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

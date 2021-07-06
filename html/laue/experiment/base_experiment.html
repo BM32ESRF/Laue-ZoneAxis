@@ -1,0 +1,3534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>laue.experiment.base_experiment API documentation</title>
+<meta name="description" content="** Manipule un lot de donnees Laue. **
+…" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>laue.experiment.base_experiment</code></h1>
+</header>
+<section id="section-intro">
+<h2 id="manipule-un-lot-de-donnees-laue"><strong> Manipule un lot de donnees Laue. </strong></h2>
+<ul>
+<li>Ce programe permet de faire le lien entre differents diagrammes de Laue.</li>
+<li>C'est le point d'entree principal.</li>
+</ul>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+
+&#34;&#34;&#34;
+** Manipule un lot de donnees Laue. **
+--------------------------------------
+
+* Ce programe permet de faire le lien entre differents diagrammes de Laue.
+* C&#39;est le point d&#39;entree principal.
+&#34;&#34;&#34;
+
+import collections
+import glob
+import multiprocessing
+import os
+import time
+
+import cloudpickle
+import cv2
+import numpy as np
+try:
+    import psutil # Pour acceder a la memoire disponible.
+except ImportError:
+    psutil = None
+
+from laue.diagram import LaueDiagram
+from laue import geometry
+from laue.spot import Spot
+
+
+__pdoc__ = {&#34;Experiment._get_gnomonic_matrix&#34;: False,
+            &#34;Experiment.__getitem__&#34;: True,
+            &#34;Experiment.__iter__&#34;: True,
+            &#34;Experiment.__len__&#34;: True}
+
+
+class Experiment:
+    &#34;&#34;&#34;
+    ** Permet de travailler sur un lot d&#39;images. **
+    &#34;&#34;&#34;
+    def __init__(self, images=(), *, verbose=False, max_space=5, threshold=5.1, **kwargs):
+        &#34;&#34;&#34;
+        Parameters
+        ----------
+        images : str, iterable
+            - Toutes les images qui constituent l&#39;experience.
+            - Peut prendre plein de forme differentes:
+                - Iterable d&#39;images. Chaque elements peut prendre 2 formes:
+                    - Le chemin de l&#39;image (str) absolu ou relatif.
+                    - L&#39;image elle meme, matrice 2d en uint16 (np.ndarray).
+                        - Il vaut mieux donner le nom de l&#39;image que l&#39;image elle-meme
+                        car la gestion de la RAM sera meilleur, surtout si il y a
+                        un nombre important d&#39;images ce qui saturerait la memoire.
+                - Repertoire. Nom du dossier qui contient recursivement les images.
+                - Glob expression. Par example &#34;mon_dossier/*.tiff&#34;.
+        verbose : int, optional
+            * Permet d&#39;afficher ou non des informations suplementaires.
+                - 0 or False =&gt; N&#39;affiche rien du tout, ne pollue pas l&#39;ecran.
+                - 1 or True =&gt; Affiche seulement les etapes principales.
+                - 2 =&gt; Affiche les resultats intermediaires.
+                - 3 =&gt; Affiche vraiment beaucoup de choses (pas tres lisible).
+                - 4 =&gt; Affiche aussi des choses graphiques en plus de
+                    tous ce qui est dans le terminal.
+
+        max_space : int, optional
+            Le nombre minimum de pixels qui separent 2 taches.
+            Quand des taches ne sont pas separes par cet intevalle,
+            elles se retrouvent aglomerees. La valeur par defaut de 5
+            permet d&#39;avoir une recherche tres hexaustive.
+        threshold : float, optional
+            - Seuil relatif par raport a l&#39;ecart type de l&#39;image sans fond.
+            - Plus la valeur est grande, moins on capture de spots:
+                - 3.5 =&gt; Prend enormement de spots, beaucoup de fausses detection.
+                - 5.1 =&gt; Bon compromis, reste sensible sans trop capturer le fond.
+                - 10 =&gt; Asser selectif, ne prend que les taches qui ressortent beaucoup.
+        font_size : int, optional
+            Diametre de l&#39;element structurant qui permet d&#39;evaluer le fond par
+            une ouverture morphologique. La valeur par defaut est 21,
+            normalement cette valeur est bien, il faut pas y toucher.
+        ignore_errors : boolean, optional
+            Permet d&#39;ignorer certaine erreurs qui ne sont pas critiques.
+            La valeur par defaut et True.
+        **detector_parameters : number
+            Les parametres de set_calibration de la camera deja connus.
+            Il servent dans la methode ``laue.experiment.base_experiment.Experiment.set_calibration``
+            a accelerer la recherche ou a la rendre plus precise.
+            Pour avoir le detail sur ces parametres, voir
+            ``laue.tools.parsing.extract_parameters``.
+        **bbox : number
+            Ce sont les limites min et max des parametres de set_calibration a ne pas depasser.
+            Les bornes minimum doivent etre precedes de &#39;_min&#39; et les maximum de &#39;_max&#39;.
+            Vous pouvez par example donner ``Experiment(dd_min=90.0, dd_max=100.0)``.
+            Il sont utilises dans la methode ``laue.experiment.base_experiment.Experiment.set_calibration``.
+            Les noms possibles des parametres sont les meme que ``**detector_parameters``
+            a l&#39;exeption de ``pixelsize, size, pxlsize et config_file`` qui n&#39;admettent
+            pas de bornes.
+            Les valeur par defaut sont:
+
+                dd   : 60.0 mm          ; 80.0 mm
+                xbet : -0.9 degre       ; 0.9 degre
+                xgam : -0.9 degre       ; 0.9 degre
+                xcen : milieu - 150 pxl ; milieu + 150 pxl
+                ycen : milieu - 150 pxl ; milieu + 150 pxl
+        &#34;&#34;&#34;
+        assert hasattr(images, &#34;__iter__&#34;), (&#34;&#39;images&#39; must to be iterable. &#34;
+            f&#34;It can not be of type {type(images).__name__}.&#34;)
+        assert isinstance(verbose, int), f&#34;&#39;verbose&#39; has to be int, not {type(verbose).__name__}.&#34;
+        assert isinstance(max_space, int), &#34;&#39;max_space&#39; has to be an integer, not a %s.&#34; \
+            % type(max_space).__name__
+        assert max_space &gt;= 1, f&#34;&#39;max_space&#39; has to be positive. His value is &#39;{max_space}&#39;.&#34;
+        assert isinstance(threshold, float), \
+            f&#34;&#39;threshold&#39; has to be float, not a {type(threshold).__name__}.&#34;
+        assert 2.0 &lt; threshold &lt; 80.0, \
+            f&#34;Le seuil doit etre compris entre 2 et 50, il vaut &#39;{threshold}&#39;.&#34;
+
+        font_size = kwargs.get(&#34;font_size&#34;, 21)
+        assert isinstance(font_size, int), \
+            f&#34;&#39;font_size&#39; has to be an integer, not a {type(font_size).__name__}.&#34;
+        assert font_size &gt;= 2, (&#34;&#39;font_size&#39; doit etre superieur a 1. &#34;
+            f&#34;Il ne peut pas valoir {font_size}.&#34;)
+        ignore_errors = kwargs.get(&#34;ignore_errors&#34;, True)
+        assert isinstance(ignore_errors, bool), \
+            f&#34;&#39;ignore_errors&#39; has to be a boolean, not a {type(ignore_errors).__name__}.&#34;
+
+        self.images = images
+
+        self.verbose = verbose
+        self.max_space = max_space
+        self.threshold = threshold
+        self.font_size = font_size
+        self.ignore_errors = ignore_errors
+        self.kwargs = kwargs
+
+        # Precalul des constantes.
+        self.kernel_font = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.font_size, self.font_size))
+        self.kernel_dilate = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.max_space, self.max_space))
+        self.transformer = geometry.Transformer() # Outil permetant de faire les transformations geometriques.
+
+        # Declaration des attributs interne de memoire.
+        self._len = None # Nombre de diagrames lues.
+        self._buff_diags = [] # La liste ordonnee des diagrames lus.
+
+        self._mean_bg = None # Fond diffus estime par la moyenne de toutes les images.
+        self._shape = None # Les dimensions des matrices des images xy.
+        self._calibration_parameters = None # Le dictionaire des parametres geometrique de la camera.
+        self._gnomonic_matrix = None # Les matrices de transformation.
+
+        self._images_iterator = None # Iterateur unique des informations des images.
+        self._diagrams_iterator = None # Iterateur unique qui genere les diagrammes.
+        self._axes_iterator = None # Iterateur unique qui cede les axes de zonne de chaque diagramme.
+
+    def set_calibration(self, *diagrams):
+        &#34;&#34;&#34;
+        ** Calibration de la camera. **
+
+        Notes
+        -----
+        * Ne nessecite aucune connaissances prealable sur le christal.
+        * Il n&#39;y a pas besoin d&#39;avoir un diagramme bien calibre, il se debrouille tout seul.
+        * Cette fonction peut parfois etre lente (plusieur minutes)!
+        * Si vous connaissez les parametres, fournissez-les, ca ira plus vite!
+        * Si cette methode a deja ete appelee une fois, elle retourne
+            immeditement le resultat sans refaire les calculs.
+
+        Parameters
+        ----------
+        *diagrams : optional
+            Les ou le diagramme.s qui vont servir a faire la set_calibration.
+            Si aucun diagramme n&#39;est precise, cette methode recherche par elle meme
+            les diagrammes qu&#39;elle trouve convaincant parmis ceux qui sont disponibles.
+            Il doivent etre de type ``laue.diagram.LaueDiagram``.
+
+        Returns
+        -------
+        dict 
+            Le dictionaire qui a chaque non de parametre, associe sa valeur numerique.
+            Les clefs sont les suivantes: &#34;dd&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;xbet&#34;, &#34;xgam&#34; and &#34;pixelsize&#34;
+
+        Raises
+        ------
+        KeyError
+            Si l&#39;utilisateur n&#39;a pas precise les parametres vraiment indispenssables.
+        ValueError
+            Si il y a des incoherences dans les parametres.
+
+        Example
+        -------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; experiment = laue.Experiment(image)
+        &gt;&gt;&gt; parameters = experiment.set_calibration()
+        &gt;&gt;&gt; sorted(parameters.keys())
+        [&#39;dd&#39;, &#39;pixelsize&#39;, &#39;xbet&#39;, &#39;xcen&#39;, &#39;xgam&#39;, &#39;ycen&#39;]
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self._calibration_parameters is not None: # Si on peut retourner directement,
+            return self._calibration_parameters # on ne s&#39;en prive pas.
+
+        assert all(isinstance(diag, LaueDiagram) for diag in diagrams), \
+            &#34;Tous les diagrammes doivent etre de type &#39;LaueDiagram&#39;. Or ce n&#39;est pas le cas.&#34;
+
+        if self.verbose:
+            print(&#34;Calibration...&#34;)
+            if self.verbose &gt;= 2:
+                print(&#34;\tPrise en compte des parametres fournis...&#34;)
+
+        # Constantes.
+        PIXELSIZE_REF = {(2048, 2048): 0.079856, # Taille des pixels fonction de la camera.
+                         (2018, 2016): 0.0734,
+                         (2594, 2748): 0.031}
+        PARAM_SET = {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;} # Les paremetres non deductibles.
+        PARAM_MIN = {&#34;dd&#34;: 60.0, # Les bornes minimale par defaut.
+                     &#34;xbet&#34;: -.9,
+                     &#34;xgam&#34;: -.9,
+                     &#34;xcen&#34;: self.get_images_shape()[0]/2 - 150,
+                     &#34;ycen&#34;: self.get_images_shape()[0]/2 - 150}
+        PARAM_MAX = {&#34;dd&#34;: 80.0, # Les bornes maximales par defaut.
+                     &#34;xbet&#34;: .9,
+                     &#34;xgam&#34;: .9,
+                     &#34;xcen&#34;: self.get_images_shape()[0]/2 + 150,
+                     &#34;ycen&#34;: self.get_images_shape()[1]/2 + 150}
+
+        # Recuperation des parametres fournis et deductibles.
+        from laue.tools.parsing import extract_parameters
+        given_parameters = extract_parameters(ignore_missing=True, **self.kwargs)
+        if (&#34;pixelsize&#34; not in given_parameters) and (self.get_images_shape() in PIXELSIZE_REF):
+            given_parameters[&#34;pixelsize&#34;] = PIXELSIZE_REF[self.get_images_shape()]
+        
+        elif (&#34;pixelsize&#34; not in given_parameters) and (self.get_images_shape() not in PIXELSIZE_REF):
+            raise KeyError(&#34;Vous devez fournir le parametre &#39;pixelsize&#39;.\n&#34;
+                f&#34;Les images font {self.get_images_shape()} pxl**2. &#34;
+                f&#34;Or, seul les &#39;pixelsize&#39; des images {&#39; et &#39;.join(map(str, PIXELSIZE_REF))} sont connus.&#34;)
+
+        # Recuperation des bornes.
+        given_min = extract_parameters(ignore_missing=True, **{
+            param[:-4]: value
+            for param, value in self.kwargs.items()
+            if param.endswith(&#34;_min&#34;) and len(param) &gt; 4})
+        given_max = extract_parameters(ignore_missing=True, **{
+            param[:-4]: value
+            for param, value in self.kwargs.items()
+            if param.endswith(&#34;_max&#34;) and len(param) &gt; 4})
+        parameters_min = {param: given_min.get(param, PARAM_MIN[param]) for param in PARAM_SET}
+        parameters_max = {param: given_max.get(param, PARAM_MAX[param]) for param in PARAM_SET}
+        
+        for param in PARAM_SET: # Verification de la coherence des bornes.
+            if parameters_min[param] &gt;= parameters_max[param]:
+                raise ValueError(f&#34;Les bornes du parametre {repr(param)} sont inversees, &#34;
+                    f&#34;{param}_min={parameters_min[param]} et {param}_max={parameters_max[param]}.&#34;)
+
+        # Valeur de departs des parametres.
+        initial_parameters = { # Ce sont les parametres initiaux pour la descente de gradient.
+            par: given_parameters.get(par,
+                .5*(parameters_min[par] + parameters_max[par]))
+            for par in PARAM_SET}
+       
+        for par, val in initial_parameters.items(): # Verification.
+            if par in given_parameters and par in given_min:
+                if given_parameters[par] &lt; given_min[par]:
+                    raise ValueError(f&#34;Vous avez imposes {par}_min={given_min[par]} &#34;
+                        f&#34;et en meme temp vous avez donnes {par}={val}!&#34;)
+            if par in given_parameters and par in given_max:
+                if given_parameters[par] &gt; given_max[par]:
+                    raise ValueError(f&#34;Vous avez imposes {par}_max={given_max[par]} &#34;
+                        f&#34;et en meme temps vous avez donnes {par}={val}!&#34;)
+
+        # Parametres restants.
+        unknown_parameters = PARAM_SET - set(given_parameters)
+        if not unknown_parameters: # Si Il n&#39;y a rien a calculer.
+            self._calibration_parameters = given_parameters
+            self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
+            if self.verbose:
+                if self.verbose &gt;= 2:
+                    print(&#34;\t\tOK: Tout est fournis, il n&#39;y a rien a faire.&#34;)
+                print(f&#34;\tOK: Calibration terminee: {given_parameters}&#34;)
+            return self._calibration_parameters
+
+        # Extraction d&#39;une poignee de diagrammes interressants.
+        if self.verbose &gt;= 2:
+            print(&#34;\tRecuperation des diagrammes interressants...&#34;)
+        if not diagrams: # Si l&#39;utilisateur ne nous aide pas a trouver les bons diagrammes.
+            diagrams = []
+            for i, dia in enumerate(self):
+                if i &gt; 60: # On ne s&#39;interesse qu&#39;a la premiere minute.
+                    break
+                diagrams.append(dia)
+
+            diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:os.cpu_count()])
+            best_diagrams = [next(diagrams)]
+            best_diagrams.extend([dia for dia in diagrams
+                if dia.get_quality() &gt; 0.7*best_diagrams[0].get_quality()])
+        else: # Si l&#39;utilisateur nous en fournit.
+            best_diagrams = diagrams # C&#39;est un tuple et non pas une liste mais c&#39;est pas genant.
+        if self.verbose &gt;= 2:
+            for dia in best_diagrams:
+                print(f&#34;\t\t{dia.get_id()}&#34;)
+
+        # Vectorisation des donnees pour de bonnes perfs.
+        min_size = min(len(dia) for dia in best_diagrams) # Le plus petit nombre de points.
+        spots_position = np.array(
+            [dia.get_positions(n=min_size, sort=&#34;quality&#34;)
+             for dia in best_diagrams],
+            dtype=np.float32)
+        spots_position = np.swapaxes(spots_position, 0, 1) # shape: (2, n_diagrams, nbr_spots)
+
+        # Perparations des parametres pour la suite.
+        vect_labels = tuple(unknown_parameters) # On recupere les nom des parametre inconus seulement.
+        bounds = [(parameters_min[name], parameters_max[name]) for name in vect_labels] # Les limites des variables.
+        args = (given_parameters, vect_labels, spots_position) # Les arguments en plus de la fonction de cout.
+        if self.verbose &gt;= 2:
+            print(f&#34;\tcalibration des parametres {vect_labels}&#34;)
+            print(f&#34;\tbornes min: {tuple(b_min for b_min, _ in bounds)}&#34;)
+            print(f&#34;\tbornes max: {tuple(b_max for _, b_max in bounds)}&#34;)
+        
+        # Recherche rapide d&#39;un minimum par descente de gradient.
+        from scipy import optimize # On ne l&#39;importe que ici car on est pas sur de s&#39;en servir.
+        if self.verbose &gt;= 2:
+            print(&#34;\tDescente de gradient...&#34;)
+        opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
+            self._calibration_cost,
+            x0=[initial_parameters[name] for name in vect_labels],
+            args=args, # On donne les arguments et on paralelise.
+            bounds=bounds,
+            options={&#34;disp&#34;: self.verbose &gt;= 3})
+        if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
+            if self.verbose &gt;= 2:
+                print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+            # Recherche d&#39;un bon minimum global
+            if self.verbose &gt;= 2:
+                print(&#34;\tOptimsation globale, algo genetique...&#34;)
+            opt_res = optimize.differential_evolution(
+                self._calibration_cost,
+                bounds=bounds,
+                args=args,
+                disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
+                polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
+                popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
+                workers=1) # Pour ne pas creer de sous processus.
+                # C&#39;est plus rapide de ne pas creer de sous processus que d&#39;en faire... car cloudpickle est lent!
+        if self.verbose &gt;= 2:
+            print(f&#34;\t\tOk: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+        fit_parameters_vect = opt_res[&#34;x&#34;]
+        
+        # Mise en forme du resultat.
+        fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
+        self._calibration_parameters = {**given_parameters, **fit_parameters}
+        self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
+        if self.verbose:
+            print(f&#34;\tOK: set_calibration terminee: {self._calibration_parameters}&#34;)
+        return self._calibration_parameters
+
+    def _calibration_cost(self, params_as_vect, known_params, vect_labels, spots_position):
+        &#34;&#34;&#34;
+        ** Help for ``set_calibration``. **
+
+        Parameters
+        ----------
+        params_as_vect : np.ndarray
+            Le vecteur des valeurs inconues de parametres.
+        :param known_params : dict
+            Dictionaire des parametres connus.
+        :param vect_labels : tuple
+            Le tuple des nom des parametres associes au vecteur.
+        spots_position : np.ndarray
+            Coordonnees des points x, y des diagrammes de reference.
+            shape = (2, n_diagrams, nbr_spots)
+        &#34;&#34;&#34;
+        # Projection gnomonique.
+        _, n_diagrams, nbr_spots = spots_position.shape
+        unknown_parameters = {name: value for name, value in zip(vect_labels, params_as_vect)}
+        parameters = {**unknown_parameters, **known_params}
+        gnom_spots_x, gnom_spots_y = self.transformer.cam_to_gnomonic(*spots_position, parameters) # shape: (n_diagrams, nbr_pic)
+
+        # Recherche des axes de zones intensifs.
+        gnom_spots_x = ((gnom_spots_x
+                        - np.repeat(gnom_spots_x.mean(axis=-1)[..., np.newaxis], nbr_spots, axis=-1)
+                        ) / np.repeat(gnom_spots_x.std(axis=-1)[..., np.newaxis], nbr_spots, axis=-1))
+        gnom_spots_y = ((gnom_spots_y
+                        - np.repeat(gnom_spots_y.mean(axis=-1)[..., np.newaxis], nbr_spots, axis=-1)
+                        ) / np.repeat(gnom_spots_y.std(axis=-1)[..., np.newaxis], nbr_spots, axis=-1))
+        thetas, dists = self.transformer.hough(gnom_spots_x, gnom_spots_y) # shape: (n_diagrams, nbr_pic*(nbr_pic-1)/2)
+        clusters = self.transformer.hough_reduce(thetas, dists, # shape: (n_diagrams,)
+            nbr=6, tol=0.035) # On prend des qu&#39;il y a 6 points environ allignes.
+
+        # Calcul de l&#39;erreur.
+        projection = np.mean([np.log(1 + self.transformer.dist_line( # compris generalement entre [0.007, 0.3]
+                                clusters[i][0, :], clusters[i][1, :],
+                                gnom_spots_x[i, :], gnom_spots_y[i, :]).min(axis=0, initial=1.0)).mean()
+                              if clusters[i].shape[-1] else 1.0 # Si il n&#39;y a pas de droite, c&#39;est qu&#39;on est dans les choux.
+                            for i in range(n_diagrams)]) # Moyenne des ecarts des projetes des points sur la droite la plus proche.
+        scattering = np.mean([np.log(
+                                    (gnom_spots_x[i, :] - gnom_spots_x[i, :].mean())**2
+                                  + (gnom_spots_y[i, :] - gnom_spots_y[i, :].mean())**2
+                                  + 1)
+                            for i in range(n_diagrams)]) # Eparpillement [0.1, 0.95], &gt; =&gt; bien eparpille
+        cost = projection * scattering**(-4)
+
+        if self.verbose &gt;= 3:
+            print(f&#34;\t\tCurrent parameters: {unknown_parameters}&#34;)
+            print(f&#34;\t\tCurrent cost: {cost}&#34;)
+            if self.verbose &gt;= 4:
+                import matplotlib.pyplot as plt
+                plt.clf()
+                for i in range(n_diagrams):
+                    plt.subplot(n_diagrams, 3, 1 + 3*i)
+                    plt.title(f&#34;diagramme {i+1}, plan camera&#34;)
+                    plt.scatter(spots_position[0, i, ...], spots_position[1, i, ...])
+
+                    plt.subplot(n_diagrams, 3, 2 + 3*i)
+                    plt.title(f&#34;diagramme {i+1}, plan gnomonic&#34;)
+                    plt.scatter(gnom_spots_x[i, :], gnom_spots_y[i, :])
+                    for angle, dist in clusters[i].transpose():
+                        v = np.array([np.cos(angle), np.sin(angle)])
+                        u = np.array([np.sin(angle), -np.cos(angle)])
+                        p = dist*v
+                        plt.axline(p, p+u, lw=0.5, color=&#34;r&#34;)
+
+                    plt.subplot(n_diagrams, 3, 3 + 3*i)
+                    plt.title(f&#34;diagramme {i+1}, hough&#34;)
+                    plt.scatter(thetas[i, :], dists[i, :])
+                    print(clusters.shape)
+                    plt.scatter(clusters[i][0], clusters[i][1])
+                plt.draw()
+                plt.pause(1e-6)
+
+        return cost
+
+    def clean(self):
+        &#34;&#34;&#34;
+        ** Tente de liberer de la memoire. **
+
+        Supprime tous les attributs qui sont suceptibles
+        de prendre de la place ne memoire.
+        &#34;&#34;&#34;
+        if self.verbose:
+            print(&#34;Suppression des attributs facultatifs...&#34;)
+        self._gnomonic_matrix = None
+        for diag in self:
+            diag.clean()
+        if self.verbose:
+            print(&#34;\tOK: Le volume de donnees et minimum.&#34;)
+
+    def get_diagrams(self, *, tense_flow=False):
+        &#34;&#34;&#34;
+        ** Genere les diagrammes de l&#39;experience. **
+
+        Notes
+        -----
+        * Performances:
+            * Sur un PC (intel core i7, ssd, 8 coeurs), met environ 37 ms/diagramme.
+            * Sur un PC (intel centrino, hdd, 2 coeurs), met environ 530 ms/diagramme.
+
+        Parameters
+        ----------
+        tense_flow : boolean
+            * True : Permet de travailler a flux tendu, c&#39;est a dire
+            de cede les diagrammes au fur a meusure qu&#39;ils sont crees.
+                * Le generateur termine quand toutes les images sont lues ou
+                que le generateur d&#39;images leve un ``StopIteration``.
+                * A chaque nouvel appel de cette methode, l&#39;iteration
+                recommence a partir du debut et l&#39;ordre reste inchange.
+                * Equivalent a ``laue.experiment.base_experiment.Experiment.__iter__``.
+            * False. Sinon, attend que tous les diagrammes
+            soient lues afin de tout renvoyer en meme temps.
+
+        Returns
+        -------
+        list
+            La liste des diagrammes de type ``laue.diagram.LaueDiagram``.
+
+        Yields
+        ------
+        laue.diagram.LaueDiagram
+            * Chaque diagram extrait au fur a mesure qu&#39;il arrive.
+            * L&#39;ordre est concerve pour chaque appel de cette methode a flux tendu.
+            * A chaque appel on repars du debut, meme si un autre appel n&#39;est pas termine.
+            * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+        &gt;&gt;&gt; experiment = laue.Experiment(images)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; diagrams = experiment.get_diagrams()
+        &gt;&gt;&gt; type(diagrams)
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; type(diagrams.pop())
+        &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def update_len(func):
+            &#34;&#34;&#34;
+            Tient a jour la longueur de l&#39;experience.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                for i, element in enumerate(func(*func_args, **func_kwargs)):
+                    yield element
+                self._len = i + 1
+
+            return decorate
+
+        def show_iterator_state(func):
+            &#34;&#34;&#34;
+            Insere des commentaires.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                if self.verbose:
+                    print(&#34;Extraction des diagrammes...&#34;)
+
+                for i, diag in enumerate(func(*func_args, **func_kwargs)):
+                    if self.verbose &gt;= 2:
+                        print(f&#34;\tdiagramme num {i} extrait: &#34;
+                              f&#34;(...{diag.get_id()[-20:]}) &#34;
+                              f&#34;avec {len(diag)} spots&#34;)
+                    yield diag
+                if self.verbose:
+                    print(&#34;\tOK: Tous les diagrammes sont extraits.&#34;)
+            
+            return decorate
+
+        @update_len
+        @show_iterator_state
+        def _diagram_extractor(self):
+            &#34;&#34;&#34;
+            Premiere vraie lecture. Cede les diagrammes.
+            &#34;&#34;&#34;
+            if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+                attrs = [&#34;kernel_font&#34;, &#34;threshold&#34;, &#34;kernel_dilate&#34;]
+                mini_self = collections.namedtuple(&#34;SelfCopy&#34;, attrs)(
+                    *(getattr(self, attr) for attr in attrs)
+                    ) # Strategie car &#39;pickle&#39; ne sais pas faire ca.
+                ser_self = cloudpickle.dumps(mini_self)
+
+                from laue.tools.multi_core import pickleable_method
+                from laue.tools.multi_core import limited_imap
+                with multiprocessing.Pool() as pool:
+                    yield from (
+                        self._help_get_diagrams(name, image, spot_args=spot_args)
+                        for (name, image, spot_args) in limited_imap(pool,
+                            pickleable_method,
+                            (
+                                (
+                                    Experiment._help_get_diagrams,
+                                    ser_self,
+                                    {&#34;name&#34;:name, &#34;image&#34;:image, &#34;thread&#34;:True}
+                                )
+                                for name, image in self.read_images()
+                            )
+                        )
+                    )
+            else:
+                yield from (self._help_get_diagrams(name, image)
+                    for name, image in self.read_images())
+        
+        if self._diagrams_iterator is None:
+            self._diagrams_iterator = iter(_diagram_extractor(self))
+
+        from laue.tools.multi_core import RecallingIterator
+        return (
+            (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
+            if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self)))
+
+    def _help_get_diagrams(self, name, image, thread=False, spot_args=None):
+        &#34;&#34;&#34;
+        ** Comme ``laue.experiment.base_experiment.Experiment.get_diagrams`` pour une seule image. **
+
+        * Cette methode n&#39;est utile qu&#39;a fin de parallelisation.
+        * Elle ne doit pas etre appelle par l&#39;utilisateur.
+        * Cette methode est indirectement appelle par self.get_diagrams().
+        * Il n&#39;y a pas de verifications pour une histoire de performance.
+
+        :retrun: Le diagramme de Laue correspondant.
+        :rtype: LaueDiagram
+        &#34;&#34;&#34;
+        if isinstance(self, bytes):
+            self = cloudpickle.loads(self)
+
+        if spot_args is None:
+            # Binarisation de l&#39;image.
+            bg_image = cv2.morphologyEx(image, cv2.MORPH_OPEN, self.kernel_font, iterations=1)
+            fg_image = image - bg_image
+            thresh_image = (fg_image &gt; self.threshold*fg_image.std()).astype(np.uint8)
+            dilated_image = cv2.dilate(thresh_image, self.kernel_dilate, iterations=1)
+
+            # Detection des contours grossiers.
+            outlines, _ = cv2.findContours(dilated_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            bbox = [cv2.boundingRect(outl) for outl in outlines]
+
+            # Calcul des distortions.
+            distortions_open = np.array([
+                cv2.arcLength(outl, True)/np.sqrt(cv2.contourArea(outl))
+                for outl in outlines]) / (2*np.sqrt(np.pi))
+
+            # Preparations des arguments des spot.
+            spot_args = [((x, y, w, h), fg_image[y:y+h, x:x+w], dis)
+                for dis, (x, y, w, h) in zip(distortions_open, bbox)]
+
+        if thread:
+            if (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent &lt; 50):
+                return (name, image, spot_args)
+            return (name, None, spot_args)
+
+        # Mise en forme du resultat.
+        if image is not None and (
+                (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent &lt; 50)
+                ):
+            laue_diagram = LaueDiagram(name, None, experiment=self, image_xy=image)
+        else:
+            laue_diagram = LaueDiagram(name, None, experiment=self)
+
+        # Creation des ensembles de spots.
+        spots_open = [Spot(bbox=bbox, spot_im=spot_im, distortion=distortion, diagram=laue_diagram)
+                     for bbox, spot_im, distortion in spot_args]
+        laue_diagram.spots = spots_open
+
+        return laue_diagram
+
+    def find_zone_axes(self, tense_flow=True, **constraints):
+        &#34;&#34;&#34;
+        ** Recherche l&#39;ensemble des axes de zones. **
+
+        Returns a zone axis iterator.
+
+        Notes
+        -----
+        * Le resultat est le meme que ``(diag.find_zone_axes() for diag in self)``
+            Sauf qu&#39;il y a de la parallelisation en plus.
+        * Il est possible d&#39;appeler plusieur fois cette methode en parallele.
+        * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+        Parameters
+        ----------
+        **constraints : number
+            Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
+
+        Yields
+        ------
+        list
+            Pour chaque diagramme de cette experience, cede la liste
+            des axes de zones du diagramme. Les elements de l&#39;ensemble
+            sont de type ``laue.zone_axis.ZoneAxis``.
+
+        Example
+        -------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+        &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())))
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())).pop())
+        &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def show_iterator_state(func):
+            &#34;&#34;&#34;
+            Insere des commentaires.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                if self.verbose:
+                    print(&#34;Extraction des axes de zone...&#34;)
+                
+                for i, axes in enumerate(func(*func_args, **func_kwargs)):
+                    if self.verbose &gt;= 2:
+                        print(f&#34;\taxes du diagramme num {i} trouves: il y en a {len(axes)}&#34;)
+                    yield axes
+
+                if self.verbose:
+                    print(&#34;\tOK: Tous les axes de zone sont extraits.&#34;)
+
+            return decorate
+
+        @show_iterator_state
+        def _axes_extractor(self):
+            &#34;&#34;&#34;
+            Premiere vraie extraction.
+            &#34;&#34;&#34;
+            if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+                # Compilation et serialisation des equations.
+                self.transformer.compile()
+                self.set_calibration()
+                transformer_ser = cloudpickle.dumps(self.transformer)
+
+                # Parallelisation des fils.
+                from laue.zone_axis import _get_zone_axes_pickle
+                from laue.tools.multi_core import limited_imap
+                with multiprocessing.Pool() as pool:
+                    yield from (
+                        diag.find_zone_axes(_axes_args=args)
+                        for diag, args
+                        in zip(
+                            self,
+                            limited_imap(pool,
+                                _get_zone_axes_pickle,
+                                ( # transformer, gnomonics, dmax, nbr, tol
+                                    (transformer_ser, *diag.find_zone_axes(**constraints, _get_args=True))
+                                    for diag in self
+                                )
+                            )
+                        )
+                    )
+
+            else:
+                yield from (diag.find_zone_axes() for diag in self)
+
+        if self._axes_iterator is None:
+            self._axes_iterator = iter(_axes_extractor(self))
+
+        from laue.tools.multi_core import RecallingIterator
+        return (lambda x: (yield from x))(RecallingIterator(self._axes_iterator, mother=self))
+
+    def _get_gnomonic_matrix(self):
+        &#34;&#34;&#34;
+        ** Calcul les matrices de transformation gnomonic **
+
+        Notes
+        -----
+        * Permet via ``cv2`` d&#39;avoir une image dans le plan gnomonic.
+        * Les tailles des image sont le meme dans le plan
+        de la camera et dans le plan gnommonic.
+
+        Returns
+        -------
+        np.ndarray(np.float32) : map_x
+            La premiere matrice que l&#39;on peut voir comme une fonction
+            de ``f(x_gnomon, y_gnomon) -&gt; x_camera``, avec les coordonnees
+            gnomonique exprimees en pxl.
+        np.ndarray(np.float32) : map_y
+            La seconde matrice ``f(x_gnomon, y_gnomon) -&gt; y_camera``
+        tuple : bornes
+            Les limite en mm des pixel extremes:
+            (xmin, xmax, ymin, ymax)
+        &#34;&#34;&#34;
+        if self._gnomonic_matrix is not None:
+            return self._gnomonic_matrix
+
+        if self.verbose:
+            print(&#34;Recuperation de la matrice gnomonic...&#34;)
+        # Recherche des bornes.
+        x_max, y_max = self.get_images_shape()
+        xg, yg = self.transformer.cam_to_gnomonic(
+            *np.meshgrid(np.arange(x_max), np.arange(y_max), copy=False),
+            self.set_calibration())
+        bornes = (xg.min(), xg.max(), yg.min(), yg.max())
+        del xg, yg
+        x_side = np.linspace(bornes[0], bornes[1], num=x_max)
+        y_side = np.linspace(bornes[2], bornes[3], num=y_max)
+        
+        # Fonction inverse.
+        map_x, map_y = self.transformer.gnomonic_to_cam(
+            *np.meshgrid(x_side, y_side, copy=False),
+            self.set_calibration())
+        map_x, map_y = map_x.astype(np.float32, copy=False), map_y.astype(np.float32, copy=False) # cv2 en a besoin.
+
+        if self.verbose:
+            print(&#34;\tOK: La matrice gnomonic est calculee.&#34;)
+
+        # Sauvegarde
+        if psutil is not None and psutil.virtual_memory().percent &lt; 75:
+            self._gnomonic_matrix = (map_x, map_y, bornes)
+            return self._gnomonic_matrix
+        return map_x, map_y, bornes
+
+    def get_mean(self):
+        &#34;&#34;&#34;
+        ** Estime la moyenne des images. **
+
+        Cela permet d&#39;avoir une estimation du fond difus.
+
+        Notes
+        -----
+        * A cause des arrondis machine, seule les 9e15 permieres images sont considerees.
+        * Ne retourne pas tant que toutes les images d&#39;entree ne sont pas lues.
+
+        Returns
+        -------
+        np.ndarray
+            L&#39;image de la moyenne des images en matrice 2d uint16.
+        &#34;&#34;&#34;
+        if self._mean_bg is not None:
+            return self._mean_bg
+
+        if self.verbose:
+            print(&#34;Estimation du fond par la moyenne...&#34;)
+
+        im_gen = iter((image.astype(np.float64) for _, image in self.read_images()))
+        try:
+            mean_array = next(im_gen)
+        except StopIteration as err:
+            raise ValueError(&#34;L&#39;experience ne contient aucune image.&#34;) from err
+        for i, image in enumerate(im_gen):
+            mean_array = i/(i+1) * mean_array + 1/(i+1) * image
+
+        self._mean_bg = mean_array.astype(np.uint16)
+
+        if self.verbose:
+            print(&#34;\tOK: La moyenne des images est estimee.&#34;)
+        return self._mean_bg
+
+    def get_images_shape(self):
+        &#34;&#34;&#34;
+        ** Recupere les dimensions des images. **
+
+        Returns
+        -------
+        tuple
+            (nbr de lignes, nbr de colones), de type (int, int).
+        &#34;&#34;&#34;
+        if self._shape is not None:
+            return self._shape
+
+        try:
+            _, image = next(iter(self.read_images()))
+        except StopIteration as err:
+            raise ValueError(&#34;L&#39;experience ne contient aucune image.&#34;) from err
+        self._shape = image.shape
+        return self._shape
+
+    def read_images(self):
+        &#34;&#34;&#34;
+        ** Cede le contenu des images. **
+
+        Notes
+        -----
+        * Reitere depuis le debut a chaque appel.
+        * Il peut y avoir plusieurs appels en parallele
+        sans que cela ne genere de conflits. Dumoins tans que des threads
+        ne sont pas utilises, car il n&#39;y a pas de mecanisme de verrou.
+        * A chaque appel de cette methode, l&#39;ordre est conserve.
+        * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+        Yields
+        ------
+        name : str
+            Le nom de l&#39;image (path si possible)
+        image : np.ndarray
+            Le contenu de l&#39;image
+
+        Raises
+        ------
+        TypeError
+            Si l&#39;image n&#39;est pas bien typee.
+        FileNotFoundError
+            Si le chemin de l&#39;image n&#39;est pas correcte.
+        ValueError
+            Si les images ne sont pas de la meme taille.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+        &gt;&gt;&gt; for image in laue.Experiment(images):
+        ...     pass
+        ...
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        from laue.tools.multi_core import RecallingIterator, prevent_generator_size
+
+        def read_and_check_any_image(image_info, image_num):
+            &#34;&#34;&#34;
+            Soit retroune directement, soit lit le fichier.
+            Retourne le nom de l&#39;image et l&#39;image elle-meme.
+            Renvoi None, None si il faut ignorer cette image.
+            &#34;&#34;&#34;            
+            # Mise en forme.
+            if isinstance(image_info, str):
+                image_name = image_info
+                from laue.tools.image import read_image
+                image = read_image(image_info, ignore_errors=self.ignore_errors)
+                if image is None:
+                    return None, None
+            elif isinstance(image_info, np.ndarray):
+                image_name = f&#34;image_{image_num}&#34;
+                image = image_info
+            else:
+                raise TypeError(&#34;L&#39;image doit etre de type str ou np.array, &#34;
+                    f&#34;pas {type(image_info).__name__}.&#34;)
+
+            # Verifications
+            if not isinstance(image, np.ndarray):
+                raise TypeError(f&#34;L&#39;image doit etre un array numpy, pas un {type(image).__name__}.&#34;)
+            if image.ndim != 2:
+                raise TypeError(f&#34;L&#39;image {image_name} doit etre en niveau de gris pas de dimension {image.ndim}.&#34;)
+            if image.dtype != np.uint16:
+                raise TypeError(f&#34;L&#39;image {image_name} doit etre encodee en uint16, pas {image.dtype}.&#34;)
+            if self._shape is None:
+                self._shape = image.shape
+            if self._shape != image.shape:
+                raise ValueError(f&#34;L&#39;image {image_name} a pour taille {image.shape} tandis que les images &#34;
+                    f&#34;precedentes ont pour taille {self._shape}. Les images ne sont pas issues de la meme experience.&#34;)
+
+            return image_name, image
+
+        def show_iterator_state(func):
+            &#34;&#34;&#34;
+            Insere des commentaires.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                if self.verbose:
+                    print(&#34;Lecture des images...&#34;)
+                
+                for image_info in func(*func_args, **func_kwargs):
+                    yield image_info
+                    if self.verbose &gt;= 2:
+                        print(f&#34;\timage : (...{str(image_info)[-20:]}) cedes.&#34;)
+
+                if self.verbose:
+                    print(&#34;\tOK: Toutes les images sont lues.&#34;)
+
+            return decorate
+
+        @show_iterator_state
+        def _images_extractor():
+            &#34;&#34;&#34;
+            Premiere vraie extraction.
+            &#34;&#34;&#34;
+            # Convertion str vers generateur
+            if isinstance(self.images, str): # Dans le cas ou une chaine de caractere
+                if os.path.isdir(self.images): # decrit l&#39;ensemble des images.
+                    self.images = (
+                        os.path.join(father, file)
+                        for father, _, files in os.walk(self.images)
+                        for file in files)
+                else:
+                    self.images = glob.iglob(self.images, recursive=True)
+
+            yield from self.images
+
+        @prevent_generator_size(min_size=1)
+        def jump_map(multi_image_iterator):
+            image_num = 0
+            for image_info in multi_image_iterator:
+                image_name, image = read_and_check_any_image(image_info, image_num)
+                if image is None:
+                    continue
+                image_num += 1
+                yield image_name, image
+
+        if self._images_iterator is None:
+            self._images_iterator = iter(_images_extractor())
+
+        return jump_map(RecallingIterator(self._images_iterator, mother=self))
+
+    def save_file(self, filename):
+        &#34;&#34;&#34;
+        ** Enregistre un fichier contenant des informations. **
+
+        Notes
+        -----
+        * Les extensions prises en charge sont ``.det``.
+        * Pour les fichiers propres a chaque diagrammes, voir ``laue.diagram.LaueDiagram.save_file``.
+
+        Parameters
+        ----------
+        filename : str
+            Nom ou chemin du fichier de destination.
+            L&#39;extension doit etre comprise dans le nom du fichier.
+            Si un fichier du meme nom existe deja, il est ecrase.
+
+        Example
+        -------
+        &gt;&gt;&gt; import os, tempfile
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+        &gt;&gt;&gt; rep = tempfile.mkdtemp()
+        &gt;&gt;&gt; expe = laue.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
+        &gt;&gt;&gt; expe.save_file(os.path.join(rep, &#34;fit.det&#34;))
+        &#34;&#34;&#34;
+        assert isinstance(filename, str), \
+            f&#34;&#39;filename&#39; has to be a string, not a {type(filename).__name__}.&#34;
+        assert &#34;.&#34; in filename, &#34;Le fichier doit posseder une extension.&#34;
+        assert filename.split(&#34;.&#34;)[-1].lower() in {&#34;det&#34;}, \
+            f&#34;Seule les extensions &#39;.det&#39; sont supportees. Pas &#39;.{filename.split(&#39;.&#39;)[-1]}&#39;.&#34;
+
+        ext = filename.split(&#34;.&#34;)[-1].lower()
+        if ext == &#34;det&#34;:
+            with open(filename, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
+                file.write(
+                   (f&#34;{self.set_calibration()[&#39;dd&#39;]}, &#34;
+                    f&#34;{self.set_calibration()[&#39;xcen&#39;]}, &#34;
+                    f&#34;{self.set_calibration()[&#39;ycen&#39;]}, &#34;
+                    f&#34;{self.set_calibration()[&#39;xbet&#39;]}, &#34;
+                    f&#34;{self.set_calibration()[&#39;xgam&#39;]}, &#34;
+                    f&#34;{self.set_calibration()[&#39;pixelsize&#39;]}, &#34;
+                    f&#34;{self.get_images_shape()[0]}, &#34;
+                    f&#34;{self.get_images_shape()[1]}\n&#34;))
+                file.write(&#34;Sample-Detector distance(IM), xO, yO, angle1, angle2, pixelsize, dim1, dim2\n&#34;)
+                file.write(f&#34;{repr(self)}\n&#34;)
+                file.write(f&#34;Calibration done at {time.asctime()}.\n&#34;)
+
+    def __getitem__(self, item):
+        &#34;&#34;&#34;
+        ** Recupere un diagrame. **
+
+        Retroune le ou les diagrames de type ``laue.diagram.LaueDiagram``.
+
+        Parameters
+        ----------
+        item
+            * Ce qui permet de reconaitre un diagrame parmis tous.
+                * ``int`` =&gt; Retourne le ieme diagrame, genere par la
+                    ieme image lue.
+
+        Raises
+        ------
+        KeyError
+            Si la clef est correcte mais qu&#39;aucun diagrame ne correspond a cette clef.
+        TypeError
+            Si la clef n&#39;est pas correcte.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; type(laue.Experiment(images)[0])
+        &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+        &gt;&gt;&gt; type(laue.Experiment(images)[-1])
+        &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def get_diag_list(limit):
+            # Cas simple ou il n&#39;y a rien a extraire.
+            if limit &gt;= 0 and len(self._buff_diags) &gt; limit: # Si on a deja une liste de la bone taille.
+                return self._buff_diags
+            if limit &lt; 0 and len(self) and -limit &lt;= len(self):
+                return self._buff_diags
+            if len(self) and limit &gt;= len(self):
+                raise KeyError(f&#34;L&#39;experience n&#39;est faite que de {len(self)} diagrames, &#34;
+                    f&#34;Or vous tentez d&#39;acceder au {limit+1}eme diagrame!&#34;)
+            if len(self) and -limit &gt; len(self):
+                raise KeyError(f&#34;L&#39;experience n&#39;est faite que de {len(self)} diagrames, &#34;
+                    f&#34;Or vous tentez d&#39;acceder rang {limit}. Le plus petit rang possible c&#39;est {-len(self)}.&#34;)
+
+            # Cas ou il faut extraire.
+            if limit &gt;= 0:
+                target_limit = max(limit, 2*len(self._buff_diags))
+                self._buff_diags = []
+                for i, diag in enumerate(self):
+                    self._buff_diags.append(diag)
+                    if i == self._buff_diags:
+                        break
+            else:
+                self._buff_diags = self.get_diagrams()
+
+            return get_diag_list(limit=limit)
+
+        if isinstance(item, int):
+            return get_diag_list(item)[item]
+
+        if isinstance(item, slice):
+            print(item)
+            print(item.start, item.stop, item.step)
+
+        raise TypeError(f&#34;La clef doit etre de type int ou slice. Pas {type(item).__name__}.&#34;)
+
+    def __iter__(self):
+        &#34;&#34;&#34;
+        ** Cede les differents diagrammes contenus dans l&#39;experience. **
+
+        * L&#39;ordre est arbitraire la premiere fois mais reste le meme a chaque appel.
+        * Strictement equivalent a ``self.get_diagrams(tense_flow=True)`` de
+        la methode ``laue.experiment.base_experiment.Experiment.get_diagrams``.
+
+        Yields
+        ------
+        diagram : laue.diagram.LaueDiagram
+            Chaque diagramme contenus dans l&#39;experience.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; experiment = laue.Experiment(image)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; for diag in experiment:
+        ...     pass # Allows to process each diagram as it is ready.
+        ...
+        &gt;&gt;&gt; type(next(iter(experiment)))
+        &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        yield from self.get_diagrams(tense_flow=True)
+
+    def __len__(self):
+        &#34;&#34;&#34;
+        ** Nombre de diagrammes constituants l&#39;experience. **
+
+        Returns
+        -------
+        int
+            Renvoi le nombre de diagrames presents dans cette experience.
+            Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.
+        &#34;&#34;&#34;
+        if self._len is None:
+            return 0
+        return self._len
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        ** Renvoi une chaine evaluable de self. **
+        &#34;&#34;&#34;
+        kwargs = [&#34;images&#34;, &#34;verbose&#34;, &#34;max_space&#34;, &#34;threshold&#34;]
+        attr1 = [f&#34;{kwarg}={repr(getattr(self, kwarg))}&#34; for kwarg in kwargs]
+        attr2 = [f&#34;{k}={v}&#34; for k, v in self.kwargs.items()]
+        return &#34;Experiment(%s)&#34; % &#34;, &#34;.join(attr1 + attr2)
+
+    def __str__(self):
+        &#34;&#34;&#34;
+        ** Retourne une jolie representation. **
+        &#34;&#34;&#34;
+        addi_kwargs = &#39;\t\t\n&#39;.join(f&#39;{k}={v}&#39; for k, v in self.kwargs.items())
+        addi_print = f&#34;\n\tadditional kwargs: \n\t\t{addi_kwargs}&#34; if addi_kwargs else &#34;&#34;
+        return (&#34;Basic Experiment:\n&#34;
+                f&#34;\tnbr reading diagrams: {len(self)}\n&#34;
+                f&#34;\tmax_space: {self.max_space} pxl\n&#34;
+                f&#34;\tthreshold: {self.threshold} impact/impact\n&#34;
+                f&#34;\tfont_size: {self.font_size} pxl\n&#34;
+                f&#34;\tignore_errors: {self.ignore_errors}\n&#34;
+                f&#34;\tverbose: {self.verbose}&#34;
+                f&#34;{addi_print}&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="laue.experiment.base_experiment.Experiment"><code class="flex name class">
+<span>class <span class="ident">Experiment</span></span>
+<span>(</span><span>images=(), *, verbose=False, max_space=5, threshold=5.1, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Permet de travailler sur un lot d'images. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>images</code></strong> :&ensp;<code>str, iterable</code></dt>
+<dd>
+<ul>
+<li>Toutes les images qui constituent l'experience.</li>
+<li>Peut prendre plein de forme differentes:<ul>
+<li>Iterable d'images. Chaque elements peut prendre 2 formes:<ul>
+<li>Le chemin de l'image (str) absolu ou relatif.</li>
+<li>L'image elle meme, matrice 2d en uint16 (np.ndarray).<ul>
+<li>Il vaut mieux donner le nom de l'image que l'image elle-meme
+car la gestion de la RAM sera meilleur, surtout si il y a
+un nombre important d'images ce qui saturerait la memoire.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Repertoire. Nom du dossier qui contient recursivement les images.</li>
+<li>Glob expression. Par example "mon_dossier/*.tiff".</li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>
+<ul>
+<li>Permet d'afficher ou non des informations suplementaires.<ul>
+<li>0 or False =&gt; N'affiche rien du tout, ne pollue pas l'ecran.</li>
+<li>1 or True =&gt; Affiche seulement les etapes principales.</li>
+<li>2 =&gt; Affiche les resultats intermediaires.</li>
+<li>3 =&gt; Affiche vraiment beaucoup de choses (pas tres lisible).</li>
+<li>4 =&gt; Affiche aussi des choses graphiques en plus de
+tous ce qui est dans le terminal.</li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt><strong><code>max_space</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Le nombre minimum de pixels qui separent 2 taches.
+Quand des taches ne sont pas separes par cet intevalle,
+elles se retrouvent aglomerees. La valeur par defaut de 5
+permet d'avoir une recherche tres hexaustive.</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>
+<ul>
+<li>Seuil relatif par raport a l'ecart type de l'image sans fond.</li>
+<li>Plus la valeur est grande, moins on capture de spots:<ul>
+<li>3.5 =&gt; Prend enormement de spots, beaucoup de fausses detection.</li>
+<li>5.1 =&gt; Bon compromis, reste sensible sans trop capturer le fond.</li>
+<li>10 =&gt; Asser selectif, ne prend que les taches qui ressortent beaucoup.</li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt><strong><code>font_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Diametre de l'element structurant qui permet d'evaluer le fond par
+une ouverture morphologique. La valeur par defaut est 21,
+normalement cette valeur est bien, il faut pas y toucher.</dd>
+<dt><strong><code>ignore_errors</code></strong> :&ensp;<code>boolean</code>, optional</dt>
+<dd>Permet d'ignorer certaine erreurs qui ne sont pas critiques.
+La valeur par defaut et True.</dd>
+<dt><strong><code>**detector_parameters</code></strong> :&ensp;<code>number</code></dt>
+<dd>Les parametres de set_calibration de la camera deja connus.
+Il servent dans la methode <code><a title="laue.experiment.base_experiment.Experiment.set_calibration" href="#laue.experiment.base_experiment.Experiment.set_calibration">Experiment.set_calibration()</a></code>
+a accelerer la recherche ou a la rendre plus precise.
+Pour avoir le detail sur ces parametres, voir
+<code><a title="laue.tools.parsing.extract_parameters" href="../tools/parsing.html#laue.tools.parsing.extract_parameters">extract_parameters()</a></code>.</dd>
+<dt><strong><code>**bbox</code></strong> :&ensp;<code>number</code></dt>
+<dd>Ce sont les limites min et max des parametres de set_calibration a ne pas depasser.
+Les bornes minimum doivent etre precedes de '_min' et les maximum de '_max'.
+Vous pouvez par example donner <code>Experiment(dd_min=90.0, dd_max=100.0)</code>.
+Il sont utilises dans la methode <code><a title="laue.experiment.base_experiment.Experiment.set_calibration" href="#laue.experiment.base_experiment.Experiment.set_calibration">Experiment.set_calibration()</a></code>.
+Les noms possibles des parametres sont les meme que <code>**detector_parameters</code>
+a l'exeption de <code>pixelsize, size, pxlsize et config_file</code> qui n'admettent
+pas de bornes.
+Les valeur par defaut sont:<pre><code>dd   : 60.0 mm          ; 80.0 mm
+xbet : -0.9 degre       ; 0.9 degre
+xgam : -0.9 degre       ; 0.9 degre
+xcen : milieu - 150 pxl ; milieu + 150 pxl
+ycen : milieu - 150 pxl ; milieu + 150 pxl
+</code></pre>
+</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Experiment:
+    &#34;&#34;&#34;
+    ** Permet de travailler sur un lot d&#39;images. **
+    &#34;&#34;&#34;
+    def __init__(self, images=(), *, verbose=False, max_space=5, threshold=5.1, **kwargs):
+        &#34;&#34;&#34;
+        Parameters
+        ----------
+        images : str, iterable
+            - Toutes les images qui constituent l&#39;experience.
+            - Peut prendre plein de forme differentes:
+                - Iterable d&#39;images. Chaque elements peut prendre 2 formes:
+                    - Le chemin de l&#39;image (str) absolu ou relatif.
+                    - L&#39;image elle meme, matrice 2d en uint16 (np.ndarray).
+                        - Il vaut mieux donner le nom de l&#39;image que l&#39;image elle-meme
+                        car la gestion de la RAM sera meilleur, surtout si il y a
+                        un nombre important d&#39;images ce qui saturerait la memoire.
+                - Repertoire. Nom du dossier qui contient recursivement les images.
+                - Glob expression. Par example &#34;mon_dossier/*.tiff&#34;.
+        verbose : int, optional
+            * Permet d&#39;afficher ou non des informations suplementaires.
+                - 0 or False =&gt; N&#39;affiche rien du tout, ne pollue pas l&#39;ecran.
+                - 1 or True =&gt; Affiche seulement les etapes principales.
+                - 2 =&gt; Affiche les resultats intermediaires.
+                - 3 =&gt; Affiche vraiment beaucoup de choses (pas tres lisible).
+                - 4 =&gt; Affiche aussi des choses graphiques en plus de
+                    tous ce qui est dans le terminal.
+
+        max_space : int, optional
+            Le nombre minimum de pixels qui separent 2 taches.
+            Quand des taches ne sont pas separes par cet intevalle,
+            elles se retrouvent aglomerees. La valeur par defaut de 5
+            permet d&#39;avoir une recherche tres hexaustive.
+        threshold : float, optional
+            - Seuil relatif par raport a l&#39;ecart type de l&#39;image sans fond.
+            - Plus la valeur est grande, moins on capture de spots:
+                - 3.5 =&gt; Prend enormement de spots, beaucoup de fausses detection.
+                - 5.1 =&gt; Bon compromis, reste sensible sans trop capturer le fond.
+                - 10 =&gt; Asser selectif, ne prend que les taches qui ressortent beaucoup.
+        font_size : int, optional
+            Diametre de l&#39;element structurant qui permet d&#39;evaluer le fond par
+            une ouverture morphologique. La valeur par defaut est 21,
+            normalement cette valeur est bien, il faut pas y toucher.
+        ignore_errors : boolean, optional
+            Permet d&#39;ignorer certaine erreurs qui ne sont pas critiques.
+            La valeur par defaut et True.
+        **detector_parameters : number
+            Les parametres de set_calibration de la camera deja connus.
+            Il servent dans la methode ``laue.experiment.base_experiment.Experiment.set_calibration``
+            a accelerer la recherche ou a la rendre plus precise.
+            Pour avoir le detail sur ces parametres, voir
+            ``laue.tools.parsing.extract_parameters``.
+        **bbox : number
+            Ce sont les limites min et max des parametres de set_calibration a ne pas depasser.
+            Les bornes minimum doivent etre precedes de &#39;_min&#39; et les maximum de &#39;_max&#39;.
+            Vous pouvez par example donner ``Experiment(dd_min=90.0, dd_max=100.0)``.
+            Il sont utilises dans la methode ``laue.experiment.base_experiment.Experiment.set_calibration``.
+            Les noms possibles des parametres sont les meme que ``**detector_parameters``
+            a l&#39;exeption de ``pixelsize, size, pxlsize et config_file`` qui n&#39;admettent
+            pas de bornes.
+            Les valeur par defaut sont:
+
+                dd   : 60.0 mm          ; 80.0 mm
+                xbet : -0.9 degre       ; 0.9 degre
+                xgam : -0.9 degre       ; 0.9 degre
+                xcen : milieu - 150 pxl ; milieu + 150 pxl
+                ycen : milieu - 150 pxl ; milieu + 150 pxl
+        &#34;&#34;&#34;
+        assert hasattr(images, &#34;__iter__&#34;), (&#34;&#39;images&#39; must to be iterable. &#34;
+            f&#34;It can not be of type {type(images).__name__}.&#34;)
+        assert isinstance(verbose, int), f&#34;&#39;verbose&#39; has to be int, not {type(verbose).__name__}.&#34;
+        assert isinstance(max_space, int), &#34;&#39;max_space&#39; has to be an integer, not a %s.&#34; \
+            % type(max_space).__name__
+        assert max_space &gt;= 1, f&#34;&#39;max_space&#39; has to be positive. His value is &#39;{max_space}&#39;.&#34;
+        assert isinstance(threshold, float), \
+            f&#34;&#39;threshold&#39; has to be float, not a {type(threshold).__name__}.&#34;
+        assert 2.0 &lt; threshold &lt; 80.0, \
+            f&#34;Le seuil doit etre compris entre 2 et 50, il vaut &#39;{threshold}&#39;.&#34;
+
+        font_size = kwargs.get(&#34;font_size&#34;, 21)
+        assert isinstance(font_size, int), \
+            f&#34;&#39;font_size&#39; has to be an integer, not a {type(font_size).__name__}.&#34;
+        assert font_size &gt;= 2, (&#34;&#39;font_size&#39; doit etre superieur a 1. &#34;
+            f&#34;Il ne peut pas valoir {font_size}.&#34;)
+        ignore_errors = kwargs.get(&#34;ignore_errors&#34;, True)
+        assert isinstance(ignore_errors, bool), \
+            f&#34;&#39;ignore_errors&#39; has to be a boolean, not a {type(ignore_errors).__name__}.&#34;
+
+        self.images = images
+
+        self.verbose = verbose
+        self.max_space = max_space
+        self.threshold = threshold
+        self.font_size = font_size
+        self.ignore_errors = ignore_errors
+        self.kwargs = kwargs
+
+        # Precalul des constantes.
+        self.kernel_font = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.font_size, self.font_size))
+        self.kernel_dilate = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.max_space, self.max_space))
+        self.transformer = geometry.Transformer() # Outil permetant de faire les transformations geometriques.
+
+        # Declaration des attributs interne de memoire.
+        self._len = None # Nombre de diagrames lues.
+        self._buff_diags = [] # La liste ordonnee des diagrames lus.
+
+        self._mean_bg = None # Fond diffus estime par la moyenne de toutes les images.
+        self._shape = None # Les dimensions des matrices des images xy.
+        self._calibration_parameters = None # Le dictionaire des parametres geometrique de la camera.
+        self._gnomonic_matrix = None # Les matrices de transformation.
+
+        self._images_iterator = None # Iterateur unique des informations des images.
+        self._diagrams_iterator = None # Iterateur unique qui genere les diagrammes.
+        self._axes_iterator = None # Iterateur unique qui cede les axes de zonne de chaque diagramme.
+
+    def set_calibration(self, *diagrams):
+        &#34;&#34;&#34;
+        ** Calibration de la camera. **
+
+        Notes
+        -----
+        * Ne nessecite aucune connaissances prealable sur le christal.
+        * Il n&#39;y a pas besoin d&#39;avoir un diagramme bien calibre, il se debrouille tout seul.
+        * Cette fonction peut parfois etre lente (plusieur minutes)!
+        * Si vous connaissez les parametres, fournissez-les, ca ira plus vite!
+        * Si cette methode a deja ete appelee une fois, elle retourne
+            immeditement le resultat sans refaire les calculs.
+
+        Parameters
+        ----------
+        *diagrams : optional
+            Les ou le diagramme.s qui vont servir a faire la set_calibration.
+            Si aucun diagramme n&#39;est precise, cette methode recherche par elle meme
+            les diagrammes qu&#39;elle trouve convaincant parmis ceux qui sont disponibles.
+            Il doivent etre de type ``laue.diagram.LaueDiagram``.
+
+        Returns
+        -------
+        dict 
+            Le dictionaire qui a chaque non de parametre, associe sa valeur numerique.
+            Les clefs sont les suivantes: &#34;dd&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;xbet&#34;, &#34;xgam&#34; and &#34;pixelsize&#34;
+
+        Raises
+        ------
+        KeyError
+            Si l&#39;utilisateur n&#39;a pas precise les parametres vraiment indispenssables.
+        ValueError
+            Si il y a des incoherences dans les parametres.
+
+        Example
+        -------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; experiment = laue.Experiment(image)
+        &gt;&gt;&gt; parameters = experiment.set_calibration()
+        &gt;&gt;&gt; sorted(parameters.keys())
+        [&#39;dd&#39;, &#39;pixelsize&#39;, &#39;xbet&#39;, &#39;xcen&#39;, &#39;xgam&#39;, &#39;ycen&#39;]
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if self._calibration_parameters is not None: # Si on peut retourner directement,
+            return self._calibration_parameters # on ne s&#39;en prive pas.
+
+        assert all(isinstance(diag, LaueDiagram) for diag in diagrams), \
+            &#34;Tous les diagrammes doivent etre de type &#39;LaueDiagram&#39;. Or ce n&#39;est pas le cas.&#34;
+
+        if self.verbose:
+            print(&#34;Calibration...&#34;)
+            if self.verbose &gt;= 2:
+                print(&#34;\tPrise en compte des parametres fournis...&#34;)
+
+        # Constantes.
+        PIXELSIZE_REF = {(2048, 2048): 0.079856, # Taille des pixels fonction de la camera.
+                         (2018, 2016): 0.0734,
+                         (2594, 2748): 0.031}
+        PARAM_SET = {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;} # Les paremetres non deductibles.
+        PARAM_MIN = {&#34;dd&#34;: 60.0, # Les bornes minimale par defaut.
+                     &#34;xbet&#34;: -.9,
+                     &#34;xgam&#34;: -.9,
+                     &#34;xcen&#34;: self.get_images_shape()[0]/2 - 150,
+                     &#34;ycen&#34;: self.get_images_shape()[0]/2 - 150}
+        PARAM_MAX = {&#34;dd&#34;: 80.0, # Les bornes maximales par defaut.
+                     &#34;xbet&#34;: .9,
+                     &#34;xgam&#34;: .9,
+                     &#34;xcen&#34;: self.get_images_shape()[0]/2 + 150,
+                     &#34;ycen&#34;: self.get_images_shape()[1]/2 + 150}
+
+        # Recuperation des parametres fournis et deductibles.
+        from laue.tools.parsing import extract_parameters
+        given_parameters = extract_parameters(ignore_missing=True, **self.kwargs)
+        if (&#34;pixelsize&#34; not in given_parameters) and (self.get_images_shape() in PIXELSIZE_REF):
+            given_parameters[&#34;pixelsize&#34;] = PIXELSIZE_REF[self.get_images_shape()]
+        
+        elif (&#34;pixelsize&#34; not in given_parameters) and (self.get_images_shape() not in PIXELSIZE_REF):
+            raise KeyError(&#34;Vous devez fournir le parametre &#39;pixelsize&#39;.\n&#34;
+                f&#34;Les images font {self.get_images_shape()} pxl**2. &#34;
+                f&#34;Or, seul les &#39;pixelsize&#39; des images {&#39; et &#39;.join(map(str, PIXELSIZE_REF))} sont connus.&#34;)
+
+        # Recuperation des bornes.
+        given_min = extract_parameters(ignore_missing=True, **{
+            param[:-4]: value
+            for param, value in self.kwargs.items()
+            if param.endswith(&#34;_min&#34;) and len(param) &gt; 4})
+        given_max = extract_parameters(ignore_missing=True, **{
+            param[:-4]: value
+            for param, value in self.kwargs.items()
+            if param.endswith(&#34;_max&#34;) and len(param) &gt; 4})
+        parameters_min = {param: given_min.get(param, PARAM_MIN[param]) for param in PARAM_SET}
+        parameters_max = {param: given_max.get(param, PARAM_MAX[param]) for param in PARAM_SET}
+        
+        for param in PARAM_SET: # Verification de la coherence des bornes.
+            if parameters_min[param] &gt;= parameters_max[param]:
+                raise ValueError(f&#34;Les bornes du parametre {repr(param)} sont inversees, &#34;
+                    f&#34;{param}_min={parameters_min[param]} et {param}_max={parameters_max[param]}.&#34;)
+
+        # Valeur de departs des parametres.
+        initial_parameters = { # Ce sont les parametres initiaux pour la descente de gradient.
+            par: given_parameters.get(par,
+                .5*(parameters_min[par] + parameters_max[par]))
+            for par in PARAM_SET}
+       
+        for par, val in initial_parameters.items(): # Verification.
+            if par in given_parameters and par in given_min:
+                if given_parameters[par] &lt; given_min[par]:
+                    raise ValueError(f&#34;Vous avez imposes {par}_min={given_min[par]} &#34;
+                        f&#34;et en meme temp vous avez donnes {par}={val}!&#34;)
+            if par in given_parameters and par in given_max:
+                if given_parameters[par] &gt; given_max[par]:
+                    raise ValueError(f&#34;Vous avez imposes {par}_max={given_max[par]} &#34;
+                        f&#34;et en meme temps vous avez donnes {par}={val}!&#34;)
+
+        # Parametres restants.
+        unknown_parameters = PARAM_SET - set(given_parameters)
+        if not unknown_parameters: # Si Il n&#39;y a rien a calculer.
+            self._calibration_parameters = given_parameters
+            self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
+            if self.verbose:
+                if self.verbose &gt;= 2:
+                    print(&#34;\t\tOK: Tout est fournis, il n&#39;y a rien a faire.&#34;)
+                print(f&#34;\tOK: Calibration terminee: {given_parameters}&#34;)
+            return self._calibration_parameters
+
+        # Extraction d&#39;une poignee de diagrammes interressants.
+        if self.verbose &gt;= 2:
+            print(&#34;\tRecuperation des diagrammes interressants...&#34;)
+        if not diagrams: # Si l&#39;utilisateur ne nous aide pas a trouver les bons diagrammes.
+            diagrams = []
+            for i, dia in enumerate(self):
+                if i &gt; 60: # On ne s&#39;interesse qu&#39;a la premiere minute.
+                    break
+                diagrams.append(dia)
+
+            diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:os.cpu_count()])
+            best_diagrams = [next(diagrams)]
+            best_diagrams.extend([dia for dia in diagrams
+                if dia.get_quality() &gt; 0.7*best_diagrams[0].get_quality()])
+        else: # Si l&#39;utilisateur nous en fournit.
+            best_diagrams = diagrams # C&#39;est un tuple et non pas une liste mais c&#39;est pas genant.
+        if self.verbose &gt;= 2:
+            for dia in best_diagrams:
+                print(f&#34;\t\t{dia.get_id()}&#34;)
+
+        # Vectorisation des donnees pour de bonnes perfs.
+        min_size = min(len(dia) for dia in best_diagrams) # Le plus petit nombre de points.
+        spots_position = np.array(
+            [dia.get_positions(n=min_size, sort=&#34;quality&#34;)
+             for dia in best_diagrams],
+            dtype=np.float32)
+        spots_position = np.swapaxes(spots_position, 0, 1) # shape: (2, n_diagrams, nbr_spots)
+
+        # Perparations des parametres pour la suite.
+        vect_labels = tuple(unknown_parameters) # On recupere les nom des parametre inconus seulement.
+        bounds = [(parameters_min[name], parameters_max[name]) for name in vect_labels] # Les limites des variables.
+        args = (given_parameters, vect_labels, spots_position) # Les arguments en plus de la fonction de cout.
+        if self.verbose &gt;= 2:
+            print(f&#34;\tcalibration des parametres {vect_labels}&#34;)
+            print(f&#34;\tbornes min: {tuple(b_min for b_min, _ in bounds)}&#34;)
+            print(f&#34;\tbornes max: {tuple(b_max for _, b_max in bounds)}&#34;)
+        
+        # Recherche rapide d&#39;un minimum par descente de gradient.
+        from scipy import optimize # On ne l&#39;importe que ici car on est pas sur de s&#39;en servir.
+        if self.verbose &gt;= 2:
+            print(&#34;\tDescente de gradient...&#34;)
+        opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
+            self._calibration_cost,
+            x0=[initial_parameters[name] for name in vect_labels],
+            args=args, # On donne les arguments et on paralelise.
+            bounds=bounds,
+            options={&#34;disp&#34;: self.verbose &gt;= 3})
+        if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
+            if self.verbose &gt;= 2:
+                print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+            # Recherche d&#39;un bon minimum global
+            if self.verbose &gt;= 2:
+                print(&#34;\tOptimsation globale, algo genetique...&#34;)
+            opt_res = optimize.differential_evolution(
+                self._calibration_cost,
+                bounds=bounds,
+                args=args,
+                disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
+                polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
+                popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
+                workers=1) # Pour ne pas creer de sous processus.
+                # C&#39;est plus rapide de ne pas creer de sous processus que d&#39;en faire... car cloudpickle est lent!
+        if self.verbose &gt;= 2:
+            print(f&#34;\t\tOk: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+        fit_parameters_vect = opt_res[&#34;x&#34;]
+        
+        # Mise en forme du resultat.
+        fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
+        self._calibration_parameters = {**given_parameters, **fit_parameters}
+        self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
+        if self.verbose:
+            print(f&#34;\tOK: set_calibration terminee: {self._calibration_parameters}&#34;)
+        return self._calibration_parameters
+
+    def _calibration_cost(self, params_as_vect, known_params, vect_labels, spots_position):
+        &#34;&#34;&#34;
+        ** Help for ``set_calibration``. **
+
+        Parameters
+        ----------
+        params_as_vect : np.ndarray
+            Le vecteur des valeurs inconues de parametres.
+        :param known_params : dict
+            Dictionaire des parametres connus.
+        :param vect_labels : tuple
+            Le tuple des nom des parametres associes au vecteur.
+        spots_position : np.ndarray
+            Coordonnees des points x, y des diagrammes de reference.
+            shape = (2, n_diagrams, nbr_spots)
+        &#34;&#34;&#34;
+        # Projection gnomonique.
+        _, n_diagrams, nbr_spots = spots_position.shape
+        unknown_parameters = {name: value for name, value in zip(vect_labels, params_as_vect)}
+        parameters = {**unknown_parameters, **known_params}
+        gnom_spots_x, gnom_spots_y = self.transformer.cam_to_gnomonic(*spots_position, parameters) # shape: (n_diagrams, nbr_pic)
+
+        # Recherche des axes de zones intensifs.
+        gnom_spots_x = ((gnom_spots_x
+                        - np.repeat(gnom_spots_x.mean(axis=-1)[..., np.newaxis], nbr_spots, axis=-1)
+                        ) / np.repeat(gnom_spots_x.std(axis=-1)[..., np.newaxis], nbr_spots, axis=-1))
+        gnom_spots_y = ((gnom_spots_y
+                        - np.repeat(gnom_spots_y.mean(axis=-1)[..., np.newaxis], nbr_spots, axis=-1)
+                        ) / np.repeat(gnom_spots_y.std(axis=-1)[..., np.newaxis], nbr_spots, axis=-1))
+        thetas, dists = self.transformer.hough(gnom_spots_x, gnom_spots_y) # shape: (n_diagrams, nbr_pic*(nbr_pic-1)/2)
+        clusters = self.transformer.hough_reduce(thetas, dists, # shape: (n_diagrams,)
+            nbr=6, tol=0.035) # On prend des qu&#39;il y a 6 points environ allignes.
+
+        # Calcul de l&#39;erreur.
+        projection = np.mean([np.log(1 + self.transformer.dist_line( # compris generalement entre [0.007, 0.3]
+                                clusters[i][0, :], clusters[i][1, :],
+                                gnom_spots_x[i, :], gnom_spots_y[i, :]).min(axis=0, initial=1.0)).mean()
+                              if clusters[i].shape[-1] else 1.0 # Si il n&#39;y a pas de droite, c&#39;est qu&#39;on est dans les choux.
+                            for i in range(n_diagrams)]) # Moyenne des ecarts des projetes des points sur la droite la plus proche.
+        scattering = np.mean([np.log(
+                                    (gnom_spots_x[i, :] - gnom_spots_x[i, :].mean())**2
+                                  + (gnom_spots_y[i, :] - gnom_spots_y[i, :].mean())**2
+                                  + 1)
+                            for i in range(n_diagrams)]) # Eparpillement [0.1, 0.95], &gt; =&gt; bien eparpille
+        cost = projection * scattering**(-4)
+
+        if self.verbose &gt;= 3:
+            print(f&#34;\t\tCurrent parameters: {unknown_parameters}&#34;)
+            print(f&#34;\t\tCurrent cost: {cost}&#34;)
+            if self.verbose &gt;= 4:
+                import matplotlib.pyplot as plt
+                plt.clf()
+                for i in range(n_diagrams):
+                    plt.subplot(n_diagrams, 3, 1 + 3*i)
+                    plt.title(f&#34;diagramme {i+1}, plan camera&#34;)
+                    plt.scatter(spots_position[0, i, ...], spots_position[1, i, ...])
+
+                    plt.subplot(n_diagrams, 3, 2 + 3*i)
+                    plt.title(f&#34;diagramme {i+1}, plan gnomonic&#34;)
+                    plt.scatter(gnom_spots_x[i, :], gnom_spots_y[i, :])
+                    for angle, dist in clusters[i].transpose():
+                        v = np.array([np.cos(angle), np.sin(angle)])
+                        u = np.array([np.sin(angle), -np.cos(angle)])
+                        p = dist*v
+                        plt.axline(p, p+u, lw=0.5, color=&#34;r&#34;)
+
+                    plt.subplot(n_diagrams, 3, 3 + 3*i)
+                    plt.title(f&#34;diagramme {i+1}, hough&#34;)
+                    plt.scatter(thetas[i, :], dists[i, :])
+                    print(clusters.shape)
+                    plt.scatter(clusters[i][0], clusters[i][1])
+                plt.draw()
+                plt.pause(1e-6)
+
+        return cost
+
+    def clean(self):
+        &#34;&#34;&#34;
+        ** Tente de liberer de la memoire. **
+
+        Supprime tous les attributs qui sont suceptibles
+        de prendre de la place ne memoire.
+        &#34;&#34;&#34;
+        if self.verbose:
+            print(&#34;Suppression des attributs facultatifs...&#34;)
+        self._gnomonic_matrix = None
+        for diag in self:
+            diag.clean()
+        if self.verbose:
+            print(&#34;\tOK: Le volume de donnees et minimum.&#34;)
+
+    def get_diagrams(self, *, tense_flow=False):
+        &#34;&#34;&#34;
+        ** Genere les diagrammes de l&#39;experience. **
+
+        Notes
+        -----
+        * Performances:
+            * Sur un PC (intel core i7, ssd, 8 coeurs), met environ 37 ms/diagramme.
+            * Sur un PC (intel centrino, hdd, 2 coeurs), met environ 530 ms/diagramme.
+
+        Parameters
+        ----------
+        tense_flow : boolean
+            * True : Permet de travailler a flux tendu, c&#39;est a dire
+            de cede les diagrammes au fur a meusure qu&#39;ils sont crees.
+                * Le generateur termine quand toutes les images sont lues ou
+                que le generateur d&#39;images leve un ``StopIteration``.
+                * A chaque nouvel appel de cette methode, l&#39;iteration
+                recommence a partir du debut et l&#39;ordre reste inchange.
+                * Equivalent a ``laue.experiment.base_experiment.Experiment.__iter__``.
+            * False. Sinon, attend que tous les diagrammes
+            soient lues afin de tout renvoyer en meme temps.
+
+        Returns
+        -------
+        list
+            La liste des diagrammes de type ``laue.diagram.LaueDiagram``.
+
+        Yields
+        ------
+        laue.diagram.LaueDiagram
+            * Chaque diagram extrait au fur a mesure qu&#39;il arrive.
+            * L&#39;ordre est concerve pour chaque appel de cette methode a flux tendu.
+            * A chaque appel on repars du debut, meme si un autre appel n&#39;est pas termine.
+            * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+        &gt;&gt;&gt; experiment = laue.Experiment(images)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; diagrams = experiment.get_diagrams()
+        &gt;&gt;&gt; type(diagrams)
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; type(diagrams.pop())
+        &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def update_len(func):
+            &#34;&#34;&#34;
+            Tient a jour la longueur de l&#39;experience.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                for i, element in enumerate(func(*func_args, **func_kwargs)):
+                    yield element
+                self._len = i + 1
+
+            return decorate
+
+        def show_iterator_state(func):
+            &#34;&#34;&#34;
+            Insere des commentaires.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                if self.verbose:
+                    print(&#34;Extraction des diagrammes...&#34;)
+
+                for i, diag in enumerate(func(*func_args, **func_kwargs)):
+                    if self.verbose &gt;= 2:
+                        print(f&#34;\tdiagramme num {i} extrait: &#34;
+                              f&#34;(...{diag.get_id()[-20:]}) &#34;
+                              f&#34;avec {len(diag)} spots&#34;)
+                    yield diag
+                if self.verbose:
+                    print(&#34;\tOK: Tous les diagrammes sont extraits.&#34;)
+            
+            return decorate
+
+        @update_len
+        @show_iterator_state
+        def _diagram_extractor(self):
+            &#34;&#34;&#34;
+            Premiere vraie lecture. Cede les diagrammes.
+            &#34;&#34;&#34;
+            if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+                attrs = [&#34;kernel_font&#34;, &#34;threshold&#34;, &#34;kernel_dilate&#34;]
+                mini_self = collections.namedtuple(&#34;SelfCopy&#34;, attrs)(
+                    *(getattr(self, attr) for attr in attrs)
+                    ) # Strategie car &#39;pickle&#39; ne sais pas faire ca.
+                ser_self = cloudpickle.dumps(mini_self)
+
+                from laue.tools.multi_core import pickleable_method
+                from laue.tools.multi_core import limited_imap
+                with multiprocessing.Pool() as pool:
+                    yield from (
+                        self._help_get_diagrams(name, image, spot_args=spot_args)
+                        for (name, image, spot_args) in limited_imap(pool,
+                            pickleable_method,
+                            (
+                                (
+                                    Experiment._help_get_diagrams,
+                                    ser_self,
+                                    {&#34;name&#34;:name, &#34;image&#34;:image, &#34;thread&#34;:True}
+                                )
+                                for name, image in self.read_images()
+                            )
+                        )
+                    )
+            else:
+                yield from (self._help_get_diagrams(name, image)
+                    for name, image in self.read_images())
+        
+        if self._diagrams_iterator is None:
+            self._diagrams_iterator = iter(_diagram_extractor(self))
+
+        from laue.tools.multi_core import RecallingIterator
+        return (
+            (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
+            if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self)))
+
+    def _help_get_diagrams(self, name, image, thread=False, spot_args=None):
+        &#34;&#34;&#34;
+        ** Comme ``laue.experiment.base_experiment.Experiment.get_diagrams`` pour une seule image. **
+
+        * Cette methode n&#39;est utile qu&#39;a fin de parallelisation.
+        * Elle ne doit pas etre appelle par l&#39;utilisateur.
+        * Cette methode est indirectement appelle par self.get_diagrams().
+        * Il n&#39;y a pas de verifications pour une histoire de performance.
+
+        :retrun: Le diagramme de Laue correspondant.
+        :rtype: LaueDiagram
+        &#34;&#34;&#34;
+        if isinstance(self, bytes):
+            self = cloudpickle.loads(self)
+
+        if spot_args is None:
+            # Binarisation de l&#39;image.
+            bg_image = cv2.morphologyEx(image, cv2.MORPH_OPEN, self.kernel_font, iterations=1)
+            fg_image = image - bg_image
+            thresh_image = (fg_image &gt; self.threshold*fg_image.std()).astype(np.uint8)
+            dilated_image = cv2.dilate(thresh_image, self.kernel_dilate, iterations=1)
+
+            # Detection des contours grossiers.
+            outlines, _ = cv2.findContours(dilated_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            bbox = [cv2.boundingRect(outl) for outl in outlines]
+
+            # Calcul des distortions.
+            distortions_open = np.array([
+                cv2.arcLength(outl, True)/np.sqrt(cv2.contourArea(outl))
+                for outl in outlines]) / (2*np.sqrt(np.pi))
+
+            # Preparations des arguments des spot.
+            spot_args = [((x, y, w, h), fg_image[y:y+h, x:x+w], dis)
+                for dis, (x, y, w, h) in zip(distortions_open, bbox)]
+
+        if thread:
+            if (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent &lt; 50):
+                return (name, image, spot_args)
+            return (name, None, spot_args)
+
+        # Mise en forme du resultat.
+        if image is not None and (
+                (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent &lt; 50)
+                ):
+            laue_diagram = LaueDiagram(name, None, experiment=self, image_xy=image)
+        else:
+            laue_diagram = LaueDiagram(name, None, experiment=self)
+
+        # Creation des ensembles de spots.
+        spots_open = [Spot(bbox=bbox, spot_im=spot_im, distortion=distortion, diagram=laue_diagram)
+                     for bbox, spot_im, distortion in spot_args]
+        laue_diagram.spots = spots_open
+
+        return laue_diagram
+
+    def find_zone_axes(self, tense_flow=True, **constraints):
+        &#34;&#34;&#34;
+        ** Recherche l&#39;ensemble des axes de zones. **
+
+        Returns a zone axis iterator.
+
+        Notes
+        -----
+        * Le resultat est le meme que ``(diag.find_zone_axes() for diag in self)``
+            Sauf qu&#39;il y a de la parallelisation en plus.
+        * Il est possible d&#39;appeler plusieur fois cette methode en parallele.
+        * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+        Parameters
+        ----------
+        **constraints : number
+            Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
+
+        Yields
+        ------
+        list
+            Pour chaque diagramme de cette experience, cede la liste
+            des axes de zones du diagramme. Les elements de l&#39;ensemble
+            sont de type ``laue.zone_axis.ZoneAxis``.
+
+        Example
+        -------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+        &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())))
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())).pop())
+        &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def show_iterator_state(func):
+            &#34;&#34;&#34;
+            Insere des commentaires.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                if self.verbose:
+                    print(&#34;Extraction des axes de zone...&#34;)
+                
+                for i, axes in enumerate(func(*func_args, **func_kwargs)):
+                    if self.verbose &gt;= 2:
+                        print(f&#34;\taxes du diagramme num {i} trouves: il y en a {len(axes)}&#34;)
+                    yield axes
+
+                if self.verbose:
+                    print(&#34;\tOK: Tous les axes de zone sont extraits.&#34;)
+
+            return decorate
+
+        @show_iterator_state
+        def _axes_extractor(self):
+            &#34;&#34;&#34;
+            Premiere vraie extraction.
+            &#34;&#34;&#34;
+            if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+                # Compilation et serialisation des equations.
+                self.transformer.compile()
+                self.set_calibration()
+                transformer_ser = cloudpickle.dumps(self.transformer)
+
+                # Parallelisation des fils.
+                from laue.zone_axis import _get_zone_axes_pickle
+                from laue.tools.multi_core import limited_imap
+                with multiprocessing.Pool() as pool:
+                    yield from (
+                        diag.find_zone_axes(_axes_args=args)
+                        for diag, args
+                        in zip(
+                            self,
+                            limited_imap(pool,
+                                _get_zone_axes_pickle,
+                                ( # transformer, gnomonics, dmax, nbr, tol
+                                    (transformer_ser, *diag.find_zone_axes(**constraints, _get_args=True))
+                                    for diag in self
+                                )
+                            )
+                        )
+                    )
+
+            else:
+                yield from (diag.find_zone_axes() for diag in self)
+
+        if self._axes_iterator is None:
+            self._axes_iterator = iter(_axes_extractor(self))
+
+        from laue.tools.multi_core import RecallingIterator
+        return (lambda x: (yield from x))(RecallingIterator(self._axes_iterator, mother=self))
+
+    def _get_gnomonic_matrix(self):
+        &#34;&#34;&#34;
+        ** Calcul les matrices de transformation gnomonic **
+
+        Notes
+        -----
+        * Permet via ``cv2`` d&#39;avoir une image dans le plan gnomonic.
+        * Les tailles des image sont le meme dans le plan
+        de la camera et dans le plan gnommonic.
+
+        Returns
+        -------
+        np.ndarray(np.float32) : map_x
+            La premiere matrice que l&#39;on peut voir comme une fonction
+            de ``f(x_gnomon, y_gnomon) -&gt; x_camera``, avec les coordonnees
+            gnomonique exprimees en pxl.
+        np.ndarray(np.float32) : map_y
+            La seconde matrice ``f(x_gnomon, y_gnomon) -&gt; y_camera``
+        tuple : bornes
+            Les limite en mm des pixel extremes:
+            (xmin, xmax, ymin, ymax)
+        &#34;&#34;&#34;
+        if self._gnomonic_matrix is not None:
+            return self._gnomonic_matrix
+
+        if self.verbose:
+            print(&#34;Recuperation de la matrice gnomonic...&#34;)
+        # Recherche des bornes.
+        x_max, y_max = self.get_images_shape()
+        xg, yg = self.transformer.cam_to_gnomonic(
+            *np.meshgrid(np.arange(x_max), np.arange(y_max), copy=False),
+            self.set_calibration())
+        bornes = (xg.min(), xg.max(), yg.min(), yg.max())
+        del xg, yg
+        x_side = np.linspace(bornes[0], bornes[1], num=x_max)
+        y_side = np.linspace(bornes[2], bornes[3], num=y_max)
+        
+        # Fonction inverse.
+        map_x, map_y = self.transformer.gnomonic_to_cam(
+            *np.meshgrid(x_side, y_side, copy=False),
+            self.set_calibration())
+        map_x, map_y = map_x.astype(np.float32, copy=False), map_y.astype(np.float32, copy=False) # cv2 en a besoin.
+
+        if self.verbose:
+            print(&#34;\tOK: La matrice gnomonic est calculee.&#34;)
+
+        # Sauvegarde
+        if psutil is not None and psutil.virtual_memory().percent &lt; 75:
+            self._gnomonic_matrix = (map_x, map_y, bornes)
+            return self._gnomonic_matrix
+        return map_x, map_y, bornes
+
+    def get_mean(self):
+        &#34;&#34;&#34;
+        ** Estime la moyenne des images. **
+
+        Cela permet d&#39;avoir une estimation du fond difus.
+
+        Notes
+        -----
+        * A cause des arrondis machine, seule les 9e15 permieres images sont considerees.
+        * Ne retourne pas tant que toutes les images d&#39;entree ne sont pas lues.
+
+        Returns
+        -------
+        np.ndarray
+            L&#39;image de la moyenne des images en matrice 2d uint16.
+        &#34;&#34;&#34;
+        if self._mean_bg is not None:
+            return self._mean_bg
+
+        if self.verbose:
+            print(&#34;Estimation du fond par la moyenne...&#34;)
+
+        im_gen = iter((image.astype(np.float64) for _, image in self.read_images()))
+        try:
+            mean_array = next(im_gen)
+        except StopIteration as err:
+            raise ValueError(&#34;L&#39;experience ne contient aucune image.&#34;) from err
+        for i, image in enumerate(im_gen):
+            mean_array = i/(i+1) * mean_array + 1/(i+1) * image
+
+        self._mean_bg = mean_array.astype(np.uint16)
+
+        if self.verbose:
+            print(&#34;\tOK: La moyenne des images est estimee.&#34;)
+        return self._mean_bg
+
+    def get_images_shape(self):
+        &#34;&#34;&#34;
+        ** Recupere les dimensions des images. **
+
+        Returns
+        -------
+        tuple
+            (nbr de lignes, nbr de colones), de type (int, int).
+        &#34;&#34;&#34;
+        if self._shape is not None:
+            return self._shape
+
+        try:
+            _, image = next(iter(self.read_images()))
+        except StopIteration as err:
+            raise ValueError(&#34;L&#39;experience ne contient aucune image.&#34;) from err
+        self._shape = image.shape
+        return self._shape
+
+    def read_images(self):
+        &#34;&#34;&#34;
+        ** Cede le contenu des images. **
+
+        Notes
+        -----
+        * Reitere depuis le debut a chaque appel.
+        * Il peut y avoir plusieurs appels en parallele
+        sans que cela ne genere de conflits. Dumoins tans que des threads
+        ne sont pas utilises, car il n&#39;y a pas de mecanisme de verrou.
+        * A chaque appel de cette methode, l&#39;ordre est conserve.
+        * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+        Yields
+        ------
+        name : str
+            Le nom de l&#39;image (path si possible)
+        image : np.ndarray
+            Le contenu de l&#39;image
+
+        Raises
+        ------
+        TypeError
+            Si l&#39;image n&#39;est pas bien typee.
+        FileNotFoundError
+            Si le chemin de l&#39;image n&#39;est pas correcte.
+        ValueError
+            Si les images ne sont pas de la meme taille.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+        &gt;&gt;&gt; for image in laue.Experiment(images):
+        ...     pass
+        ...
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        from laue.tools.multi_core import RecallingIterator, prevent_generator_size
+
+        def read_and_check_any_image(image_info, image_num):
+            &#34;&#34;&#34;
+            Soit retroune directement, soit lit le fichier.
+            Retourne le nom de l&#39;image et l&#39;image elle-meme.
+            Renvoi None, None si il faut ignorer cette image.
+            &#34;&#34;&#34;            
+            # Mise en forme.
+            if isinstance(image_info, str):
+                image_name = image_info
+                from laue.tools.image import read_image
+                image = read_image(image_info, ignore_errors=self.ignore_errors)
+                if image is None:
+                    return None, None
+            elif isinstance(image_info, np.ndarray):
+                image_name = f&#34;image_{image_num}&#34;
+                image = image_info
+            else:
+                raise TypeError(&#34;L&#39;image doit etre de type str ou np.array, &#34;
+                    f&#34;pas {type(image_info).__name__}.&#34;)
+
+            # Verifications
+            if not isinstance(image, np.ndarray):
+                raise TypeError(f&#34;L&#39;image doit etre un array numpy, pas un {type(image).__name__}.&#34;)
+            if image.ndim != 2:
+                raise TypeError(f&#34;L&#39;image {image_name} doit etre en niveau de gris pas de dimension {image.ndim}.&#34;)
+            if image.dtype != np.uint16:
+                raise TypeError(f&#34;L&#39;image {image_name} doit etre encodee en uint16, pas {image.dtype}.&#34;)
+            if self._shape is None:
+                self._shape = image.shape
+            if self._shape != image.shape:
+                raise ValueError(f&#34;L&#39;image {image_name} a pour taille {image.shape} tandis que les images &#34;
+                    f&#34;precedentes ont pour taille {self._shape}. Les images ne sont pas issues de la meme experience.&#34;)
+
+            return image_name, image
+
+        def show_iterator_state(func):
+            &#34;&#34;&#34;
+            Insere des commentaires.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                if self.verbose:
+                    print(&#34;Lecture des images...&#34;)
+                
+                for image_info in func(*func_args, **func_kwargs):
+                    yield image_info
+                    if self.verbose &gt;= 2:
+                        print(f&#34;\timage : (...{str(image_info)[-20:]}) cedes.&#34;)
+
+                if self.verbose:
+                    print(&#34;\tOK: Toutes les images sont lues.&#34;)
+
+            return decorate
+
+        @show_iterator_state
+        def _images_extractor():
+            &#34;&#34;&#34;
+            Premiere vraie extraction.
+            &#34;&#34;&#34;
+            # Convertion str vers generateur
+            if isinstance(self.images, str): # Dans le cas ou une chaine de caractere
+                if os.path.isdir(self.images): # decrit l&#39;ensemble des images.
+                    self.images = (
+                        os.path.join(father, file)
+                        for father, _, files in os.walk(self.images)
+                        for file in files)
+                else:
+                    self.images = glob.iglob(self.images, recursive=True)
+
+            yield from self.images
+
+        @prevent_generator_size(min_size=1)
+        def jump_map(multi_image_iterator):
+            image_num = 0
+            for image_info in multi_image_iterator:
+                image_name, image = read_and_check_any_image(image_info, image_num)
+                if image is None:
+                    continue
+                image_num += 1
+                yield image_name, image
+
+        if self._images_iterator is None:
+            self._images_iterator = iter(_images_extractor())
+
+        return jump_map(RecallingIterator(self._images_iterator, mother=self))
+
+    def save_file(self, filename):
+        &#34;&#34;&#34;
+        ** Enregistre un fichier contenant des informations. **
+
+        Notes
+        -----
+        * Les extensions prises en charge sont ``.det``.
+        * Pour les fichiers propres a chaque diagrammes, voir ``laue.diagram.LaueDiagram.save_file``.
+
+        Parameters
+        ----------
+        filename : str
+            Nom ou chemin du fichier de destination.
+            L&#39;extension doit etre comprise dans le nom du fichier.
+            Si un fichier du meme nom existe deja, il est ecrase.
+
+        Example
+        -------
+        &gt;&gt;&gt; import os, tempfile
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+        &gt;&gt;&gt; rep = tempfile.mkdtemp()
+        &gt;&gt;&gt; expe = laue.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
+        &gt;&gt;&gt; expe.save_file(os.path.join(rep, &#34;fit.det&#34;))
+        &#34;&#34;&#34;
+        assert isinstance(filename, str), \
+            f&#34;&#39;filename&#39; has to be a string, not a {type(filename).__name__}.&#34;
+        assert &#34;.&#34; in filename, &#34;Le fichier doit posseder une extension.&#34;
+        assert filename.split(&#34;.&#34;)[-1].lower() in {&#34;det&#34;}, \
+            f&#34;Seule les extensions &#39;.det&#39; sont supportees. Pas &#39;.{filename.split(&#39;.&#39;)[-1]}&#39;.&#34;
+
+        ext = filename.split(&#34;.&#34;)[-1].lower()
+        if ext == &#34;det&#34;:
+            with open(filename, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
+                file.write(
+                   (f&#34;{self.set_calibration()[&#39;dd&#39;]}, &#34;
+                    f&#34;{self.set_calibration()[&#39;xcen&#39;]}, &#34;
+                    f&#34;{self.set_calibration()[&#39;ycen&#39;]}, &#34;
+                    f&#34;{self.set_calibration()[&#39;xbet&#39;]}, &#34;
+                    f&#34;{self.set_calibration()[&#39;xgam&#39;]}, &#34;
+                    f&#34;{self.set_calibration()[&#39;pixelsize&#39;]}, &#34;
+                    f&#34;{self.get_images_shape()[0]}, &#34;
+                    f&#34;{self.get_images_shape()[1]}\n&#34;))
+                file.write(&#34;Sample-Detector distance(IM), xO, yO, angle1, angle2, pixelsize, dim1, dim2\n&#34;)
+                file.write(f&#34;{repr(self)}\n&#34;)
+                file.write(f&#34;Calibration done at {time.asctime()}.\n&#34;)
+
+    def __getitem__(self, item):
+        &#34;&#34;&#34;
+        ** Recupere un diagrame. **
+
+        Retroune le ou les diagrames de type ``laue.diagram.LaueDiagram``.
+
+        Parameters
+        ----------
+        item
+            * Ce qui permet de reconaitre un diagrame parmis tous.
+                * ``int`` =&gt; Retourne le ieme diagrame, genere par la
+                    ieme image lue.
+
+        Raises
+        ------
+        KeyError
+            Si la clef est correcte mais qu&#39;aucun diagrame ne correspond a cette clef.
+        TypeError
+            Si la clef n&#39;est pas correcte.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; type(laue.Experiment(images)[0])
+        &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+        &gt;&gt;&gt; type(laue.Experiment(images)[-1])
+        &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def get_diag_list(limit):
+            # Cas simple ou il n&#39;y a rien a extraire.
+            if limit &gt;= 0 and len(self._buff_diags) &gt; limit: # Si on a deja une liste de la bone taille.
+                return self._buff_diags
+            if limit &lt; 0 and len(self) and -limit &lt;= len(self):
+                return self._buff_diags
+            if len(self) and limit &gt;= len(self):
+                raise KeyError(f&#34;L&#39;experience n&#39;est faite que de {len(self)} diagrames, &#34;
+                    f&#34;Or vous tentez d&#39;acceder au {limit+1}eme diagrame!&#34;)
+            if len(self) and -limit &gt; len(self):
+                raise KeyError(f&#34;L&#39;experience n&#39;est faite que de {len(self)} diagrames, &#34;
+                    f&#34;Or vous tentez d&#39;acceder rang {limit}. Le plus petit rang possible c&#39;est {-len(self)}.&#34;)
+
+            # Cas ou il faut extraire.
+            if limit &gt;= 0:
+                target_limit = max(limit, 2*len(self._buff_diags))
+                self._buff_diags = []
+                for i, diag in enumerate(self):
+                    self._buff_diags.append(diag)
+                    if i == self._buff_diags:
+                        break
+            else:
+                self._buff_diags = self.get_diagrams()
+
+            return get_diag_list(limit=limit)
+
+        if isinstance(item, int):
+            return get_diag_list(item)[item]
+
+        if isinstance(item, slice):
+            print(item)
+            print(item.start, item.stop, item.step)
+
+        raise TypeError(f&#34;La clef doit etre de type int ou slice. Pas {type(item).__name__}.&#34;)
+
+    def __iter__(self):
+        &#34;&#34;&#34;
+        ** Cede les differents diagrammes contenus dans l&#39;experience. **
+
+        * L&#39;ordre est arbitraire la premiere fois mais reste le meme a chaque appel.
+        * Strictement equivalent a ``self.get_diagrams(tense_flow=True)`` de
+        la methode ``laue.experiment.base_experiment.Experiment.get_diagrams``.
+
+        Yields
+        ------
+        diagram : laue.diagram.LaueDiagram
+            Chaque diagramme contenus dans l&#39;experience.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; experiment = laue.Experiment(image)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; for diag in experiment:
+        ...     pass # Allows to process each diagram as it is ready.
+        ...
+        &gt;&gt;&gt; type(next(iter(experiment)))
+        &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        yield from self.get_diagrams(tense_flow=True)
+
+    def __len__(self):
+        &#34;&#34;&#34;
+        ** Nombre de diagrammes constituants l&#39;experience. **
+
+        Returns
+        -------
+        int
+            Renvoi le nombre de diagrames presents dans cette experience.
+            Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.
+        &#34;&#34;&#34;
+        if self._len is None:
+            return 0
+        return self._len
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        ** Renvoi une chaine evaluable de self. **
+        &#34;&#34;&#34;
+        kwargs = [&#34;images&#34;, &#34;verbose&#34;, &#34;max_space&#34;, &#34;threshold&#34;]
+        attr1 = [f&#34;{kwarg}={repr(getattr(self, kwarg))}&#34; for kwarg in kwargs]
+        attr2 = [f&#34;{k}={v}&#34; for k, v in self.kwargs.items()]
+        return &#34;Experiment(%s)&#34; % &#34;, &#34;.join(attr1 + attr2)
+
+    def __str__(self):
+        &#34;&#34;&#34;
+        ** Retourne une jolie representation. **
+        &#34;&#34;&#34;
+        addi_kwargs = &#39;\t\t\n&#39;.join(f&#39;{k}={v}&#39; for k, v in self.kwargs.items())
+        addi_print = f&#34;\n\tadditional kwargs: \n\t\t{addi_kwargs}&#34; if addi_kwargs else &#34;&#34;
+        return (&#34;Basic Experiment:\n&#34;
+                f&#34;\tnbr reading diagrams: {len(self)}\n&#34;
+                f&#34;\tmax_space: {self.max_space} pxl\n&#34;
+                f&#34;\tthreshold: {self.threshold} impact/impact\n&#34;
+                f&#34;\tfont_size: {self.font_size} pxl\n&#34;
+                f&#34;\tignore_errors: {self.ignore_errors}\n&#34;
+                f&#34;\tverbose: {self.verbose}&#34;
+                f&#34;{addi_print}&#34;)</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="laue.experiment.theorical_experiment.TheoricalExperiment" href="theorical_experiment.html#laue.experiment.theorical_experiment.TheoricalExperiment">TheoricalExperiment</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.experiment.base_experiment.Experiment.__getitem__"><code class="name flex">
+<span>def <span class="ident">__getitem__</span></span>(<span>self, item)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere un diagrame. </strong></p>
+<p>Retroune le ou les diagrames de type <code><a title="laue.diagram.LaueDiagram" href="../diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>item</code></strong></dt>
+<dd>
+<ul>
+<li>Ce qui permet de reconaitre un diagrame parmis tous.<ul>
+<li><code>int</code> =&gt; Retourne le ieme diagrame, genere par la
+ieme image lue.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>KeyError</code></dt>
+<dd>Si la clef est correcte mais qu'aucun diagrame ne correspond a cette clef.</dd>
+<dt><code>TypeError</code></dt>
+<dd>Si la clef n'est pas correcte.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
+&gt;&gt;&gt;
+&gt;&gt;&gt; type(laue.Experiment(images)[0])
+&lt;class 'laue.diagram.LaueDiagram'&gt;
+&gt;&gt;&gt; type(laue.Experiment(images)[-1])
+&lt;class 'laue.diagram.LaueDiagram'&gt;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __getitem__(self, item):
+    &#34;&#34;&#34;
+    ** Recupere un diagrame. **
+
+    Retroune le ou les diagrames de type ``laue.diagram.LaueDiagram``.
+
+    Parameters
+    ----------
+    item
+        * Ce qui permet de reconaitre un diagrame parmis tous.
+            * ``int`` =&gt; Retourne le ieme diagrame, genere par la
+                ieme image lue.
+
+    Raises
+    ------
+    KeyError
+        Si la clef est correcte mais qu&#39;aucun diagrame ne correspond a cette clef.
+    TypeError
+        Si la clef n&#39;est pas correcte.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; type(laue.Experiment(images)[0])
+    &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+    &gt;&gt;&gt; type(laue.Experiment(images)[-1])
+    &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    def get_diag_list(limit):
+        # Cas simple ou il n&#39;y a rien a extraire.
+        if limit &gt;= 0 and len(self._buff_diags) &gt; limit: # Si on a deja une liste de la bone taille.
+            return self._buff_diags
+        if limit &lt; 0 and len(self) and -limit &lt;= len(self):
+            return self._buff_diags
+        if len(self) and limit &gt;= len(self):
+            raise KeyError(f&#34;L&#39;experience n&#39;est faite que de {len(self)} diagrames, &#34;
+                f&#34;Or vous tentez d&#39;acceder au {limit+1}eme diagrame!&#34;)
+        if len(self) and -limit &gt; len(self):
+            raise KeyError(f&#34;L&#39;experience n&#39;est faite que de {len(self)} diagrames, &#34;
+                f&#34;Or vous tentez d&#39;acceder rang {limit}. Le plus petit rang possible c&#39;est {-len(self)}.&#34;)
+
+        # Cas ou il faut extraire.
+        if limit &gt;= 0:
+            target_limit = max(limit, 2*len(self._buff_diags))
+            self._buff_diags = []
+            for i, diag in enumerate(self):
+                self._buff_diags.append(diag)
+                if i == self._buff_diags:
+                    break
+        else:
+            self._buff_diags = self.get_diagrams()
+
+        return get_diag_list(limit=limit)
+
+    if isinstance(item, int):
+        return get_diag_list(item)[item]
+
+    if isinstance(item, slice):
+        print(item)
+        print(item.start, item.stop, item.step)
+
+    raise TypeError(f&#34;La clef doit etre de type int ou slice. Pas {type(item).__name__}.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.base_experiment.Experiment.__iter__"><code class="name flex">
+<span>def <span class="ident">__iter__</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Cede les differents diagrammes contenus dans l'experience. </strong></p>
+<ul>
+<li>L'ordre est arbitraire la premiere fois mais reste le meme a chaque appel.</li>
+<li>Strictement equivalent a <code>self.get_diagrams(tense_flow=True)</code> de
+la methode <code><a title="laue.experiment.base_experiment.Experiment.get_diagrams" href="#laue.experiment.base_experiment.Experiment.get_diagrams">Experiment.get_diagrams()</a></code>.</li>
+</ul>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><strong><code>diagram</code></strong> :&ensp;<code><a title="laue.diagram.LaueDiagram" href="../diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code></dt>
+<dd>Chaque diagramme contenus dans l'experience.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; experiment = laue.Experiment(image)
+&gt;&gt;&gt;
+&gt;&gt;&gt; for diag in experiment:
+...     pass # Allows to process each diagram as it is ready.
+...
+&gt;&gt;&gt; type(next(iter(experiment)))
+&lt;class 'laue.diagram.LaueDiagram'&gt;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __iter__(self):
+    &#34;&#34;&#34;
+    ** Cede les differents diagrammes contenus dans l&#39;experience. **
+
+    * L&#39;ordre est arbitraire la premiere fois mais reste le meme a chaque appel.
+    * Strictement equivalent a ``self.get_diagrams(tense_flow=True)`` de
+    la methode ``laue.experiment.base_experiment.Experiment.get_diagrams``.
+
+    Yields
+    ------
+    diagram : laue.diagram.LaueDiagram
+        Chaque diagramme contenus dans l&#39;experience.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; experiment = laue.Experiment(image)
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; for diag in experiment:
+    ...     pass # Allows to process each diagram as it is ready.
+    ...
+    &gt;&gt;&gt; type(next(iter(experiment)))
+    &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    yield from self.get_diagrams(tense_flow=True)</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.base_experiment.Experiment.__len__"><code class="name flex">
+<span>def <span class="ident">__len__</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Nombre de diagrammes constituants l'experience. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>int</code></dt>
+<dd>Renvoi le nombre de diagrames presents dans cette experience.
+Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __len__(self):
+    &#34;&#34;&#34;
+    ** Nombre de diagrammes constituants l&#39;experience. **
+
+    Returns
+    -------
+    int
+        Renvoi le nombre de diagrames presents dans cette experience.
+        Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.
+    &#34;&#34;&#34;
+    if self._len is None:
+        return 0
+    return self._len</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.base_experiment.Experiment.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Tente de liberer de la memoire. </strong></p>
+<p>Supprime tous les attributs qui sont suceptibles
+de prendre de la place ne memoire.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self):
+    &#34;&#34;&#34;
+    ** Tente de liberer de la memoire. **
+
+    Supprime tous les attributs qui sont suceptibles
+    de prendre de la place ne memoire.
+    &#34;&#34;&#34;
+    if self.verbose:
+        print(&#34;Suppression des attributs facultatifs...&#34;)
+    self._gnomonic_matrix = None
+    for diag in self:
+        diag.clean()
+    if self.verbose:
+        print(&#34;\tOK: Le volume de donnees et minimum.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.base_experiment.Experiment.find_zone_axes"><code class="name flex">
+<span>def <span class="ident">find_zone_axes</span></span>(<span>self, tense_flow=True, **constraints)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recherche l'ensemble des axes de zones. </strong></p>
+<p>Returns a zone axis iterator.</p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Le resultat est le meme que <code>(diag.find_zone_axes() for diag in self)</code>
+Sauf qu'il y a de la parallelisation en plus.</li>
+<li>Il est possible d'appeler plusieur fois cette methode en parallele.</li>
+<li>Les sections critiques sont verouillees donc cette methode supporte le multithread.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>**constraints</code></strong> :&ensp;<code>number</code></dt>
+<dd>Se sont les parametres de la fonction <code><a title="laue.diagram.LaueDiagram.find_zone_axes" href="../diagram.html#laue.diagram.LaueDiagram.find_zone_axes">LaueDiagram.find_zone_axes()</a></code>.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>Pour chaque diagramme de cette experience, cede la liste
+des axes de zones du diagramme. Les elements de l'ensemble
+sont de type <code><a title="laue.zone_axis.ZoneAxis" href="../zone_axis.html#laue.zone_axis.ZoneAxis">ZoneAxis</a></code>.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
+&gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&quot;laue/examples/ge_blanc.det&quot;)
+&gt;&gt;&gt;
+&gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())))
+&lt;class 'list'&gt;
+&gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())).pop())
+&lt;class 'laue.zone_axis.ZoneAxis'&gt;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_zone_axes(self, tense_flow=True, **constraints):
+    &#34;&#34;&#34;
+    ** Recherche l&#39;ensemble des axes de zones. **
+
+    Returns a zone axis iterator.
+
+    Notes
+    -----
+    * Le resultat est le meme que ``(diag.find_zone_axes() for diag in self)``
+        Sauf qu&#39;il y a de la parallelisation en plus.
+    * Il est possible d&#39;appeler plusieur fois cette methode en parallele.
+    * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+    Parameters
+    ----------
+    **constraints : number
+        Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
+
+    Yields
+    ------
+    list
+        Pour chaque diagramme de cette experience, cede la liste
+        des axes de zones du diagramme. Les elements de l&#39;ensemble
+        sont de type ``laue.zone_axis.ZoneAxis``.
+
+    Example
+    -------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+    &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())))
+    &lt;class &#39;list&#39;&gt;
+    &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())).pop())
+    &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    def show_iterator_state(func):
+        &#34;&#34;&#34;
+        Insere des commentaires.
+        &#34;&#34;&#34;
+        def decorate(*func_args, **func_kwargs):
+            if self.verbose:
+                print(&#34;Extraction des axes de zone...&#34;)
+            
+            for i, axes in enumerate(func(*func_args, **func_kwargs)):
+                if self.verbose &gt;= 2:
+                    print(f&#34;\taxes du diagramme num {i} trouves: il y en a {len(axes)}&#34;)
+                yield axes
+
+            if self.verbose:
+                print(&#34;\tOK: Tous les axes de zone sont extraits.&#34;)
+
+        return decorate
+
+    @show_iterator_state
+    def _axes_extractor(self):
+        &#34;&#34;&#34;
+        Premiere vraie extraction.
+        &#34;&#34;&#34;
+        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+            # Compilation et serialisation des equations.
+            self.transformer.compile()
+            self.set_calibration()
+            transformer_ser = cloudpickle.dumps(self.transformer)
+
+            # Parallelisation des fils.
+            from laue.zone_axis import _get_zone_axes_pickle
+            from laue.tools.multi_core import limited_imap
+            with multiprocessing.Pool() as pool:
+                yield from (
+                    diag.find_zone_axes(_axes_args=args)
+                    for diag, args
+                    in zip(
+                        self,
+                        limited_imap(pool,
+                            _get_zone_axes_pickle,
+                            ( # transformer, gnomonics, dmax, nbr, tol
+                                (transformer_ser, *diag.find_zone_axes(**constraints, _get_args=True))
+                                for diag in self
+                            )
+                        )
+                    )
+                )
+
+        else:
+            yield from (diag.find_zone_axes() for diag in self)
+
+    if self._axes_iterator is None:
+        self._axes_iterator = iter(_axes_extractor(self))
+
+    from laue.tools.multi_core import RecallingIterator
+    return (lambda x: (yield from x))(RecallingIterator(self._axes_iterator, mother=self))</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.base_experiment.Experiment.get_diagrams"><code class="name flex">
+<span>def <span class="ident">get_diagrams</span></span>(<span>self, *, tense_flow=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Genere les diagrammes de l'experience. </strong></p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Performances:<ul>
+<li>Sur un PC (intel core i7, ssd, 8 coeurs), met environ 37 ms/diagramme.</li>
+<li>Sur un PC (intel centrino, hdd, 2 coeurs), met environ 530 ms/diagramme.</li>
+</ul>
+</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tense_flow</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>
+<ul>
+<li>True : Permet de travailler a flux tendu, c'est a dire
+de cede les diagrammes au fur a meusure qu'ils sont crees.<ul>
+<li>Le generateur termine quand toutes les images sont lues ou
+que le generateur d'images leve un <code>StopIteration</code>.</li>
+<li>A chaque nouvel appel de cette methode, l'iteration
+recommence a partir du debut et l'ordre reste inchange.</li>
+<li>Equivalent a <code><a title="laue.experiment.base_experiment.Experiment.__iter__" href="#laue.experiment.base_experiment.Experiment.__iter__">Experiment.__iter__()</a></code>.</li>
+</ul>
+</li>
+<li>False. Sinon, attend que tous les diagrammes
+soient lues afin de tout renvoyer en meme temps.</li>
+</ul>
+</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>La liste des diagrammes de type <code><a title="laue.diagram.LaueDiagram" href="../diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code>.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><code><a title="laue.diagram.LaueDiagram" href="../diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code></dt>
+<dd>
+<ul>
+<li>Chaque diagram extrait au fur a mesure qu'il arrive.</li>
+<li>L'ordre est concerve pour chaque appel de cette methode a flux tendu.</li>
+<li>A chaque appel on repars du debut, meme si un autre appel n'est pas termine.</li>
+<li>Les sections critiques sont verouillees donc cette methode supporte le multithread.</li>
+</ul>
+</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
+&gt;&gt;&gt; experiment = laue.Experiment(images)
+&gt;&gt;&gt;
+&gt;&gt;&gt; diagrams = experiment.get_diagrams()
+&gt;&gt;&gt; type(diagrams)
+&lt;class 'list'&gt;
+&gt;&gt;&gt; type(diagrams.pop())
+&lt;class 'laue.diagram.LaueDiagram'&gt;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_diagrams(self, *, tense_flow=False):
+    &#34;&#34;&#34;
+    ** Genere les diagrammes de l&#39;experience. **
+
+    Notes
+    -----
+    * Performances:
+        * Sur un PC (intel core i7, ssd, 8 coeurs), met environ 37 ms/diagramme.
+        * Sur un PC (intel centrino, hdd, 2 coeurs), met environ 530 ms/diagramme.
+
+    Parameters
+    ----------
+    tense_flow : boolean
+        * True : Permet de travailler a flux tendu, c&#39;est a dire
+        de cede les diagrammes au fur a meusure qu&#39;ils sont crees.
+            * Le generateur termine quand toutes les images sont lues ou
+            que le generateur d&#39;images leve un ``StopIteration``.
+            * A chaque nouvel appel de cette methode, l&#39;iteration
+            recommence a partir du debut et l&#39;ordre reste inchange.
+            * Equivalent a ``laue.experiment.base_experiment.Experiment.__iter__``.
+        * False. Sinon, attend que tous les diagrammes
+        soient lues afin de tout renvoyer en meme temps.
+
+    Returns
+    -------
+    list
+        La liste des diagrammes de type ``laue.diagram.LaueDiagram``.
+
+    Yields
+    ------
+    laue.diagram.LaueDiagram
+        * Chaque diagram extrait au fur a mesure qu&#39;il arrive.
+        * L&#39;ordre est concerve pour chaque appel de cette methode a flux tendu.
+        * A chaque appel on repars du debut, meme si un autre appel n&#39;est pas termine.
+        * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+    &gt;&gt;&gt; experiment = laue.Experiment(images)
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; diagrams = experiment.get_diagrams()
+    &gt;&gt;&gt; type(diagrams)
+    &lt;class &#39;list&#39;&gt;
+    &gt;&gt;&gt; type(diagrams.pop())
+    &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    def update_len(func):
+        &#34;&#34;&#34;
+        Tient a jour la longueur de l&#39;experience.
+        &#34;&#34;&#34;
+        def decorate(*func_args, **func_kwargs):
+            for i, element in enumerate(func(*func_args, **func_kwargs)):
+                yield element
+            self._len = i + 1
+
+        return decorate
+
+    def show_iterator_state(func):
+        &#34;&#34;&#34;
+        Insere des commentaires.
+        &#34;&#34;&#34;
+        def decorate(*func_args, **func_kwargs):
+            if self.verbose:
+                print(&#34;Extraction des diagrammes...&#34;)
+
+            for i, diag in enumerate(func(*func_args, **func_kwargs)):
+                if self.verbose &gt;= 2:
+                    print(f&#34;\tdiagramme num {i} extrait: &#34;
+                          f&#34;(...{diag.get_id()[-20:]}) &#34;
+                          f&#34;avec {len(diag)} spots&#34;)
+                yield diag
+            if self.verbose:
+                print(&#34;\tOK: Tous les diagrammes sont extraits.&#34;)
+        
+        return decorate
+
+    @update_len
+    @show_iterator_state
+    def _diagram_extractor(self):
+        &#34;&#34;&#34;
+        Premiere vraie lecture. Cede les diagrammes.
+        &#34;&#34;&#34;
+        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+            attrs = [&#34;kernel_font&#34;, &#34;threshold&#34;, &#34;kernel_dilate&#34;]
+            mini_self = collections.namedtuple(&#34;SelfCopy&#34;, attrs)(
+                *(getattr(self, attr) for attr in attrs)
+                ) # Strategie car &#39;pickle&#39; ne sais pas faire ca.
+            ser_self = cloudpickle.dumps(mini_self)
+
+            from laue.tools.multi_core import pickleable_method
+            from laue.tools.multi_core import limited_imap
+            with multiprocessing.Pool() as pool:
+                yield from (
+                    self._help_get_diagrams(name, image, spot_args=spot_args)
+                    for (name, image, spot_args) in limited_imap(pool,
+                        pickleable_method,
+                        (
+                            (
+                                Experiment._help_get_diagrams,
+                                ser_self,
+                                {&#34;name&#34;:name, &#34;image&#34;:image, &#34;thread&#34;:True}
+                            )
+                            for name, image in self.read_images()
+                        )
+                    )
+                )
+        else:
+            yield from (self._help_get_diagrams(name, image)
+                for name, image in self.read_images())
+    
+    if self._diagrams_iterator is None:
+        self._diagrams_iterator = iter(_diagram_extractor(self))
+
+    from laue.tools.multi_core import RecallingIterator
+    return (
+        (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
+        if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self)))</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.base_experiment.Experiment.get_images_shape"><code class="name flex">
+<span>def <span class="ident">get_images_shape</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere les dimensions des images. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple</code></dt>
+<dd>(nbr de lignes, nbr de colones), de type (int, int).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_images_shape(self):
+    &#34;&#34;&#34;
+    ** Recupere les dimensions des images. **
+
+    Returns
+    -------
+    tuple
+        (nbr de lignes, nbr de colones), de type (int, int).
+    &#34;&#34;&#34;
+    if self._shape is not None:
+        return self._shape
+
+    try:
+        _, image = next(iter(self.read_images()))
+    except StopIteration as err:
+        raise ValueError(&#34;L&#39;experience ne contient aucune image.&#34;) from err
+    self._shape = image.shape
+    return self._shape</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.base_experiment.Experiment.get_mean"><code class="name flex">
+<span>def <span class="ident">get_mean</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Estime la moyenne des images. </strong></p>
+<p>Cela permet d'avoir une estimation du fond difus.</p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>A cause des arrondis machine, seule les 9e15 permieres images sont considerees.</li>
+<li>Ne retourne pas tant que toutes les images d'entree ne sont pas lues.</li>
+</ul>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>L'image de la moyenne des images en matrice 2d uint16.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_mean(self):
+    &#34;&#34;&#34;
+    ** Estime la moyenne des images. **
+
+    Cela permet d&#39;avoir une estimation du fond difus.
+
+    Notes
+    -----
+    * A cause des arrondis machine, seule les 9e15 permieres images sont considerees.
+    * Ne retourne pas tant que toutes les images d&#39;entree ne sont pas lues.
+
+    Returns
+    -------
+    np.ndarray
+        L&#39;image de la moyenne des images en matrice 2d uint16.
+    &#34;&#34;&#34;
+    if self._mean_bg is not None:
+        return self._mean_bg
+
+    if self.verbose:
+        print(&#34;Estimation du fond par la moyenne...&#34;)
+
+    im_gen = iter((image.astype(np.float64) for _, image in self.read_images()))
+    try:
+        mean_array = next(im_gen)
+    except StopIteration as err:
+        raise ValueError(&#34;L&#39;experience ne contient aucune image.&#34;) from err
+    for i, image in enumerate(im_gen):
+        mean_array = i/(i+1) * mean_array + 1/(i+1) * image
+
+    self._mean_bg = mean_array.astype(np.uint16)
+
+    if self.verbose:
+        print(&#34;\tOK: La moyenne des images est estimee.&#34;)
+    return self._mean_bg</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.base_experiment.Experiment.read_images"><code class="name flex">
+<span>def <span class="ident">read_images</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Cede le contenu des images. </strong></p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Reitere depuis le debut a chaque appel.</li>
+<li>Il peut y avoir plusieurs appels en parallele
+sans que cela ne genere de conflits. Dumoins tans que des threads
+ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
+<li>A chaque appel de cette methode, l'ordre est conserve.</li>
+<li>Les sections critiques sont verouillees donc cette methode supporte le multithread.</li>
+</ul>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Le nom de l'image (path si possible)</dd>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Le contenu de l'image</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>TypeError</code></dt>
+<dd>Si l'image n'est pas bien typee.</dd>
+<dt><code>FileNotFoundError</code></dt>
+<dd>Si le chemin de l'image n'est pas correcte.</dd>
+<dt><code>ValueError</code></dt>
+<dd>Si les images ne sont pas de la meme taille.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
+&gt;&gt;&gt; for image in laue.Experiment(images):
+...     pass
+...
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_images(self):
+    &#34;&#34;&#34;
+    ** Cede le contenu des images. **
+
+    Notes
+    -----
+    * Reitere depuis le debut a chaque appel.
+    * Il peut y avoir plusieurs appels en parallele
+    sans que cela ne genere de conflits. Dumoins tans que des threads
+    ne sont pas utilises, car il n&#39;y a pas de mecanisme de verrou.
+    * A chaque appel de cette methode, l&#39;ordre est conserve.
+    * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+    Yields
+    ------
+    name : str
+        Le nom de l&#39;image (path si possible)
+    image : np.ndarray
+        Le contenu de l&#39;image
+
+    Raises
+    ------
+    TypeError
+        Si l&#39;image n&#39;est pas bien typee.
+    FileNotFoundError
+        Si le chemin de l&#39;image n&#39;est pas correcte.
+    ValueError
+        Si les images ne sont pas de la meme taille.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+    &gt;&gt;&gt; for image in laue.Experiment(images):
+    ...     pass
+    ...
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    from laue.tools.multi_core import RecallingIterator, prevent_generator_size
+
+    def read_and_check_any_image(image_info, image_num):
+        &#34;&#34;&#34;
+        Soit retroune directement, soit lit le fichier.
+        Retourne le nom de l&#39;image et l&#39;image elle-meme.
+        Renvoi None, None si il faut ignorer cette image.
+        &#34;&#34;&#34;            
+        # Mise en forme.
+        if isinstance(image_info, str):
+            image_name = image_info
+            from laue.tools.image import read_image
+            image = read_image(image_info, ignore_errors=self.ignore_errors)
+            if image is None:
+                return None, None
+        elif isinstance(image_info, np.ndarray):
+            image_name = f&#34;image_{image_num}&#34;
+            image = image_info
+        else:
+            raise TypeError(&#34;L&#39;image doit etre de type str ou np.array, &#34;
+                f&#34;pas {type(image_info).__name__}.&#34;)
+
+        # Verifications
+        if not isinstance(image, np.ndarray):
+            raise TypeError(f&#34;L&#39;image doit etre un array numpy, pas un {type(image).__name__}.&#34;)
+        if image.ndim != 2:
+            raise TypeError(f&#34;L&#39;image {image_name} doit etre en niveau de gris pas de dimension {image.ndim}.&#34;)
+        if image.dtype != np.uint16:
+            raise TypeError(f&#34;L&#39;image {image_name} doit etre encodee en uint16, pas {image.dtype}.&#34;)
+        if self._shape is None:
+            self._shape = image.shape
+        if self._shape != image.shape:
+            raise ValueError(f&#34;L&#39;image {image_name} a pour taille {image.shape} tandis que les images &#34;
+                f&#34;precedentes ont pour taille {self._shape}. Les images ne sont pas issues de la meme experience.&#34;)
+
+        return image_name, image
+
+    def show_iterator_state(func):
+        &#34;&#34;&#34;
+        Insere des commentaires.
+        &#34;&#34;&#34;
+        def decorate(*func_args, **func_kwargs):
+            if self.verbose:
+                print(&#34;Lecture des images...&#34;)
+            
+            for image_info in func(*func_args, **func_kwargs):
+                yield image_info
+                if self.verbose &gt;= 2:
+                    print(f&#34;\timage : (...{str(image_info)[-20:]}) cedes.&#34;)
+
+            if self.verbose:
+                print(&#34;\tOK: Toutes les images sont lues.&#34;)
+
+        return decorate
+
+    @show_iterator_state
+    def _images_extractor():
+        &#34;&#34;&#34;
+        Premiere vraie extraction.
+        &#34;&#34;&#34;
+        # Convertion str vers generateur
+        if isinstance(self.images, str): # Dans le cas ou une chaine de caractere
+            if os.path.isdir(self.images): # decrit l&#39;ensemble des images.
+                self.images = (
+                    os.path.join(father, file)
+                    for father, _, files in os.walk(self.images)
+                    for file in files)
+            else:
+                self.images = glob.iglob(self.images, recursive=True)
+
+        yield from self.images
+
+    @prevent_generator_size(min_size=1)
+    def jump_map(multi_image_iterator):
+        image_num = 0
+        for image_info in multi_image_iterator:
+            image_name, image = read_and_check_any_image(image_info, image_num)
+            if image is None:
+                continue
+            image_num += 1
+            yield image_name, image
+
+    if self._images_iterator is None:
+        self._images_iterator = iter(_images_extractor())
+
+    return jump_map(RecallingIterator(self._images_iterator, mother=self))</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.base_experiment.Experiment.save_file"><code class="name flex">
+<span>def <span class="ident">save_file</span></span>(<span>self, filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Enregistre un fichier contenant des informations. </strong></p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Les extensions prises en charge sont <code>.det</code>.</li>
+<li>Pour les fichiers propres a chaque diagrammes, voir <code><a title="laue.diagram.LaueDiagram.save_file" href="../diagram.html#laue.diagram.LaueDiagram.save_file">LaueDiagram.save_file()</a></code>.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Nom ou chemin du fichier de destination.
+L'extension doit etre comprise dans le nom du fichier.
+Si un fichier du meme nom existe deja, il est ecrase.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import os, tempfile
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt;
+&gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
+&gt;&gt;&gt; rep = tempfile.mkdtemp()
+&gt;&gt;&gt; expe = laue.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
+&gt;&gt;&gt; expe.save_file(os.path.join(rep, &quot;fit.det&quot;))
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_file(self, filename):
+    &#34;&#34;&#34;
+    ** Enregistre un fichier contenant des informations. **
+
+    Notes
+    -----
+    * Les extensions prises en charge sont ``.det``.
+    * Pour les fichiers propres a chaque diagrammes, voir ``laue.diagram.LaueDiagram.save_file``.
+
+    Parameters
+    ----------
+    filename : str
+        Nom ou chemin du fichier de destination.
+        L&#39;extension doit etre comprise dans le nom du fichier.
+        Si un fichier du meme nom existe deja, il est ecrase.
+
+    Example
+    -------
+    &gt;&gt;&gt; import os, tempfile
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
+    &gt;&gt;&gt; rep = tempfile.mkdtemp()
+    &gt;&gt;&gt; expe = laue.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
+    &gt;&gt;&gt; expe.save_file(os.path.join(rep, &#34;fit.det&#34;))
+    &#34;&#34;&#34;
+    assert isinstance(filename, str), \
+        f&#34;&#39;filename&#39; has to be a string, not a {type(filename).__name__}.&#34;
+    assert &#34;.&#34; in filename, &#34;Le fichier doit posseder une extension.&#34;
+    assert filename.split(&#34;.&#34;)[-1].lower() in {&#34;det&#34;}, \
+        f&#34;Seule les extensions &#39;.det&#39; sont supportees. Pas &#39;.{filename.split(&#39;.&#39;)[-1]}&#39;.&#34;
+
+    ext = filename.split(&#34;.&#34;)[-1].lower()
+    if ext == &#34;det&#34;:
+        with open(filename, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
+            file.write(
+               (f&#34;{self.set_calibration()[&#39;dd&#39;]}, &#34;
+                f&#34;{self.set_calibration()[&#39;xcen&#39;]}, &#34;
+                f&#34;{self.set_calibration()[&#39;ycen&#39;]}, &#34;
+                f&#34;{self.set_calibration()[&#39;xbet&#39;]}, &#34;
+                f&#34;{self.set_calibration()[&#39;xgam&#39;]}, &#34;
+                f&#34;{self.set_calibration()[&#39;pixelsize&#39;]}, &#34;
+                f&#34;{self.get_images_shape()[0]}, &#34;
+                f&#34;{self.get_images_shape()[1]}\n&#34;))
+            file.write(&#34;Sample-Detector distance(IM), xO, yO, angle1, angle2, pixelsize, dim1, dim2\n&#34;)
+            file.write(f&#34;{repr(self)}\n&#34;)
+            file.write(f&#34;Calibration done at {time.asctime()}.\n&#34;)</code></pre>
+</details>
+</dd>
+<dt id="laue.experiment.base_experiment.Experiment.set_calibration"><code class="name flex">
+<span>def <span class="ident">set_calibration</span></span>(<span>self, *diagrams)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Calibration de la camera. </strong></p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Ne nessecite aucune connaissances prealable sur le christal.</li>
+<li>Il n'y a pas besoin d'avoir un diagramme bien calibre, il se debrouille tout seul.</li>
+<li>Cette fonction peut parfois etre lente (plusieur minutes)!</li>
+<li>Si vous connaissez les parametres, fournissez-les, ca ira plus vite!</li>
+<li>Si cette methode a deja ete appelee une fois, elle retourne
+immeditement le resultat sans refaire les calculs.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>*diagrams</code></strong> :&ensp;<code>optional</code></dt>
+<dd>Les ou le diagramme.s qui vont servir a faire la set_calibration.
+Si aucun diagramme n'est precise, cette methode recherche par elle meme
+les diagrammes qu'elle trouve convaincant parmis ceux qui sont disponibles.
+Il doivent etre de type <code><a title="laue.diagram.LaueDiagram" href="../diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict </code></dt>
+<dd>Le dictionaire qui a chaque non de parametre, associe sa valeur numerique.
+Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsize"</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>KeyError</code></dt>
+<dd>Si l'utilisateur n'a pas precise les parametres vraiment indispenssables.</dd>
+<dt><code>ValueError</code></dt>
+<dd>Si il y a des incoherences dans les parametres.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; experiment = laue.Experiment(image)
+&gt;&gt;&gt; parameters = experiment.set_calibration()
+&gt;&gt;&gt; sorted(parameters.keys())
+['dd', 'pixelsize', 'xbet', 'xcen', 'xgam', 'ycen']
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_calibration(self, *diagrams):
+    &#34;&#34;&#34;
+    ** Calibration de la camera. **
+
+    Notes
+    -----
+    * Ne nessecite aucune connaissances prealable sur le christal.
+    * Il n&#39;y a pas besoin d&#39;avoir un diagramme bien calibre, il se debrouille tout seul.
+    * Cette fonction peut parfois etre lente (plusieur minutes)!
+    * Si vous connaissez les parametres, fournissez-les, ca ira plus vite!
+    * Si cette methode a deja ete appelee une fois, elle retourne
+        immeditement le resultat sans refaire les calculs.
+
+    Parameters
+    ----------
+    *diagrams : optional
+        Les ou le diagramme.s qui vont servir a faire la set_calibration.
+        Si aucun diagramme n&#39;est precise, cette methode recherche par elle meme
+        les diagrammes qu&#39;elle trouve convaincant parmis ceux qui sont disponibles.
+        Il doivent etre de type ``laue.diagram.LaueDiagram``.
+
+    Returns
+    -------
+    dict 
+        Le dictionaire qui a chaque non de parametre, associe sa valeur numerique.
+        Les clefs sont les suivantes: &#34;dd&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;xbet&#34;, &#34;xgam&#34; and &#34;pixelsize&#34;
+
+    Raises
+    ------
+    KeyError
+        Si l&#39;utilisateur n&#39;a pas precise les parametres vraiment indispenssables.
+    ValueError
+        Si il y a des incoherences dans les parametres.
+
+    Example
+    -------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; experiment = laue.Experiment(image)
+    &gt;&gt;&gt; parameters = experiment.set_calibration()
+    &gt;&gt;&gt; sorted(parameters.keys())
+    [&#39;dd&#39;, &#39;pixelsize&#39;, &#39;xbet&#39;, &#39;xcen&#39;, &#39;xgam&#39;, &#39;ycen&#39;]
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    if self._calibration_parameters is not None: # Si on peut retourner directement,
+        return self._calibration_parameters # on ne s&#39;en prive pas.
+
+    assert all(isinstance(diag, LaueDiagram) for diag in diagrams), \
+        &#34;Tous les diagrammes doivent etre de type &#39;LaueDiagram&#39;. Or ce n&#39;est pas le cas.&#34;
+
+    if self.verbose:
+        print(&#34;Calibration...&#34;)
+        if self.verbose &gt;= 2:
+            print(&#34;\tPrise en compte des parametres fournis...&#34;)
+
+    # Constantes.
+    PIXELSIZE_REF = {(2048, 2048): 0.079856, # Taille des pixels fonction de la camera.
+                     (2018, 2016): 0.0734,
+                     (2594, 2748): 0.031}
+    PARAM_SET = {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;} # Les paremetres non deductibles.
+    PARAM_MIN = {&#34;dd&#34;: 60.0, # Les bornes minimale par defaut.
+                 &#34;xbet&#34;: -.9,
+                 &#34;xgam&#34;: -.9,
+                 &#34;xcen&#34;: self.get_images_shape()[0]/2 - 150,
+                 &#34;ycen&#34;: self.get_images_shape()[0]/2 - 150}
+    PARAM_MAX = {&#34;dd&#34;: 80.0, # Les bornes maximales par defaut.
+                 &#34;xbet&#34;: .9,
+                 &#34;xgam&#34;: .9,
+                 &#34;xcen&#34;: self.get_images_shape()[0]/2 + 150,
+                 &#34;ycen&#34;: self.get_images_shape()[1]/2 + 150}
+
+    # Recuperation des parametres fournis et deductibles.
+    from laue.tools.parsing import extract_parameters
+    given_parameters = extract_parameters(ignore_missing=True, **self.kwargs)
+    if (&#34;pixelsize&#34; not in given_parameters) and (self.get_images_shape() in PIXELSIZE_REF):
+        given_parameters[&#34;pixelsize&#34;] = PIXELSIZE_REF[self.get_images_shape()]
+    
+    elif (&#34;pixelsize&#34; not in given_parameters) and (self.get_images_shape() not in PIXELSIZE_REF):
+        raise KeyError(&#34;Vous devez fournir le parametre &#39;pixelsize&#39;.\n&#34;
+            f&#34;Les images font {self.get_images_shape()} pxl**2. &#34;
+            f&#34;Or, seul les &#39;pixelsize&#39; des images {&#39; et &#39;.join(map(str, PIXELSIZE_REF))} sont connus.&#34;)
+
+    # Recuperation des bornes.
+    given_min = extract_parameters(ignore_missing=True, **{
+        param[:-4]: value
+        for param, value in self.kwargs.items()
+        if param.endswith(&#34;_min&#34;) and len(param) &gt; 4})
+    given_max = extract_parameters(ignore_missing=True, **{
+        param[:-4]: value
+        for param, value in self.kwargs.items()
+        if param.endswith(&#34;_max&#34;) and len(param) &gt; 4})
+    parameters_min = {param: given_min.get(param, PARAM_MIN[param]) for param in PARAM_SET}
+    parameters_max = {param: given_max.get(param, PARAM_MAX[param]) for param in PARAM_SET}
+    
+    for param in PARAM_SET: # Verification de la coherence des bornes.
+        if parameters_min[param] &gt;= parameters_max[param]:
+            raise ValueError(f&#34;Les bornes du parametre {repr(param)} sont inversees, &#34;
+                f&#34;{param}_min={parameters_min[param]} et {param}_max={parameters_max[param]}.&#34;)
+
+    # Valeur de departs des parametres.
+    initial_parameters = { # Ce sont les parametres initiaux pour la descente de gradient.
+        par: given_parameters.get(par,
+            .5*(parameters_min[par] + parameters_max[par]))
+        for par in PARAM_SET}
+   
+    for par, val in initial_parameters.items(): # Verification.
+        if par in given_parameters and par in given_min:
+            if given_parameters[par] &lt; given_min[par]:
+                raise ValueError(f&#34;Vous avez imposes {par}_min={given_min[par]} &#34;
+                    f&#34;et en meme temp vous avez donnes {par}={val}!&#34;)
+        if par in given_parameters and par in given_max:
+            if given_parameters[par] &gt; given_max[par]:
+                raise ValueError(f&#34;Vous avez imposes {par}_max={given_max[par]} &#34;
+                    f&#34;et en meme temps vous avez donnes {par}={val}!&#34;)
+
+    # Parametres restants.
+    unknown_parameters = PARAM_SET - set(given_parameters)
+    if not unknown_parameters: # Si Il n&#39;y a rien a calculer.
+        self._calibration_parameters = given_parameters
+        self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
+        if self.verbose:
+            if self.verbose &gt;= 2:
+                print(&#34;\t\tOK: Tout est fournis, il n&#39;y a rien a faire.&#34;)
+            print(f&#34;\tOK: Calibration terminee: {given_parameters}&#34;)
+        return self._calibration_parameters
+
+    # Extraction d&#39;une poignee de diagrammes interressants.
+    if self.verbose &gt;= 2:
+        print(&#34;\tRecuperation des diagrammes interressants...&#34;)
+    if not diagrams: # Si l&#39;utilisateur ne nous aide pas a trouver les bons diagrammes.
+        diagrams = []
+        for i, dia in enumerate(self):
+            if i &gt; 60: # On ne s&#39;interesse qu&#39;a la premiere minute.
+                break
+            diagrams.append(dia)
+
+        diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:os.cpu_count()])
+        best_diagrams = [next(diagrams)]
+        best_diagrams.extend([dia for dia in diagrams
+            if dia.get_quality() &gt; 0.7*best_diagrams[0].get_quality()])
+    else: # Si l&#39;utilisateur nous en fournit.
+        best_diagrams = diagrams # C&#39;est un tuple et non pas une liste mais c&#39;est pas genant.
+    if self.verbose &gt;= 2:
+        for dia in best_diagrams:
+            print(f&#34;\t\t{dia.get_id()}&#34;)
+
+    # Vectorisation des donnees pour de bonnes perfs.
+    min_size = min(len(dia) for dia in best_diagrams) # Le plus petit nombre de points.
+    spots_position = np.array(
+        [dia.get_positions(n=min_size, sort=&#34;quality&#34;)
+         for dia in best_diagrams],
+        dtype=np.float32)
+    spots_position = np.swapaxes(spots_position, 0, 1) # shape: (2, n_diagrams, nbr_spots)
+
+    # Perparations des parametres pour la suite.
+    vect_labels = tuple(unknown_parameters) # On recupere les nom des parametre inconus seulement.
+    bounds = [(parameters_min[name], parameters_max[name]) for name in vect_labels] # Les limites des variables.
+    args = (given_parameters, vect_labels, spots_position) # Les arguments en plus de la fonction de cout.
+    if self.verbose &gt;= 2:
+        print(f&#34;\tcalibration des parametres {vect_labels}&#34;)
+        print(f&#34;\tbornes min: {tuple(b_min for b_min, _ in bounds)}&#34;)
+        print(f&#34;\tbornes max: {tuple(b_max for _, b_max in bounds)}&#34;)
+    
+    # Recherche rapide d&#39;un minimum par descente de gradient.
+    from scipy import optimize # On ne l&#39;importe que ici car on est pas sur de s&#39;en servir.
+    if self.verbose &gt;= 2:
+        print(&#34;\tDescente de gradient...&#34;)
+    opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
+        self._calibration_cost,
+        x0=[initial_parameters[name] for name in vect_labels],
+        args=args, # On donne les arguments et on paralelise.
+        bounds=bounds,
+        options={&#34;disp&#34;: self.verbose &gt;= 3})
+    if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
+        if self.verbose &gt;= 2:
+            print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+        # Recherche d&#39;un bon minimum global
+        if self.verbose &gt;= 2:
+            print(&#34;\tOptimsation globale, algo genetique...&#34;)
+        opt_res = optimize.differential_evolution(
+            self._calibration_cost,
+            bounds=bounds,
+            args=args,
+            disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
+            polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
+            popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
+            workers=1) # Pour ne pas creer de sous processus.
+            # C&#39;est plus rapide de ne pas creer de sous processus que d&#39;en faire... car cloudpickle est lent!
+    if self.verbose &gt;= 2:
+        print(f&#34;\t\tOk: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+    fit_parameters_vect = opt_res[&#34;x&#34;]
+    
+    # Mise en forme du resultat.
+    fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
+    self._calibration_parameters = {**given_parameters, **fit_parameters}
+    self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
+    if self.verbose:
+        print(f&#34;\tOK: set_calibration terminee: {self._calibration_parameters}&#34;)
+    return self._calibration_parameters</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#manipule-un-lot-de-donnees-laue">Manipule un lot de donnees Laue.</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="laue.experiment" href="index.html">laue.experiment</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="laue.experiment.base_experiment.Experiment" href="#laue.experiment.base_experiment.Experiment">Experiment</a></code></h4>
+<ul class="two-column">
+<li><code><a title="laue.experiment.base_experiment.Experiment.__getitem__" href="#laue.experiment.base_experiment.Experiment.__getitem__">__getitem__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.__iter__" href="#laue.experiment.base_experiment.Experiment.__iter__">__iter__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.__len__" href="#laue.experiment.base_experiment.Experiment.__len__">__len__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.clean" href="#laue.experiment.base_experiment.Experiment.clean">clean</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.find_zone_axes" href="#laue.experiment.base_experiment.Experiment.find_zone_axes">find_zone_axes</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.get_diagrams" href="#laue.experiment.base_experiment.Experiment.get_diagrams">get_diagrams</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.get_images_shape" href="#laue.experiment.base_experiment.Experiment.get_images_shape">get_images_shape</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.get_mean" href="#laue.experiment.base_experiment.Experiment.get_mean">get_mean</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.read_images" href="#laue.experiment.base_experiment.Experiment.read_images">read_images</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.save_file" href="#laue.experiment.base_experiment.Experiment.save_file">save_file</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.set_calibration" href="#laue.experiment.base_experiment.Experiment.set_calibration">set_calibration</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

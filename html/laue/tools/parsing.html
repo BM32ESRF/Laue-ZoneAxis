@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>laue.tools.parsing API documentation</title>
+<meta name="description" content="** Extrait l&#39;informations de donnes pas bien rigoureuses. **
+…" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>laue.tools.parsing</code></h1>
+</header>
+<section id="section-intro">
+<h2 id="extrait-linformations-de-donnes-pas-bien-rigoureuses"><strong> Extrait l'informations de donnes pas bien rigoureuses. </strong></h2>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Permet en particulier de faire du parsing a l'aide d'expression regulieres.</li>
+<li>Le module <code>regex</code> peut permetre d'accroitre legerement les performances.</li>
+</ul>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+
+&#34;&#34;&#34;
+** Extrait l&#39;informations de donnes pas bien rigoureuses. **
+------------------------------------------------------------
+
+Notes
+-----
+* Permet en particulier de faire du parsing a l&#39;aide d&#39;expression regulieres.
+* Le module ``regex`` peut permetre d&#39;accroitre legerement les performances.
+&#34;&#34;&#34;
+
+import os
+try:
+        import regex as re
+except ImportError:
+        import re
+
+
+def extract_parameters(ignore_missing=False, **detector_parameters):
+    &#34;&#34;&#34;
+    ** Extrait les parametres de la camera. **
+
+    Notes
+    -----
+    * Permet une grande souplesse d&#39;utilisation.
+    * Tous les parametres ne sont pas forcement a preciser.
+
+    Parameters
+    ----------
+    ignore_missing : boolean, optional
+        * Permet d&#39;imposer ou non, d&#39;avoir un retour exhaustif:
+        * True =&gt; Retourne toutes les grandeurs extraites, meme si il en manque.
+        * False =&gt; S&#39;assure que tous les parametres ont etes correctement extraits.
+    config_file : str
+        Chemin du fichier &#39;*.det&#39; qui contient tous ces parametres.
+
+    dd, detect, distance : float, int
+        Plus courte distance entre l&#39;origine du cristal et le plan de la camera.
+        ||OO&#39;|| en mm
+    xcen, x0 : float, int
+        Distance entre l&#39;origine de la camera et le point d&#39;incidence normal projetee selon X_camera.
+        &lt;O&#39;&#39;O&#39;, Ci&gt; en pxl
+    ycen, y0 : float, int
+        Distance entre l&#39;origine de la camera et le point d&#39;incidence normal projetee selon Y_camera.
+        &lt;O&#39;&#39;O&#39;, Cj&gt; en pxl
+    xbet, bet, beta, angle1 : float
+        Rotation du repere de la camera autour de l&#39;axe Y_cristal dans le sens.
+        axe (Y_cristal ou Ci) en degre
+    xgam, gam, gamma, angle2 : float
+        Rotation du repere de la camera autour de l&#39;axe Ck qui a deja subit la rotation de ``xbet``.
+        axe (OO&#39; ou Ck) en degre
+    pixelsize, size, pxlsize : float
+        Dimension du cote des pixels carre du capteur.
+        (taille capteur x / nbr pixels x == taille capteur y / nbr pixels y) en mm/pxl
+
+    Returns
+    -------
+    dict
+        Le dictionaire qui a chaque nom de parametre, associ ca valeur.
+        Les clefs et les valeurs typique sont par example:
+        ``{&#34;dd&#34;: 70.0, &#34;xcen&#34;: 1024, &#34;ycen&#34;: 1024, &#34;xbet&#34;: .0, &#34;xgam&#34;: .0, &#34;pixelsize&#34;: .080567}``
+
+    Raises
+    ------
+    ValueError
+        Si il y a des incoherences. (Par example si le meme parametre a 2 valeurs differentes)
+    KeyError
+        Si il manque des parametres.
+
+    Examples
+    --------
+    &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
+    &gt;&gt;&gt; output = lambda pars: &#34;, &#34;.join(f&#34;{repr(k)}: {round(pars[k], 2)}&#34; for k in sorted(pars))
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; output(extract_parameters(config_file=&#34;laue/examples/ge_blanc.det&#34;))
+    &#34;&#39;dd&#39;: 71.47, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.01, &#39;xcen&#39;: 938.51, &#39;xgam&#39;: -0.01, &#39;ycen&#39;: 1078.08&#34;
+    &gt;&gt;&gt; output(extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024))
+    &#34;&#39;dd&#39;: 70, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.0, &#39;xcen&#39;: 1024, &#39;xgam&#39;: 0.0, &#39;ycen&#39;: 1024&#34;
+    &gt;&gt;&gt; output(extract_parameters(distance=70, angle2=.0, angle1=.0, size=.08, x0=1024, y0=1024))
+    &#34;&#39;dd&#39;: 70, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.0, &#39;xcen&#39;: 1024, &#39;xgam&#39;: 0.0, &#39;ycen&#39;: 1024&#34;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    # Verification de type et contenu.
+    assert isinstance(ignore_missing, bool), \
+        f&#34;&#39;ignore_missing&#39; has to be a boolean, not a {type(ignore_missing).__name__}.&#34;
+    if &#34;config_file&#34; in detector_parameters:
+        assert isinstance(detector_parameters[&#34;config_file&#34;], str), (&#34;&#39;file&#39; doit etre un chemin de &#34;
+            f&#34;fichier de type str, pas {type(detector_parameters[&#39;config_file&#39;]).__name__}.&#34;)
+        assert os.path.isfile(detector_parameters[&#34;config_file&#34;]), \
+            f&#34;{repr(detector_parameters[&#39;config_file&#39;])} n&#39;est pas un fichier qui existe.&#34;
+    for dist in (&#34;dd&#34;, &#34;detect&#34;, &#34;distance&#34;):
+        if dist in detector_parameters:
+            assert isinstance(detector_parameters[dist], (float, int)), \
+                f&#34;&#39;{dist}&#39; doit etre un nombre, pas un {type(detector_parameters[dist]).__name__}.&#34;
+            assert detector_parameters[dist] &gt; 0, \
+                f&#34;Toute distance doit etre positive, or elle vaut {detector_parameters[dist]}.&#34;
+    for pos in (&#34;xcen&#34;, &#34;x0&#34;, &#34;ycen&#34;, &#34;y0&#34;):
+        if pos in detector_parameters:
+            assert isinstance(detector_parameters[pos], (float, int)), \
+                f&#34;&#39;{pos}&#39; doit etre un nombre, pas un {type(detector_parameters[pos]).__name__}.&#34;
+    for angle in (&#34;xbet&#34;, &#34;bet&#34;, &#34;beta&#34;, &#34;angle1&#34;, &#34;xgam&#34;, &#34;gam&#34;, &#34;gamma&#34;, &#34;angle2&#34;):
+        if angle in detector_parameters:
+            assert isinstance(detector_parameters[angle], float), \
+                f&#34;&#39;{angle}&#39; doit etre un flottant, pas un {type(detector_parameters[angle]).__name__}.&#34;
+            assert -4.84 &lt; detector_parameters[angle] &lt; 4.84, (&#34;L&#39;angle de correction doit etre petit car &#34;
+                &#34;un developement limite permet d&#39;accelerer les calculs. Seulement on autorise une erreur &#34;
+                f&#34;de 1e-4 qui correpond a 4.84 degres, pas {detector_parameters[angle]}.&#34;)
+    for size in (&#34;pixelsize&#34;, &#34;size&#34;, &#34;pxlsize&#34;):
+        if size in detector_parameters:
+            assert isinstance(detector_parameters[size], float), \
+                f&#34;&#39;{size}&#39; doit etre un flottant, pas un {type(detector_parameters[size]).__name__}.&#34;
+            assert detector_parameters[size] &gt; 0, \
+                f&#34;La taille d&#39;un pixel doit etre positive, or elle vaut {detector_parameters[size]}.&#34;
+
+    parameters = {} # C&#39;est le dictionaire des parametres extraits.
+
+    # Extraction des informations du fichier.
+    if &#34;config_file&#34; in detector_parameters:
+        f_mod = re.compile(r&#34;&#34;&#34;(?:[+-]*
+                (?:
+                  \. [0-9]+ (?:_[0-9]+)*
+                  (?: e [+-]? [0-9]+ (?:_[0-9]+)* )?
+                | [0-9]+ (?:_[0-9]+)* \. (?: [0-9]+ (?:_[0-9]+)* )?
+                  (?: e [+-]? [0-9]+ (?:_[0-9]+)* )?
+                | [0-9]+ (?:_[0-9]+)*
+                  e [+-]? [0-9]+ (?:_[0-9]+)*
+                ))&#34;&#34;&#34;, re.VERBOSE | re.IGNORECASE) # Model d&#39;un flottant.
+        i_mod = re.compile(r&#34;&#34;&#34;(?:[+-]*
+                    # entier normal
+                    [0-9]+ (?:_[0-9]+)*
+                | 0 (?:
+                    # binary
+                    b [01]+ (?:_[01]+)*
+                  | # octal
+                    o [0-7]+ (?:_[0-7]+)*
+                  | # hexadecimal
+                    x [0-9a-f]+ (?:_[0-9a-f]+)*
+                )
+                )&#34;&#34;&#34;, re.VERBOSE | re.IGNORECASE) # Model d&#39;un entier.
+        complete_model = re.compile(r&#34;&#34;&#34;^[\[\(]?\s*?(?:
+                    (?P&lt;dd&gt;{f_mod}) [\s,]+
+                    (?P&lt;xcen&gt;{f_mod}) [\s,]+
+                    (?P&lt;ycen&gt;{f_mod}) [\s,]+
+                    (?P&lt;xbet&gt;{f_mod}) [\s,]+
+                    (?P&lt;xgam&gt;{f_mod})
+                    (?: [\s,]+ (?P&lt;pixelsize&gt;{f_mod}))?
+                )
+                &#34;&#34;&#34;.format(f_mod=f_mod.pattern, i_mod=i_mod.pattern), re.VERBOSE | re.IGNORECASE)
+        dd_model = re.compile(rf&#34;(?:dd|detect|distance)[\s:=]+(?P&lt;dd&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        xcen_model = re.compile(rf&#34;(?:xcen|x0)[\s:=]+(?P&lt;xcen&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        ycen_model = re.compile(rf&#34;(?:ycen|y0)[\s:=]+(?P&lt;ycen&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        xbet_model = re.compile(rf&#34;(?:xbet|bet|beta|angle1)[\s:=]+(?P&lt;xbet&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        xgam_model = re.compile(rf&#34;(?:xgam|gam|gamma|angle2)[\s:=]+(?P&lt;xgam&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        pixelsize_model = re.compile(rf&#34;(?:size|pixelsize|pxlsize)[\s:=]+(?P&lt;pixelsize&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        keys = {&#34;dd&#34;: dd_model, &#34;xcen&#34;: xcen_model, &#34;ycen&#34;: ycen_model,
+                &#34;xbet&#34;: xbet_model, &#34;xgam&#34;: xgam_model}
+
+        with open(detector_parameters[&#34;config_file&#34;], &#34;r&#34;, encoding=&#34;utf-8&#34;, errors=&#34;ignore&#34;) as file:
+            for line in file: # Pour chaque ligne du fichier, on tente d&#39;y recuperer les infos.
+
+                # Recherche de la liste des parametres.
+                complete_search = re.search(complete_model, line)
+                if complete_search is not None:
+                    for key in keys:
+                        value = float(complete_search[key])
+                        if parameters.get(key, value) != value:
+                            raise ValueError(f&#34;&#39;{key}&#39; value is ambigous. Is it {parameters[key]} or {value}?&#34;)
+                        parameters[key] = value
+                    if complete_search[&#34;pixelsize&#34;] is not None:
+                        pixelsize = float(complete_search[&#34;pixelsize&#34;])
+                        if parameters.get(&#34;pixelsize&#34;, pixelsize) != pixelsize:
+                            raise ValueError(&#34;&#39;pixelsize&#39; value is ambigous. &#34;
+                                f&#34;Is it {parameters[&#39;pixelsize&#39;]} or {pixelsize}?&#34;)
+                        parameters[&#34;pixelsize&#34;] = pixelsize
+
+                # Recherches des parametres isoles.
+                for key, model in {**keys, &#34;pixelsize&#34;: pixelsize_model}.items():
+                    search = re.search(model, line)
+                    if search is not None:
+                        value = float(search[key])
+                        if parameters.get(key, value) != value:
+                            raise ValueError(f&#34;&#39;{key}&#39; value is ambigous. Is it {parameters[key]} or {value}?&#34;)
+                        parameters[key] = value
+
+    # 3 Extraction des informations expicites.
+    for keys in [(&#34;dd&#34;, &#34;detect&#34;, &#34;distance&#34;),
+                 (&#34;xcen&#34;, &#34;x0&#34;),
+                 (&#34;ycen&#34;, &#34;y0&#34;),
+                 (&#34;xbet&#34;, &#34;bet&#34;, &#34;beta&#34;, &#34;angle1&#34;),
+                 (&#34;xgam&#34;, &#34;gam&#34;, &#34;gamma&#34;, &#34;angle2&#34;),
+                 (&#34;pixelsize&#34;, &#34;size&#34;, &#34;pxlsize&#34;)]:
+        for key in keys:
+            if key in detector_parameters:
+                value = detector_parameters[key]
+                if parameters.get(keys[0], value) != value:
+                    raise ValueError(f&#34;&#39;{keys[0]}&#39; value is ambigous. Is it {parameters[keys[0]]} or {value}?&#34;)
+                parameters[keys[0]] = value
+
+    # Ajout des valeurs manquantes.
+    if not ignore_missing:
+        keys = {&#34;dd&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;pixelsize&#34;}
+        missing_keys = keys - set(parameters)
+        if missing_keys:
+            raise KeyError(f&#34;Il manque les parametres {&#39;, &#39;.join(missing_keys)}.&#34;)
+
+    return parameters</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="laue.tools.parsing.extract_parameters"><code class="name flex">
+<span>def <span class="ident">extract_parameters</span></span>(<span>ignore_missing=False, **detector_parameters)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Extrait les parametres de la camera. </strong></p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Permet une grande souplesse d'utilisation.</li>
+<li>Tous les parametres ne sont pas forcement a preciser.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ignore_missing</code></strong> :&ensp;<code>boolean</code>, optional</dt>
+<dd>
+<ul>
+<li>Permet d'imposer ou non, d'avoir un retour exhaustif:</li>
+<li>True =&gt; Retourne toutes les grandeurs extraites, meme si il en manque.</li>
+<li>False =&gt; S'assure que tous les parametres ont etes correctement extraits.</li>
+</ul>
+</dd>
+<dt><strong><code>config_file</code></strong> :&ensp;<code>str</code></dt>
+<dd>Chemin du fichier '*.det' qui contient tous ces parametres.</dd>
+<dt><strong><code>dd</code></strong>, <strong><code>detect</code></strong>, <strong><code>distance</code></strong> :&ensp;<code>float, int</code></dt>
+<dd>Plus courte distance entre l'origine du cristal et le plan de la camera.
+||OO'|| en mm</dd>
+<dt><strong><code>xcen</code></strong>, <strong><code>x0</code></strong> :&ensp;<code>float, int</code></dt>
+<dd>Distance entre l'origine de la camera et le point d'incidence normal projetee selon X_camera.
+<O''O', Ci> en pxl</dd>
+<dt><strong><code>ycen</code></strong>, <strong><code>y0</code></strong> :&ensp;<code>float, int</code></dt>
+<dd>Distance entre l'origine de la camera et le point d'incidence normal projetee selon Y_camera.
+<O''O', Cj> en pxl</dd>
+<dt><strong><code>xbet</code></strong>, <strong><code>bet</code></strong>, <strong><code>beta</code></strong>, <strong><code>angle1</code></strong> :&ensp;<code>float</code></dt>
+<dd>Rotation du repere de la camera autour de l'axe Y_cristal dans le sens.
+axe (Y_cristal ou Ci) en degre</dd>
+<dt><strong><code>xgam</code></strong>, <strong><code>gam</code></strong>, <strong><code>gamma</code></strong>, <strong><code>angle2</code></strong> :&ensp;<code>float</code></dt>
+<dd>Rotation du repere de la camera autour de l'axe Ck qui a deja subit la rotation de <code>xbet</code>.
+axe (OO' ou Ck) en degre</dd>
+<dt><strong><code>pixelsize</code></strong>, <strong><code>size</code></strong>, <strong><code>pxlsize</code></strong> :&ensp;<code>float</code></dt>
+<dd>Dimension du cote des pixels carre du capteur.
+(taille capteur x / nbr pixels x == taille capteur y / nbr pixels y) en mm/pxl</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>Le dictionaire qui a chaque nom de parametre, associ ca valeur.
+Les clefs et les valeurs typique sont par example:
+<code>{"dd": 70.0, "xcen": 1024, "ycen": 1024, "xbet": .0, "xgam": .0, "pixelsize": .080567}</code></dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>Si il y a des incoherences. (Par example si le meme parametre a 2 valeurs differentes)</dd>
+<dt><code>KeyError</code></dt>
+<dd>Si il manque des parametres.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from laue.tools.parsing import extract_parameters
+&gt;&gt;&gt; output = lambda pars: &quot;, &quot;.join(f&quot;{repr(k)}: {round(pars[k], 2)}&quot; for k in sorted(pars))
+&gt;&gt;&gt;
+&gt;&gt;&gt; output(extract_parameters(config_file=&quot;laue/examples/ge_blanc.det&quot;))
+&quot;'dd': 71.47, 'pixelsize': 0.08, 'xbet': 0.01, 'xcen': 938.51, 'xgam': -0.01, 'ycen': 1078.08&quot;
+&gt;&gt;&gt; output(extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024))
+&quot;'dd': 70, 'pixelsize': 0.08, 'xbet': 0.0, 'xcen': 1024, 'xgam': 0.0, 'ycen': 1024&quot;
+&gt;&gt;&gt; output(extract_parameters(distance=70, angle2=.0, angle1=.0, size=.08, x0=1024, y0=1024))
+&quot;'dd': 70, 'pixelsize': 0.08, 'xbet': 0.0, 'xcen': 1024, 'xgam': 0.0, 'ycen': 1024&quot;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract_parameters(ignore_missing=False, **detector_parameters):
+    &#34;&#34;&#34;
+    ** Extrait les parametres de la camera. **
+
+    Notes
+    -----
+    * Permet une grande souplesse d&#39;utilisation.
+    * Tous les parametres ne sont pas forcement a preciser.
+
+    Parameters
+    ----------
+    ignore_missing : boolean, optional
+        * Permet d&#39;imposer ou non, d&#39;avoir un retour exhaustif:
+        * True =&gt; Retourne toutes les grandeurs extraites, meme si il en manque.
+        * False =&gt; S&#39;assure que tous les parametres ont etes correctement extraits.
+    config_file : str
+        Chemin du fichier &#39;*.det&#39; qui contient tous ces parametres.
+
+    dd, detect, distance : float, int
+        Plus courte distance entre l&#39;origine du cristal et le plan de la camera.
+        ||OO&#39;|| en mm
+    xcen, x0 : float, int
+        Distance entre l&#39;origine de la camera et le point d&#39;incidence normal projetee selon X_camera.
+        &lt;O&#39;&#39;O&#39;, Ci&gt; en pxl
+    ycen, y0 : float, int
+        Distance entre l&#39;origine de la camera et le point d&#39;incidence normal projetee selon Y_camera.
+        &lt;O&#39;&#39;O&#39;, Cj&gt; en pxl
+    xbet, bet, beta, angle1 : float
+        Rotation du repere de la camera autour de l&#39;axe Y_cristal dans le sens.
+        axe (Y_cristal ou Ci) en degre
+    xgam, gam, gamma, angle2 : float
+        Rotation du repere de la camera autour de l&#39;axe Ck qui a deja subit la rotation de ``xbet``.
+        axe (OO&#39; ou Ck) en degre
+    pixelsize, size, pxlsize : float
+        Dimension du cote des pixels carre du capteur.
+        (taille capteur x / nbr pixels x == taille capteur y / nbr pixels y) en mm/pxl
+
+    Returns
+    -------
+    dict
+        Le dictionaire qui a chaque nom de parametre, associ ca valeur.
+        Les clefs et les valeurs typique sont par example:
+        ``{&#34;dd&#34;: 70.0, &#34;xcen&#34;: 1024, &#34;ycen&#34;: 1024, &#34;xbet&#34;: .0, &#34;xgam&#34;: .0, &#34;pixelsize&#34;: .080567}``
+
+    Raises
+    ------
+    ValueError
+        Si il y a des incoherences. (Par example si le meme parametre a 2 valeurs differentes)
+    KeyError
+        Si il manque des parametres.
+
+    Examples
+    --------
+    &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
+    &gt;&gt;&gt; output = lambda pars: &#34;, &#34;.join(f&#34;{repr(k)}: {round(pars[k], 2)}&#34; for k in sorted(pars))
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; output(extract_parameters(config_file=&#34;laue/examples/ge_blanc.det&#34;))
+    &#34;&#39;dd&#39;: 71.47, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.01, &#39;xcen&#39;: 938.51, &#39;xgam&#39;: -0.01, &#39;ycen&#39;: 1078.08&#34;
+    &gt;&gt;&gt; output(extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024))
+    &#34;&#39;dd&#39;: 70, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.0, &#39;xcen&#39;: 1024, &#39;xgam&#39;: 0.0, &#39;ycen&#39;: 1024&#34;
+    &gt;&gt;&gt; output(extract_parameters(distance=70, angle2=.0, angle1=.0, size=.08, x0=1024, y0=1024))
+    &#34;&#39;dd&#39;: 70, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.0, &#39;xcen&#39;: 1024, &#39;xgam&#39;: 0.0, &#39;ycen&#39;: 1024&#34;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    # Verification de type et contenu.
+    assert isinstance(ignore_missing, bool), \
+        f&#34;&#39;ignore_missing&#39; has to be a boolean, not a {type(ignore_missing).__name__}.&#34;
+    if &#34;config_file&#34; in detector_parameters:
+        assert isinstance(detector_parameters[&#34;config_file&#34;], str), (&#34;&#39;file&#39; doit etre un chemin de &#34;
+            f&#34;fichier de type str, pas {type(detector_parameters[&#39;config_file&#39;]).__name__}.&#34;)
+        assert os.path.isfile(detector_parameters[&#34;config_file&#34;]), \
+            f&#34;{repr(detector_parameters[&#39;config_file&#39;])} n&#39;est pas un fichier qui existe.&#34;
+    for dist in (&#34;dd&#34;, &#34;detect&#34;, &#34;distance&#34;):
+        if dist in detector_parameters:
+            assert isinstance(detector_parameters[dist], (float, int)), \
+                f&#34;&#39;{dist}&#39; doit etre un nombre, pas un {type(detector_parameters[dist]).__name__}.&#34;
+            assert detector_parameters[dist] &gt; 0, \
+                f&#34;Toute distance doit etre positive, or elle vaut {detector_parameters[dist]}.&#34;
+    for pos in (&#34;xcen&#34;, &#34;x0&#34;, &#34;ycen&#34;, &#34;y0&#34;):
+        if pos in detector_parameters:
+            assert isinstance(detector_parameters[pos], (float, int)), \
+                f&#34;&#39;{pos}&#39; doit etre un nombre, pas un {type(detector_parameters[pos]).__name__}.&#34;
+    for angle in (&#34;xbet&#34;, &#34;bet&#34;, &#34;beta&#34;, &#34;angle1&#34;, &#34;xgam&#34;, &#34;gam&#34;, &#34;gamma&#34;, &#34;angle2&#34;):
+        if angle in detector_parameters:
+            assert isinstance(detector_parameters[angle], float), \
+                f&#34;&#39;{angle}&#39; doit etre un flottant, pas un {type(detector_parameters[angle]).__name__}.&#34;
+            assert -4.84 &lt; detector_parameters[angle] &lt; 4.84, (&#34;L&#39;angle de correction doit etre petit car &#34;
+                &#34;un developement limite permet d&#39;accelerer les calculs. Seulement on autorise une erreur &#34;
+                f&#34;de 1e-4 qui correpond a 4.84 degres, pas {detector_parameters[angle]}.&#34;)
+    for size in (&#34;pixelsize&#34;, &#34;size&#34;, &#34;pxlsize&#34;):
+        if size in detector_parameters:
+            assert isinstance(detector_parameters[size], float), \
+                f&#34;&#39;{size}&#39; doit etre un flottant, pas un {type(detector_parameters[size]).__name__}.&#34;
+            assert detector_parameters[size] &gt; 0, \
+                f&#34;La taille d&#39;un pixel doit etre positive, or elle vaut {detector_parameters[size]}.&#34;
+
+    parameters = {} # C&#39;est le dictionaire des parametres extraits.
+
+    # Extraction des informations du fichier.
+    if &#34;config_file&#34; in detector_parameters:
+        f_mod = re.compile(r&#34;&#34;&#34;(?:[+-]*
+                (?:
+                  \. [0-9]+ (?:_[0-9]+)*
+                  (?: e [+-]? [0-9]+ (?:_[0-9]+)* )?
+                | [0-9]+ (?:_[0-9]+)* \. (?: [0-9]+ (?:_[0-9]+)* )?
+                  (?: e [+-]? [0-9]+ (?:_[0-9]+)* )?
+                | [0-9]+ (?:_[0-9]+)*
+                  e [+-]? [0-9]+ (?:_[0-9]+)*
+                ))&#34;&#34;&#34;, re.VERBOSE | re.IGNORECASE) # Model d&#39;un flottant.
+        i_mod = re.compile(r&#34;&#34;&#34;(?:[+-]*
+                    # entier normal
+                    [0-9]+ (?:_[0-9]+)*
+                | 0 (?:
+                    # binary
+                    b [01]+ (?:_[01]+)*
+                  | # octal
+                    o [0-7]+ (?:_[0-7]+)*
+                  | # hexadecimal
+                    x [0-9a-f]+ (?:_[0-9a-f]+)*
+                )
+                )&#34;&#34;&#34;, re.VERBOSE | re.IGNORECASE) # Model d&#39;un entier.
+        complete_model = re.compile(r&#34;&#34;&#34;^[\[\(]?\s*?(?:
+                    (?P&lt;dd&gt;{f_mod}) [\s,]+
+                    (?P&lt;xcen&gt;{f_mod}) [\s,]+
+                    (?P&lt;ycen&gt;{f_mod}) [\s,]+
+                    (?P&lt;xbet&gt;{f_mod}) [\s,]+
+                    (?P&lt;xgam&gt;{f_mod})
+                    (?: [\s,]+ (?P&lt;pixelsize&gt;{f_mod}))?
+                )
+                &#34;&#34;&#34;.format(f_mod=f_mod.pattern, i_mod=i_mod.pattern), re.VERBOSE | re.IGNORECASE)
+        dd_model = re.compile(rf&#34;(?:dd|detect|distance)[\s:=]+(?P&lt;dd&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        xcen_model = re.compile(rf&#34;(?:xcen|x0)[\s:=]+(?P&lt;xcen&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        ycen_model = re.compile(rf&#34;(?:ycen|y0)[\s:=]+(?P&lt;ycen&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        xbet_model = re.compile(rf&#34;(?:xbet|bet|beta|angle1)[\s:=]+(?P&lt;xbet&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        xgam_model = re.compile(rf&#34;(?:xgam|gam|gamma|angle2)[\s:=]+(?P&lt;xgam&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        pixelsize_model = re.compile(rf&#34;(?:size|pixelsize|pxlsize)[\s:=]+(?P&lt;pixelsize&gt;{f_mod.pattern})&#34;,
+            re.VERBOSE | re.IGNORECASE)
+        keys = {&#34;dd&#34;: dd_model, &#34;xcen&#34;: xcen_model, &#34;ycen&#34;: ycen_model,
+                &#34;xbet&#34;: xbet_model, &#34;xgam&#34;: xgam_model}
+
+        with open(detector_parameters[&#34;config_file&#34;], &#34;r&#34;, encoding=&#34;utf-8&#34;, errors=&#34;ignore&#34;) as file:
+            for line in file: # Pour chaque ligne du fichier, on tente d&#39;y recuperer les infos.
+
+                # Recherche de la liste des parametres.
+                complete_search = re.search(complete_model, line)
+                if complete_search is not None:
+                    for key in keys:
+                        value = float(complete_search[key])
+                        if parameters.get(key, value) != value:
+                            raise ValueError(f&#34;&#39;{key}&#39; value is ambigous. Is it {parameters[key]} or {value}?&#34;)
+                        parameters[key] = value
+                    if complete_search[&#34;pixelsize&#34;] is not None:
+                        pixelsize = float(complete_search[&#34;pixelsize&#34;])
+                        if parameters.get(&#34;pixelsize&#34;, pixelsize) != pixelsize:
+                            raise ValueError(&#34;&#39;pixelsize&#39; value is ambigous. &#34;
+                                f&#34;Is it {parameters[&#39;pixelsize&#39;]} or {pixelsize}?&#34;)
+                        parameters[&#34;pixelsize&#34;] = pixelsize
+
+                # Recherches des parametres isoles.
+                for key, model in {**keys, &#34;pixelsize&#34;: pixelsize_model}.items():
+                    search = re.search(model, line)
+                    if search is not None:
+                        value = float(search[key])
+                        if parameters.get(key, value) != value:
+                            raise ValueError(f&#34;&#39;{key}&#39; value is ambigous. Is it {parameters[key]} or {value}?&#34;)
+                        parameters[key] = value
+
+    # 3 Extraction des informations expicites.
+    for keys in [(&#34;dd&#34;, &#34;detect&#34;, &#34;distance&#34;),
+                 (&#34;xcen&#34;, &#34;x0&#34;),
+                 (&#34;ycen&#34;, &#34;y0&#34;),
+                 (&#34;xbet&#34;, &#34;bet&#34;, &#34;beta&#34;, &#34;angle1&#34;),
+                 (&#34;xgam&#34;, &#34;gam&#34;, &#34;gamma&#34;, &#34;angle2&#34;),
+                 (&#34;pixelsize&#34;, &#34;size&#34;, &#34;pxlsize&#34;)]:
+        for key in keys:
+            if key in detector_parameters:
+                value = detector_parameters[key]
+                if parameters.get(keys[0], value) != value:
+                    raise ValueError(f&#34;&#39;{keys[0]}&#39; value is ambigous. Is it {parameters[keys[0]]} or {value}?&#34;)
+                parameters[keys[0]] = value
+
+    # Ajout des valeurs manquantes.
+    if not ignore_missing:
+        keys = {&#34;dd&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;pixelsize&#34;}
+        missing_keys = keys - set(parameters)
+        if missing_keys:
+            raise KeyError(f&#34;Il manque les parametres {&#39;, &#39;.join(missing_keys)}.&#34;)
+
+    return parameters</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#extrait-linformations-de-donnes-pas-bien-rigoureuses">Extrait l'informations de donnes pas bien rigoureuses.</a></li>
+<li><a href="#notes">Notes</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="laue.tools" href="index.html">laue.tools</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="laue.tools.parsing.extract_parameters" href="#laue.tools.parsing.extract_parameters">extract_parameters</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
