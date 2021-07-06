@@ -1,0 +1,4 @@
+71.46530388792195, 938.5084324120866, 1078.0785188418245, 0.008226786287516288, -0.01295663739703454, 0.079856, 2048, 2048
+Sample-Detector distance(IM), xO, yO, angle1, angle2, pixelsize, dim1, dim2
+Experiment(images=<generator object _iglob at 0x7f6ccffc5740>, verbose=False, max_space=5, threshold=5.1)
+Calibration done at Fri Jul  2 10:42:09 2021.
