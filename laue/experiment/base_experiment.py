@@ -36,7 +36,7 @@ class Experiment:
     """
     ** Permet de travailler sur un lot d'images. **
     """
-    def __init__(self, images=(), *, verbose=False, config_file=None, **kwargs):
+    def __init__(self, images=(), *, config_file=None, verbose=False, **kwargs):
         """
         Parameters
         ----------
@@ -333,15 +333,32 @@ class Experiment:
             # Recherche d'un bon minimum global
             if self.verbose >= 2:
                 print("\tOptimsation globale, algo genetique...")
-            opt_res = optimize.differential_evolution(
-                self._calibration_cost,
-                bounds=bounds,
-                args=args,
-                disp=self.verbose >= 3, # Pour rendre la fonction verbeuse.
-                polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
-                popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
-                workers=1) # Pour ne pas creer de sous processus.
-                # C'est plus rapide de ne pas creer de sous processus que d'en faire... car cloudpickle est lent!
+            
+            if multiprocessing.current_process().name == "MainProcess":
+                attrs = ["transformer", "verbose"]
+                self_bis = collections.namedtuple("PartialExperiment", attrs, defaults=[getattr(self, attr) for attr in attrs])()
+                opt_res = optimize.differential_evolution(
+                    # self._calibration_cost,
+                    _Picklable(cloudpickle.dumps(self_bis), Experiment._calibration_cost,
+                        {name: val for name, val in zip(("known_params", "vect_labels", "spots_position"), args)}
+                        ),
+                    updating="deferred",
+                    bounds=bounds,
+                    # args=args,
+                    disp=self.verbose >= 3, # Pour rendre la fonction verbeuse.
+                    polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
+                    popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
+                    workers=-1) # Pour utiliser tous les cpus.
+            else:
+                opt_res = optimize.differential_evolution(
+                    self._calibration_cost,
+                    bounds=bounds,
+                    args=args,
+                    disp=self.verbose >= 3, # Pour rendre la fonction verbeuse.
+                    polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
+                    popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
+                    workers=1) # Pour ne pas creer de sous processus.
+                    # C'est plus rapide de ne pas creer de sous processus que d'en faire... car cloudpickle est lent!
         if self.verbose >= 2:
             print(f"\t\tOk: cout final = {opt_res['fun']}")
         fit_parameters_vect = opt_res["x"]
@@ -1126,3 +1143,12 @@ class Experiment:
                 f"\tignore_errors: {self.ignore_errors}\n"
                 f"\tverbose: {self.verbose}"
                 f"{addi_print}")
+
+class _Picklable:
+    def __init__(self, ser_mother_class, func, kwargs):
+        self.ser_mother_class = ser_mother_class
+        self.func = func
+        self.kwargs = kwargs
+
+    def __call__(self, x):
+        return self.func(cloudpickle.loads(self.ser_mother_class), x, **self.kwargs)
