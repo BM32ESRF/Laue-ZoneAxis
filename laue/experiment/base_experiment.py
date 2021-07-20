@@ -36,7 +36,7 @@ class Experiment:
     """
     ** Permet de travailler sur un lot d'images. **
     """
-    def __init__(self, images=(), *, verbose=False, max_space=5, threshold=5.1, **kwargs):
+    def __init__(self, images=(), *, verbose=False, config_file=None, **kwargs):
         """
         Parameters
         ----------
@@ -78,6 +78,8 @@ class Experiment:
         ignore_errors : boolean, optional
             Permet d'ignorer certaine erreurs qui ne sont pas critiques.
             La valeur par defaut et True.
+        config_file : str, optional
+            Alias vers ``**detector_parameters``.
         **detector_parameters : number
             Les parametres de set_calibration de la camera deja connus.
             Il servent dans la methode ``laue.experiment.base_experiment.Experiment.set_calibration``
@@ -103,14 +105,16 @@ class Experiment:
         assert hasattr(images, "__iter__"), ("'images' must to be iterable. "
             f"It can not be of type {type(images).__name__}.")
         assert isinstance(verbose, int), f"'verbose' has to be int, not {type(verbose).__name__}."
+        
+        max_space = kwargs.get("max_space", 5)
         assert isinstance(max_space, int), "'max_space' has to be an integer, not a %s." \
             % type(max_space).__name__
         assert max_space >= 1, f"'max_space' has to be positive. His value is '{max_space}'."
+        threshold = kwargs.get("threshold", 5.1)
         assert isinstance(threshold, float), \
             f"'threshold' has to be float, not a {type(threshold).__name__}."
         assert 2.0 < threshold < 80.0, \
             f"Le seuil doit etre compris entre 2 et 50, il vaut '{threshold}'."
-
         font_size = kwargs.get("font_size", 21)
         assert isinstance(font_size, int), \
             f"'font_size' has to be an integer, not a {type(font_size).__name__}."
@@ -119,6 +123,9 @@ class Experiment:
         ignore_errors = kwargs.get("ignore_errors", True)
         assert isinstance(ignore_errors, bool), \
             f"'ignore_errors' has to be a boolean, not a {type(ignore_errors).__name__}."
+
+        if config_file is not None:
+            kwargs["config_file"] = config_file
 
         self.images = images
 
@@ -206,7 +213,7 @@ class Experiment:
         PIXELSIZE_REF = {(2048, 2048): 0.079856, # Taille des pixels fonction de la camera.
                          (2018, 2016): 0.0734,
                          (2594, 2748): 0.031}
-        PARAM_SET = {"dd", "xbet", "xgam", "xcen", "ycen"} # Les paremetres non deductibles.
+        PARAM_SET = {"dd", "xbet", "xgam", "xcen", "ycen"} # Les parametres non deductibles.
         PARAM_MIN = {"dd": 60.0, # Les bornes minimale par defaut.
                      "xbet": -.9,
                      "xgam": -.9,
@@ -416,7 +423,6 @@ class Experiment:
                     plt.subplot(n_diagrams, 3, 3 + 3*i)
                     plt.title(f"diagramme {i+1}, hough")
                     plt.scatter(thetas[i, :], dists[i, :])
-                    print(clusters.shape)
                     plt.scatter(clusters[i][0], clusters[i][1])
                 plt.draw()
                 plt.pause(1e-6)
@@ -726,10 +732,11 @@ class Experiment:
             *np.meshgrid(np.arange(x_max), np.arange(y_max), copy=False),
             self.set_calibration())
         bornes = (xg.min(), xg.max(), yg.min(), yg.max())
+        
         del xg, yg
         x_side = np.linspace(bornes[0], bornes[1], num=x_max)
         y_side = np.linspace(bornes[2], bornes[3], num=y_max)
-        
+
         # Fonction inverse.
         map_x, map_y = self.transformer.gnomonic_to_cam(
             *np.meshgrid(x_side, y_side, copy=False),
@@ -743,7 +750,7 @@ class Experiment:
         if psutil is not None and psutil.virtual_memory().percent < 75:
             self._gnomonic_matrix = (map_x, map_y, bornes)
             return self._gnomonic_matrix
-        return map_x, map_y, bornes
+        return (map_x, map_y, bornes)
 
     def get_mean(self):
         """

@@ -124,10 +124,9 @@ def _find_images_dir(images_min=10, root=os.path.expanduser("~")):
     images_min : int
         Le nombre minium d'images dans un dossier.
     root : str
-        Le repertoir racine a explorer recursivement.
+        Le repertoire racine a explorer recursivement.
     """
-    with CWDasRoot():
-        from laue.tools.multi_core import RecallingIterator
+    from laue.tools.multi_core import RecallingIterator
    
     def generator():
         extensions = {".mccd", ".mccd.gz", ".tiff", ".tiff.gz"}

@@ -225,16 +225,19 @@ class LaueDiagram(Splitable):
                [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
+        if self.image_gnom is not None:
+            return self.image_gnom
+
         # Interpolation inverse vers l&#39;image finale.
         map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
-        image = cv2.remap(self.get_image_xy(),
-            map_x, map_y,
-            interpolation=cv2.INTER_CUBIC)
+        image_xy = self.get_image_xy()
+        image_gnom = cv2.remap(image_xy,
+            map_x, map_y, interpolation=cv2.INTER_LINEAR)
 
-        if psutil is not None and psutil.virtual_memory().percent &lt; 50:
-            self.image_gnom = image
+        if psutil is not None and psutil.virtual_memory().percent &lt; 75:
+            self.image_gnom = image_gnom
 
-        return image
+        return image_gnom
 
     def get_image_xy(self):
         &#34;&#34;&#34;
@@ -263,6 +266,8 @@ class LaueDiagram(Splitable):
                [0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+        &gt;&gt;&gt; diag.get_image_xy().max()
+        28899
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if self.image_xy is not None:
@@ -274,7 +279,7 @@ class LaueDiagram(Splitable):
         from laue.tools.image import read_image
         image = read_image(self.get_id())
 
-        if psutil is not None and psutil.virtual_memory().percent &lt; 50:
+        if psutil is not None and psutil.virtual_memory().percent &lt; 75:
             self.image_xy = image
 
         return image
@@ -841,13 +846,13 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(diag[500, 700]), len(diag[500, 700])
         (&lt;class &#39;list&#39;&gt;, 1)
-        &gt;&gt;&gt; diag[500, 700].pop().get_position()
-        (521.0178209801539, 724.4949372215472)
+        &gt;&gt;&gt; np.round(diag[500, 700].pop().get_position(), 3)
+        array([521.018, 724.495])
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(diag[.2, -.3]), len(diag[.2, -.3])
         (&lt;class &#39;list&#39;&gt;, 1)
-        &gt;&gt;&gt; diag[.2, -.3].pop().get_gnomonic()
-        (0.2656585507727329, -0.2989256509748738)
+        &gt;&gt;&gt; np.round(diag[.2, -.3].pop().get_gnomonic(), 3)
+        array([ 0.266, -0.299])
         &gt;&gt;&gt;
         &gt;&gt;&gt; len(diag[0.2, .5, &#34;gnomonic&#34;, 6])
         6
@@ -1205,16 +1210,19 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
                [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
+        if self.image_gnom is not None:
+            return self.image_gnom
+
         # Interpolation inverse vers l&#39;image finale.
         map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
-        image = cv2.remap(self.get_image_xy(),
-            map_x, map_y,
-            interpolation=cv2.INTER_CUBIC)
+        image_xy = self.get_image_xy()
+        image_gnom = cv2.remap(image_xy,
+            map_x, map_y, interpolation=cv2.INTER_LINEAR)
 
-        if psutil is not None and psutil.virtual_memory().percent &lt; 50:
-            self.image_gnom = image
+        if psutil is not None and psutil.virtual_memory().percent &lt; 75:
+            self.image_gnom = image_gnom
 
-        return image
+        return image_gnom
 
     def get_image_xy(self):
         &#34;&#34;&#34;
@@ -1243,6 +1251,8 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
                [0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+        &gt;&gt;&gt; diag.get_image_xy().max()
+        28899
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if self.image_xy is not None:
@@ -1254,7 +1264,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         from laue.tools.image import read_image
         image = read_image(self.get_id())
 
-        if psutil is not None and psutil.virtual_memory().percent &lt; 50:
+        if psutil is not None and psutil.virtual_memory().percent &lt; 75:
             self.image_xy = image
 
         return image
@@ -1821,13 +1831,13 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(diag[500, 700]), len(diag[500, 700])
         (&lt;class &#39;list&#39;&gt;, 1)
-        &gt;&gt;&gt; diag[500, 700].pop().get_position()
-        (521.0178209801539, 724.4949372215472)
+        &gt;&gt;&gt; np.round(diag[500, 700].pop().get_position(), 3)
+        array([521.018, 724.495])
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(diag[.2, -.3]), len(diag[.2, -.3])
         (&lt;class &#39;list&#39;&gt;, 1)
-        &gt;&gt;&gt; diag[.2, -.3].pop().get_gnomonic()
-        (0.2656585507727329, -0.2989256509748738)
+        &gt;&gt;&gt; np.round(diag[.2, -.3].pop().get_gnomonic(), 3)
+        array([ 0.266, -0.299])
         &gt;&gt;&gt;
         &gt;&gt;&gt; len(diag[0.2, .5, &#34;gnomonic&#34;, 6])
         6
@@ -2149,13 +2159,13 @@ La valeur par defaut est 1. Cet argument doit etre un entier positif.</li>
 &gt;&gt;&gt;
 &gt;&gt;&gt; type(diag[500, 700]), len(diag[500, 700])
 (&lt;class 'list'&gt;, 1)
-&gt;&gt;&gt; diag[500, 700].pop().get_position()
-(521.0178209801539, 724.4949372215472)
+&gt;&gt;&gt; np.round(diag[500, 700].pop().get_position(), 3)
+array([521.018, 724.495])
 &gt;&gt;&gt;
 &gt;&gt;&gt; type(diag[.2, -.3]), len(diag[.2, -.3])
 (&lt;class 'list'&gt;, 1)
-&gt;&gt;&gt; diag[.2, -.3].pop().get_gnomonic()
-(0.2656585507727329, -0.2989256509748738)
+&gt;&gt;&gt; np.round(diag[.2, -.3].pop().get_gnomonic(), 3)
+array([ 0.266, -0.299])
 &gt;&gt;&gt;
 &gt;&gt;&gt; len(diag[0.2, .5, &quot;gnomonic&quot;, 6])
 6
@@ -2228,13 +2238,13 @@ array([[0.29464949, 0.39670733],
     &gt;&gt;&gt;
     &gt;&gt;&gt; type(diag[500, 700]), len(diag[500, 700])
     (&lt;class &#39;list&#39;&gt;, 1)
-    &gt;&gt;&gt; diag[500, 700].pop().get_position()
-    (521.0178209801539, 724.4949372215472)
+    &gt;&gt;&gt; np.round(diag[500, 700].pop().get_position(), 3)
+    array([521.018, 724.495])
     &gt;&gt;&gt;
     &gt;&gt;&gt; type(diag[.2, -.3]), len(diag[.2, -.3])
     (&lt;class &#39;list&#39;&gt;, 1)
-    &gt;&gt;&gt; diag[.2, -.3].pop().get_gnomonic()
-    (0.2656585507727329, -0.2989256509748738)
+    &gt;&gt;&gt; np.round(diag[.2, -.3].pop().get_gnomonic(), 3)
+    array([ 0.266, -0.299])
     &gt;&gt;&gt;
     &gt;&gt;&gt; len(diag[0.2, .5, &#34;gnomonic&#34;, 6])
     6
@@ -2796,16 +2806,19 @@ array([[0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
+    if self.image_gnom is not None:
+        return self.image_gnom
+
     # Interpolation inverse vers l&#39;image finale.
     map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
-    image = cv2.remap(self.get_image_xy(),
-        map_x, map_y,
-        interpolation=cv2.INTER_CUBIC)
+    image_xy = self.get_image_xy()
+    image_gnom = cv2.remap(image_xy,
+        map_x, map_y, interpolation=cv2.INTER_LINEAR)
 
-    if psutil is not None and psutil.virtual_memory().percent &lt; 50:
-        self.image_gnom = image
+    if psutil is not None and psutil.virtual_memory().percent &lt; 75:
+        self.image_gnom = image_gnom
 
-    return image</code></pre>
+    return image_gnom</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.get_image_xy"><code class="name flex">
@@ -2835,6 +2848,8 @@ array([[0, 0, 0, ..., 0, 0, 0],
        [0, 0, 0, ..., 0, 0, 0],
        [0, 0, 0, ..., 0, 0, 0],
        [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+&gt;&gt;&gt; diag.get_image_xy().max()
+28899
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -2868,6 +2883,8 @@ array([[0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+    &gt;&gt;&gt; diag.get_image_xy().max()
+    28899
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     if self.image_xy is not None:
@@ -2879,7 +2896,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
     from laue.tools.image import read_image
     image = read_image(self.get_id())
 
-    if psutil is not None and psutil.virtual_memory().percent &lt; 50:
+    if psutil is not None and psutil.virtual_memory().percent &lt; 75:
         self.image_xy = image
 
     return image</code></pre>

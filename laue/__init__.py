@@ -8,7 +8,8 @@ Notes
 -----
 * Pour effectuer les bancs de tests, il faut installer le module ``pip install pytest``.
     Il faut ensuite saisir la commande suivante:
-    * ``clear && pytest --doctest-modules laue/ && pytest -v laue/tools/tests.py && cat tests_results.txt``
+    * ``clear && pytest --disable-warnings --exitfirst --doctest-modules laue/
+        && pytest -v laue/tools/tests.py && cat tests_results.txt``
 * Pour generer la documentation, il faut installer le module ``pip install pdoc3``.
     Il faut ensuite saisir la commande suivante:
     * ``pdoc3 laue/ -c latex_math=True --force --html``

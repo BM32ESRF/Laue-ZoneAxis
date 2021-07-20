@@ -192,16 +192,19 @@ class LaueDiagram(Splitable):
                [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
         >>>
         """
+        if self.image_gnom is not None:
+            return self.image_gnom
+
         # Interpolation inverse vers l'image finale.
         map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
-        image = cv2.remap(self.get_image_xy(),
-            map_x, map_y,
-            interpolation=cv2.INTER_CUBIC)
+        image_xy = self.get_image_xy()
+        image_gnom = cv2.remap(image_xy,
+            map_x, map_y, interpolation=cv2.INTER_LINEAR)
 
-        if psutil is not None and psutil.virtual_memory().percent < 50:
-            self.image_gnom = image
+        if psutil is not None and psutil.virtual_memory().percent < 75:
+            self.image_gnom = image_gnom
 
-        return image
+        return image_gnom
 
     def get_image_xy(self):
         """
@@ -230,6 +233,8 @@ class LaueDiagram(Splitable):
                [0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
+        >>> diag.get_image_xy().max()
+        28899
         >>>
         """
         if self.image_xy is not None:
@@ -241,7 +246,7 @@ class LaueDiagram(Splitable):
         from laue.tools.image import read_image
         image = read_image(self.get_id())
 
-        if psutil is not None and psutil.virtual_memory().percent < 50:
+        if psutil is not None and psutil.virtual_memory().percent < 75:
             self.image_xy = image
 
         return image
@@ -808,13 +813,13 @@ class LaueDiagram(Splitable):
         >>>
         >>> type(diag[500, 700]), len(diag[500, 700])
         (<class 'list'>, 1)
-        >>> diag[500, 700].pop().get_position()
-        (521.0178209801539, 724.4949372215472)
+        >>> np.round(diag[500, 700].pop().get_position(), 3)
+        array([521.018, 724.495])
         >>>
         >>> type(diag[.2, -.3]), len(diag[.2, -.3])
         (<class 'list'>, 1)
-        >>> diag[.2, -.3].pop().get_gnomonic()
-        (0.2656585507727329, -0.2989256509748738)
+        >>> np.round(diag[.2, -.3].pop().get_gnomonic(), 3)
+        array([ 0.266, -0.299])
         >>>
         >>> len(diag[0.2, .5, "gnomonic", 6])
         6
