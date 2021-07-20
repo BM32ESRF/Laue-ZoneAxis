@@ -137,7 +137,7 @@ class LaueDiagram(Splitable):
         -------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; type(diag.find_zone_axes())
         &lt;class &#39;list&#39;&gt;
         &gt;&gt;&gt; type(diag.find_zone_axes().pop())
@@ -214,7 +214,7 @@ class LaueDiagram(Splitable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_image_gnomonic()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -254,7 +254,7 @@ class LaueDiagram(Splitable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_image_xy()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -291,7 +291,7 @@ class LaueDiagram(Splitable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_id()
         &#39;laue/examples/ge_blanc.mccd&#39;
         &gt;&gt;&gt;
@@ -334,7 +334,7 @@ class LaueDiagram(Splitable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;intensity&#34;)
         [Spot(bbox=(617, 1651, 11, 13), distortion=1.0760), Spot(bbox=(928, 1210, 10, 11), distortion=1.0673)]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;distortion&#34;)
@@ -394,7 +394,7 @@ class LaueDiagram(Splitable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_positions().shape
         (2, 78)
         &gt;&gt;&gt; diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0])
@@ -433,7 +433,7 @@ class LaueDiagram(Splitable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_gnomonic_positions().shape
         (2, 78)
         &gt;&gt;&gt; diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0])
@@ -474,7 +474,7 @@ class LaueDiagram(Splitable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; print(f&#34;quality: {diag.get_quality():.4f}&#34;)
         quality: 1.2752
         &gt;&gt;&gt;
@@ -501,31 +501,85 @@ class LaueDiagram(Splitable):
         &#34;&#34;&#34;
         return super().find_subsets(*args, **kwargs)
 
-    def plot_gnomonic(self, axe, *, display=True):
+    def plot_all(self, *, display=True):
+        &#34;&#34;&#34;
+        ** Affiche le diagramme a l&#39;ecran. **
+
+        * Utilise le module ``matplotlib`` qui doit etre installe.
+        * Cette methode peut prendre du temps car elle affiche le maximum de choses possible.
+
+        Parameters
+        ----------
+        display : boolean
+            Si True, affiche a l&#39;ecran en faisant appel a ``plt.show()``.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            La figure matplotlib completee.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag.plot_all(display=False)
+        &lt;Figure size 640x480 with 2 Axes&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure()
+        fig.suptitle(self.get_id())
+        axe_xy = fig.add_subplot(1, 2, 1)
+        axe_gnomonic = fig.add_subplot(1, 2, 2)
+
+        self.plot_xy(axe_xy, display=False)
+
+        try:
+            self.plot_gnomonic(axe_gnomonic, display=False)
+        except AttributeError:
+            pass
+
+        if display:
+            plt.show()
+
+        return fig
+
+    def plot_gnomonic(self, axe_pyplot=None, *, display=True):
         &#34;&#34;&#34;
         ** Prepare l&#39;affichage du diagramme dans le plan gnomonic. **
 
         Parameters
         ----------
-        axe : Axe
+        axe_pyplot : Axe
             Axe matplotlib qui supporte les methodes ``.scatter`` et ``.imshow``.
+        display : boolean
+            Si True, affiche a l&#39;ecran en faisant appel a ``plt.show()``.
 
         Examples
         --------
-        &gt;&gt;&gt; import matplotlib.pyplot as plt
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt;
+        &gt;&gt;&gt; diag.plot_gnomonic(display=False)
+        &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; import matplotlib.pyplot as plt
         &gt;&gt;&gt; fig = plt.figure()
         &gt;&gt;&gt; axe = fig.add_subplot()
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
-        &gt;&gt;&gt; diag.plot_gnomonic(axe)
+        &gt;&gt;&gt; diag.plot_gnomonic(axe, display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        axe.set_title(&#34;plan gnomonic&#34;)
-        axe.set_xlabel(&#34;x.Gi (mm)&#34;)
-        axe.set_ylabel(&#34;y.Gj (mm)&#34;)
+        if axe_pyplot is None:
+            import matplotlib.pyplot as plt
+            axe_pyplot = plt.figure().add_subplot()
+
+        axe_pyplot.set_title(&#34;plan gnomonic&#34;)
+        axe_pyplot.set_xlabel(&#34;x.Gi (mm)&#34;)
+        axe_pyplot.set_ylabel(&#34;y.Gj (mm)&#34;)
 
         # Affichage image de fond.
         try:
@@ -536,7 +590,7 @@ class LaueDiagram(Splitable):
             *_, limits = self.experiment._get_gnomonic_matrix()
             mean, std = image.mean(), image.std()
             x_coords, y_coords = self.get_gnomonic_positions()
-            axe.imshow(image,
+            axe_pyplot.imshow(image,
                 origin=&#39;lower&#39;,
                 aspect=((self.experiment.get_images_shape()[1]*x_coords.ptp())
                       / (self.experiment.get_images_shape()[0]*y_coords.ptp())),
@@ -546,41 +600,54 @@ class LaueDiagram(Splitable):
         # Affichage des axes.
         try:
             for axis in self.find_zone_axes():
-                axe = axis.plot_gnomonic(axe)
+                axe_pyplot = axis.plot_gnomonic(axe_pyplot, display=False)
         except AttributeError:
-            return axe
+            return axe_pyplot
 
         # Affichage de spots.
         for spot in self:
-            axe = spot.plot_gnomonic(axe)
+            axe_pyplot = spot.plot_gnomonic(axe_pyplot, display=False)
 
-        return axe
+        if display:
+            import matplotlib.pyplot as plt
+            plt.show()
 
-    def plot_xy(self, axe):
+        return axe_pyplot
+
+    def plot_xy(self, axe_pyplot=None, *, display=True):
         &#34;&#34;&#34;
         ** Prepare l&#39;affichage du diagramme dans le plan du capteur. **
 
         Parameters
         ----------
-        axe : Axe
+        axe_pyplot : Axe
             Axe matplotlib qui supporte les methodes ``.scatter`` et ``.imshow``.
+        display : boolean
+            Si True, affiche a l&#39;ecran en faisant appel a ``plt.show()``.
 
         Examples
         --------
-        &gt;&gt;&gt; import matplotlib.pyplot as plt
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt;
+        &gt;&gt;&gt; diag.plot_xy(display=False)
+        &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; import matplotlib.pyplot as plt
         &gt;&gt;&gt; fig = plt.figure()
         &gt;&gt;&gt; axe = fig.add_subplot()
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
-        &gt;&gt;&gt; diag.plot_xy(axe)
+        &gt;&gt;&gt; diag.plot_xy(axe, display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        axe.set_title(&#34;plan camera&#34;)
-        axe.set_xlabel(&#34;x.Ci (pxl)&#34;)
-        axe.set_ylabel(&#34;y.Cj (pxl)&#34;)
+        if axe_pyplot is None:
+            import matplotlib.pyplot as plt
+            axe_pyplot = plt.figure().add_subplot()
+
+        axe_pyplot.set_title(&#34;plan camera&#34;)
+        axe_pyplot.set_xlabel(&#34;x.Ci (pxl)&#34;)
+        axe_pyplot.set_ylabel(&#34;y.Cj (pxl)&#34;)
 
         # Affichage image de fond.
         try:
@@ -589,13 +656,17 @@ class LaueDiagram(Splitable):
             pass
         else:
             mean, std = image.mean(), image.std()
-            axe.imshow(image, vmin=mean-2*std, vmax=mean+4*std, cmap=&#34;gray&#34;)
+            axe_pyplot.imshow(image, vmin=mean-2*std, vmax=mean+4*std, cmap=&#34;gray&#34;)
 
         # Affichage des spots.
         for spot in self:
-            axe = spot.plot_xy(axe)
+            axe_pyplot = spot.plot_xy(axe_pyplot, display=False)
 
-        return axe
+        if display:
+            import matplotlib.pyplot as plt
+            plt.show()
+
+        return axe_pyplot
 
     def save_file(self, filename):
         &#34;&#34;&#34;
@@ -620,7 +691,7 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; rep = tempfile.mkdtemp()
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
@@ -644,39 +715,6 @@ class LaueDiagram(Splitable):
         elif ext in {&#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}:
             plt = self.show(_return=True)
             plt.savefig(filename)
-
-    def show_all(self, _return=False):
-        &#34;&#34;&#34;
-        ** Affiche le diagramme a l&#39;ecran. **
-
-        * Utilise le module ``matplotlib`` qui doit etre installe.
-        * Cette methode peut prendre du temps car elle affiche le maximum de choses possible.
-
-        Examples
-        --------
-        &gt;&gt;&gt; import laue
-        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
-        &gt;&gt;&gt; # diag.show()
-        &gt;&gt;&gt;
-        &#34;&#34;&#34;
-        import matplotlib.pyplot as plt
-
-        fig = plt.figure()
-        fig.suptitle(self.get_id())
-        axe_xy = fig.add_subplot(1, 2, 1)
-        axe_gnomonic = fig.add_subplot(1, 2, 2)
-
-        self.plot_xy(axe_xy)
-
-        try:
-            self.plot_gnomonic(axe_gnomonic)
-        except AttributeError:
-            pass
-
-        if _return:
-            return plt
-        plt.show()
 
     def _clean(self):
         &#34;&#34;&#34;
@@ -716,7 +754,7 @@ class LaueDiagram(Splitable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; len(diag)
         78
@@ -794,7 +832,7 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(diag[0])
         &lt;class &#39;laue.spot.Spot&#39;&gt;
@@ -925,7 +963,7 @@ class LaueDiagram(Splitable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; for spot in diag:
         ...     pass
         ...
@@ -941,7 +979,7 @@ class LaueDiagram(Splitable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; len(diag)
         78
         &gt;&gt;&gt;
@@ -1079,7 +1117,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         -------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; type(diag.find_zone_axes())
         &lt;class &#39;list&#39;&gt;
         &gt;&gt;&gt; type(diag.find_zone_axes().pop())
@@ -1156,7 +1194,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_image_gnomonic()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -1196,7 +1234,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_image_xy()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -1233,7 +1271,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_id()
         &#39;laue/examples/ge_blanc.mccd&#39;
         &gt;&gt;&gt;
@@ -1276,7 +1314,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;intensity&#34;)
         [Spot(bbox=(617, 1651, 11, 13), distortion=1.0760), Spot(bbox=(928, 1210, 10, 11), distortion=1.0673)]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;distortion&#34;)
@@ -1336,7 +1374,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_positions().shape
         (2, 78)
         &gt;&gt;&gt; diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0])
@@ -1375,7 +1413,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_gnomonic_positions().shape
         (2, 78)
         &gt;&gt;&gt; diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0])
@@ -1416,7 +1454,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; print(f&#34;quality: {diag.get_quality():.4f}&#34;)
         quality: 1.2752
         &gt;&gt;&gt;
@@ -1443,31 +1481,85 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &#34;&#34;&#34;
         return super().find_subsets(*args, **kwargs)
 
-    def plot_gnomonic(self, axe, *, display=True):
+    def plot_all(self, *, display=True):
+        &#34;&#34;&#34;
+        ** Affiche le diagramme a l&#39;ecran. **
+
+        * Utilise le module ``matplotlib`` qui doit etre installe.
+        * Cette methode peut prendre du temps car elle affiche le maximum de choses possible.
+
+        Parameters
+        ----------
+        display : boolean
+            Si True, affiche a l&#39;ecran en faisant appel a ``plt.show()``.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            La figure matplotlib completee.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag.plot_all(display=False)
+        &lt;Figure size 640x480 with 2 Axes&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure()
+        fig.suptitle(self.get_id())
+        axe_xy = fig.add_subplot(1, 2, 1)
+        axe_gnomonic = fig.add_subplot(1, 2, 2)
+
+        self.plot_xy(axe_xy, display=False)
+
+        try:
+            self.plot_gnomonic(axe_gnomonic, display=False)
+        except AttributeError:
+            pass
+
+        if display:
+            plt.show()
+
+        return fig
+
+    def plot_gnomonic(self, axe_pyplot=None, *, display=True):
         &#34;&#34;&#34;
         ** Prepare l&#39;affichage du diagramme dans le plan gnomonic. **
 
         Parameters
         ----------
-        axe : Axe
+        axe_pyplot : Axe
             Axe matplotlib qui supporte les methodes ``.scatter`` et ``.imshow``.
+        display : boolean
+            Si True, affiche a l&#39;ecran en faisant appel a ``plt.show()``.
 
         Examples
         --------
-        &gt;&gt;&gt; import matplotlib.pyplot as plt
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt;
+        &gt;&gt;&gt; diag.plot_gnomonic(display=False)
+        &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; import matplotlib.pyplot as plt
         &gt;&gt;&gt; fig = plt.figure()
         &gt;&gt;&gt; axe = fig.add_subplot()
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
-        &gt;&gt;&gt; diag.plot_gnomonic(axe)
+        &gt;&gt;&gt; diag.plot_gnomonic(axe, display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        axe.set_title(&#34;plan gnomonic&#34;)
-        axe.set_xlabel(&#34;x.Gi (mm)&#34;)
-        axe.set_ylabel(&#34;y.Gj (mm)&#34;)
+        if axe_pyplot is None:
+            import matplotlib.pyplot as plt
+            axe_pyplot = plt.figure().add_subplot()
+
+        axe_pyplot.set_title(&#34;plan gnomonic&#34;)
+        axe_pyplot.set_xlabel(&#34;x.Gi (mm)&#34;)
+        axe_pyplot.set_ylabel(&#34;y.Gj (mm)&#34;)
 
         # Affichage image de fond.
         try:
@@ -1478,7 +1570,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             *_, limits = self.experiment._get_gnomonic_matrix()
             mean, std = image.mean(), image.std()
             x_coords, y_coords = self.get_gnomonic_positions()
-            axe.imshow(image,
+            axe_pyplot.imshow(image,
                 origin=&#39;lower&#39;,
                 aspect=((self.experiment.get_images_shape()[1]*x_coords.ptp())
                       / (self.experiment.get_images_shape()[0]*y_coords.ptp())),
@@ -1488,41 +1580,54 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         # Affichage des axes.
         try:
             for axis in self.find_zone_axes():
-                axe = axis.plot_gnomonic(axe)
+                axe_pyplot = axis.plot_gnomonic(axe_pyplot, display=False)
         except AttributeError:
-            return axe
+            return axe_pyplot
 
         # Affichage de spots.
         for spot in self:
-            axe = spot.plot_gnomonic(axe)
+            axe_pyplot = spot.plot_gnomonic(axe_pyplot, display=False)
 
-        return axe
+        if display:
+            import matplotlib.pyplot as plt
+            plt.show()
 
-    def plot_xy(self, axe):
+        return axe_pyplot
+
+    def plot_xy(self, axe_pyplot=None, *, display=True):
         &#34;&#34;&#34;
         ** Prepare l&#39;affichage du diagramme dans le plan du capteur. **
 
         Parameters
         ----------
-        axe : Axe
+        axe_pyplot : Axe
             Axe matplotlib qui supporte les methodes ``.scatter`` et ``.imshow``.
+        display : boolean
+            Si True, affiche a l&#39;ecran en faisant appel a ``plt.show()``.
 
         Examples
         --------
-        &gt;&gt;&gt; import matplotlib.pyplot as plt
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt;
+        &gt;&gt;&gt; diag.plot_xy(display=False)
+        &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; import matplotlib.pyplot as plt
         &gt;&gt;&gt; fig = plt.figure()
         &gt;&gt;&gt; axe = fig.add_subplot()
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
-        &gt;&gt;&gt; diag.plot_xy(axe)
+        &gt;&gt;&gt; diag.plot_xy(axe, display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        axe.set_title(&#34;plan camera&#34;)
-        axe.set_xlabel(&#34;x.Ci (pxl)&#34;)
-        axe.set_ylabel(&#34;y.Cj (pxl)&#34;)
+        if axe_pyplot is None:
+            import matplotlib.pyplot as plt
+            axe_pyplot = plt.figure().add_subplot()
+
+        axe_pyplot.set_title(&#34;plan camera&#34;)
+        axe_pyplot.set_xlabel(&#34;x.Ci (pxl)&#34;)
+        axe_pyplot.set_ylabel(&#34;y.Cj (pxl)&#34;)
 
         # Affichage image de fond.
         try:
@@ -1531,13 +1636,17 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             pass
         else:
             mean, std = image.mean(), image.std()
-            axe.imshow(image, vmin=mean-2*std, vmax=mean+4*std, cmap=&#34;gray&#34;)
+            axe_pyplot.imshow(image, vmin=mean-2*std, vmax=mean+4*std, cmap=&#34;gray&#34;)
 
         # Affichage des spots.
         for spot in self:
-            axe = spot.plot_xy(axe)
+            axe_pyplot = spot.plot_xy(axe_pyplot, display=False)
 
-        return axe
+        if display:
+            import matplotlib.pyplot as plt
+            plt.show()
+
+        return axe_pyplot
 
     def save_file(self, filename):
         &#34;&#34;&#34;
@@ -1562,7 +1671,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; rep = tempfile.mkdtemp()
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
@@ -1586,39 +1695,6 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         elif ext in {&#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}:
             plt = self.show(_return=True)
             plt.savefig(filename)
-
-    def show_all(self, _return=False):
-        &#34;&#34;&#34;
-        ** Affiche le diagramme a l&#39;ecran. **
-
-        * Utilise le module ``matplotlib`` qui doit etre installe.
-        * Cette methode peut prendre du temps car elle affiche le maximum de choses possible.
-
-        Examples
-        --------
-        &gt;&gt;&gt; import laue
-        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
-        &gt;&gt;&gt; # diag.show()
-        &gt;&gt;&gt;
-        &#34;&#34;&#34;
-        import matplotlib.pyplot as plt
-
-        fig = plt.figure()
-        fig.suptitle(self.get_id())
-        axe_xy = fig.add_subplot(1, 2, 1)
-        axe_gnomonic = fig.add_subplot(1, 2, 2)
-
-        self.plot_xy(axe_xy)
-
-        try:
-            self.plot_gnomonic(axe_gnomonic)
-        except AttributeError:
-            pass
-
-        if _return:
-            return plt
-        plt.show()
 
     def _clean(self):
         &#34;&#34;&#34;
@@ -1658,7 +1734,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; len(diag)
         78
@@ -1736,7 +1812,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(diag[0])
         &lt;class &#39;laue.spot.Spot&#39;&gt;
@@ -1867,7 +1943,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; for spot in diag:
         ...     pass
         ...
@@ -1883,7 +1959,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; len(diag)
         78
         &gt;&gt;&gt;
@@ -1932,7 +2008,7 @@ si il est present ou pas. Ou bien l'index de ce spot.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; len(diag)
 78
@@ -1971,7 +2047,7 @@ True
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; len(diag)
     78
@@ -2064,7 +2140,7 @@ La valeur par defaut est 1. Cet argument doit etre un entier positif.</li>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; type(diag[0])
 &lt;class 'laue.spot.Spot'&gt;
@@ -2143,7 +2219,7 @@ array([[0.29464949, 0.39670733],
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; type(diag[0])
     &lt;class &#39;laue.spot.Spot&#39;&gt;
@@ -2287,7 +2363,7 @@ modification d'un spot sera globale.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; for spot in diag:
 ...     pass
 ...
@@ -2314,7 +2390,7 @@ modification d'un spot sera globale.</dd>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; for spot in diag:
     ...     pass
     ...
@@ -2331,7 +2407,7 @@ modification d'un spot sera globale.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; len(diag)
 78
 &gt;&gt;&gt;
@@ -2348,7 +2424,7 @@ modification d'un spot sera globale.</dd>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; len(diag)
     78
     &gt;&gt;&gt;
@@ -2408,7 +2484,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; type(diag.find_zone_axes())
 &lt;class 'list'&gt;
 &gt;&gt;&gt; type(diag.find_zone_axes().pop())
@@ -2455,7 +2531,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
     -------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; type(diag.find_zone_axes())
     &lt;class &#39;list&#39;&gt;
     &gt;&gt;&gt; type(diag.find_zone_axes().pop())
@@ -2539,7 +2615,7 @@ En general l'un des parametres de set_calibration.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.get_gnomonic_positions().shape
 (2, 78)
 &gt;&gt;&gt; diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0])
@@ -2579,7 +2655,7 @@ array([[-0.0978478 , -0.20958039, -0.04084784, -0.3524825 ],
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; diag.get_gnomonic_positions().shape
     (2, 78)
     &gt;&gt;&gt; diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0])
@@ -2617,7 +2693,7 @@ d'acces au fichier image qui a permis de constituer le diagramme.</li>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_id()
 'laue/examples/ge_blanc.mccd'
 &gt;&gt;&gt;
@@ -2638,7 +2714,7 @@ d'acces au fichier image qui a permis de constituer le diagramme.</li>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; diag.get_id()
     &#39;laue/examples/ge_blanc.mccd&#39;
     &gt;&gt;&gt;
@@ -2669,7 +2745,7 @@ un appel a la fonction <code><a title="laue.experiment.base_experiment.Experimen
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.get_image_gnomonic()
 array([[0, 0, 0, ..., 0, 0, 0],
        [0, 0, 0, ..., 0, 0, 0],
@@ -2709,7 +2785,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; diag.get_image_gnomonic()
     array([[0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
@@ -2750,7 +2826,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_image_xy()
 array([[0, 0, 0, ..., 0, 0, 0],
        [0, 0, 0, ..., 0, 0, 0],
@@ -2783,7 +2859,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; diag.get_image_xy()
     array([[0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
@@ -2836,7 +2912,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_positions().shape
 (2, 78)
 &gt;&gt;&gt; diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0])
@@ -2871,7 +2947,7 @@ array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; diag.get_positions().shape
     (2, 78)
     &gt;&gt;&gt; diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0])
@@ -2905,7 +2981,7 @@ array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; print(f&quot;quality: {diag.get_quality():.4f}&quot;)
 quality: 1.2752
 &gt;&gt;&gt;
@@ -2931,7 +3007,7 @@ quality: 1.2752
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; print(f&#34;quality: {diag.get_quality():.4f}&#34;)
     quality: 1.2752
     &gt;&gt;&gt;
@@ -2951,25 +3027,107 @@ quality: 1.2752
     return self.quality</code></pre>
 </details>
 </dd>
+<dt id="laue.diagram.LaueDiagram.plot_all"><code class="name flex">
+<span>def <span class="ident">plot_all</span></span>(<span>self, *, display=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Affiche le diagramme a l'ecran. </strong></p>
+<ul>
+<li>Utilise le module <code>matplotlib</code> qui doit etre installe.</li>
+<li>Cette methode peut prendre du temps car elle affiche le maximum de choses possible.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>display</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>matplotlib.figure.Figure</code></dt>
+<dd>La figure matplotlib completee.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag.plot_all(display=False)
+&lt;Figure size 640x480 with 2 Axes&gt;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_all(self, *, display=True):
+    &#34;&#34;&#34;
+    ** Affiche le diagramme a l&#39;ecran. **
+
+    * Utilise le module ``matplotlib`` qui doit etre installe.
+    * Cette methode peut prendre du temps car elle affiche le maximum de choses possible.
+
+    Parameters
+    ----------
+    display : boolean
+        Si True, affiche a l&#39;ecran en faisant appel a ``plt.show()``.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        La figure matplotlib completee.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag.plot_all(display=False)
+    &lt;Figure size 640x480 with 2 Axes&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure()
+    fig.suptitle(self.get_id())
+    axe_xy = fig.add_subplot(1, 2, 1)
+    axe_gnomonic = fig.add_subplot(1, 2, 2)
+
+    self.plot_xy(axe_xy, display=False)
+
+    try:
+        self.plot_gnomonic(axe_gnomonic, display=False)
+    except AttributeError:
+        pass
+
+    if display:
+        plt.show()
+
+    return fig</code></pre>
+</details>
+</dd>
 <dt id="laue.diagram.LaueDiagram.plot_gnomonic"><code class="name flex">
-<span>def <span class="ident">plot_gnomonic</span></span>(<span>self, axe, *, display=True)</span>
+<span>def <span class="ident">plot_gnomonic</span></span>(<span>self, axe_pyplot=None, *, display=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Prepare l'affichage du diagramme dans le plan gnomonic. </strong></p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>axe</code></strong> :&ensp;<code>Axe</code></dt>
+<dt><strong><code>axe_pyplot</code></strong> :&ensp;<code>Axe</code></dt>
 <dd>Axe matplotlib qui supporte les methodes <code>.scatter</code> et <code>.imshow</code>.</dd>
+<dt><strong><code>display</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
-&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt;
+&gt;&gt;&gt; diag.plot_gnomonic(display=False)
+&lt;AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'&gt;
+&gt;&gt;&gt;
+&gt;&gt;&gt; import matplotlib.pyplot as plt
 &gt;&gt;&gt; fig = plt.figure()
 &gt;&gt;&gt; axe = fig.add_subplot()
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
-&gt;&gt;&gt; diag.plot_gnomonic(axe)
+&gt;&gt;&gt; diag.plot_gnomonic(axe, display=False)
 &lt;AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'&gt;
 &gt;&gt;&gt;
 </code></pre></div>
@@ -2977,31 +3135,40 @@ quality: 1.2752
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_gnomonic(self, axe, *, display=True):
+<pre><code class="python">def plot_gnomonic(self, axe_pyplot=None, *, display=True):
     &#34;&#34;&#34;
     ** Prepare l&#39;affichage du diagramme dans le plan gnomonic. **
 
     Parameters
     ----------
-    axe : Axe
+    axe_pyplot : Axe
         Axe matplotlib qui supporte les methodes ``.scatter`` et ``.imshow``.
+    display : boolean
+        Si True, affiche a l&#39;ecran en faisant appel a ``plt.show()``.
 
     Examples
     --------
-    &gt;&gt;&gt; import matplotlib.pyplot as plt
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt;
+    &gt;&gt;&gt; diag.plot_gnomonic(display=False)
+    &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; import matplotlib.pyplot as plt
     &gt;&gt;&gt; fig = plt.figure()
     &gt;&gt;&gt; axe = fig.add_subplot()
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
-    &gt;&gt;&gt; diag.plot_gnomonic(axe)
+    &gt;&gt;&gt; diag.plot_gnomonic(axe, display=False)
     &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    axe.set_title(&#34;plan gnomonic&#34;)
-    axe.set_xlabel(&#34;x.Gi (mm)&#34;)
-    axe.set_ylabel(&#34;y.Gj (mm)&#34;)
+    if axe_pyplot is None:
+        import matplotlib.pyplot as plt
+        axe_pyplot = plt.figure().add_subplot()
+
+    axe_pyplot.set_title(&#34;plan gnomonic&#34;)
+    axe_pyplot.set_xlabel(&#34;x.Gi (mm)&#34;)
+    axe_pyplot.set_ylabel(&#34;y.Gj (mm)&#34;)
 
     # Affichage image de fond.
     try:
@@ -3012,7 +3179,7 @@ quality: 1.2752
         *_, limits = self.experiment._get_gnomonic_matrix()
         mean, std = image.mean(), image.std()
         x_coords, y_coords = self.get_gnomonic_positions()
-        axe.imshow(image,
+        axe_pyplot.imshow(image,
             origin=&#39;lower&#39;,
             aspect=((self.experiment.get_images_shape()[1]*x_coords.ptp())
                   / (self.experiment.get_images_shape()[0]*y_coords.ptp())),
@@ -3022,36 +3189,45 @@ quality: 1.2752
     # Affichage des axes.
     try:
         for axis in self.find_zone_axes():
-            axe = axis.plot_gnomonic(axe)
+            axe_pyplot = axis.plot_gnomonic(axe_pyplot, display=False)
     except AttributeError:
-        return axe
+        return axe_pyplot
 
     # Affichage de spots.
     for spot in self:
-        axe = spot.plot_gnomonic(axe)
+        axe_pyplot = spot.plot_gnomonic(axe_pyplot, display=False)
 
-    return axe</code></pre>
+    if display:
+        import matplotlib.pyplot as plt
+        plt.show()
+
+    return axe_pyplot</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.plot_xy"><code class="name flex">
-<span>def <span class="ident">plot_xy</span></span>(<span>self, axe)</span>
+<span>def <span class="ident">plot_xy</span></span>(<span>self, axe_pyplot=None, *, display=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Prepare l'affichage du diagramme dans le plan du capteur. </strong></p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>axe</code></strong> :&ensp;<code>Axe</code></dt>
+<dt><strong><code>axe_pyplot</code></strong> :&ensp;<code>Axe</code></dt>
 <dd>Axe matplotlib qui supporte les methodes <code>.scatter</code> et <code>.imshow</code>.</dd>
+<dt><strong><code>display</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
-&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt;
+&gt;&gt;&gt; diag.plot_xy(display=False)
+&lt;AxesSubplot:title={'center':'plan camera'}, xlabel='x.Ci (pxl)', ylabel='y.Cj (pxl)'&gt;
+&gt;&gt;&gt;
+&gt;&gt;&gt; import matplotlib.pyplot as plt
 &gt;&gt;&gt; fig = plt.figure()
 &gt;&gt;&gt; axe = fig.add_subplot()
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
-&gt;&gt;&gt; diag.plot_xy(axe)
+&gt;&gt;&gt; diag.plot_xy(axe, display=False)
 &lt;AxesSubplot:title={'center':'plan camera'}, xlabel='x.Ci (pxl)', ylabel='y.Cj (pxl)'&gt;
 &gt;&gt;&gt;
 </code></pre></div>
@@ -3059,31 +3235,40 @@ quality: 1.2752
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_xy(self, axe):
+<pre><code class="python">def plot_xy(self, axe_pyplot=None, *, display=True):
     &#34;&#34;&#34;
     ** Prepare l&#39;affichage du diagramme dans le plan du capteur. **
 
     Parameters
     ----------
-    axe : Axe
+    axe_pyplot : Axe
         Axe matplotlib qui supporte les methodes ``.scatter`` et ``.imshow``.
+    display : boolean
+        Si True, affiche a l&#39;ecran en faisant appel a ``plt.show()``.
 
     Examples
     --------
-    &gt;&gt;&gt; import matplotlib.pyplot as plt
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt;
+    &gt;&gt;&gt; diag.plot_xy(display=False)
+    &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; import matplotlib.pyplot as plt
     &gt;&gt;&gt; fig = plt.figure()
     &gt;&gt;&gt; axe = fig.add_subplot()
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
-    &gt;&gt;&gt; diag.plot_xy(axe)
+    &gt;&gt;&gt; diag.plot_xy(axe, display=False)
     &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    axe.set_title(&#34;plan camera&#34;)
-    axe.set_xlabel(&#34;x.Ci (pxl)&#34;)
-    axe.set_ylabel(&#34;y.Cj (pxl)&#34;)
+    if axe_pyplot is None:
+        import matplotlib.pyplot as plt
+        axe_pyplot = plt.figure().add_subplot()
+
+    axe_pyplot.set_title(&#34;plan camera&#34;)
+    axe_pyplot.set_xlabel(&#34;x.Ci (pxl)&#34;)
+    axe_pyplot.set_ylabel(&#34;y.Cj (pxl)&#34;)
 
     # Affichage image de fond.
     try:
@@ -3092,13 +3277,17 @@ quality: 1.2752
         pass
     else:
         mean, std = image.mean(), image.std()
-        axe.imshow(image, vmin=mean-2*std, vmax=mean+4*std, cmap=&#34;gray&#34;)
+        axe_pyplot.imshow(image, vmin=mean-2*std, vmax=mean+4*std, cmap=&#34;gray&#34;)
 
     # Affichage des spots.
     for spot in self:
-        axe = spot.plot_xy(axe)
+        axe_pyplot = spot.plot_xy(axe_pyplot, display=False)
 
-    return axe</code></pre>
+    if display:
+        import matplotlib.pyplot as plt
+        plt.show()
+
+    return axe_pyplot</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.save_file"><code class="name flex">
@@ -3122,7 +3311,7 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; rep = tempfile.mkdtemp()
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.save_file(os.path.join(rep, &quot;ge_blanc.dat&quot;))
 &gt;&gt;&gt;
 </code></pre></div>
@@ -3153,7 +3342,7 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
     &gt;&gt;&gt;
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; rep = tempfile.mkdtemp()
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
     &gt;&gt;&gt;
     &#34;&#34;&#34;
@@ -3219,7 +3408,7 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.select_spots(n=2, sort=&quot;intensity&quot;)
 [Spot(bbox=(617, 1651, 11, 13), distortion=1.0760), Spot(bbox=(928, 1210, 10, 11), distortion=1.0673)]
 &gt;&gt;&gt; diag.select_spots(n=2, sort=&quot;distortion&quot;)
@@ -3268,7 +3457,7 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;intensity&#34;)
     [Spot(bbox=(617, 1651, 11, 13), distortion=1.0760), Spot(bbox=(928, 1210, 10, 11), distortion=1.0673)]
     &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;distortion&#34;)
@@ -3304,60 +3493,6 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
     if n is not None:
         return l_spots[:n]
     return l_spots</code></pre>
-</details>
-</dd>
-<dt id="laue.diagram.LaueDiagram.show_all"><code class="name flex">
-<span>def <span class="ident">show_all</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p><strong> Affiche le diagramme a l'ecran. </strong></p>
-<ul>
-<li>Utilise le module <code>matplotlib</code> qui doit etre installe.</li>
-<li>Cette methode peut prendre du temps car elle affiche le maximum de choses possible.</li>
-</ul>
-<h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
-&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
-&gt;&gt;&gt; # diag.show()
-&gt;&gt;&gt;
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def show_all(self, _return=False):
-    &#34;&#34;&#34;
-    ** Affiche le diagramme a l&#39;ecran. **
-
-    * Utilise le module ``matplotlib`` qui doit etre installe.
-    * Cette methode peut prendre du temps car elle affiche le maximum de choses possible.
-
-    Examples
-    --------
-    &gt;&gt;&gt; import laue
-    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
-    &gt;&gt;&gt; # diag.show()
-    &gt;&gt;&gt;
-    &#34;&#34;&#34;
-    import matplotlib.pyplot as plt
-
-    fig = plt.figure()
-    fig.suptitle(self.get_id())
-    axe_xy = fig.add_subplot(1, 2, 1)
-    axe_gnomonic = fig.add_subplot(1, 2, 2)
-
-    self.plot_xy(axe_xy)
-
-    try:
-        self.plot_gnomonic(axe_gnomonic)
-    except AttributeError:
-        pass
-
-    if _return:
-        return plt
-    plt.show()</code></pre>
 </details>
 </dd>
 </dl>
@@ -3397,11 +3532,11 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 <li><code><a title="laue.diagram.LaueDiagram.get_image_xy" href="#laue.diagram.LaueDiagram.get_image_xy">get_image_xy</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.get_positions" href="#laue.diagram.LaueDiagram.get_positions">get_positions</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.get_quality" href="#laue.diagram.LaueDiagram.get_quality">get_quality</a></code></li>
+<li><code><a title="laue.diagram.LaueDiagram.plot_all" href="#laue.diagram.LaueDiagram.plot_all">plot_all</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.plot_gnomonic" href="#laue.diagram.LaueDiagram.plot_gnomonic">plot_gnomonic</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.plot_xy" href="#laue.diagram.LaueDiagram.plot_xy">plot_xy</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.save_file" href="#laue.diagram.LaueDiagram.save_file">save_file</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.select_spots" href="#laue.diagram.LaueDiagram.select_spots">select_spots</a></code></li>
-<li><code><a title="laue.diagram.LaueDiagram.show_all" href="#laue.diagram.LaueDiagram.show_all">show_all</a></code></li>
 </ul>
 </li>
 </ul>

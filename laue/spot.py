@@ -393,7 +393,7 @@ class Spot:
         self.diagram.find_zone_axes()
         return self.axes
 
-    def plot_gnomonic(self, axe_pyplot):
+    def plot_gnomonic(self, axe_pyplot=None, *, display=True):
         """
         ** Affiche ce spot dans le plan gnomonic. **
 
@@ -401,11 +401,41 @@ class Spot:
         ----------
         axe_pyplot : Axe
             Axe matplotlib qui supporte la methode ``.scatter``.
+        display : boolean
+            Si True, affiche a l'ecran en faisant appel a ``plt.show()``.
+
+        Examples
+        --------
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> spot = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
+        >>>
+        >>> spot.plot_gnomonic(display=False)
+        <AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'>
+        >>>
+        >>> import matplotlib.pyplot as plt
+        >>> fig = plt.figure()
+        >>> axe = fig.add_subplot()
+        >>> spot.plot_gnomonic(axe, display=False)
+        <AxesSubplot:>
+        >>>
         """
+        if axe_pyplot is None:
+            import matplotlib.pyplot as plt
+            axe_pyplot = plt.figure().add_subplot()
+            axe_pyplot.set_title("plan gnomonic")
+            axe_pyplot.set_xlabel("x.Gi (mm)")
+            axe_pyplot.set_ylabel("y.Gj (mm)")
+
         axe_pyplot.scatter(*self.get_gnomonic(), color="black")
+
+        if display:
+            import matplotlib.pyplot as plt
+            plt.show()
+
         return axe_pyplot
 
-    def plot_xy(self, axe_pyplot):
+    def plot_xy(self, axe_pyplot=None, *, display=True):
         """
         ** Affiche ce spot dans le plan de la camera. **
 
@@ -413,13 +443,43 @@ class Spot:
         ----------
         axe_pyplot : Axe
             Axe matplotlib qui supporte les methodes ``.plot`` et ``.scatter``.
+        display : boolean
+            Si True, affiche a l'ecran en faisant appel a ``plt.show()``.
+
+        Examples
+        --------
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> spot = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
+        >>>
+        >>> spot.plot_xy(display=False)
+        <AxesSubplot:title={'center':'plan camera'}, xlabel='x.Ci (pxl)', ylabel='y.Cj (pxl)'>
+        >>>
+        >>> import matplotlib.pyplot as plt
+        >>> fig = plt.figure()
+        >>> axe = fig.add_subplot()
+        >>> spot.plot_xy(axe, display=False)
+        <AxesSubplot:>
+        >>>
         """
+        if axe_pyplot is None:
+            import matplotlib.pyplot as plt
+            axe_pyplot = plt.figure().add_subplot()
+            axe_pyplot.set_title("plan camera")
+            axe_pyplot.set_xlabel("x.Ci (pxl)")
+            axe_pyplot.set_ylabel("y.Cj (pxl)")
+
         x, y, w, h = self.get_bbox()
         axe_pyplot.plot(
             [x-.5, x+w-.5, x+w-.5, x-.5, x-.5],
             [y-.5, y-.5, y+h-.5, y+h-.5, y-.5],
             color="grey")
         axe_pyplot.scatter(*self.get_position(), color="black")
+
+        if display:
+            import matplotlib.pyplot as plt
+            plt.show()
+
         return axe_pyplot
 
     def _clean(self):

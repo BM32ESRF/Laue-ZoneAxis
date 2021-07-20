@@ -78,9 +78,9 @@ def distance(axis1, axis2, *, weight=.5):
     >>> import laue
     >>> from laue.zone_axis import distance
     >>> image = "laue/examples/ge_blanc.mccd"
-    >>> axes = next(iter(
-    ...     laue.Experiment(image, config_file="laue/examples/ge_blanc.det")
-    ...     )).find_zone_axes()
+    >>> axes = laue.Experiment(image,
+    ...     config_file="laue/examples/ge_blanc.det"
+    ...     )[0].find_zone_axes()
     >>> axes.sort(key=lambda axis: axis.get_quality())
     >>> ax1, ax2, *axes = axes
     >>> np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
@@ -215,7 +215,7 @@ class ZoneAxis:
         >>> import numpy
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
         >>> np.float16(axis.dist_mean())
         5.054e-05
@@ -242,7 +242,7 @@ class ZoneAxis:
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
         >>> angle, dist = axis.get_polar_coords()
         >>> np.float16(angle), np.float16(dist)
@@ -269,7 +269,7 @@ class ZoneAxis:
         >>> import numpy as np
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> qualities = sorted(axis.get_quality() for axis in diag.find_zone_axes())
         >>> np.array(qualities, dtype=np.float16)
         array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
@@ -308,7 +308,7 @@ class ZoneAxis:
         nbr_weight = .75 # Importance du nombre de points par raport a la proximite.
         return nbr_weight*nbr_2_score(len(self)) + (1-nbr_weight)*dmean_2_score(self.dist_mean())
 
-    def plot_gnomonic(self, axe_pyplot):
+    def plot_gnomonic(self, axe_pyplot=None, *, display=True):
         """
         ** Affiche un axe de zone dans le plan gnomonic. **
 
@@ -316,6 +316,8 @@ class ZoneAxis:
         ----------
         axe_pyplot : Axe
             Axe matplotlib qui supporte la methode ``.axline``.
+        display : boolean
+            Si True, affiche a l'ecran en faisant appel a ``plt.show()``.
 
         Examples
         --------
@@ -323,23 +325,38 @@ class ZoneAxis:
         >>> import laue
         >>>
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        >>>
+        >>> axis.plot_gnomonic(display=False)
+        <AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'>
         >>>
         >>> fig = plt.figure()
         >>> axe = fig.add_subplot()
-        >>> axis.plot_gnomonic(axe)
+        >>> axis.plot_gnomonic(axe, display=False)
         <AxesSubplot:>
         >>>
         """
+        if axe_pyplot is None:
+            import matplotlib.pyplot as plt
+            axe_pyplot = plt.figure().add_subplot()
+            axe_pyplot.set_title("plan gnomonic")
+            axe_pyplot.set_xlabel("x.Gi (mm)")
+            axe_pyplot.set_ylabel("y.Gj (mm)")
+
         normal = np.array([math.cos(self.angle), math.sin(self.angle)])
         director = np.array([math.sin(self.angle), -math.cos(self.angle)])
         point1 = self.dist * normal
         point2 = point1 + director
         axe_pyplot.axline(point1, point2, lw=0.5, color="gray", clip_box=((-.1, -.1), (.1, .1)))
+
+        if display:
+            import matplotlib.pyplot as plt
+            plt.show()
+
         return axe_pyplot
 
-    def plot_xy(self, axe_pyplot):
+    def plot_xy(self, axe_pyplot=None, *, display=True):
         """
         ** Affiche un axe de zone tordu dans le plan de la camera. **
 
@@ -347,8 +364,51 @@ class ZoneAxis:
         ----------
         axe_pyplot : Axe
             Axe matplotlib qui supporte la methode ``.plot``.
+        display : boolean
+            Si True, affiche a l'ecran en faisant appel a ``plt.show()``.
+
+        Examples
+        --------
+        >>> import matplotlib.pyplot as plt
+        >>> import laue
+        >>>
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        >>>
+        >>> axis.plot_xy(display=False)
+        <AxesSubplot:title={'center':'plan camera'}, xlabel='x.Ci (pxl)', ylabel='y.Cj (pxl)'>
+        >>>
+        >>> fig = plt.figure()
+        >>> axe = fig.add_subplot()
+        >>> axis.plot_xy(axe, display=False)
+        <AxesSubplot:>
+        >>>
         """
-        raise NotImplementedError
+        if axe_pyplot is None:
+            import matplotlib.pyplot as plt
+            axe_pyplot = plt.figure().add_subplot()
+            axe_pyplot.set_title("plan camera")
+            axe_pyplot.set_xlabel("x.Ci (pxl)")
+            axe_pyplot.set_ylabel("y.Cj (pxl)")
+
+        normal = np.array([math.cos(self.angle), math.sin(self.angle)])
+        director = np.array([math.sin(self.angle), -math.cos(self.angle)])
+        centre = self.dist * normal
+        points_gnom_x = centre[0] + np.linspace(-2.0, 2.0, 50)*director[0]
+        points_gnom_y = centre[1] + np.linspace(-2.0, 2.0, 50)*director[1]
+        cam_x, cam_y = self.diagram.experiment.transformer.gnomonic_to_cam(
+            points_gnom_x, points_gnom_y, self.diagram.experiment.set_calibration())
+        cam_x_max, cam_y_max = self.diagram.experiment.get_images_shape()
+        to_keep = (cam_x <= cam_x_max) & (cam_x >= 0) & (cam_y <= cam_y_max) & (cam_y >= 0)
+        cam_x, cam_y = cam_x[to_keep], cam_y[to_keep]
+        axe_pyplot.plot(cam_x, cam_y, color="blue")
+
+        if display:
+            import matplotlib.pyplot as plt
+            plt.show()
+
+        return axe_pyplot
 
     def __contains__(self, spot):
         """
@@ -370,7 +430,7 @@ class ZoneAxis:
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
         >>> axis
         ZoneAxis(spots_ind=(2, 5, 8, 12, 22, 25, 27, 29, 31, 33, 35, 38, 39, 42), identifier=1, angle=-0.5040, dist=0.0664)
@@ -419,7 +479,7 @@ class ZoneAxis:
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
         >>> for spot in axis:
         ...     pass
@@ -436,7 +496,7 @@ class ZoneAxis:
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
         >>> len(axis)
         14

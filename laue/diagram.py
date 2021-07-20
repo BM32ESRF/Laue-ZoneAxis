@@ -104,7 +104,7 @@ class LaueDiagram(Splitable):
         -------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> type(diag.find_zone_axes())
         <class 'list'>
         >>> type(diag.find_zone_axes().pop())
@@ -181,7 +181,7 @@ class LaueDiagram(Splitable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> diag.get_image_gnomonic()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -221,7 +221,7 @@ class LaueDiagram(Splitable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image)))
+        >>> diag = laue.Experiment(image)[0]
         >>> diag.get_image_xy()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -258,7 +258,7 @@ class LaueDiagram(Splitable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image)))
+        >>> diag = laue.Experiment(image)[0]
         >>> diag.get_id()
         'laue/examples/ge_blanc.mccd'
         >>>
@@ -301,7 +301,7 @@ class LaueDiagram(Splitable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image)))
+        >>> diag = laue.Experiment(image)[0]
         >>> diag.select_spots(n=2, sort="intensity")
         [Spot(bbox=(617, 1651, 11, 13), distortion=1.0760), Spot(bbox=(928, 1210, 10, 11), distortion=1.0673)]
         >>> diag.select_spots(n=2, sort="distortion")
@@ -361,7 +361,7 @@ class LaueDiagram(Splitable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image)))
+        >>> diag = laue.Experiment(image)[0]
         >>> diag.get_positions().shape
         (2, 78)
         >>> diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0])
@@ -400,7 +400,7 @@ class LaueDiagram(Splitable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> diag.get_gnomonic_positions().shape
         (2, 78)
         >>> diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0])
@@ -441,7 +441,7 @@ class LaueDiagram(Splitable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image)))
+        >>> diag = laue.Experiment(image)[0]
         >>> print(f"quality: {diag.get_quality():.4f}")
         quality: 1.2752
         >>>
@@ -468,31 +468,85 @@ class LaueDiagram(Splitable):
         """
         return super().find_subsets(*args, **kwargs)
 
-    def plot_gnomonic(self, axe, *, display=True):
+    def plot_all(self, *, display=True):
+        """
+        ** Affiche le diagramme a l'ecran. **
+
+        * Utilise le module ``matplotlib`` qui doit etre installe.
+        * Cette methode peut prendre du temps car elle affiche le maximum de choses possible.
+
+        Parameters
+        ----------
+        display : boolean
+            Si True, affiche a l'ecran en faisant appel a ``plt.show()``.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            La figure matplotlib completee.
+
+        Examples
+        --------
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag.plot_all(display=False)
+        <Figure size 640x480 with 2 Axes>
+        >>>
+        """
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure()
+        fig.suptitle(self.get_id())
+        axe_xy = fig.add_subplot(1, 2, 1)
+        axe_gnomonic = fig.add_subplot(1, 2, 2)
+
+        self.plot_xy(axe_xy, display=False)
+
+        try:
+            self.plot_gnomonic(axe_gnomonic, display=False)
+        except AttributeError:
+            pass
+
+        if display:
+            plt.show()
+
+        return fig
+
+    def plot_gnomonic(self, axe_pyplot=None, *, display=True):
         """
         ** Prepare l'affichage du diagramme dans le plan gnomonic. **
 
         Parameters
         ----------
-        axe : Axe
+        axe_pyplot : Axe
             Axe matplotlib qui supporte les methodes ``.scatter`` et ``.imshow``.
+        display : boolean
+            Si True, affiche a l'ecran en faisant appel a ``plt.show()``.
 
         Examples
         --------
-        >>> import matplotlib.pyplot as plt
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>>
+        >>> diag.plot_gnomonic(display=False)
+        <AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'>
+        >>>
+        >>> import matplotlib.pyplot as plt
         >>> fig = plt.figure()
         >>> axe = fig.add_subplot()
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
-        >>> diag.plot_gnomonic(axe)
+        >>> diag.plot_gnomonic(axe, display=False)
         <AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'>
         >>>
         """
-        axe.set_title("plan gnomonic")
-        axe.set_xlabel("x.Gi (mm)")
-        axe.set_ylabel("y.Gj (mm)")
+        if axe_pyplot is None:
+            import matplotlib.pyplot as plt
+            axe_pyplot = plt.figure().add_subplot()
+
+        axe_pyplot.set_title("plan gnomonic")
+        axe_pyplot.set_xlabel("x.Gi (mm)")
+        axe_pyplot.set_ylabel("y.Gj (mm)")
 
         # Affichage image de fond.
         try:
@@ -503,7 +557,7 @@ class LaueDiagram(Splitable):
             *_, limits = self.experiment._get_gnomonic_matrix()
             mean, std = image.mean(), image.std()
             x_coords, y_coords = self.get_gnomonic_positions()
-            axe.imshow(image,
+            axe_pyplot.imshow(image,
                 origin='lower',
                 aspect=((self.experiment.get_images_shape()[1]*x_coords.ptp())
                       / (self.experiment.get_images_shape()[0]*y_coords.ptp())),
@@ -513,41 +567,54 @@ class LaueDiagram(Splitable):
         # Affichage des axes.
         try:
             for axis in self.find_zone_axes():
-                axe = axis.plot_gnomonic(axe)
+                axe_pyplot = axis.plot_gnomonic(axe_pyplot, display=False)
         except AttributeError:
-            return axe
+            return axe_pyplot
 
         # Affichage de spots.
         for spot in self:
-            axe = spot.plot_gnomonic(axe)
+            axe_pyplot = spot.plot_gnomonic(axe_pyplot, display=False)
 
-        return axe
+        if display:
+            import matplotlib.pyplot as plt
+            plt.show()
 
-    def plot_xy(self, axe):
+        return axe_pyplot
+
+    def plot_xy(self, axe_pyplot=None, *, display=True):
         """
         ** Prepare l'affichage du diagramme dans le plan du capteur. **
 
         Parameters
         ----------
-        axe : Axe
+        axe_pyplot : Axe
             Axe matplotlib qui supporte les methodes ``.scatter`` et ``.imshow``.
+        display : boolean
+            Si True, affiche a l'ecran en faisant appel a ``plt.show()``.
 
         Examples
         --------
-        >>> import matplotlib.pyplot as plt
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image)[0]
         >>>
+        >>> diag.plot_xy(display=False)
+        <AxesSubplot:title={'center':'plan camera'}, xlabel='x.Ci (pxl)', ylabel='y.Cj (pxl)'>
+        >>>
+        >>> import matplotlib.pyplot as plt
         >>> fig = plt.figure()
         >>> axe = fig.add_subplot()
-        >>> diag = next(iter(laue.Experiment(image)))
-        >>> diag.plot_xy(axe)
+        >>> diag.plot_xy(axe, display=False)
         <AxesSubplot:title={'center':'plan camera'}, xlabel='x.Ci (pxl)', ylabel='y.Cj (pxl)'>
         >>>
         """
-        axe.set_title("plan camera")
-        axe.set_xlabel("x.Ci (pxl)")
-        axe.set_ylabel("y.Cj (pxl)")
+        if axe_pyplot is None:
+            import matplotlib.pyplot as plt
+            axe_pyplot = plt.figure().add_subplot()
+
+        axe_pyplot.set_title("plan camera")
+        axe_pyplot.set_xlabel("x.Ci (pxl)")
+        axe_pyplot.set_ylabel("y.Cj (pxl)")
 
         # Affichage image de fond.
         try:
@@ -556,13 +623,17 @@ class LaueDiagram(Splitable):
             pass
         else:
             mean, std = image.mean(), image.std()
-            axe.imshow(image, vmin=mean-2*std, vmax=mean+4*std, cmap="gray")
+            axe_pyplot.imshow(image, vmin=mean-2*std, vmax=mean+4*std, cmap="gray")
 
         # Affichage des spots.
         for spot in self:
-            axe = spot.plot_xy(axe)
+            axe_pyplot = spot.plot_xy(axe_pyplot, display=False)
 
-        return axe
+        if display:
+            import matplotlib.pyplot as plt
+            plt.show()
+
+        return axe_pyplot
 
     def save_file(self, filename):
         """
@@ -587,7 +658,7 @@ class LaueDiagram(Splitable):
         >>>
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> rep = tempfile.mkdtemp()
-        >>> diag = next(iter(laue.Experiment(image)))
+        >>> diag = laue.Experiment(image)[0]
         >>> diag.save_file(os.path.join(rep, "ge_blanc.dat"))
         >>>
         """
@@ -611,39 +682,6 @@ class LaueDiagram(Splitable):
         elif ext in {"jpg", "jpeg", "svg", "png"}:
             plt = self.show(_return=True)
             plt.savefig(filename)
-
-    def show_all(self, _return=False):
-        """
-        ** Affiche le diagramme a l'ecran. **
-
-        * Utilise le module ``matplotlib`` qui doit etre installe.
-        * Cette methode peut prendre du temps car elle affiche le maximum de choses possible.
-
-        Examples
-        --------
-        >>> import laue
-        >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image)))
-        >>> # diag.show()
-        >>>
-        """
-        import matplotlib.pyplot as plt
-
-        fig = plt.figure()
-        fig.suptitle(self.get_id())
-        axe_xy = fig.add_subplot(1, 2, 1)
-        axe_gnomonic = fig.add_subplot(1, 2, 2)
-
-        self.plot_xy(axe_xy)
-
-        try:
-            self.plot_gnomonic(axe_gnomonic)
-        except AttributeError:
-            pass
-
-        if _return:
-            return plt
-        plt.show()
 
     def _clean(self):
         """
@@ -683,7 +721,7 @@ class LaueDiagram(Splitable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image)))
+        >>> diag = laue.Experiment(image)[0]
         >>>
         >>> len(diag)
         78
@@ -761,7 +799,7 @@ class LaueDiagram(Splitable):
         >>> import numpy as np
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>>
         >>> type(diag[0])
         <class 'laue.spot.Spot'>
@@ -892,7 +930,7 @@ class LaueDiagram(Splitable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image)))
+        >>> diag = laue.Experiment(image)[0]
         >>> for spot in diag:
         ...     pass
         ...
@@ -908,7 +946,7 @@ class LaueDiagram(Splitable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image)))
+        >>> diag = laue.Experiment(image)[0]
         >>> len(diag)
         78
         >>>
