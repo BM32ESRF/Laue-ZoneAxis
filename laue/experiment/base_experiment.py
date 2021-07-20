@@ -27,8 +27,7 @@ from laue import geometry
 from laue.spot import Spot
 
 
-__pdoc__ = {"Experiment._get_gnomonic_matrix": False,
-            "Experiment.__getitem__": True,
+__pdoc__ = {"Experiment.__getitem__": True,
             "Experiment.__iter__": True,
             "Experiment.__len__": True}
 
@@ -423,21 +422,6 @@ class Experiment:
                 plt.pause(1e-6)
 
         return cost
-
-    def clean(self):
-        """
-        ** Tente de liberer de la memoire. **
-
-        Supprime tous les attributs qui sont suceptibles
-        de prendre de la place ne memoire.
-        """
-        if self.verbose:
-            print("Suppression des attributs facultatifs...")
-        self._gnomonic_matrix = None
-        for diag in self:
-            diag.clean()
-        if self.verbose:
-            print("\tOK: Le volume de donnees et minimum.")
 
     def get_diagrams(self, *, tense_flow=False):
         """
@@ -988,6 +972,21 @@ class Experiment:
                 file.write("Sample-Detector distance(IM), xO, yO, angle1, angle2, pixelsize, dim1, dim2\n")
                 file.write(f"{repr(self)}\n")
                 file.write(f"Calibration done at {time.asctime()}.\n")
+
+    def _clean(self):
+        """
+        ** Tente de liberer de la memoire. **
+
+        Supprime tous les attributs qui sont suceptibles
+        de prendre de la place ne memoire.
+        """
+        if self.verbose:
+            print("Suppression des attributs facultatifs...")
+        self._gnomonic_matrix = None
+        for diag in self:
+            diag._clean()
+        if self.verbose:
+            print("\tOK: Le volume de donnees et minimum.")
 
     def __getitem__(self, item):
         """

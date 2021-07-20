@@ -49,8 +49,7 @@ import numpy as np
 
 
 __pdoc__ = {&#34;Spot.__hash__&#34;: True,
-            &#34;Spot.__sub__&#34;: True,
-            &#34;Spot.clean&#34;: False}
+            &#34;Spot.__sub__&#34;: True}
 
 
 def distance(spot1, spot2, *, space=&#34;camera&#34;):
@@ -210,21 +209,6 @@ class Spot:
         self.quality = None # Beautee du point.
         self.hkl = None # Les 3 indices de Miller h, k et l.
         self.axes = None
-
-    def clean(self):
-        &#34;&#34;&#34;
-        ** Vide les attributs recaculables. **
-
-        Cela permet de rafraichir la valeur des attribut qui dependent
-        d&#39;une grandeur exterieur qui aurait changee. (Comme par example
-        les parametres de set_calibration.)
-        &#34;&#34;&#34;
-        self.gnomonic = None # Si jamais la set_calibration change.
-        self.twicetheta_chi = None # Si jamais la set_calibration change.
-        self.intensity = None # Si jamais l&#39;image change.
-        self.position = None # Si jamais l&#39;image change.
-        self.quality = None # Car on vient de changer &#39;self.intensity&#39;.
-        self.axes = None # Car si la projection gnomonique change, tout change.
 
     def get_bbox(self):
         &#34;&#34;&#34;
@@ -471,6 +455,21 @@ class Spot:
             color=&#34;grey&#34;)
         axe_pyplot.scatter(*self.get_position(), color=&#34;black&#34;)
         return axe_pyplot
+
+    def _clean(self):
+        &#34;&#34;&#34;
+        ** Vide les attributs recaculables. **
+
+        Cela permet de rafraichir la valeur des attributs qui dependent
+        d&#39;une grandeur exterieur qui aurait changee. (Comme par example
+        les parametres de set_calibration.)
+        &#34;&#34;&#34;
+        self.gnomonic = None # Si jamais la set_calibration change.
+        self.twicetheta_chi = None # Si jamais la set_calibration change.
+        self.intensity = None # Si jamais l&#39;image change.
+        self.position = None # Si jamais l&#39;image change.
+        self.quality = None # Car on vient de changer &#39;self.intensity&#39;.
+        self.axes = None # Car si la projection gnomonique change, tout change.
 
     def __hash__(self):
         &#34;&#34;&#34;
@@ -801,21 +800,6 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         self.hkl = None # Les 3 indices de Miller h, k et l.
         self.axes = None
 
-    def clean(self):
-        &#34;&#34;&#34;
-        ** Vide les attributs recaculables. **
-
-        Cela permet de rafraichir la valeur des attribut qui dependent
-        d&#39;une grandeur exterieur qui aurait changee. (Comme par example
-        les parametres de set_calibration.)
-        &#34;&#34;&#34;
-        self.gnomonic = None # Si jamais la set_calibration change.
-        self.twicetheta_chi = None # Si jamais la set_calibration change.
-        self.intensity = None # Si jamais l&#39;image change.
-        self.position = None # Si jamais l&#39;image change.
-        self.quality = None # Car on vient de changer &#39;self.intensity&#39;.
-        self.axes = None # Car si la projection gnomonique change, tout change.
-
     def get_bbox(self):
         &#34;&#34;&#34;
         ** Retourne les coordonnees de la boite. **
@@ -1061,6 +1045,21 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
             color=&#34;grey&#34;)
         axe_pyplot.scatter(*self.get_position(), color=&#34;black&#34;)
         return axe_pyplot
+
+    def _clean(self):
+        &#34;&#34;&#34;
+        ** Vide les attributs recaculables. **
+
+        Cela permet de rafraichir la valeur des attributs qui dependent
+        d&#39;une grandeur exterieur qui aurait changee. (Comme par example
+        les parametres de set_calibration.)
+        &#34;&#34;&#34;
+        self.gnomonic = None # Si jamais la set_calibration change.
+        self.twicetheta_chi = None # Si jamais la set_calibration change.
+        self.intensity = None # Si jamais l&#39;image change.
+        self.position = None # Si jamais l&#39;image change.
+        self.quality = None # Car on vient de changer &#39;self.intensity&#39;.
+        self.axes = None # Car si la projection gnomonique change, tout change.
 
     def __hash__(self):
         &#34;&#34;&#34;

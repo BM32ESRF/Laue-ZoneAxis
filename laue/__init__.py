@@ -43,8 +43,7 @@ recuperation des diagrammes
 # $ python3 -m pytest --doctest-modules laue && python3 -m pytest laue/tools/tests.py
 
 __all__ = ["Experiment"]
-__pdoc__ = {"Experiment._get_gnomonic_matrix": False,
-            "Experiment.__iter__": True,
+__pdoc__ = {"Experiment.__iter__": True,
             "Experiment.__len__": True}
 
 from laue.experiment.base_experiment import Experiment

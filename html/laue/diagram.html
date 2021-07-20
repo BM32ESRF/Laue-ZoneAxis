@@ -98,27 +98,8 @@ class LaueDiagram(Splitable):
         self.quality = None # Facteur qui dit a quel point ce diagramme est joli a l&#39;oeil.
         self.image_gnom = None # Image projete dans le plan gnomonic.
         self.sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
-        self.axis = {} # Les axis de zones
+        self.axis = {} # Les axes de zones
         self.spots_set = None # L&#39;ensemble des spots pour une recherche plus rapide.
-
-    def clean(self):
-        &#34;&#34;&#34;
-        ** Supprime les attributs superfux. **
-
-        Si les spots sont modifies, cela permet de vider la memoire
-        des informations desormais fausses. Si beaucoup d&#39;images
-        sont enregistrees dans la RAM, cela permet de faire de la
-        place en memoire.
-        &#34;&#34;&#34;
-        if os.path.exists(self.get_id()): # Il ne faut pas supprimer
-            self.image_xy = None # une image que l&#39;on ne peut pas retrouver!
-        self.quality = None
-        self.image_gnom = None
-        self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
-        self.axis = {} # Les axis de zone depandent de beaucoup de choses, on reste donc prudent.
-        self.spots_set = None # On libere de la memoire en faisant ca.
-        for spot in self:
-            spot.clean()
 
     def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
         _axes_args=None, _get_args=False):
@@ -245,7 +226,7 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # Interpolation inverse vers l&#39;image finale.
-        map_x, map_y, _ = self.experiment.get_gnomonic_matrix()
+        map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
         image = cv2.remap(self.get_image_xy(),
             map_x, map_y,
             interpolation=cv2.INTER_CUBIC)
@@ -552,13 +533,13 @@ class LaueDiagram(Splitable):
         except (NameError, AttributeError):
             pass
         else:
-            *_, limits = self.experiment.get_gnomonic_matrix()
+            *_, limits = self.experiment._get_gnomonic_matrix()
             mean, std = image.mean(), image.std()
             x_coords, y_coords = self.get_gnomonic_positions()
             axe.imshow(image,
                 origin=&#39;lower&#39;,
-                aspect=((self.experiment.get_shape()[1]*x_coords.ptp())
-                      / (self.experiment.get_shape()[0]*y_coords.ptp())),
+                aspect=((self.experiment.get_images_shape()[1]*x_coords.ptp())
+                      / (self.experiment.get_images_shape()[0]*y_coords.ptp())),
                 extent=limits,
                 vmin=mean-2*std, vmax=mean+4*std, cmap=&#34;gray&#34;)
 
@@ -696,6 +677,25 @@ class LaueDiagram(Splitable):
         if _return:
             return plt
         plt.show()
+
+    def _clean(self):
+        &#34;&#34;&#34;
+        ** Supprime les attributs superfux. **
+
+        Si les spots sont modifies, cela permet de vider la memoire
+        des informations desormais fausses. Si beaucoup d&#39;images
+        sont enregistrees dans la RAM, cela permet de faire de la
+        place en memoire.
+        &#34;&#34;&#34;
+        if os.path.exists(self.get_id()): # Il ne faut pas supprimer
+            self.image_xy = None # une image que l&#39;on ne peut pas retrouver!
+        self.quality = None
+        self.image_gnom = None
+        self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
+        self.axis = {} # Les axis de zone depandent de beaucoup de choses, on reste donc prudent.
+        self.spots_set = None # On libere de la memoire en faisant ca.
+        for spot in self:
+            spot._clean()
 
     def __contains__(self, spot):
         &#34;&#34;&#34;
@@ -1040,27 +1040,8 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         self.quality = None # Facteur qui dit a quel point ce diagramme est joli a l&#39;oeil.
         self.image_gnom = None # Image projete dans le plan gnomonic.
         self.sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
-        self.axis = {} # Les axis de zones
+        self.axis = {} # Les axes de zones
         self.spots_set = None # L&#39;ensemble des spots pour une recherche plus rapide.
-
-    def clean(self):
-        &#34;&#34;&#34;
-        ** Supprime les attributs superfux. **
-
-        Si les spots sont modifies, cela permet de vider la memoire
-        des informations desormais fausses. Si beaucoup d&#39;images
-        sont enregistrees dans la RAM, cela permet de faire de la
-        place en memoire.
-        &#34;&#34;&#34;
-        if os.path.exists(self.get_id()): # Il ne faut pas supprimer
-            self.image_xy = None # une image que l&#39;on ne peut pas retrouver!
-        self.quality = None
-        self.image_gnom = None
-        self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
-        self.axis = {} # Les axis de zone depandent de beaucoup de choses, on reste donc prudent.
-        self.spots_set = None # On libere de la memoire en faisant ca.
-        for spot in self:
-            spot.clean()
 
     def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
         _axes_args=None, _get_args=False):
@@ -1187,7 +1168,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # Interpolation inverse vers l&#39;image finale.
-        map_x, map_y, _ = self.experiment.get_gnomonic_matrix()
+        map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
         image = cv2.remap(self.get_image_xy(),
             map_x, map_y,
             interpolation=cv2.INTER_CUBIC)
@@ -1494,13 +1475,13 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         except (NameError, AttributeError):
             pass
         else:
-            *_, limits = self.experiment.get_gnomonic_matrix()
+            *_, limits = self.experiment._get_gnomonic_matrix()
             mean, std = image.mean(), image.std()
             x_coords, y_coords = self.get_gnomonic_positions()
             axe.imshow(image,
                 origin=&#39;lower&#39;,
-                aspect=((self.experiment.get_shape()[1]*x_coords.ptp())
-                      / (self.experiment.get_shape()[0]*y_coords.ptp())),
+                aspect=((self.experiment.get_images_shape()[1]*x_coords.ptp())
+                      / (self.experiment.get_images_shape()[0]*y_coords.ptp())),
                 extent=limits,
                 vmin=mean-2*std, vmax=mean+4*std, cmap=&#34;gray&#34;)
 
@@ -1638,6 +1619,25 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         if _return:
             return plt
         plt.show()
+
+    def _clean(self):
+        &#34;&#34;&#34;
+        ** Supprime les attributs superfux. **
+
+        Si les spots sont modifies, cela permet de vider la memoire
+        des informations desormais fausses. Si beaucoup d&#39;images
+        sont enregistrees dans la RAM, cela permet de faire de la
+        place en memoire.
+        &#34;&#34;&#34;
+        if os.path.exists(self.get_id()): # Il ne faut pas supprimer
+            self.image_xy = None # une image que l&#39;on ne peut pas retrouver!
+        self.quality = None
+        self.image_gnom = None
+        self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
+        self.axis = {} # Les axis de zone depandent de beaucoup de choses, on reste donc prudent.
+        self.spots_set = None # On libere de la memoire en faisant ca.
+        for spot in self:
+            spot._clean()
 
     def __contains__(self, spot):
         &#34;&#34;&#34;
@@ -2356,39 +2356,6 @@ modification d'un spot sera globale.</dd>
     return len(self.spots)</code></pre>
 </details>
 </dd>
-<dt id="laue.diagram.LaueDiagram.clean"><code class="name flex">
-<span>def <span class="ident">clean</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p><strong> Supprime les attributs superfux. </strong></p>
-<p>Si les spots sont modifies, cela permet de vider la memoire
-des informations desormais fausses. Si beaucoup d'images
-sont enregistrees dans la RAM, cela permet de faire de la
-place en memoire.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def clean(self):
-    &#34;&#34;&#34;
-    ** Supprime les attributs superfux. **
-
-    Si les spots sont modifies, cela permet de vider la memoire
-    des informations desormais fausses. Si beaucoup d&#39;images
-    sont enregistrees dans la RAM, cela permet de faire de la
-    place en memoire.
-    &#34;&#34;&#34;
-    if os.path.exists(self.get_id()): # Il ne faut pas supprimer
-        self.image_xy = None # une image que l&#39;on ne peut pas retrouver!
-    self.quality = None
-    self.image_gnom = None
-    self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
-    self.axis = {} # Les axis de zone depandent de beaucoup de choses, on reste donc prudent.
-    self.spots_set = None # On libere de la memoire en faisant ca.
-    for spot in self:
-        spot.clean()</code></pre>
-</details>
-</dd>
 <dt id="laue.diagram.LaueDiagram.find_subsets"><code class="name flex">
 <span>def <span class="ident">find_subsets</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
@@ -2754,7 +2721,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     # Interpolation inverse vers l&#39;image finale.
-    map_x, map_y, _ = self.experiment.get_gnomonic_matrix()
+    map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
     image = cv2.remap(self.get_image_xy(),
         map_x, map_y,
         interpolation=cv2.INTER_CUBIC)
@@ -3042,13 +3009,13 @@ quality: 1.2752
     except (NameError, AttributeError):
         pass
     else:
-        *_, limits = self.experiment.get_gnomonic_matrix()
+        *_, limits = self.experiment._get_gnomonic_matrix()
         mean, std = image.mean(), image.std()
         x_coords, y_coords = self.get_gnomonic_positions()
         axe.imshow(image,
             origin=&#39;lower&#39;,
-            aspect=((self.experiment.get_shape()[1]*x_coords.ptp())
-                  / (self.experiment.get_shape()[0]*y_coords.ptp())),
+            aspect=((self.experiment.get_images_shape()[1]*x_coords.ptp())
+                  / (self.experiment.get_images_shape()[0]*y_coords.ptp())),
             extent=limits,
             vmin=mean-2*std, vmax=mean+4*std, cmap=&#34;gray&#34;)
 
@@ -3422,7 +3389,6 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 <li><code><a title="laue.diagram.LaueDiagram.__hash__" href="#laue.diagram.LaueDiagram.__hash__">__hash__</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.__iter__" href="#laue.diagram.LaueDiagram.__iter__">__iter__</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.__len__" href="#laue.diagram.LaueDiagram.__len__">__len__</a></code></li>
-<li><code><a title="laue.diagram.LaueDiagram.clean" href="#laue.diagram.LaueDiagram.clean">clean</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.find_subsets" href="#laue.diagram.LaueDiagram.find_subsets">find_subsets</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.find_zone_axes" href="#laue.diagram.LaueDiagram.find_zone_axes">find_zone_axes</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.get_gnomonic_positions" href="#laue.diagram.LaueDiagram.get_gnomonic_positions">get_gnomonic_positions</a></code></li>

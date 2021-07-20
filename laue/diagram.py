@@ -65,27 +65,8 @@ class LaueDiagram(Splitable):
         self.quality = None # Facteur qui dit a quel point ce diagramme est joli a l'oeil.
         self.image_gnom = None # Image projete dans le plan gnomonic.
         self.sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
-        self.axis = {} # Les axis de zones
+        self.axis = {} # Les axes de zones
         self.spots_set = None # L'ensemble des spots pour une recherche plus rapide.
-
-    def clean(self):
-        """
-        ** Supprime les attributs superfux. **
-
-        Si les spots sont modifies, cela permet de vider la memoire
-        des informations desormais fausses. Si beaucoup d'images
-        sont enregistrees dans la RAM, cela permet de faire de la
-        place en memoire.
-        """
-        if os.path.exists(self.get_id()): # Il ne faut pas supprimer
-            self.image_xy = None # une image que l'on ne peut pas retrouver!
-        self.quality = None
-        self.image_gnom = None
-        self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
-        self.axis = {} # Les axis de zone depandent de beaucoup de choses, on reste donc prudent.
-        self.spots_set = None # On libere de la memoire en faisant ca.
-        for spot in self:
-            spot.clean()
 
     def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
         _axes_args=None, _get_args=False):
@@ -663,6 +644,25 @@ class LaueDiagram(Splitable):
         if _return:
             return plt
         plt.show()
+
+    def _clean(self):
+        """
+        ** Supprime les attributs superfux. **
+
+        Si les spots sont modifies, cela permet de vider la memoire
+        des informations desormais fausses. Si beaucoup d'images
+        sont enregistrees dans la RAM, cela permet de faire de la
+        place en memoire.
+        """
+        if os.path.exists(self.get_id()): # Il ne faut pas supprimer
+            self.image_xy = None # une image que l'on ne peut pas retrouver!
+        self.quality = None
+        self.image_gnom = None
+        self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
+        self.axis = {} # Les axis de zone depandent de beaucoup de choses, on reste donc prudent.
+        self.spots_set = None # On libere de la memoire en faisant ca.
+        for spot in self:
+            spot._clean()
 
     def __contains__(self, spot):
         """

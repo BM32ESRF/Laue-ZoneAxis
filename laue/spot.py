@@ -15,8 +15,7 @@ import numpy as np
 
 
 __pdoc__ = {"Spot.__hash__": True,
-            "Spot.__sub__": True,
-            "Spot.clean": False}
+            "Spot.__sub__": True}
 
 
 def distance(spot1, spot2, *, space="camera"):
@@ -176,21 +175,6 @@ class Spot:
         self.quality = None # Beautee du point.
         self.hkl = None # Les 3 indices de Miller h, k et l.
         self.axes = None
-
-    def clean(self):
-        """
-        ** Vide les attributs recaculables. **
-
-        Cela permet de rafraichir la valeur des attribut qui dependent
-        d'une grandeur exterieur qui aurait changee. (Comme par example
-        les parametres de set_calibration.)
-        """
-        self.gnomonic = None # Si jamais la set_calibration change.
-        self.twicetheta_chi = None # Si jamais la set_calibration change.
-        self.intensity = None # Si jamais l'image change.
-        self.position = None # Si jamais l'image change.
-        self.quality = None # Car on vient de changer 'self.intensity'.
-        self.axes = None # Car si la projection gnomonique change, tout change.
 
     def get_bbox(self):
         """
@@ -437,6 +421,21 @@ class Spot:
             color="grey")
         axe_pyplot.scatter(*self.get_position(), color="black")
         return axe_pyplot
+
+    def _clean(self):
+        """
+        ** Vide les attributs recaculables. **
+
+        Cela permet de rafraichir la valeur des attributs qui dependent
+        d'une grandeur exterieur qui aurait changee. (Comme par example
+        les parametres de set_calibration.)
+        """
+        self.gnomonic = None # Si jamais la set_calibration change.
+        self.twicetheta_chi = None # Si jamais la set_calibration change.
+        self.intensity = None # Si jamais l'image change.
+        self.position = None # Si jamais l'image change.
+        self.quality = None # Car on vient de changer 'self.intensity'.
+        self.axes = None # Car si la projection gnomonique change, tout change.
 
     def __hash__(self):
         """

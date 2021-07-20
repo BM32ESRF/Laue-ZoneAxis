@@ -107,8 +107,7 @@ recuperation des diagrammes
 # $ python3 -m pytest --doctest-modules laue &amp;&amp; python3 -m pytest laue/tools/tests.py
 
 __all__ = [&#34;Experiment&#34;]
-__pdoc__ = {&#34;Experiment._get_gnomonic_matrix&#34;: False,
-            &#34;Experiment.__iter__&#34;: True,
+__pdoc__ = {&#34;Experiment.__iter__&#34;: True,
             &#34;Experiment.__len__&#34;: True}
 
 from laue.experiment.base_experiment import Experiment</code></pre>
@@ -637,21 +636,6 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                 plt.pause(1e-6)
 
         return cost
-
-    def clean(self):
-        &#34;&#34;&#34;
-        ** Tente de liberer de la memoire. **
-
-        Supprime tous les attributs qui sont suceptibles
-        de prendre de la place ne memoire.
-        &#34;&#34;&#34;
-        if self.verbose:
-            print(&#34;Suppression des attributs facultatifs...&#34;)
-        self._gnomonic_matrix = None
-        for diag in self:
-            diag.clean()
-        if self.verbose:
-            print(&#34;\tOK: Le volume de donnees et minimum.&#34;)
 
     def get_diagrams(self, *, tense_flow=False):
         &#34;&#34;&#34;
@@ -1203,6 +1187,21 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                 file.write(f&#34;{repr(self)}\n&#34;)
                 file.write(f&#34;Calibration done at {time.asctime()}.\n&#34;)
 
+    def _clean(self):
+        &#34;&#34;&#34;
+        ** Tente de liberer de la memoire. **
+
+        Supprime tous les attributs qui sont suceptibles
+        de prendre de la place ne memoire.
+        &#34;&#34;&#34;
+        if self.verbose:
+            print(&#34;Suppression des attributs facultatifs...&#34;)
+        self._gnomonic_matrix = None
+        for diag in self:
+            diag._clean()
+        if self.verbose:
+            print(&#34;\tOK: Le volume de donnees et minimum.&#34;)
+
     def __getitem__(self, item):
         &#34;&#34;&#34;
         ** Recupere un diagrame. **
@@ -1429,33 +1428,6 @@ Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.</dd>
     if self._len is None:
         return 0
     return self._len</code></pre>
-</details>
-</dd>
-<dt id="laue.Experiment.clean"><code class="name flex">
-<span>def <span class="ident">clean</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p><strong> Tente de liberer de la memoire. </strong></p>
-<p>Supprime tous les attributs qui sont suceptibles
-de prendre de la place ne memoire.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def clean(self):
-    &#34;&#34;&#34;
-    ** Tente de liberer de la memoire. **
-
-    Supprime tous les attributs qui sont suceptibles
-    de prendre de la place ne memoire.
-    &#34;&#34;&#34;
-    if self.verbose:
-        print(&#34;Suppression des attributs facultatifs...&#34;)
-    self._gnomonic_matrix = None
-    for diag in self:
-        diag.clean()
-    if self.verbose:
-        print(&#34;\tOK: Le volume de donnees et minimum.&#34;)</code></pre>
 </details>
 </dd>
 <dt id="laue.Experiment.find_zone_axes"><code class="name flex">
@@ -2399,7 +2371,6 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
 <ul class="two-column">
 <li><code><a title="laue.Experiment.__iter__" href="#laue.Experiment.__iter__">__iter__</a></code></li>
 <li><code><a title="laue.Experiment.__len__" href="#laue.Experiment.__len__">__len__</a></code></li>
-<li><code><a title="laue.Experiment.clean" href="#laue.Experiment.clean">clean</a></code></li>
 <li><code><a title="laue.Experiment.find_zone_axes" href="#laue.Experiment.find_zone_axes">find_zone_axes</a></code></li>
 <li><code><a title="laue.Experiment.get_diagrams" href="#laue.Experiment.get_diagrams">get_diagrams</a></code></li>
 <li><code><a title="laue.Experiment.get_images_shape" href="#laue.Experiment.get_images_shape">get_images_shape</a></code></li>
