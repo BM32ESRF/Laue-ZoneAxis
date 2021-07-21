@@ -193,7 +193,7 @@ class Spot:
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> spot = laue.Experiment(image)[0][0]
         >>> spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> spot.get_bbox()
         (1368, 1873, 6, 5)
         >>>
@@ -218,9 +218,9 @@ class Spot:
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> spot = laue.Experiment(image)[0][0]
         >>> spot
-        Spot(bbox=(1368, 1873, 6, 5), position=(1370.5172, 1874.7801), quality=132.6911)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> round(spot.get_distortion(), 4)
-        1.1804
+        0.8472
         >>>
         """
         return self.distortion
@@ -239,9 +239,11 @@ class Spot:
         >>> import laue
         >>> import numpy as np
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image,[0]onfig_file="laue/examples/ge_blanc.det")))[0]
+        >>> spot = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
         >>> spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
+        >>> type(spot.get_gnomonic())
+        <class 'tuple'>
         >>> np.round(spot.get_gnomonic(), 4)
         array([ 0.3137, -0.4409])
         >>>
@@ -283,7 +285,7 @@ class Spot:
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> spot = laue.Experiment(image)[0][0]
         >>> spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> spot.get_intensity()
         814
         >>>
@@ -311,7 +313,7 @@ class Spot:
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> spot = laue.Experiment(image)[0][0]
         >>> spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> np.round(spot.get_position(), 4)
         array([1370.5172, 1874.7801])
         >>>
@@ -341,9 +343,9 @@ class Spot:
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> spot = laue.Experiment(image)[0][0]
         >>> spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> round(spot.get_quality(), 2)
-        0.34
+        0.57
         >>>
         """
         if self.quality is not None:
@@ -389,7 +391,7 @@ class Spot:
         -------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image,[0]onfig_file="laue/examples/ge_blanc.det")))
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> spot = diag.select_spots(n=1, sort="quality").pop()
         >>> type(spot.find_zone_axes())
         <class 'set'>
@@ -399,7 +401,7 @@ class Spot:
         """
         if self.axes is not None:
             return self.axes
-        self.diagram.find_zone_axes()
+        self.diagram.find_zone_axes() # met automatiquement a jour self.axes.
         return self.axes
 
     def plot_gnomonic(self, axe_pyplot=None, *, display=True):
@@ -521,10 +523,9 @@ class Spot:
         """
         ** Renvoie un representation evaluable de self. **
         """
-        return (f"Spot(bbox={(self.x, self.y, self.w, self.h)}, "
-                f"position=({self.get_position()[0]:.4f}, {self.get_position()[1]:.4f}), "
-                f"quality={self.get_quality():.4f})")
-                # il manque diagram=... mais fait des boucles infinies.
+        return (f"Spot("
+                f"position=({self.get_position()[0]:.2f}, {self.get_position()[1]:.2f}), "
+                f"quality={self.get_quality():.3f})")
 
     def __str__(self):
         """
@@ -532,6 +533,7 @@ class Spot:
         """
         x, y = self.get_position()
         return ("Spot:\n"
+                f"\tbbox: {self.get_bbox()}\n"
                 f"\tposition: x={x}, y={y}\n"
                 f"\tintensity: {self.get_intensity()}\n"
                 f"\tdistortion: {self.get_distortion()}\n"

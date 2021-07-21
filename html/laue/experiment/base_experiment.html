@@ -71,7 +71,7 @@ class Experiment:
     &#34;&#34;&#34;
     ** Permet de travailler sur un lot d&#39;images. **
     &#34;&#34;&#34;
-    def __init__(self, images=(), *, verbose=False, config_file=None, **kwargs):
+    def __init__(self, images=(), *, config_file=None, verbose=False, **kwargs):
         &#34;&#34;&#34;
         Parameters
         ----------
@@ -205,7 +205,7 @@ class Experiment:
         Parameters
         ----------
         *diagrams : optional
-            Les ou le diagramme.s qui vont servir a faire la set_calibration.
+            Les ou le diagramme.s qui vont servir a faire la calibration.
             Si aucun diagramme n&#39;est precise, cette methode recherche par elle meme
             les diagrammes qu&#39;elle trouve convaincant parmis ceux qui sont disponibles.
             Il doivent etre de type ``laue.diagram.LaueDiagram``.
@@ -248,7 +248,7 @@ class Experiment:
         PIXELSIZE_REF = {(2048, 2048): 0.079856, # Taille des pixels fonction de la camera.
                          (2018, 2016): 0.0734,
                          (2594, 2748): 0.031}
-        PARAM_SET = {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;} # Les paremetres non deductibles.
+        PARAM_SET = {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;} # Les parametres non deductibles.
         PARAM_MIN = {&#34;dd&#34;: 60.0, # Les bornes minimale par defaut.
                      &#34;xbet&#34;: -.9,
                      &#34;xgam&#34;: -.9,
@@ -354,26 +354,41 @@ class Experiment:
         
         # Recherche rapide d&#39;un minimum par descente de gradient.
         from scipy import optimize # On ne l&#39;importe que ici car on est pas sur de s&#39;en servir.
-        if self.verbose &gt;= 2:
-            print(&#34;\tDescente de gradient...&#34;)
-        opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
-            self._calibration_cost,
-            x0=[initial_parameters[name] for name in vect_labels],
-            args=args, # On donne les arguments et on paralelise.
-            bounds=bounds,
-            options={&#34;disp&#34;: self.verbose &gt;= 3})
-        if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
-            if self.verbose &gt;= 2:
-                print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+        # if self.verbose &gt;= 2:
+        #     print(&#34;\tDescente de gradient...&#34;)
+        # opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
+        #     self._calibration_cost,
+        #     x0=[initial_parameters[name] for name in vect_labels],
+        #     args=args, # On donne les arguments et on paralelise.
+        #     bounds=bounds,
+        #     options={&#34;disp&#34;: self.verbose &gt;= 3})
+        # if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
+        #     if self.verbose &gt;= 2:
+        #         print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
             # Recherche d&#39;un bon minimum global
-            if self.verbose &gt;= 2:
-                print(&#34;\tOptimsation globale, algo genetique...&#34;)
+        if self.verbose &gt;= 2:
+            print(&#34;\tOptimsation globale, algo genetique...&#34;)
+        
+        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+            attrs = [&#34;transformer&#34;, &#34;verbose&#34;]
+            self_bis = collections.namedtuple(&#34;PartialExperiment&#34;, attrs, defaults=[getattr(self, attr) for attr in attrs])()
+            opt_res = optimize.differential_evolution(
+                _Picklable(cloudpickle.dumps(self_bis), Experiment._calibration_cost,
+                    {name: val for name, val in zip((&#34;known_params&#34;, &#34;vect_labels&#34;, &#34;spots_position&#34;), args)}
+                    ),
+                updating=&#34;deferred&#34;,
+                bounds=bounds,
+                disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
+                polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
+                popsize=15, # On garde la taille de la population par defaut.
+                workers=-1) # Pour utiliser tous les cpus.
+        else:
             opt_res = optimize.differential_evolution(
                 self._calibration_cost,
                 bounds=bounds,
                 args=args,
                 disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
-                polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
+                polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
                 popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
                 workers=1) # Pour ne pas creer de sous processus.
                 # C&#39;est plus rapide de ne pas creer de sous processus que d&#39;en faire... car cloudpickle est lent!
@@ -458,7 +473,6 @@ class Experiment:
                     plt.subplot(n_diagrams, 3, 3 + 3*i)
                     plt.title(f&#34;diagramme {i+1}, hough&#34;)
                     plt.scatter(thetas[i, :], dists[i, :])
-                    print(clusters.shape)
                     plt.scatter(clusters[i][0], clusters[i][1])
                 plt.draw()
                 plt.pause(1e-6)
@@ -613,9 +627,9 @@ class Experiment:
             bbox = [cv2.boundingRect(outl) for outl in outlines]
 
             # Calcul des distortions.
-            distortions_open = np.array([
+            distortions_open = (2*np.sqrt(np.pi)) / np.array([
                 cv2.arcLength(outl, True)/np.sqrt(cv2.contourArea(outl))
-                for outl in outlines]) / (2*np.sqrt(np.pi))
+                for outl in outlines])
 
             # Preparations des arguments des spot.
             spot_args = [((x, y, w, h), fg_image[y:y+h, x:x+w], dis)
@@ -641,40 +655,53 @@ class Experiment:
 
         return laue_diagram
 
-    def find_zone_axes(self, tense_flow=True, **constraints):
+    def find_zone_axes(self, *, tense_flow=False, **kwds):
         &#34;&#34;&#34;
         ** Recherche l&#39;ensemble des axes de zones. **
-
-        Returns a zone axis iterator.
 
         Notes
         -----
         * Le resultat est le meme que ``(diag.find_zone_axes() for diag in self)``
-            Sauf qu&#39;il y a de la parallelisation en plus.
+            sauf qu&#39;il y a de la parallelisation en plus.
         * Il est possible d&#39;appeler plusieur fois cette methode en parallele.
         * Les sections critiques sont verouillees donc cette methode supporte le multithread.
 
         Parameters
         ----------
-        **constraints : number
+        tense_flow : boolean
+            * True : Permet de travailler a flux tendu, c&#39;est a dire
+            de ceder les axes des diagrammes au fur a meusure qu&#39;ils sont trouves.
+                * Le generateur termine quand toutes les images sont lues ou
+                que le generateur d&#39;images leve un ``StopIteration``.
+                * A chaque nouvel appel de cette methode, l&#39;iteration
+                recommence a partir du debut et l&#39;ordre reste inchange.
+                * Equivalent a ``(diag.find_zone_axes() for diag in self)``.
+            * False. Sinon, attend que tous les diagrammes soient lues afin de tout renvoyer en meme temps.
+                * C&#39;est equvalent a ``[diag.find_zone_axes() for diag in self]``.
+                * Au lieu de retourner un generateur, retourne une liste.
+        **kwds : number
             Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
 
-        Yields
-        ------
+        Returns
+        -------
         list
             Pour chaque diagramme de cette experience, cede la liste
             des axes de zones du diagramme. Les elements de l&#39;ensemble
             sont de type ``laue.zone_axis.ZoneAxis``.
 
-        Example
-        -------
+        Examples
+        --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
         &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
         &gt;&gt;&gt;
-        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())))
+        &gt;&gt;&gt; type(experiment.find_zone_axes())
         &lt;class &#39;list&#39;&gt;
-        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())).pop())
+        &gt;&gt;&gt; type(experiment.find_zone_axes(tense_flow=True))
+        &lt;class &#39;generator&#39;&gt;
+        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes(tense_flow=True))))
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes(tense_flow=True))).pop())
         &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
@@ -719,7 +746,7 @@ class Experiment:
                             limited_imap(pool,
                                 _get_zone_axes_pickle,
                                 ( # transformer, gnomonics, dmax, nbr, tol
-                                    (transformer_ser, *diag.find_zone_axes(**constraints, _get_args=True))
+                                    (transformer_ser, *diag.find_zone_axes(**kwds, _get_args=True))
                                     for diag in self
                                 )
                             )
@@ -728,6 +755,9 @@ class Experiment:
 
             else:
                 yield from (diag.find_zone_axes() for diag in self)
+
+        if not tense_flow:
+            return list(self.find_zone_axes(tense_flow=True, **kwds))
 
         if self._axes_iterator is None:
             self._axes_iterator = iter(_axes_extractor(self))
@@ -792,7 +822,7 @@ class Experiment:
         &#34;&#34;&#34;
         ** Estime la moyenne des images. **
 
-        Cela permet d&#39;avoir une estimation du fond difus.
+        Cela permet d&#39;avoir une estimation du fond diffus.
 
         Notes
         -----
@@ -1161,7 +1191,16 @@ class Experiment:
                 f&#34;\tfont_size: {self.font_size} pxl\n&#34;
                 f&#34;\tignore_errors: {self.ignore_errors}\n&#34;
                 f&#34;\tverbose: {self.verbose}&#34;
-                f&#34;{addi_print}&#34;)</code></pre>
+                f&#34;{addi_print}&#34;)
+
+class _Picklable:
+    def __init__(self, ser_mother_class, func, kwargs):
+        self.ser_mother_class = ser_mother_class
+        self.func = func
+        self.kwargs = kwargs
+
+    def __call__(self, x):
+        return self.func(cloudpickle.loads(self.ser_mother_class), x, **self.kwargs)</code></pre>
 </details>
 </section>
 <section>
@@ -1175,7 +1214,7 @@ class Experiment:
 <dl>
 <dt id="laue.experiment.base_experiment.Experiment"><code class="flex name class">
 <span>class <span class="ident">Experiment</span></span>
-<span>(</span><span>images=(), *, verbose=False, config_file=None, **kwargs)</span>
+<span>(</span><span>images=(), *, config_file=None, verbose=False, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Permet de travailler sur un lot d'images. </strong></p>
@@ -1272,7 +1311,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
     &#34;&#34;&#34;
     ** Permet de travailler sur un lot d&#39;images. **
     &#34;&#34;&#34;
-    def __init__(self, images=(), *, verbose=False, config_file=None, **kwargs):
+    def __init__(self, images=(), *, config_file=None, verbose=False, **kwargs):
         &#34;&#34;&#34;
         Parameters
         ----------
@@ -1406,7 +1445,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         Parameters
         ----------
         *diagrams : optional
-            Les ou le diagramme.s qui vont servir a faire la set_calibration.
+            Les ou le diagramme.s qui vont servir a faire la calibration.
             Si aucun diagramme n&#39;est precise, cette methode recherche par elle meme
             les diagrammes qu&#39;elle trouve convaincant parmis ceux qui sont disponibles.
             Il doivent etre de type ``laue.diagram.LaueDiagram``.
@@ -1449,7 +1488,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         PIXELSIZE_REF = {(2048, 2048): 0.079856, # Taille des pixels fonction de la camera.
                          (2018, 2016): 0.0734,
                          (2594, 2748): 0.031}
-        PARAM_SET = {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;} # Les paremetres non deductibles.
+        PARAM_SET = {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;} # Les parametres non deductibles.
         PARAM_MIN = {&#34;dd&#34;: 60.0, # Les bornes minimale par defaut.
                      &#34;xbet&#34;: -.9,
                      &#34;xgam&#34;: -.9,
@@ -1555,26 +1594,41 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         
         # Recherche rapide d&#39;un minimum par descente de gradient.
         from scipy import optimize # On ne l&#39;importe que ici car on est pas sur de s&#39;en servir.
-        if self.verbose &gt;= 2:
-            print(&#34;\tDescente de gradient...&#34;)
-        opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
-            self._calibration_cost,
-            x0=[initial_parameters[name] for name in vect_labels],
-            args=args, # On donne les arguments et on paralelise.
-            bounds=bounds,
-            options={&#34;disp&#34;: self.verbose &gt;= 3})
-        if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
-            if self.verbose &gt;= 2:
-                print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+        # if self.verbose &gt;= 2:
+        #     print(&#34;\tDescente de gradient...&#34;)
+        # opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
+        #     self._calibration_cost,
+        #     x0=[initial_parameters[name] for name in vect_labels],
+        #     args=args, # On donne les arguments et on paralelise.
+        #     bounds=bounds,
+        #     options={&#34;disp&#34;: self.verbose &gt;= 3})
+        # if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
+        #     if self.verbose &gt;= 2:
+        #         print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
             # Recherche d&#39;un bon minimum global
-            if self.verbose &gt;= 2:
-                print(&#34;\tOptimsation globale, algo genetique...&#34;)
+        if self.verbose &gt;= 2:
+            print(&#34;\tOptimsation globale, algo genetique...&#34;)
+        
+        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+            attrs = [&#34;transformer&#34;, &#34;verbose&#34;]
+            self_bis = collections.namedtuple(&#34;PartialExperiment&#34;, attrs, defaults=[getattr(self, attr) for attr in attrs])()
+            opt_res = optimize.differential_evolution(
+                _Picklable(cloudpickle.dumps(self_bis), Experiment._calibration_cost,
+                    {name: val for name, val in zip((&#34;known_params&#34;, &#34;vect_labels&#34;, &#34;spots_position&#34;), args)}
+                    ),
+                updating=&#34;deferred&#34;,
+                bounds=bounds,
+                disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
+                polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
+                popsize=15, # On garde la taille de la population par defaut.
+                workers=-1) # Pour utiliser tous les cpus.
+        else:
             opt_res = optimize.differential_evolution(
                 self._calibration_cost,
                 bounds=bounds,
                 args=args,
                 disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
-                polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
+                polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
                 popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
                 workers=1) # Pour ne pas creer de sous processus.
                 # C&#39;est plus rapide de ne pas creer de sous processus que d&#39;en faire... car cloudpickle est lent!
@@ -1659,7 +1713,6 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                     plt.subplot(n_diagrams, 3, 3 + 3*i)
                     plt.title(f&#34;diagramme {i+1}, hough&#34;)
                     plt.scatter(thetas[i, :], dists[i, :])
-                    print(clusters.shape)
                     plt.scatter(clusters[i][0], clusters[i][1])
                 plt.draw()
                 plt.pause(1e-6)
@@ -1814,9 +1867,9 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
             bbox = [cv2.boundingRect(outl) for outl in outlines]
 
             # Calcul des distortions.
-            distortions_open = np.array([
+            distortions_open = (2*np.sqrt(np.pi)) / np.array([
                 cv2.arcLength(outl, True)/np.sqrt(cv2.contourArea(outl))
-                for outl in outlines]) / (2*np.sqrt(np.pi))
+                for outl in outlines])
 
             # Preparations des arguments des spot.
             spot_args = [((x, y, w, h), fg_image[y:y+h, x:x+w], dis)
@@ -1842,40 +1895,53 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
 
         return laue_diagram
 
-    def find_zone_axes(self, tense_flow=True, **constraints):
+    def find_zone_axes(self, *, tense_flow=False, **kwds):
         &#34;&#34;&#34;
         ** Recherche l&#39;ensemble des axes de zones. **
-
-        Returns a zone axis iterator.
 
         Notes
         -----
         * Le resultat est le meme que ``(diag.find_zone_axes() for diag in self)``
-            Sauf qu&#39;il y a de la parallelisation en plus.
+            sauf qu&#39;il y a de la parallelisation en plus.
         * Il est possible d&#39;appeler plusieur fois cette methode en parallele.
         * Les sections critiques sont verouillees donc cette methode supporte le multithread.
 
         Parameters
         ----------
-        **constraints : number
+        tense_flow : boolean
+            * True : Permet de travailler a flux tendu, c&#39;est a dire
+            de ceder les axes des diagrammes au fur a meusure qu&#39;ils sont trouves.
+                * Le generateur termine quand toutes les images sont lues ou
+                que le generateur d&#39;images leve un ``StopIteration``.
+                * A chaque nouvel appel de cette methode, l&#39;iteration
+                recommence a partir du debut et l&#39;ordre reste inchange.
+                * Equivalent a ``(diag.find_zone_axes() for diag in self)``.
+            * False. Sinon, attend que tous les diagrammes soient lues afin de tout renvoyer en meme temps.
+                * C&#39;est equvalent a ``[diag.find_zone_axes() for diag in self]``.
+                * Au lieu de retourner un generateur, retourne une liste.
+        **kwds : number
             Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
 
-        Yields
-        ------
+        Returns
+        -------
         list
             Pour chaque diagramme de cette experience, cede la liste
             des axes de zones du diagramme. Les elements de l&#39;ensemble
             sont de type ``laue.zone_axis.ZoneAxis``.
 
-        Example
-        -------
+        Examples
+        --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
         &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
         &gt;&gt;&gt;
-        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())))
+        &gt;&gt;&gt; type(experiment.find_zone_axes())
         &lt;class &#39;list&#39;&gt;
-        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())).pop())
+        &gt;&gt;&gt; type(experiment.find_zone_axes(tense_flow=True))
+        &lt;class &#39;generator&#39;&gt;
+        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes(tense_flow=True))))
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes(tense_flow=True))).pop())
         &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
@@ -1920,7 +1986,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                             limited_imap(pool,
                                 _get_zone_axes_pickle,
                                 ( # transformer, gnomonics, dmax, nbr, tol
-                                    (transformer_ser, *diag.find_zone_axes(**constraints, _get_args=True))
+                                    (transformer_ser, *diag.find_zone_axes(**kwds, _get_args=True))
                                     for diag in self
                                 )
                             )
@@ -1929,6 +1995,9 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
 
             else:
                 yield from (diag.find_zone_axes() for diag in self)
+
+        if not tense_flow:
+            return list(self.find_zone_axes(tense_flow=True, **kwds))
 
         if self._axes_iterator is None:
             self._axes_iterator = iter(_axes_extractor(self))
@@ -1993,7 +2062,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         &#34;&#34;&#34;
         ** Estime la moyenne des images. **
 
-        Cela permet d&#39;avoir une estimation du fond difus.
+        Cela permet d&#39;avoir une estimation du fond diffus.
 
         Notes
         -----
@@ -2568,38 +2637,60 @@ Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.</dd>
 </details>
 </dd>
 <dt id="laue.experiment.base_experiment.Experiment.find_zone_axes"><code class="name flex">
-<span>def <span class="ident">find_zone_axes</span></span>(<span>self, tense_flow=True, **constraints)</span>
+<span>def <span class="ident">find_zone_axes</span></span>(<span>self, *, tense_flow=False, **kwds)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Recherche l'ensemble des axes de zones. </strong></p>
-<p>Returns a zone axis iterator.</p>
 <h2 id="notes">Notes</h2>
 <ul>
 <li>Le resultat est le meme que <code>(diag.find_zone_axes() for diag in self)</code>
-Sauf qu'il y a de la parallelisation en plus.</li>
+sauf qu'il y a de la parallelisation en plus.</li>
 <li>Il est possible d'appeler plusieur fois cette methode en parallele.</li>
 <li>Les sections critiques sont verouillees donc cette methode supporte le multithread.</li>
 </ul>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>**constraints</code></strong> :&ensp;<code>number</code></dt>
+<dt><strong><code>tense_flow</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>
+<ul>
+<li>True : Permet de travailler a flux tendu, c'est a dire
+de ceder les axes des diagrammes au fur a meusure qu'ils sont trouves.<ul>
+<li>Le generateur termine quand toutes les images sont lues ou
+que le generateur d'images leve un <code>StopIteration</code>.</li>
+<li>A chaque nouvel appel de cette methode, l'iteration
+recommence a partir du debut et l'ordre reste inchange.</li>
+<li>Equivalent a <code>(diag.find_zone_axes() for diag in self)</code>.</li>
+</ul>
+</li>
+<li>False. Sinon, attend que tous les diagrammes soient lues afin de tout renvoyer en meme temps.<ul>
+<li>C'est equvalent a <code>[diag.find_zone_axes() for diag in self]</code>.</li>
+<li>Au lieu de retourner un generateur, retourne une liste.</li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt><strong><code>**kwds</code></strong> :&ensp;<code>number</code></dt>
 <dd>Se sont les parametres de la fonction <code><a title="laue.diagram.LaueDiagram.find_zone_axes" href="../diagram.html#laue.diagram.LaueDiagram.find_zone_axes">LaueDiagram.find_zone_axes()</a></code>.</dd>
 </dl>
-<h2 id="yields">Yields</h2>
+<h2 id="returns">Returns</h2>
 <dl>
 <dt><code>list</code></dt>
 <dd>Pour chaque diagramme de cette experience, cede la liste
 des axes de zones du diagramme. Les elements de l'ensemble
 sont de type <code><a title="laue.zone_axis.ZoneAxis" href="../zone_axis.html#laue.zone_axis.ZoneAxis">ZoneAxis</a></code>.</dd>
 </dl>
-<h2 id="example">Example</h2>
+<h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&quot;laue/examples/ge_blanc.det&quot;)
 &gt;&gt;&gt;
-&gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())))
+&gt;&gt;&gt; type(experiment.find_zone_axes())
 &lt;class 'list'&gt;
-&gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())).pop())
+&gt;&gt;&gt; type(experiment.find_zone_axes(tense_flow=True))
+&lt;class 'generator'&gt;
+&gt;&gt;&gt; type(next(iter(experiment.find_zone_axes(tense_flow=True))))
+&lt;class 'list'&gt;
+&gt;&gt;&gt; type(next(iter(experiment.find_zone_axes(tense_flow=True))).pop())
 &lt;class 'laue.zone_axis.ZoneAxis'&gt;
 &gt;&gt;&gt;
 </code></pre></div>
@@ -2607,40 +2698,53 @@ sont de type <code><a title="laue.zone_axis.ZoneAxis" href="../zone_axis.html#la
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_zone_axes(self, tense_flow=True, **constraints):
+<pre><code class="python">def find_zone_axes(self, *, tense_flow=False, **kwds):
     &#34;&#34;&#34;
     ** Recherche l&#39;ensemble des axes de zones. **
-
-    Returns a zone axis iterator.
 
     Notes
     -----
     * Le resultat est le meme que ``(diag.find_zone_axes() for diag in self)``
-        Sauf qu&#39;il y a de la parallelisation en plus.
+        sauf qu&#39;il y a de la parallelisation en plus.
     * Il est possible d&#39;appeler plusieur fois cette methode en parallele.
     * Les sections critiques sont verouillees donc cette methode supporte le multithread.
 
     Parameters
     ----------
-    **constraints : number
+    tense_flow : boolean
+        * True : Permet de travailler a flux tendu, c&#39;est a dire
+        de ceder les axes des diagrammes au fur a meusure qu&#39;ils sont trouves.
+            * Le generateur termine quand toutes les images sont lues ou
+            que le generateur d&#39;images leve un ``StopIteration``.
+            * A chaque nouvel appel de cette methode, l&#39;iteration
+            recommence a partir du debut et l&#39;ordre reste inchange.
+            * Equivalent a ``(diag.find_zone_axes() for diag in self)``.
+        * False. Sinon, attend que tous les diagrammes soient lues afin de tout renvoyer en meme temps.
+            * C&#39;est equvalent a ``[diag.find_zone_axes() for diag in self]``.
+            * Au lieu de retourner un generateur, retourne une liste.
+    **kwds : number
         Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
 
-    Yields
-    ------
+    Returns
+    -------
     list
         Pour chaque diagramme de cette experience, cede la liste
         des axes de zones du diagramme. Les elements de l&#39;ensemble
         sont de type ``laue.zone_axis.ZoneAxis``.
 
-    Example
-    -------
+    Examples
+    --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
     &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
     &gt;&gt;&gt;
-    &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())))
+    &gt;&gt;&gt; type(experiment.find_zone_axes())
     &lt;class &#39;list&#39;&gt;
-    &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes())).pop())
+    &gt;&gt;&gt; type(experiment.find_zone_axes(tense_flow=True))
+    &lt;class &#39;generator&#39;&gt;
+    &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes(tense_flow=True))))
+    &lt;class &#39;list&#39;&gt;
+    &gt;&gt;&gt; type(next(iter(experiment.find_zone_axes(tense_flow=True))).pop())
     &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
@@ -2685,7 +2789,7 @@ sont de type <code><a title="laue.zone_axis.ZoneAxis" href="../zone_axis.html#la
                         limited_imap(pool,
                             _get_zone_axes_pickle,
                             ( # transformer, gnomonics, dmax, nbr, tol
-                                (transformer_ser, *diag.find_zone_axes(**constraints, _get_args=True))
+                                (transformer_ser, *diag.find_zone_axes(**kwds, _get_args=True))
                                 for diag in self
                             )
                         )
@@ -2694,6 +2798,9 @@ sont de type <code><a title="laue.zone_axis.ZoneAxis" href="../zone_axis.html#la
 
         else:
             yield from (diag.find_zone_axes() for diag in self)
+
+    if not tense_flow:
+        return list(self.find_zone_axes(tense_flow=True, **kwds))
 
     if self._axes_iterator is None:
         self._axes_iterator = iter(_axes_extractor(self))
@@ -2928,7 +3035,7 @@ soient lues afin de tout renvoyer en meme temps.</li>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Estime la moyenne des images. </strong></p>
-<p>Cela permet d'avoir une estimation du fond difus.</p>
+<p>Cela permet d'avoir une estimation du fond diffus.</p>
 <h2 id="notes">Notes</h2>
 <ul>
 <li>A cause des arrondis machine, seule les 9e15 permieres images sont considerees.</li>
@@ -2947,7 +3054,7 @@ soient lues afin de tout renvoyer en meme temps.</li>
     &#34;&#34;&#34;
     ** Estime la moyenne des images. **
 
-    Cela permet d&#39;avoir une estimation du fond difus.
+    Cela permet d&#39;avoir une estimation du fond diffus.
 
     Notes
     -----
@@ -3244,7 +3351,7 @@ immeditement le resultat sans refaire les calculs.</li>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>*diagrams</code></strong> :&ensp;<code>optional</code></dt>
-<dd>Les ou le diagramme.s qui vont servir a faire la set_calibration.
+<dd>Les ou le diagramme.s qui vont servir a faire la calibration.
 Si aucun diagramme n'est precise, cette methode recherche par elle meme
 les diagrammes qu'elle trouve convaincant parmis ceux qui sont disponibles.
 Il doivent etre de type <code><a title="laue.diagram.LaueDiagram" href="../diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code>.</dd>
@@ -3291,7 +3398,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     Parameters
     ----------
     *diagrams : optional
-        Les ou le diagramme.s qui vont servir a faire la set_calibration.
+        Les ou le diagramme.s qui vont servir a faire la calibration.
         Si aucun diagramme n&#39;est precise, cette methode recherche par elle meme
         les diagrammes qu&#39;elle trouve convaincant parmis ceux qui sont disponibles.
         Il doivent etre de type ``laue.diagram.LaueDiagram``.
@@ -3334,7 +3441,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     PIXELSIZE_REF = {(2048, 2048): 0.079856, # Taille des pixels fonction de la camera.
                      (2018, 2016): 0.0734,
                      (2594, 2748): 0.031}
-    PARAM_SET = {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;} # Les paremetres non deductibles.
+    PARAM_SET = {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;} # Les parametres non deductibles.
     PARAM_MIN = {&#34;dd&#34;: 60.0, # Les bornes minimale par defaut.
                  &#34;xbet&#34;: -.9,
                  &#34;xgam&#34;: -.9,
@@ -3440,26 +3547,41 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     
     # Recherche rapide d&#39;un minimum par descente de gradient.
     from scipy import optimize # On ne l&#39;importe que ici car on est pas sur de s&#39;en servir.
-    if self.verbose &gt;= 2:
-        print(&#34;\tDescente de gradient...&#34;)
-    opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
-        self._calibration_cost,
-        x0=[initial_parameters[name] for name in vect_labels],
-        args=args, # On donne les arguments et on paralelise.
-        bounds=bounds,
-        options={&#34;disp&#34;: self.verbose &gt;= 3})
-    if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
-        if self.verbose &gt;= 2:
-            print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+    # if self.verbose &gt;= 2:
+    #     print(&#34;\tDescente de gradient...&#34;)
+    # opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
+    #     self._calibration_cost,
+    #     x0=[initial_parameters[name] for name in vect_labels],
+    #     args=args, # On donne les arguments et on paralelise.
+    #     bounds=bounds,
+    #     options={&#34;disp&#34;: self.verbose &gt;= 3})
+    # if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
+    #     if self.verbose &gt;= 2:
+    #         print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
         # Recherche d&#39;un bon minimum global
-        if self.verbose &gt;= 2:
-            print(&#34;\tOptimsation globale, algo genetique...&#34;)
+    if self.verbose &gt;= 2:
+        print(&#34;\tOptimsation globale, algo genetique...&#34;)
+    
+    if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+        attrs = [&#34;transformer&#34;, &#34;verbose&#34;]
+        self_bis = collections.namedtuple(&#34;PartialExperiment&#34;, attrs, defaults=[getattr(self, attr) for attr in attrs])()
+        opt_res = optimize.differential_evolution(
+            _Picklable(cloudpickle.dumps(self_bis), Experiment._calibration_cost,
+                {name: val for name, val in zip((&#34;known_params&#34;, &#34;vect_labels&#34;, &#34;spots_position&#34;), args)}
+                ),
+            updating=&#34;deferred&#34;,
+            bounds=bounds,
+            disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
+            polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
+            popsize=15, # On garde la taille de la population par defaut.
+            workers=-1) # Pour utiliser tous les cpus.
+    else:
         opt_res = optimize.differential_evolution(
             self._calibration_cost,
             bounds=bounds,
             args=args,
             disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
-            polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
+            polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
             popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
             workers=1) # Pour ne pas creer de sous processus.
             # C&#39;est plus rapide de ne pas creer de sous processus que d&#39;en faire... car cloudpickle est lent!

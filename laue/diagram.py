@@ -293,9 +293,9 @@ class LaueDiagram(Splitable):
             associe un flotant. Les spots ayant des petits flottant se retrouveront
             au debut, ceux avec un gros seront en fin de chaine.
             - str => La methode de tri. Il y en a plusieurs possibles:
-                - "intensity" => Les spots sont renvoyes par intensite decroissante.
-                - "distortion" => Les spots sont renvoyes par distortion croissante.
-                - "quality" => Les spots sont renvoyes par qualite decroissante.
+                - "intensity" => Les spots sont renvoyes des plus intenses aux plus faibles.
+                - "distortion" => Les spots sont renvoyes des plus rond aux plus biscornus.
+                - "quality" => Les spots sont renvoyes des plus beau aux plus moches.
 
         Returns
         -------
@@ -308,11 +308,11 @@ class LaueDiagram(Splitable):
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> diag = laue.Experiment(image)[0]
         >>> diag.select_spots(n=2, sort="intensity")
-        [Spot(bbox=(617, 1651, 11, 13), distortion=1.0760), Spot(bbox=(928, 1210, 10, 11), distortion=1.0673)]
+        [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
         >>> diag.select_spots(n=2, sort="distortion")
-        [Spot(bbox=(928, 1210, 10, 11), distortion=1.0673), Spot(bbox=(617, 1651, 11, 13), distortion=1.0760)]
+        [Spot(position=(932.05, 1214.49), quality=0.940), Spot(position=(622.09, 1656.72), quality=0.949)]
         >>> diag.select_spots(n=2, sort=lambda spot: spot.get_position()[0])
-        [Spot(bbox=(130, 1202, 5, 6), distortion=1.1804), Spot(bbox=(157, 905, 7, 6), distortion=1.1342)]
+        [Spot(position=(132.03, 1204.66), quality=0.577), Spot(position=(160.35, 907.21), quality=0.621)]
         >>>
         """
         assert n is None or isinstance(n, int), f"'n' can not be {type(n).__name__}."
@@ -334,7 +334,7 @@ class LaueDiagram(Splitable):
             if sort == "intensity":
                 l_spots = sorted(self.spots, key=(lambda spot: -spot.get_intensity()))
             elif sort == "distortion":
-                l_spots = sorted(self.spots, key=(lambda spot: spot.get_distortion()))
+                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_distortion()))
             elif sort == "quality":
                 l_spots = sorted(self.spots, key=(lambda spot: -spot.get_quality()))
             self.sorted_spots[sort] = l_spots
@@ -437,10 +437,10 @@ class LaueDiagram(Splitable):
         -------
         quality : float
             * Un scalaire qui permet de juger de la purete du diagramme:
-            * < 1 => diagramme tres moche, illisible a l'oeil.
-            * < 2 => diagramme pas bien joli.
-            * < 3 => diagramme bien joli, avec de belles taches.
-            * \> 3 => diagramme super joli, bien epure avec des taches rondes et intenses.
+            * 0.0 => diagramme tres moche, illisible a l'oeil.
+            * 0.2 => diagramme pas bien joli.
+            * 0.8 => diagramme bien joli, avec de belles taches.
+            * 1.0 => diagramme super joli, bien epure avec des taches rondes et intenses.
 
         Examples
         --------
@@ -448,7 +448,7 @@ class LaueDiagram(Splitable):
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> diag = laue.Experiment(image)[0]
         >>> print(f"quality: {diag.get_quality():.4f}")
-        quality: 1.2752
+        quality: 0.8344
         >>>
         """
         def f_nbr(x, n_best_min, n_best_max):
@@ -468,7 +468,9 @@ class LaueDiagram(Splitable):
         if self.quality is not None:
             return self.quality
 
-        self.quality = f_nbr(len(self), 60, 120) * np.mean([spot.get_quality() for spot in self])
+        spot_qual_weight = 0.5
+
+        self.quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
         return self.quality
 
     def find_subsets(self, *args, **kwargs):
@@ -743,7 +745,7 @@ class LaueDiagram(Splitable):
         >>>
         >>> spot = diag[0]
         >>> spot
-        Spot(bbox=(1368, 1873, 6, 5), position=(1370.5172, 1874.7801), quality=0.5731)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> spot in diag
         True
         >>> 

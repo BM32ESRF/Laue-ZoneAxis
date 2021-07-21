@@ -92,7 +92,7 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; from laue.spot import distance
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; spot1, spot2 = diag[:2]
     &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
     ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
@@ -225,9 +225,9 @@ class Spot:
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; spot.get_bbox()
         (1368, 1873, 6, 5)
         &gt;&gt;&gt;
@@ -238,23 +238,23 @@ class Spot:
         r&#34;&#34;&#34;
         ** Scalaire qui caracterise la rondeur de la tache. **
 
-        Il est defini comme:
-        \[ \frac{girth}{2 . \sqrt{\pi . area}} \]
+        \[ distortion = \frac{2 . \sqrt{\pi . area}}{girth} \]
 
         Returns
         -------
         float
-            1.0 =&gt; Tache bien ronde, &gt;&gt; 1 =&gt; Tache biscornue.
+            1.0 =&gt; Tache bien ronde
+            0.0 =&gt; Tache biscornue.
 
         Examples
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; round(spot.get_distortion(), 4)
-        1.1804
+        0.8472
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return self.distortion
@@ -273,9 +273,11 @@ class Spot:
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
+        &gt;&gt;&gt; type(spot.get_gnomonic())
+        &lt;class &#39;tuple&#39;&gt;
         &gt;&gt;&gt; np.round(spot.get_gnomonic(), 4)
         array([ 0.3137, -0.4409])
         &gt;&gt;&gt;
@@ -300,8 +302,10 @@ class Spot:
         raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
 
     def get_intensity(self):
-        &#34;&#34;&#34;
+        r&#34;&#34;&#34;
         ** Calcul l&#39;intensite de la tache. **
+
+        \[ intensity = \sum_{i \in bbox} pxl[i] - background[i] \]
 
         Returns
         -------
@@ -313,9 +317,9 @@ class Spot:
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; spot.get_intensity()
         814
         &gt;&gt;&gt;
@@ -326,8 +330,10 @@ class Spot:
         return self.intensity
 
     def get_position(self):
-        &#34;&#34;&#34;
+        r&#34;&#34;&#34;
         ** Calcul le centre d&#39;inertie de la tache. **
+
+        \[ position = \sum_{i, j \in bbox} (i, j) . \frac{pxl[i, j] - background[i, j]}{intensity} \]
 
         Returns
         -------
@@ -339,9 +345,9 @@ class Spot:
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; np.round(spot.get_position(), 4)
         array([1370.5172, 1874.7801])
         &gt;&gt;&gt;
@@ -362,24 +368,29 @@ class Spot:
         -------
         float
             * Une grandeur qui permet d&#39;estimer l&#39;intensite et la rondeur du spot.
-                - 0.1 =&gt; Tres moche, peu intense et tout disordu.
-                - 3 =&gt; Tres joli, intense et rond.
+                - 0.0 =&gt; Tres moche, peu intense et tout disordu.
+                - 1.0 =&gt; Tres joli, intense et rond.
 
         Examples
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; round(spot.get_quality(), 2)
-        0.34
+        0.57
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if self.quality is not None:
             return self.quality
 
-        self.quality = math.log(self.get_intensity()) / self.get_distortion()**18
+        cout_ref = 100_000
+        val_cout_ref = 0.95
+        distortion_weight = 0.667
+
+        a = -math.log(1-val_cout_ref) / cout_ref
+        self.quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
         return self.quality
 
     def get_twicetheta_chi(self):
@@ -414,7 +425,7 @@ class Spot:
         -------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; spot = diag.select_spots(n=1, sort=&#34;quality&#34;).pop()
         &gt;&gt;&gt; type(spot.find_zone_axes())
         &lt;class &#39;set&#39;&gt;
@@ -424,7 +435,7 @@ class Spot:
         &#34;&#34;&#34;
         if self.axes is not None:
             return self.axes
-        self.diagram.find_zone_axes()
+        self.diagram.find_zone_axes() # met automatiquement a jour self.axes.
         return self.axes
 
     def plot_gnomonic(self, axe_pyplot=None, *, display=True):
@@ -546,10 +557,9 @@ class Spot:
         &#34;&#34;&#34;
         ** Renvoie un representation evaluable de self. **
         &#34;&#34;&#34;
-        return (f&#34;Spot(bbox={(self.x, self.y, self.w, self.h)}, &#34;
-                # f&#34;spot_im={repr(self.spot_im)}, &#34; # On le met pas car c&#39;est tres moche...
-                f&#34;distortion={self.get_distortion():.4f})&#34;)
-                # il manque diagram=... mais fait des boucles infinies.
+        return (f&#34;Spot(&#34;
+                f&#34;position=({self.get_position()[0]:.2f}, {self.get_position()[1]:.2f}), &#34;
+                f&#34;quality={self.get_quality():.3f})&#34;)
 
     def __str__(self):
         &#34;&#34;&#34;
@@ -557,6 +567,7 @@ class Spot:
         &#34;&#34;&#34;
         x, y = self.get_position()
         return (&#34;Spot:\n&#34;
+                f&#34;\tbbox: {self.get_bbox()}\n&#34;
                 f&#34;\tposition: x={x}, y={y}\n&#34;
                 f&#34;\tintensity: {self.get_intensity()}\n&#34;
                 f&#34;\tdistortion: {self.get_distortion()}\n&#34;
@@ -582,7 +593,7 @@ class Spot:
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; spot1, spot2 = diag[:2]
         &gt;&gt;&gt; round(spot1 - spot2)
         94
@@ -647,7 +658,7 @@ la liste des distance qui separe ce spot unique a tous les autres.</li>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; from laue.spot import distance
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; spot1, spot2 = diag[:2]
 &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
 ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
@@ -705,7 +716,7 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; from laue.spot import distance
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; spot1, spot2 = diag[:2]
     &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
     ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
@@ -875,9 +886,9 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; spot.get_bbox()
         (1368, 1873, 6, 5)
         &gt;&gt;&gt;
@@ -888,23 +899,23 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         r&#34;&#34;&#34;
         ** Scalaire qui caracterise la rondeur de la tache. **
 
-        Il est defini comme:
-        \[ \frac{girth}{2 . \sqrt{\pi . area}} \]
+        \[ distortion = \frac{2 . \sqrt{\pi . area}}{girth} \]
 
         Returns
         -------
         float
-            1.0 =&gt; Tache bien ronde, &gt;&gt; 1 =&gt; Tache biscornue.
+            1.0 =&gt; Tache bien ronde
+            0.0 =&gt; Tache biscornue.
 
         Examples
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; round(spot.get_distortion(), 4)
-        1.1804
+        0.8472
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return self.distortion
@@ -923,9 +934,11 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
+        &gt;&gt;&gt; type(spot.get_gnomonic())
+        &lt;class &#39;tuple&#39;&gt;
         &gt;&gt;&gt; np.round(spot.get_gnomonic(), 4)
         array([ 0.3137, -0.4409])
         &gt;&gt;&gt;
@@ -950,8 +963,10 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
 
     def get_intensity(self):
-        &#34;&#34;&#34;
+        r&#34;&#34;&#34;
         ** Calcul l&#39;intensite de la tache. **
+
+        \[ intensity = \sum_{i \in bbox} pxl[i] - background[i] \]
 
         Returns
         -------
@@ -963,9 +978,9 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; spot.get_intensity()
         814
         &gt;&gt;&gt;
@@ -976,8 +991,10 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         return self.intensity
 
     def get_position(self):
-        &#34;&#34;&#34;
+        r&#34;&#34;&#34;
         ** Calcul le centre d&#39;inertie de la tache. **
+
+        \[ position = \sum_{i, j \in bbox} (i, j) . \frac{pxl[i, j] - background[i, j]}{intensity} \]
 
         Returns
         -------
@@ -989,9 +1006,9 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; np.round(spot.get_position(), 4)
         array([1370.5172, 1874.7801])
         &gt;&gt;&gt;
@@ -1012,24 +1029,29 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         -------
         float
             * Une grandeur qui permet d&#39;estimer l&#39;intensite et la rondeur du spot.
-                - 0.1 =&gt; Tres moche, peu intense et tout disordu.
-                - 3 =&gt; Tres joli, intense et rond.
+                - 0.0 =&gt; Tres moche, peu intense et tout disordu.
+                - 1.0 =&gt; Tres joli, intense et rond.
 
         Examples
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; round(spot.get_quality(), 2)
-        0.34
+        0.57
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if self.quality is not None:
             return self.quality
 
-        self.quality = math.log(self.get_intensity()) / self.get_distortion()**18
+        cout_ref = 100_000
+        val_cout_ref = 0.95
+        distortion_weight = 0.667
+
+        a = -math.log(1-val_cout_ref) / cout_ref
+        self.quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
         return self.quality
 
     def get_twicetheta_chi(self):
@@ -1064,7 +1086,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         -------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; spot = diag.select_spots(n=1, sort=&#34;quality&#34;).pop()
         &gt;&gt;&gt; type(spot.find_zone_axes())
         &lt;class &#39;set&#39;&gt;
@@ -1074,7 +1096,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &#34;&#34;&#34;
         if self.axes is not None:
             return self.axes
-        self.diagram.find_zone_axes()
+        self.diagram.find_zone_axes() # met automatiquement a jour self.axes.
         return self.axes
 
     def plot_gnomonic(self, axe_pyplot=None, *, display=True):
@@ -1196,10 +1218,9 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &#34;&#34;&#34;
         ** Renvoie un representation evaluable de self. **
         &#34;&#34;&#34;
-        return (f&#34;Spot(bbox={(self.x, self.y, self.w, self.h)}, &#34;
-                # f&#34;spot_im={repr(self.spot_im)}, &#34; # On le met pas car c&#39;est tres moche...
-                f&#34;distortion={self.get_distortion():.4f})&#34;)
-                # il manque diagram=... mais fait des boucles infinies.
+        return (f&#34;Spot(&#34;
+                f&#34;position=({self.get_position()[0]:.2f}, {self.get_position()[1]:.2f}), &#34;
+                f&#34;quality={self.get_quality():.3f})&#34;)
 
     def __str__(self):
         &#34;&#34;&#34;
@@ -1207,6 +1228,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &#34;&#34;&#34;
         x, y = self.get_position()
         return (&#34;Spot:\n&#34;
+                f&#34;\tbbox: {self.get_bbox()}\n&#34;
                 f&#34;\tposition: x={x}, y={y}\n&#34;
                 f&#34;\tintensity: {self.get_intensity()}\n&#34;
                 f&#34;\tdistortion: {self.get_distortion()}\n&#34;
@@ -1232,7 +1254,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; spot1, spot2 = diag[:2]
         &gt;&gt;&gt; round(spot1 - spot2)
         94
@@ -1288,7 +1310,7 @@ des distances avec <code>np.meshgrid</code>.</li>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; spot1, spot2 = diag[:2]
 &gt;&gt;&gt; round(spot1 - spot2)
 94
@@ -1318,7 +1340,7 @@ des distances avec <code>np.meshgrid</code>.</li>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image)))
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; spot1, spot2 = diag[:2]
     &gt;&gt;&gt; round(spot1 - spot2)
     94
@@ -1344,7 +1366,7 @@ l'ensemble contiendra plusieurs elements.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; spot = diag.select_spots(n=1, sort=&quot;quality&quot;).pop()
 &gt;&gt;&gt; type(spot.find_zone_axes())
 &lt;class 'set'&gt;
@@ -1373,7 +1395,7 @@ l'ensemble contiendra plusieurs elements.</dd>
     -------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; spot = diag.select_spots(n=1, sort=&#34;quality&#34;).pop()
     &gt;&gt;&gt; type(spot.find_zone_axes())
     &lt;class &#39;set&#39;&gt;
@@ -1383,7 +1405,7 @@ l'ensemble contiendra plusieurs elements.</dd>
     &#34;&#34;&#34;
     if self.axes is not None:
         return self.axes
-    self.diagram.find_zone_axes()
+    self.diagram.find_zone_axes() # met automatiquement a jour self.axes.
     return self.axes</code></pre>
 </details>
 </dd>
@@ -1401,9 +1423,9 @@ l'ensemble contiendra plusieurs elements.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+&gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
-Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+Spot(position=(1370.52, 1874.78), quality=0.573)
 &gt;&gt;&gt; spot.get_bbox()
 (1368, 1873, 6, 5)
 &gt;&gt;&gt;
@@ -1427,9 +1449,9 @@ Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+    &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
     &gt;&gt;&gt; spot
-    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    Spot(position=(1370.52, 1874.78), quality=0.573)
     &gt;&gt;&gt; spot.get_bbox()
     (1368, 1873, 6, 5)
     &gt;&gt;&gt;
@@ -1442,21 +1464,21 @@ Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Scalaire qui caracterise la rondeur de la tache. </strong></p>
-<p>Il est defini comme:
-<span><span class="MathJax_Preview"> \frac{girth}{2 . \sqrt{\pi . area}} </span><script type="math/tex; mode=display"> \frac{girth}{2 . \sqrt{\pi . area}} </script></span></p>
+<p><span><span class="MathJax_Preview"> distortion = \frac{2 . \sqrt{\pi . area}}{girth} </span><script type="math/tex; mode=display"> distortion = \frac{2 . \sqrt{\pi . area}}{girth} </script></span></p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>float</code></dt>
-<dd>1.0 =&gt; Tache bien ronde, &gt;&gt; 1 =&gt; Tache biscornue.</dd>
+<dd>1.0 =&gt; Tache bien ronde
+0.0 =&gt; Tache biscornue.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+&gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
-Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+Spot(position=(1370.52, 1874.78), quality=0.573)
 &gt;&gt;&gt; round(spot.get_distortion(), 4)
-1.1804
+0.8472
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1467,23 +1489,23 @@ Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
     r&#34;&#34;&#34;
     ** Scalaire qui caracterise la rondeur de la tache. **
 
-    Il est defini comme:
-    \[ \frac{girth}{2 . \sqrt{\pi . area}} \]
+    \[ distortion = \frac{2 . \sqrt{\pi . area}}{girth} \]
 
     Returns
     -------
     float
-        1.0 =&gt; Tache bien ronde, &gt;&gt; 1 =&gt; Tache biscornue.
+        1.0 =&gt; Tache bien ronde
+        0.0 =&gt; Tache biscornue.
 
     Examples
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+    &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
     &gt;&gt;&gt; spot
-    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    Spot(position=(1370.52, 1874.78), quality=0.573)
     &gt;&gt;&gt; round(spot.get_distortion(), 4)
-    1.1804
+    0.8472
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     return self.distortion</code></pre>
@@ -1503,9 +1525,11 @@ Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; spot = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))[0]
+&gt;&gt;&gt; spot = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0][0]
 &gt;&gt;&gt; spot
-Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+Spot(position=(1370.52, 1874.78), quality=0.573)
+&gt;&gt;&gt; type(spot.get_gnomonic())
+&lt;class 'tuple'&gt;
 &gt;&gt;&gt; np.round(spot.get_gnomonic(), 4)
 array([ 0.3137, -0.4409])
 &gt;&gt;&gt;
@@ -1528,9 +1552,11 @@ array([ 0.3137, -0.4409])
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))[0]
+    &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0][0]
     &gt;&gt;&gt; spot
-    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    Spot(position=(1370.52, 1874.78), quality=0.573)
+    &gt;&gt;&gt; type(spot.get_gnomonic())
+    &lt;class &#39;tuple&#39;&gt;
     &gt;&gt;&gt; np.round(spot.get_gnomonic(), 4)
     array([ 0.3137, -0.4409])
     &gt;&gt;&gt;
@@ -1575,6 +1601,7 @@ array([ 0.3137, -0.4409])
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Calcul l'intensite de la tache. </strong></p>
+<p><span><span class="MathJax_Preview"> intensity = \sum_{i \in bbox} pxl[i] - background[i] </span><script type="math/tex; mode=display"> intensity = \sum_{i \in bbox} pxl[i] - background[i] </script></span></p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>int</code></dt>
@@ -1584,9 +1611,9 @@ Seules les valeurs au dessus du fond diffus sont considerees.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+&gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
-Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+Spot(position=(1370.52, 1874.78), quality=0.573)
 &gt;&gt;&gt; spot.get_intensity()
 814
 &gt;&gt;&gt;
@@ -1596,8 +1623,10 @@ Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_intensity(self):
-    &#34;&#34;&#34;
+    r&#34;&#34;&#34;
     ** Calcul l&#39;intensite de la tache. **
+
+    \[ intensity = \sum_{i \in bbox} pxl[i] - background[i] \]
 
     Returns
     -------
@@ -1609,9 +1638,9 @@ Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+    &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
     &gt;&gt;&gt; spot
-    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    Spot(position=(1370.52, 1874.78), quality=0.573)
     &gt;&gt;&gt; spot.get_intensity()
     814
     &gt;&gt;&gt;
@@ -1627,6 +1656,7 @@ Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Calcul le centre d'inertie de la tache. </strong></p>
+<p><span><span class="MathJax_Preview"> position = \sum_{i, j \in bbox} (i, j) . \frac{pxl[i, j] - background[i, j]}{intensity} </span><script type="math/tex; mode=display"> position = \sum_{i, j \in bbox} (i, j) . \frac{pxl[i, j] - background[i, j]}{intensity} </script></span></p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>tuple</code></dt>
@@ -1636,9 +1666,9 @@ Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+&gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
-Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+Spot(position=(1370.52, 1874.78), quality=0.573)
 &gt;&gt;&gt; np.round(spot.get_position(), 4)
 array([1370.5172, 1874.7801])
 &gt;&gt;&gt;
@@ -1648,8 +1678,10 @@ array([1370.5172, 1874.7801])
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_position(self):
-    &#34;&#34;&#34;
+    r&#34;&#34;&#34;
     ** Calcul le centre d&#39;inertie de la tache. **
+
+    \[ position = \sum_{i, j \in bbox} (i, j) . \frac{pxl[i, j] - background[i, j]}{intensity} \]
 
     Returns
     -------
@@ -1661,9 +1693,9 @@ array([1370.5172, 1874.7801])
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+    &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
     &gt;&gt;&gt; spot
-    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    Spot(position=(1370.52, 1874.78), quality=0.573)
     &gt;&gt;&gt; np.round(spot.get_position(), 4)
     array([1370.5172, 1874.7801])
     &gt;&gt;&gt;
@@ -1688,8 +1720,8 @@ array([1370.5172, 1874.7801])
 <dd>
 <ul>
 <li>Une grandeur qui permet d'estimer l'intensite et la rondeur du spot.<ul>
-<li>0.1 =&gt; Tres moche, peu intense et tout disordu.</li>
-<li>3 =&gt; Tres joli, intense et rond.</li>
+<li>0.0 =&gt; Tres moche, peu intense et tout disordu.</li>
+<li>1.0 =&gt; Tres joli, intense et rond.</li>
 </ul>
 </li>
 </ul>
@@ -1698,11 +1730,11 @@ array([1370.5172, 1874.7801])
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+&gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
-Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+Spot(position=(1370.52, 1874.78), quality=0.573)
 &gt;&gt;&gt; round(spot.get_quality(), 2)
-0.34
+0.57
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1717,24 +1749,29 @@ Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
     -------
     float
         * Une grandeur qui permet d&#39;estimer l&#39;intensite et la rondeur du spot.
-            - 0.1 =&gt; Tres moche, peu intense et tout disordu.
-            - 3 =&gt; Tres joli, intense et rond.
+            - 0.0 =&gt; Tres moche, peu intense et tout disordu.
+            - 1.0 =&gt; Tres joli, intense et rond.
 
     Examples
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; spot = next(iter(laue.Experiment(image)))[0]
+    &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
     &gt;&gt;&gt; spot
-    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    Spot(position=(1370.52, 1874.78), quality=0.573)
     &gt;&gt;&gt; round(spot.get_quality(), 2)
-    0.34
+    0.57
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     if self.quality is not None:
         return self.quality
 
-    self.quality = math.log(self.get_intensity()) / self.get_distortion()**18
+    cout_ref = 100_000
+    val_cout_ref = 0.95
+    distortion_weight = 0.667
+
+    a = -math.log(1-val_cout_ref) / cout_ref
+    self.quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
     return self.quality</code></pre>
 </details>
 </dd>

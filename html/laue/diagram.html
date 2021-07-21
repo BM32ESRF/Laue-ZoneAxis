@@ -326,9 +326,9 @@ class LaueDiagram(Splitable):
             associe un flotant. Les spots ayant des petits flottant se retrouveront
             au debut, ceux avec un gros seront en fin de chaine.
             - str =&gt; La methode de tri. Il y en a plusieurs possibles:
-                - &#34;intensity&#34; =&gt; Les spots sont renvoyes par intensite decroissante.
-                - &#34;distortion&#34; =&gt; Les spots sont renvoyes par distortion croissante.
-                - &#34;quality&#34; =&gt; Les spots sont renvoyes par qualite decroissante.
+                - &#34;intensity&#34; =&gt; Les spots sont renvoyes des plus intenses aux plus faibles.
+                - &#34;distortion&#34; =&gt; Les spots sont renvoyes des plus rond aux plus biscornus.
+                - &#34;quality&#34; =&gt; Les spots sont renvoyes des plus beau aux plus moches.
 
         Returns
         -------
@@ -341,11 +341,11 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;intensity&#34;)
-        [Spot(bbox=(617, 1651, 11, 13), distortion=1.0760), Spot(bbox=(928, 1210, 10, 11), distortion=1.0673)]
+        [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;distortion&#34;)
-        [Spot(bbox=(928, 1210, 10, 11), distortion=1.0673), Spot(bbox=(617, 1651, 11, 13), distortion=1.0760)]
+        [Spot(position=(932.05, 1214.49), quality=0.940), Spot(position=(622.09, 1656.72), quality=0.949)]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=lambda spot: spot.get_position()[0])
-        [Spot(bbox=(130, 1202, 5, 6), distortion=1.1804), Spot(bbox=(157, 905, 7, 6), distortion=1.1342)]
+        [Spot(position=(132.03, 1204.66), quality=0.577), Spot(position=(160.35, 907.21), quality=0.621)]
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert n is None or isinstance(n, int), f&#34;&#39;n&#39; can not be {type(n).__name__}.&#34;
@@ -367,7 +367,7 @@ class LaueDiagram(Splitable):
             if sort == &#34;intensity&#34;:
                 l_spots = sorted(self.spots, key=(lambda spot: -spot.get_intensity()))
             elif sort == &#34;distortion&#34;:
-                l_spots = sorted(self.spots, key=(lambda spot: spot.get_distortion()))
+                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_distortion()))
             elif sort == &#34;quality&#34;:
                 l_spots = sorted(self.spots, key=(lambda spot: -spot.get_quality()))
             self.sorted_spots[sort] = l_spots
@@ -470,10 +470,10 @@ class LaueDiagram(Splitable):
         -------
         quality : float
             * Un scalaire qui permet de juger de la purete du diagramme:
-            * &lt; 1 =&gt; diagramme tres moche, illisible a l&#39;oeil.
-            * &lt; 2 =&gt; diagramme pas bien joli.
-            * &lt; 3 =&gt; diagramme bien joli, avec de belles taches.
-            * \&gt; 3 =&gt; diagramme super joli, bien epure avec des taches rondes et intenses.
+            * 0.0 =&gt; diagramme tres moche, illisible a l&#39;oeil.
+            * 0.2 =&gt; diagramme pas bien joli.
+            * 0.8 =&gt; diagramme bien joli, avec de belles taches.
+            * 1.0 =&gt; diagramme super joli, bien epure avec des taches rondes et intenses.
 
         Examples
         --------
@@ -481,10 +481,17 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; print(f&#34;quality: {diag.get_quality():.4f}&#34;)
-        quality: 1.2752
+        quality: 0.8344
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         def f_nbr(x, n_best_min, n_best_max):
+            &#34;&#34;&#34;
+            f(x=0) = 0
+            f(x=n_best_min) = 1
+            f(x=n_best_max) = 1
+            f(x=2*n_best_max) = 1/2
+            f(x=oo) = 0
+            &#34;&#34;&#34;
             if x &lt; n_best_min:
                 return x / n_best_min
             if n_best_min &lt;= x &lt; n_best_max:
@@ -494,8 +501,9 @@ class LaueDiagram(Splitable):
         if self.quality is not None:
             return self.quality
 
-        spot_quality = np.mean([spot.get_quality() for spot in self])
-        self.quality = f_nbr(len(self), 60, 120) * spot_quality
+        spot_qual_weight = 0.5
+
+        self.quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
         return self.quality
 
     def find_subsets(self, *args, **kwargs):
@@ -770,7 +778,7 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt;
         &gt;&gt;&gt; spot = diag[0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; spot in diag
         True
         &gt;&gt;&gt; 
@@ -1311,9 +1319,9 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             associe un flotant. Les spots ayant des petits flottant se retrouveront
             au debut, ceux avec un gros seront en fin de chaine.
             - str =&gt; La methode de tri. Il y en a plusieurs possibles:
-                - &#34;intensity&#34; =&gt; Les spots sont renvoyes par intensite decroissante.
-                - &#34;distortion&#34; =&gt; Les spots sont renvoyes par distortion croissante.
-                - &#34;quality&#34; =&gt; Les spots sont renvoyes par qualite decroissante.
+                - &#34;intensity&#34; =&gt; Les spots sont renvoyes des plus intenses aux plus faibles.
+                - &#34;distortion&#34; =&gt; Les spots sont renvoyes des plus rond aux plus biscornus.
+                - &#34;quality&#34; =&gt; Les spots sont renvoyes des plus beau aux plus moches.
 
         Returns
         -------
@@ -1326,11 +1334,11 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;intensity&#34;)
-        [Spot(bbox=(617, 1651, 11, 13), distortion=1.0760), Spot(bbox=(928, 1210, 10, 11), distortion=1.0673)]
+        [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;distortion&#34;)
-        [Spot(bbox=(928, 1210, 10, 11), distortion=1.0673), Spot(bbox=(617, 1651, 11, 13), distortion=1.0760)]
+        [Spot(position=(932.05, 1214.49), quality=0.940), Spot(position=(622.09, 1656.72), quality=0.949)]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=lambda spot: spot.get_position()[0])
-        [Spot(bbox=(130, 1202, 5, 6), distortion=1.1804), Spot(bbox=(157, 905, 7, 6), distortion=1.1342)]
+        [Spot(position=(132.03, 1204.66), quality=0.577), Spot(position=(160.35, 907.21), quality=0.621)]
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert n is None or isinstance(n, int), f&#34;&#39;n&#39; can not be {type(n).__name__}.&#34;
@@ -1352,7 +1360,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             if sort == &#34;intensity&#34;:
                 l_spots = sorted(self.spots, key=(lambda spot: -spot.get_intensity()))
             elif sort == &#34;distortion&#34;:
-                l_spots = sorted(self.spots, key=(lambda spot: spot.get_distortion()))
+                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_distortion()))
             elif sort == &#34;quality&#34;:
                 l_spots = sorted(self.spots, key=(lambda spot: -spot.get_quality()))
             self.sorted_spots[sort] = l_spots
@@ -1455,10 +1463,10 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         -------
         quality : float
             * Un scalaire qui permet de juger de la purete du diagramme:
-            * &lt; 1 =&gt; diagramme tres moche, illisible a l&#39;oeil.
-            * &lt; 2 =&gt; diagramme pas bien joli.
-            * &lt; 3 =&gt; diagramme bien joli, avec de belles taches.
-            * \&gt; 3 =&gt; diagramme super joli, bien epure avec des taches rondes et intenses.
+            * 0.0 =&gt; diagramme tres moche, illisible a l&#39;oeil.
+            * 0.2 =&gt; diagramme pas bien joli.
+            * 0.8 =&gt; diagramme bien joli, avec de belles taches.
+            * 1.0 =&gt; diagramme super joli, bien epure avec des taches rondes et intenses.
 
         Examples
         --------
@@ -1466,10 +1474,17 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; print(f&#34;quality: {diag.get_quality():.4f}&#34;)
-        quality: 1.2752
+        quality: 0.8344
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         def f_nbr(x, n_best_min, n_best_max):
+            &#34;&#34;&#34;
+            f(x=0) = 0
+            f(x=n_best_min) = 1
+            f(x=n_best_max) = 1
+            f(x=2*n_best_max) = 1/2
+            f(x=oo) = 0
+            &#34;&#34;&#34;
             if x &lt; n_best_min:
                 return x / n_best_min
             if n_best_min &lt;= x &lt; n_best_max:
@@ -1479,8 +1494,9 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         if self.quality is not None:
             return self.quality
 
-        spot_quality = np.mean([spot.get_quality() for spot in self])
-        self.quality = f_nbr(len(self), 60, 120) * spot_quality
+        spot_qual_weight = 0.5
+
+        self.quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
         return self.quality
 
     def find_subsets(self, *args, **kwargs):
@@ -1755,7 +1771,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt;
         &gt;&gt;&gt; spot = diag[0]
         &gt;&gt;&gt; spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; spot in diag
         True
         &gt;&gt;&gt; 
@@ -2029,7 +2045,7 @@ False
 &gt;&gt;&gt;
 &gt;&gt;&gt; spot = diag[0]
 &gt;&gt;&gt; spot
-Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+Spot(position=(1370.52, 1874.78), quality=0.573)
 &gt;&gt;&gt; spot in diag
 True
 &gt;&gt;&gt;
@@ -2068,7 +2084,7 @@ True
     &gt;&gt;&gt;
     &gt;&gt;&gt; spot = diag[0]
     &gt;&gt;&gt; spot
-    Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+    Spot(position=(1370.52, 1874.78), quality=0.573)
     &gt;&gt;&gt; spot in diag
     True
     &gt;&gt;&gt; 
@@ -2988,10 +3004,10 @@ array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
 <dd>
 <ul>
 <li>Un scalaire qui permet de juger de la purete du diagramme:</li>
-<li>&lt; 1 =&gt; diagramme tres moche, illisible a l'oeil.</li>
-<li>&lt; 2 =&gt; diagramme pas bien joli.</li>
-<li>&lt; 3 =&gt; diagramme bien joli, avec de belles taches.</li>
-<li>> 3 =&gt; diagramme super joli, bien epure avec des taches rondes et intenses.</li>
+<li>0.0 =&gt; diagramme tres moche, illisible a l'oeil.</li>
+<li>0.2 =&gt; diagramme pas bien joli.</li>
+<li>0.8 =&gt; diagramme bien joli, avec de belles taches.</li>
+<li>1.0 =&gt; diagramme super joli, bien epure avec des taches rondes et intenses.</li>
 </ul>
 </dd>
 </dl>
@@ -3000,7 +3016,7 @@ array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; print(f&quot;quality: {diag.get_quality():.4f}&quot;)
-quality: 1.2752
+quality: 0.8344
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -3015,10 +3031,10 @@ quality: 1.2752
     -------
     quality : float
         * Un scalaire qui permet de juger de la purete du diagramme:
-        * &lt; 1 =&gt; diagramme tres moche, illisible a l&#39;oeil.
-        * &lt; 2 =&gt; diagramme pas bien joli.
-        * &lt; 3 =&gt; diagramme bien joli, avec de belles taches.
-        * \&gt; 3 =&gt; diagramme super joli, bien epure avec des taches rondes et intenses.
+        * 0.0 =&gt; diagramme tres moche, illisible a l&#39;oeil.
+        * 0.2 =&gt; diagramme pas bien joli.
+        * 0.8 =&gt; diagramme bien joli, avec de belles taches.
+        * 1.0 =&gt; diagramme super joli, bien epure avec des taches rondes et intenses.
 
     Examples
     --------
@@ -3026,10 +3042,17 @@ quality: 1.2752
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; print(f&#34;quality: {diag.get_quality():.4f}&#34;)
-    quality: 1.2752
+    quality: 0.8344
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     def f_nbr(x, n_best_min, n_best_max):
+        &#34;&#34;&#34;
+        f(x=0) = 0
+        f(x=n_best_min) = 1
+        f(x=n_best_max) = 1
+        f(x=2*n_best_max) = 1/2
+        f(x=oo) = 0
+        &#34;&#34;&#34;
         if x &lt; n_best_min:
             return x / n_best_min
         if n_best_min &lt;= x &lt; n_best_max:
@@ -3039,8 +3062,9 @@ quality: 1.2752
     if self.quality is not None:
         return self.quality
 
-    spot_quality = np.mean([spot.get_quality() for spot in self])
-    self.quality = f_nbr(len(self), 60, 120) * spot_quality
+    spot_qual_weight = 0.5
+
+    self.quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
     return self.quality</code></pre>
 </details>
 </dd>
@@ -3409,9 +3433,9 @@ un ordre quelquonque mais systematique. L'ordre reste inchange entre 2 appels.</
 associe un flotant. Les spots ayant des petits flottant se retrouveront
 au debut, ceux avec un gros seront en fin de chaine.</li>
 <li>str =&gt; La methode de tri. Il y en a plusieurs possibles:<ul>
-<li>"intensity" =&gt; Les spots sont renvoyes par intensite decroissante.</li>
-<li>"distortion" =&gt; Les spots sont renvoyes par distortion croissante.</li>
-<li>"quality" =&gt; Les spots sont renvoyes par qualite decroissante.</li>
+<li>"intensity" =&gt; Les spots sont renvoyes des plus intenses aux plus faibles.</li>
+<li>"distortion" =&gt; Les spots sont renvoyes des plus rond aux plus biscornus.</li>
+<li>"quality" =&gt; Les spots sont renvoyes des plus beau aux plus moches.</li>
 </ul>
 </li>
 </ul>
@@ -3427,11 +3451,11 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.select_spots(n=2, sort=&quot;intensity&quot;)
-[Spot(bbox=(617, 1651, 11, 13), distortion=1.0760), Spot(bbox=(928, 1210, 10, 11), distortion=1.0673)]
+[Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
 &gt;&gt;&gt; diag.select_spots(n=2, sort=&quot;distortion&quot;)
-[Spot(bbox=(928, 1210, 10, 11), distortion=1.0673), Spot(bbox=(617, 1651, 11, 13), distortion=1.0760)]
+[Spot(position=(932.05, 1214.49), quality=0.940), Spot(position=(622.09, 1656.72), quality=0.949)]
 &gt;&gt;&gt; diag.select_spots(n=2, sort=lambda spot: spot.get_position()[0])
-[Spot(bbox=(130, 1202, 5, 6), distortion=1.1804), Spot(bbox=(157, 905, 7, 6), distortion=1.1342)]
+[Spot(position=(132.03, 1204.66), quality=0.577), Spot(position=(160.35, 907.21), quality=0.621)]
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -3461,9 +3485,9 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
         associe un flotant. Les spots ayant des petits flottant se retrouveront
         au debut, ceux avec un gros seront en fin de chaine.
         - str =&gt; La methode de tri. Il y en a plusieurs possibles:
-            - &#34;intensity&#34; =&gt; Les spots sont renvoyes par intensite decroissante.
-            - &#34;distortion&#34; =&gt; Les spots sont renvoyes par distortion croissante.
-            - &#34;quality&#34; =&gt; Les spots sont renvoyes par qualite decroissante.
+            - &#34;intensity&#34; =&gt; Les spots sont renvoyes des plus intenses aux plus faibles.
+            - &#34;distortion&#34; =&gt; Les spots sont renvoyes des plus rond aux plus biscornus.
+            - &#34;quality&#34; =&gt; Les spots sont renvoyes des plus beau aux plus moches.
 
     Returns
     -------
@@ -3476,11 +3500,11 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;intensity&#34;)
-    [Spot(bbox=(617, 1651, 11, 13), distortion=1.0760), Spot(bbox=(928, 1210, 10, 11), distortion=1.0673)]
+    [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
     &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;distortion&#34;)
-    [Spot(bbox=(928, 1210, 10, 11), distortion=1.0673), Spot(bbox=(617, 1651, 11, 13), distortion=1.0760)]
+    [Spot(position=(932.05, 1214.49), quality=0.940), Spot(position=(622.09, 1656.72), quality=0.949)]
     &gt;&gt;&gt; diag.select_spots(n=2, sort=lambda spot: spot.get_position()[0])
-    [Spot(bbox=(130, 1202, 5, 6), distortion=1.1804), Spot(bbox=(157, 905, 7, 6), distortion=1.1342)]
+    [Spot(position=(132.03, 1204.66), quality=0.577), Spot(position=(160.35, 907.21), quality=0.621)]
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     assert n is None or isinstance(n, int), f&#34;&#39;n&#39; can not be {type(n).__name__}.&#34;
@@ -3502,7 +3526,7 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
         if sort == &#34;intensity&#34;:
             l_spots = sorted(self.spots, key=(lambda spot: -spot.get_intensity()))
         elif sort == &#34;distortion&#34;:
-            l_spots = sorted(self.spots, key=(lambda spot: spot.get_distortion()))
+            l_spots = sorted(self.spots, key=(lambda spot: -spot.get_distortion()))
         elif sort == &#34;quality&#34;:
             l_spots = sorted(self.spots, key=(lambda spot: -spot.get_quality()))
         self.sorted_spots[sort] = l_spots
