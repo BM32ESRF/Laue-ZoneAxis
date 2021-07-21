@@ -170,7 +170,7 @@ class Experiment:
         Parameters
         ----------
         *diagrams : optional
-            Les ou le diagramme.s qui vont servir a faire la set_calibration.
+            Les ou le diagramme.s qui vont servir a faire la calibration.
             Si aucun diagramme n'est precise, cette methode recherche par elle meme
             les diagrammes qu'elle trouve convaincant parmis ceux qui sont disponibles.
             Il doivent etre de type ``laue.diagram.LaueDiagram``.
@@ -319,46 +319,44 @@ class Experiment:
         
         # Recherche rapide d'un minimum par descente de gradient.
         from scipy import optimize # On ne l'importe que ici car on est pas sur de s'en servir.
-        if self.verbose >= 2:
-            print("\tDescente de gradient...")
-        opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle 'compile' des equations.
-            self._calibration_cost,
-            x0=[initial_parameters[name] for name in vect_labels],
-            args=args, # On donne les arguments et on paralelise.
-            bounds=bounds,
-            options={"disp": self.verbose >= 3})
-        if opt_res["fun"] > 0.01: # Si ca a mal converge.
-            if self.verbose >= 2:
-                print(f"\t\tEchec: cout final = {opt_res['fun']}")
+        # if self.verbose >= 2:
+        #     print("\tDescente de gradient...")
+        # opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle 'compile' des equations.
+        #     self._calibration_cost,
+        #     x0=[initial_parameters[name] for name in vect_labels],
+        #     args=args, # On donne les arguments et on paralelise.
+        #     bounds=bounds,
+        #     options={"disp": self.verbose >= 3})
+        # if opt_res["fun"] > 0.01: # Si ca a mal converge.
+        #     if self.verbose >= 2:
+        #         print(f"\t\tEchec: cout final = {opt_res['fun']}")
             # Recherche d'un bon minimum global
-            if self.verbose >= 2:
-                print("\tOptimsation globale, algo genetique...")
-            
-            if multiprocessing.current_process().name == "MainProcess":
-                attrs = ["transformer", "verbose"]
-                self_bis = collections.namedtuple("PartialExperiment", attrs, defaults=[getattr(self, attr) for attr in attrs])()
-                opt_res = optimize.differential_evolution(
-                    # self._calibration_cost,
-                    _Picklable(cloudpickle.dumps(self_bis), Experiment._calibration_cost,
-                        {name: val for name, val in zip(("known_params", "vect_labels", "spots_position"), args)}
-                        ),
-                    updating="deferred",
-                    bounds=bounds,
-                    # args=args,
-                    disp=self.verbose >= 3, # Pour rendre la fonction verbeuse.
-                    polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
-                    popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
-                    workers=-1) # Pour utiliser tous les cpus.
-            else:
-                opt_res = optimize.differential_evolution(
-                    self._calibration_cost,
-                    bounds=bounds,
-                    args=args,
-                    disp=self.verbose >= 3, # Pour rendre la fonction verbeuse.
-                    polish=True, # Pour utiliser scipy.optimize.minimize a la fin.
-                    popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
-                    workers=1) # Pour ne pas creer de sous processus.
-                    # C'est plus rapide de ne pas creer de sous processus que d'en faire... car cloudpickle est lent!
+        if self.verbose >= 2:
+            print("\tOptimsation globale, algo genetique...")
+        
+        if multiprocessing.current_process().name == "MainProcess":
+            attrs = ["transformer", "verbose"]
+            self_bis = collections.namedtuple("PartialExperiment", attrs, defaults=[getattr(self, attr) for attr in attrs])()
+            opt_res = optimize.differential_evolution(
+                _Picklable(cloudpickle.dumps(self_bis), Experiment._calibration_cost,
+                    {name: val for name, val in zip(("known_params", "vect_labels", "spots_position"), args)}
+                    ),
+                updating="deferred",
+                bounds=bounds,
+                disp=self.verbose >= 3, # Pour rendre la fonction verbeuse.
+                polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
+                popsize=15, # On garde la taille de la population par defaut.
+                workers=-1) # Pour utiliser tous les cpus.
+        else:
+            opt_res = optimize.differential_evolution(
+                self._calibration_cost,
+                bounds=bounds,
+                args=args,
+                disp=self.verbose >= 3, # Pour rendre la fonction verbeuse.
+                polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
+                popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
+                workers=1) # Pour ne pas creer de sous processus.
+                # C'est plus rapide de ne pas creer de sous processus que d'en faire... car cloudpickle est lent!
         if self.verbose >= 2:
             print(f"\t\tOk: cout final = {opt_res['fun']}")
         fit_parameters_vect = opt_res["x"]
@@ -594,9 +592,9 @@ class Experiment:
             bbox = [cv2.boundingRect(outl) for outl in outlines]
 
             # Calcul des distortions.
-            distortions_open = np.array([
+            distortions_open = (2*np.sqrt(np.pi)) / np.array([
                 cv2.arcLength(outl, True)/np.sqrt(cv2.contourArea(outl))
-                for outl in outlines]) / (2*np.sqrt(np.pi))
+                for outl in outlines])
 
             # Preparations des arguments des spot.
             spot_args = [((x, y, w, h), fg_image[y:y+h, x:x+w], dis)
@@ -622,40 +620,53 @@ class Experiment:
 
         return laue_diagram
 
-    def find_zone_axes(self, tense_flow=True, **constraints):
+    def find_zone_axes(self, *, tense_flow=False, **kwds):
         """
         ** Recherche l'ensemble des axes de zones. **
-
-        Returns a zone axis iterator.
 
         Notes
         -----
         * Le resultat est le meme que ``(diag.find_zone_axes() for diag in self)``
-            Sauf qu'il y a de la parallelisation en plus.
+            sauf qu'il y a de la parallelisation en plus.
         * Il est possible d'appeler plusieur fois cette methode en parallele.
         * Les sections critiques sont verouillees donc cette methode supporte le multithread.
 
         Parameters
         ----------
-        **constraints : number
+        tense_flow : boolean
+            * True : Permet de travailler a flux tendu, c'est a dire
+            de ceder les axes des diagrammes au fur a meusure qu'ils sont trouves.
+                * Le generateur termine quand toutes les images sont lues ou
+                que le generateur d'images leve un ``StopIteration``.
+                * A chaque nouvel appel de cette methode, l'iteration
+                recommence a partir du debut et l'ordre reste inchange.
+                * Equivalent a ``(diag.find_zone_axes() for diag in self)``.
+            * False. Sinon, attend que tous les diagrammes soient lues afin de tout renvoyer en meme temps.
+                * C'est equvalent a ``[diag.find_zone_axes() for diag in self]``.
+                * Au lieu de retourner un generateur, retourne une liste.
+        **kwds : number
             Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
 
-        Yields
-        ------
+        Returns
+        -------
         list
             Pour chaque diagramme de cette experience, cede la liste
             des axes de zones du diagramme. Les elements de l'ensemble
             sont de type ``laue.zone_axis.ZoneAxis``.
 
-        Example
-        -------
+        Examples
+        --------
         >>> import laue
         >>> images = "laue/examples/*.mccd"
         >>> experiment = laue.Experiment(images, config_file="laue/examples/ge_blanc.det")
         >>>
-        >>> type(next(iter(experiment.find_zone_axes())))
+        >>> type(experiment.find_zone_axes())
         <class 'list'>
-        >>> type(next(iter(experiment.find_zone_axes())).pop())
+        >>> type(experiment.find_zone_axes(tense_flow=True))
+        <class 'generator'>
+        >>> type(next(iter(experiment.find_zone_axes(tense_flow=True))))
+        <class 'list'>
+        >>> type(next(iter(experiment.find_zone_axes(tense_flow=True))).pop())
         <class 'laue.zone_axis.ZoneAxis'>
         >>>
         """
@@ -700,7 +711,7 @@ class Experiment:
                             limited_imap(pool,
                                 _get_zone_axes_pickle,
                                 ( # transformer, gnomonics, dmax, nbr, tol
-                                    (transformer_ser, *diag.find_zone_axes(**constraints, _get_args=True))
+                                    (transformer_ser, *diag.find_zone_axes(**kwds, _get_args=True))
                                     for diag in self
                                 )
                             )
@@ -709,6 +720,9 @@ class Experiment:
 
             else:
                 yield from (diag.find_zone_axes() for diag in self)
+
+        if not tense_flow:
+            return list(self.find_zone_axes(tense_flow=True, **kwds))
 
         if self._axes_iterator is None:
             self._axes_iterator = iter(_axes_extractor(self))
@@ -773,7 +787,7 @@ class Experiment:
         """
         ** Estime la moyenne des images. **
 
-        Cela permet d'avoir une estimation du fond difus.
+        Cela permet d'avoir une estimation du fond diffus.
 
         Notes
         -----

@@ -452,6 +452,13 @@ class LaueDiagram(Splitable):
         >>>
         """
         def f_nbr(x, n_best_min, n_best_max):
+            """
+            f(x=0) = 0
+            f(x=n_best_min) = 1
+            f(x=n_best_max) = 1
+            f(x=2*n_best_max) = 1/2
+            f(x=oo) = 0
+            """
             if x < n_best_min:
                 return x / n_best_min
             if n_best_min <= x < n_best_max:
@@ -461,8 +468,7 @@ class LaueDiagram(Splitable):
         if self.quality is not None:
             return self.quality
 
-        spot_quality = np.mean([spot.get_quality() for spot in self])
-        self.quality = f_nbr(len(self), 60, 120) * spot_quality
+        self.quality = f_nbr(len(self), 60, 120) * np.mean([spot.get_quality() for spot in self])
         return self.quality
 
     def find_subsets(self, *args, **kwargs):
@@ -737,7 +743,7 @@ class LaueDiagram(Splitable):
         >>>
         >>> spot = diag[0]
         >>> spot
-        Spot(bbox=(1368, 1873, 6, 5), distortion=1.1804)
+        Spot(bbox=(1368, 1873, 6, 5), position=(1370.5172, 1874.7801), quality=0.5731)
         >>> spot in diag
         True
         >>> 

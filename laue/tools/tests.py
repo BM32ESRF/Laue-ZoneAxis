@@ -84,13 +84,13 @@ def test_find_zone_axis():
         experiment = Experiment(images=images, **parameters)
 
         t1 = time.time()
-        all_axes1 = [axes for axes in experiment.find_zone_axes()]
+        all_axes1 = experiment.find_zone_axes(tense_flow=False)
         t2 = time.time()
 
         n_axes = sum(len(axes) for axes in all_axes1)
         _print(f"{len(all_axes1)} diagrams ({n_axes} axes): {_ftime(t2-t1)}")
 
-        all_axes2 = [axes for axes in experiment.find_zone_axes()]
+        all_axes2 = experiment.find_zone_axes(tense_flow=False)
         assert all_axes1 == all_axes2
         
 def test_grain_separation():
