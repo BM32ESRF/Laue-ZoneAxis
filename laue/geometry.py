@@ -10,6 +10,7 @@ Le module ``numexpr`` permet d'accelerer les calculs si il est installe.
 """
 
 import collections
+import hashlib
 import math
 import multiprocessing
 import os
@@ -43,6 +44,8 @@ class Compilator:
         if "compiled_expressions" not in globals():
             globals()["compiled_expressions"] = {}
 
+        self.load()
+
     def compile(self, parameters=None):
         """
         ** Precalcul toutes les equations. **
@@ -57,6 +60,8 @@ class Compilator:
         names = [
             "expr_cam_to_gnomonic",
             "expr_gnomonic_to_cam",
+            "expr_thetachi_to_gnomonic",
+            "expr_gnomonic_to_thetachi",
             "fct_dist_line",
             "fct_hough",
             "fct_inter_line"]
@@ -64,6 +69,8 @@ class Compilator:
 
         for name in names:
             getattr(self, f"get_{name}")()
+
+        self.save() # On enregistre les grandes equations.
 
         if parameters is not None:
             assert isinstance(parameters, dict), ("Les parametres doivent founis "
@@ -156,6 +163,63 @@ class Compilator:
             modules="numexpr") # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["expr_gnomonic_to_cam"]
 
+    def get_expr_thetachi_to_gnomonic(self):
+        """
+        ** Equation permetant de passer de theta chi au plan gnomonic. **
+        """
+        if "expr_thetachi_to_gnomonic" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"]
+
+        # Expresion du rayon reflechit en fonction des angles.
+        rot_refl = sympy.rot_axis1(self.chi) @ sympy.rot_axis2(2*self.theta)
+
+        # Recherche des droites normales au plan christalin.
+        u_f = rot_refl @ self.u_i # Vecteur norme du rayon diffracte u_f.
+        u_q = u_f - self.u_i # Relation de reflexion.
+        u_q = u_q.normalized() # On normalize le vecteur de facon a simplifier les calculs par la suite
+
+        # Recherche du vecteur O'''P'.
+        dist = 1*sympy.tan(sympy.acos(u_q.dot(self.gk))) # ||O'''P'|| car le plan est tangent a la sphere de rayon 1.
+        oppp_pp = dist * (u_q - u_q.dot(self.gk)*self.gk).normalized() # Inspire du procede ge Gramm-Shmitz
+
+        # Projection dans le plan gnomonic pour remonter a x_g, y_g
+        x_g = oppp_pp.dot(self.gi).simplify() # Coordonnees en mm axe x du plan gnomonic.
+        y_g = oppp_pp.dot(self.gj).simplify() # Coordonnees en mm axe y du plan gnomonic.
+
+        globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"] = _Lambdify(
+            args=[self.theta, self.chi],
+            expr=[x_g, y_g], # Les imprecisions de calculs donnent parfois des complexes!
+            modules="numexpr") # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"]
+
+    def get_expr_gnomonic_to_thetachi(self):
+        """
+        ** Equation permetant de passer du plan gnomonic a la representation theta chi. **
+        """
+        if "expr_gnomonic_to_thetachi" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"]
+
+        # Recherche du vecteur u_q.
+        o_oppp = self.gk # Vecteur OO''' == gk car le plan gnomonic est tangent a la shere unitaire.
+        u_q = o_oppp + (self.x_gnom*self.gi + self.y_gnom*self.gj) # Vecteur non normalise de la normale au plan christalin.
+        u_q = u_q.normalized() # Normale unitaire au plan christalin.
+
+        # Lois de la reflexion.
+        u_f = self.u_i - 2*u_q.dot(self.u_i)*u_q # Vecteur unitaire reflechi.
+        u_f = sympy.simplify(u_f) # Permet d'accelerer les calculs par la suite.
+
+        # Projection et normalisation dans le plan normal a x pour acceder a chi.
+        chi = sympy.asin(u_f.dot(self.ry) / (u_f.dot(self.rz)**2 + u_f.dot(self.ry)**2))
+
+        # Projection et normalisation dans le plan normal a y pour acceder a theta.
+        theta = sympy.acos(u_f.dot(self.rx) / (u_f.dot(self.rx)**2 + u_f.dot(self.rz)**2)) / 2
+
+        globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"] = _Lambdify(
+            args=[self.x_gnom, self.y_gnom],
+            expr=[theta, chi], # Les imprecisions de calculs donnent parfois des complexes!
+            modules="numexpr") # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"]
+
     def get_fct_dist_line(self):
         """
         ** Equation de projection de points sur une droite. **
@@ -226,6 +290,46 @@ class Compilator:
             [theta_1, dist_1, theta_2, dist_2], [point.x, point.y], modules="numexpr")
         return globals()["compiled_expressions"]["fct_inter_line"]
 
+    def _hash(self):
+        """
+        ** Retourne le hash de ce code. **
+        """
+        with open(__file__, "rb") as f:
+            return hashlib.md5(f.read()).hexdigest()
+
+    def save(self):
+        """
+        ** Enregistre un fichier contenant les expressions. **
+
+        Enregistre seulement ce qui est present dans ``globals()["compiled_expressions"]``.
+        N'ecrase pas l'ancien contenu.
+        """
+        dirname = os.path.dirname(os.path.abspath(__file__))
+        file = os.path.join(dirname, "geometry.data")
+        self.load() # Recuperation du contenu du fichier.
+        content = {
+            "hash": self._hash,
+            "expr": globals()["compiled_expressions"]
+            }
+        with open(file, "wb") as f:
+            cloudpickle.dump(content, f)
+
+    def load(self):
+        """
+        ** Charge si il existe, le fichier contenant les expressions. **
+
+        Deverse les expressions dans le dictionaire: ``globals()["compiled_expressions"]``.
+        """
+        dirname = os.path.dirname(os.path.abspath(__file__))
+        file = os.path.join(dirname, "geometry.data")
+        
+        if os.path.exists(file):
+            with open(file, "rb") as f:
+                content = cloudpickle.load(f)
+            if content["hash"] == self._hash(): # Si les donnees sont a jour.
+                globals()["compiled_expressions"] = {**globals()["compiled_expressions"], **content["expr"]}
+        return globals()["compiled_expressions"]
+
 
 class Transformer(Compilator):
     """
@@ -242,20 +346,25 @@ class Transformer(Compilator):
 
         # Les variables.
         self.x_cam, self.y_cam = sympy.symbols("x_cam y_cam", real=True) # Position du pxl dans le repere du plan de la camera.
-        self.x_gnom, self.y_gnom = sympy.symbols("x_gnom y_gnom", real=True) # APosition des points dans le plan gnomonic.
+        self.x_gnom, self.y_gnom = sympy.symbols("x_gnom y_gnom", real=True) # Position des points dans le plan gnomonic.
+        self.theta, self.chi = sympy.symbols("theta chi", real=True) # Les angles decrivant le rayon reflechit.
 
         # Expression des elements du model.
-        self.u_i = sympy.Matrix([1, 0, 0]) # Le rayon de lumiere incident norme parallele a l'axe X dans le repere du cristal.
+        self.rx = sympy.Matrix([1, 0, 0])
+        self.ry = sympy.Matrix([0, 1, 0])
+        self.rz = sympy.Matrix([0, 0, 1])
+
+        self.u_i = self.rx # Le rayon de lumiere incident norme parallele a l'axe X dans le repere du cristal.
 
         self.rot_camera = sympy.rot_axis2(-self.xbet) @ sympy.rot_axis3(self.xgam) # Rotation globale de la camera par rapport au cristal.
-        self.ci = self.rot_camera @ sympy.Matrix([0, -1, 0]) # Vecteur Xcamera.
-        self.cj = self.rot_camera @ sympy.Matrix([1, 0, 0]) # Vecteur Ycamera.
-        self.ck = self.rot_camera @ sympy.Matrix([0, 0, 1]) # Vecteur Zcamera normal au plan de la camera.
+        self.ci = self.rot_camera @ -self.ry # Vecteur Xcamera.
+        self.cj = self.rot_camera @ self.rx # Vecteur Ycamera.
+        self.ck = self.rot_camera @ self.rz # Vecteur Zcamera normal au plan de la camera.
 
         self.rot_gnom = sympy.rot_axis2(sympy.pi/4) # Rotation du repere de plan gnomonic par rapport au repere du cristal.
-        self.gi = self.rot_gnom @ sympy.Matrix([1, 0, 0]) # Vecteur Xgnomonic.
-        self.gj = self.rot_gnom @ sympy.Matrix([0, 1, 0]) # Vecteur Ygnomonic.
-        self.gk = self.rot_gnom @ sympy.Matrix([0, 0, 1]) # Vecteur Zgnomonic normal au plan gnomonic.
+        self.gi = self.rot_gnom @ self.rx # Vecteur Xgnomonic.
+        self.gj = self.rot_gnom @ self.ry # Vecteur Ygnomonic.
+        self.gk = self.rot_gnom @ self.rz # Vecteur Zgnomonic normal au plan gnomonic.
 
         Compilator.__init__(self) # Globalisation des expressions.
 
@@ -968,7 +1077,6 @@ class _Lambdify:
     def __call__(self, *args):
         """
         Evalue la fonction.
-        ===================
         """
         intermediate = collections.OrderedDict(zip(self.args, args)) # Ce sont les resultats intermediaires.
         for var, (func, _, useless_vars) in self.operations.items():
@@ -980,14 +1088,12 @@ class _Lambdify:
     def __repr__(self):
         """
         Donne une representation evaluable de soi.
-        ==========================================
         """
         return f"_Lambdify({self.args}, {self.expr})"
 
     def __str__(self):
         """
         Retourne le code deplie.
-        ========================
         """
         code = f"def _lambdifygenerated({', '.join(map(str, self.args))}):\n"
         for var, (_, expr, useless_vars) in self.operations.items():
@@ -1000,7 +1106,6 @@ class _Lambdify:
     def get_expr(self):
         """
         Recupere l'expression brute sympy.
-        ==================================
 
         :returns: L'expression sympy liee au parametre 'expr' de self.__init__.
         :rtype: sympy.core.basic.Basic
@@ -1010,7 +1115,6 @@ class _Lambdify:
     def _expr2sym(self, expr):
         """
         Transforme 'expr' en expression sympy.
-        ======================================
 
         :param expr: Expression sympy, tuple, liste, str
         :returns: Une expression sympy complete.
@@ -1032,7 +1136,6 @@ class _Lambdify:
     def _gather(self, variables, expr):
         """
         Supprime la redondance.
-        =======================
         """
         if isinstance(expr, sympy.core.basic.Atom): # Si il n'y a rien a symplifier.
             self.operations["final_result"] = (sympy.lambdify(variables, expr), expr, [])
@@ -1064,7 +1167,6 @@ class _Lambdify:
     def _hist_sub_expr(self, expr):
         """
         Fait l'histograme des enfants.
-        ==============================
 
         * Ne fait pas de verification pour plus de permormances.
         * Ne compte pas les symbols et les nombres.
@@ -1085,7 +1187,6 @@ class _Lambdify:
     def _len(self, expr):
         """
         Cherche le nombres d'elements.
-        ==============================
 
         * Pas de verification pour une question de performance
         """

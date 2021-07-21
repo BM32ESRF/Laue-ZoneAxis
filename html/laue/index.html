@@ -508,10 +508,10 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                     break
                 diagrams.append(dia)
 
-            diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:os.cpu_count()])
+            diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:4])
             best_diagrams = [next(diagrams)]
             best_diagrams.extend([dia for dia in diagrams
-                if dia.get_quality() &gt; 0.7*best_diagrams[0].get_quality()])
+                if dia.get_quality() &gt; 0.75*best_diagrams[0].get_quality()])
         else: # Si l&#39;utilisateur nous en fournit.
             best_diagrams = diagrams # C&#39;est un tuple et non pas une liste mais c&#39;est pas genant.
         if self.verbose &gt;= 2:
@@ -537,22 +537,10 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         
         # Recherche rapide d&#39;un minimum par descente de gradient.
         from scipy import optimize # On ne l&#39;importe que ici car on est pas sur de s&#39;en servir.
-        # if self.verbose &gt;= 2:
-        #     print(&#34;\tDescente de gradient...&#34;)
-        # opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
-        #     self._calibration_cost,
-        #     x0=[initial_parameters[name] for name in vect_labels],
-        #     args=args, # On donne les arguments et on paralelise.
-        #     bounds=bounds,
-        #     options={&#34;disp&#34;: self.verbose &gt;= 3})
-        # if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
-        #     if self.verbose &gt;= 2:
-        #         print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
-            # Recherche d&#39;un bon minimum global
         if self.verbose &gt;= 2:
             print(&#34;\tOptimsation globale, algo genetique...&#34;)
         
-        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+        if multiprocessing.current_process().name == &#34;MainProcess&#34; and os.cpu_count() &gt; 4:
             attrs = [&#34;transformer&#34;, &#34;verbose&#34;]
             self_bis = collections.namedtuple(&#34;PartialExperiment&#34;, attrs, defaults=[getattr(self, attr) for attr in attrs])()
             opt_res = optimize.differential_evolution(
@@ -563,7 +551,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                 bounds=bounds,
                 disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
                 polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
-                popsize=15, # On garde la taille de la population par defaut.
+                popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
                 workers=-1) # Pour utiliser tous les cpus.
         else:
             opt_res = optimize.differential_evolution(
@@ -1256,6 +1244,8 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
             * Ce qui permet de reconaitre un diagrame parmis tous.
                 * ``int`` =&gt; Retourne le ieme diagrame, genere par la
                     ieme image lue.
+                * ``slice`` =&gt; Permet de manipuler l&#39;experience comme une
+                    liste de diagrames ordones dans l&#39;ordre de generation des images.
 
         Raises
         ------
@@ -1274,12 +1264,21 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         &gt;&gt;&gt; type(laue.Experiment(images)[-1])
         &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
         &gt;&gt;&gt;
+        &gt;&gt;&gt; type(laue.Experiment(images)[:])
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; len(laue.Experiment(images)[:])
+        1
+        &gt;&gt;&gt; laue.Experiment(images)[1:]
+        []
+        &gt;&gt;&gt;
         &#34;&#34;&#34;
-        def get_diag_list(limit):
+        def get_diag_list(limit, ignore=False):
             # Cas simple ou il n&#39;y a rien a extraire.
             if limit &gt;= 0 and len(self._buff_diags) &gt; limit: # Si on a deja une liste de la bone taille.
                 return self._buff_diags
             if limit &lt; 0 and len(self) and -limit &lt;= len(self):
+                return self._buff_diags
+            if len(self) and ignore: # Si il faut se contenter de ce qu&#39;on a, meme si c&#39;est pas suffisant.
                 return self._buff_diags
             if len(self) and limit &gt;= len(self):
                 raise KeyError(f&#34;L&#39;experience n&#39;est faite que de {len(self)} diagrames, &#34;
@@ -1299,14 +1298,21 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
             else:
                 self._buff_diags = self.get_diagrams()
 
-            return get_diag_list(limit=limit)
+            return get_diag_list(limit=limit, ignore=ignore)
 
         if isinstance(item, int):
             return get_diag_list(item)[item]
 
         if isinstance(item, slice):
-            print(item)
-            print(item.start, item.stop, item.step)
+            assert item.start is None or isinstance(item.start, int), \
+                f&#34;Slice arguments has to be int, not {type(item.start).__name__}.&#34;
+            assert item.stop is None or isinstance(item.stop, int), \
+                f&#34;Slice arguments has to be int, not {type(item.stop).__name__}.&#34;
+            assert item.step is None or isinstance(item.step, int), \
+                f&#34;Slice arguments has to be int, not {type(item.step).__name__}.&#34;
+            l1 = get_diag_list(item.start, ignore=True) if item.start is not None else []
+            l2 = get_diag_list(item.stop, ignore=True) if item.stop is not None else self.get_diagrams()
+            return (l1 if len(l1) &gt; len(l2) else l2)[item]
 
         raise TypeError(f&#34;La clef doit etre de type int ou slice. Pas {type(item).__name__}.&#34;)
 
@@ -2354,10 +2360,10 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
                 break
             diagrams.append(dia)
 
-        diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:os.cpu_count()])
+        diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:4])
         best_diagrams = [next(diagrams)]
         best_diagrams.extend([dia for dia in diagrams
-            if dia.get_quality() &gt; 0.7*best_diagrams[0].get_quality()])
+            if dia.get_quality() &gt; 0.75*best_diagrams[0].get_quality()])
     else: # Si l&#39;utilisateur nous en fournit.
         best_diagrams = diagrams # C&#39;est un tuple et non pas une liste mais c&#39;est pas genant.
     if self.verbose &gt;= 2:
@@ -2383,22 +2389,10 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     
     # Recherche rapide d&#39;un minimum par descente de gradient.
     from scipy import optimize # On ne l&#39;importe que ici car on est pas sur de s&#39;en servir.
-    # if self.verbose &gt;= 2:
-    #     print(&#34;\tDescente de gradient...&#34;)
-    # opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle &#39;compile&#39; des equations.
-    #     self._calibration_cost,
-    #     x0=[initial_parameters[name] for name in vect_labels],
-    #     args=args, # On donne les arguments et on paralelise.
-    #     bounds=bounds,
-    #     options={&#34;disp&#34;: self.verbose &gt;= 3})
-    # if opt_res[&#34;fun&#34;] &gt; 0.01: # Si ca a mal converge.
-    #     if self.verbose &gt;= 2:
-    #         print(f&#34;\t\tEchec: cout final = {opt_res[&#39;fun&#39;]}&#34;)
-        # Recherche d&#39;un bon minimum global
     if self.verbose &gt;= 2:
         print(&#34;\tOptimsation globale, algo genetique...&#34;)
     
-    if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+    if multiprocessing.current_process().name == &#34;MainProcess&#34; and os.cpu_count() &gt; 4:
         attrs = [&#34;transformer&#34;, &#34;verbose&#34;]
         self_bis = collections.namedtuple(&#34;PartialExperiment&#34;, attrs, defaults=[getattr(self, attr) for attr in attrs])()
         opt_res = optimize.differential_evolution(
@@ -2409,7 +2403,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
             bounds=bounds,
             disp=self.verbose &gt;= 3, # Pour rendre la fonction verbeuse.
             polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
-            popsize=15, # On garde la taille de la population par defaut.
+            popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
             workers=-1) # Pour utiliser tous les cpus.
     else:
         opt_res = optimize.differential_evolution(

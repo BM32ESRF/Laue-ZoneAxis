@@ -290,10 +290,10 @@ class Experiment:
                     break
                 diagrams.append(dia)
 
-            diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:os.cpu_count()])
+            diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:4])
             best_diagrams = [next(diagrams)]
             best_diagrams.extend([dia for dia in diagrams
-                if dia.get_quality() > 0.7*best_diagrams[0].get_quality()])
+                if dia.get_quality() > 0.75*best_diagrams[0].get_quality()])
         else: # Si l'utilisateur nous en fournit.
             best_diagrams = diagrams # C'est un tuple et non pas une liste mais c'est pas genant.
         if self.verbose >= 2:
@@ -319,22 +319,10 @@ class Experiment:
         
         # Recherche rapide d'un minimum par descente de gradient.
         from scipy import optimize # On ne l'importe que ici car on est pas sur de s'en servir.
-        # if self.verbose >= 2:
-        #     print("\tDescente de gradient...")
-        # opt_res = optimize.minimize( # Cette etape ne doit pas etre sautee car elle 'compile' des equations.
-        #     self._calibration_cost,
-        #     x0=[initial_parameters[name] for name in vect_labels],
-        #     args=args, # On donne les arguments et on paralelise.
-        #     bounds=bounds,
-        #     options={"disp": self.verbose >= 3})
-        # if opt_res["fun"] > 0.01: # Si ca a mal converge.
-        #     if self.verbose >= 2:
-        #         print(f"\t\tEchec: cout final = {opt_res['fun']}")
-            # Recherche d'un bon minimum global
         if self.verbose >= 2:
             print("\tOptimsation globale, algo genetique...")
         
-        if multiprocessing.current_process().name == "MainProcess":
+        if multiprocessing.current_process().name == "MainProcess" and os.cpu_count() > 4:
             attrs = ["transformer", "verbose"]
             self_bis = collections.namedtuple("PartialExperiment", attrs, defaults=[getattr(self, attr) for attr in attrs])()
             opt_res = optimize.differential_evolution(
@@ -345,7 +333,7 @@ class Experiment:
                 bounds=bounds,
                 disp=self.verbose >= 3, # Pour rendre la fonction verbeuse.
                 polish=False, # Pour ne pas utiliser scipy.optimize.minimize a la fin.
-                popsize=15, # On garde la taille de la population par defaut.
+                popsize=10, # Pour aller plus vite que la valeur de 15 par defaut.
                 workers=-1) # Pour utiliser tous les cpus.
         else:
             opt_res = optimize.differential_evolution(
@@ -1038,6 +1026,8 @@ class Experiment:
             * Ce qui permet de reconaitre un diagrame parmis tous.
                 * ``int`` => Retourne le ieme diagrame, genere par la
                     ieme image lue.
+                * ``slice`` => Permet de manipuler l'experience comme une
+                    liste de diagrames ordones dans l'ordre de generation des images.
 
         Raises
         ------
@@ -1056,12 +1046,21 @@ class Experiment:
         >>> type(laue.Experiment(images)[-1])
         <class 'laue.diagram.LaueDiagram'>
         >>>
+        >>> type(laue.Experiment(images)[:])
+        <class 'list'>
+        >>> len(laue.Experiment(images)[:])
+        1
+        >>> laue.Experiment(images)[1:]
+        []
+        >>>
         """
-        def get_diag_list(limit):
+        def get_diag_list(limit, ignore=False):
             # Cas simple ou il n'y a rien a extraire.
             if limit >= 0 and len(self._buff_diags) > limit: # Si on a deja une liste de la bone taille.
                 return self._buff_diags
             if limit < 0 and len(self) and -limit <= len(self):
+                return self._buff_diags
+            if len(self) and ignore: # Si il faut se contenter de ce qu'on a, meme si c'est pas suffisant.
                 return self._buff_diags
             if len(self) and limit >= len(self):
                 raise KeyError(f"L'experience n'est faite que de {len(self)} diagrames, "
@@ -1081,14 +1080,21 @@ class Experiment:
             else:
                 self._buff_diags = self.get_diagrams()
 
-            return get_diag_list(limit=limit)
+            return get_diag_list(limit=limit, ignore=ignore)
 
         if isinstance(item, int):
             return get_diag_list(item)[item]
 
         if isinstance(item, slice):
-            print(item)
-            print(item.start, item.stop, item.step)
+            assert item.start is None or isinstance(item.start, int), \
+                f"Slice arguments has to be int, not {type(item.start).__name__}."
+            assert item.stop is None or isinstance(item.stop, int), \
+                f"Slice arguments has to be int, not {type(item.stop).__name__}."
+            assert item.step is None or isinstance(item.step, int), \
+                f"Slice arguments has to be int, not {type(item.step).__name__}."
+            l1 = get_diag_list(item.start, ignore=True) if item.start is not None else []
+            l2 = get_diag_list(item.stop, ignore=True) if item.stop is not None else self.get_diagrams()
+            return (l1 if len(l1) > len(l2) else l2)[item]
 
         raise TypeError(f"La clef doit etre de type int ou slice. Pas {type(item).__name__}.")
 
