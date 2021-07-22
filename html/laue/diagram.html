@@ -177,12 +177,12 @@ class LaueDiagram(Splitable):
         # Creation des objets &#39;ZoneAxis&#39;.
         from laue.zone_axis import ZoneAxis
         self.axis[(dmax, nbr, tol)] = [
-                ZoneAxis(diagram=self,
+            ZoneAxis(diagram=self,
                      spots_ind=spots_ind,
                      identifier=i,
                      angle=angle,
                      dist=dist)
-                for i, (angle, dist, spots_ind) in enumerate(zip(angles, dists, axis_spots_ind))]
+            for i, (angle, dist, spots_ind) in enumerate(zip(angles, dists, axis_spots_ind))]
 
         # Attribution des axes aux spots.
         for spot, axes_ind in zip(self, spots_axes_ind):
@@ -302,6 +302,125 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return self.name
+
+    def get_neighbors(self, spot, *, space=None, n_max=None, d_max=None):
+        &#34;&#34;&#34;
+        ** Recupere des spots proches. **
+
+        Parameters
+        ----------
+        spot : int, laue.spot.Spot, tuple
+            - Le spot a considerer, celui de reference.
+                - int =&gt; Considere le item(ieme) spot. Comme si un
+                    ``LaueDiagram`` etait une liste de ``laue.spot.Spot``.
+                - ``laue.spot.Spot`` =&gt; Prend directement le
+                    spot fourni come spot de reference.
+                - tuple =&gt; Les 2 coordonnees qui caracterisent le spot.
+                    Il peuvent etre exprime dans 3 reperes differents.
+                    Celui de la camera, celui dans le plan gnomonic, et celui angulaire en theta chi.
+                    - (int, int) =&gt; Interprete comme x_camera et y_camera en pxl.
+                    - (float, float) =&gt; Interprete comme x_gnomonic et y_gnomonic en mm.
+        space : str
+            Given to ``laue.spot.distance``.
+        n_max : int
+            C&#39;est le nombre maximum de voisins (reference comprise) a renvoyer.
+            C&#39;est la taille maximal de la liste renvoyee. Par defaut, il n&#39;y a pas de limite.
+        d_max : number
+            C&#39;est la distance maximal qui peut separer le spot de reference
+            aux autres spots. Par defaut, ce rayon est infini.
+
+        Returns
+        -------
+        list
+            La liste contenant les spots de type ``laue.spot.Spot``.
+            Les spots sont ordonnes du plus proche au plus lointain.
+            Le premier element peut etre le spot de reference si il existe.
+
+        Raises
+        ------
+        ValueError
+            Si l&#39;une des valeur fournie n&#39;est pas coherente.
+        TypeError
+            Si l&#39;un des type est absurde.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; spot, = diag.select_spots(n=1, sort=&#34;intensity&#34;)
+        &gt;&gt;&gt; spot
+        Spot(position=(622.09, 1656.72), quality=0.949)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; type(diag.get_neighbors(0))
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; len(diag.get_neighbors(0)) == len(diag)
+        True
+        &gt;&gt;&gt; len(diag.get_neighbors(0, n_max=2))
+        2
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; diag.get_neighbors((622, 1657), n_max=2)
+        [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(562.63, 1802.56), quality=0.603)]
+        &gt;&gt;&gt; diag.get_neighbors((622, 1657), d_max=10.0)
+        [Spot(position=(622.09, 1656.72), quality=0.949)]
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; diag.get_neighbors(spot, n_max=2)
+        [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(562.63, 1802.56), quality=0.603)]
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        # Extraction des position du spot.
+        if isinstance(spot, (int, np.integer)): # Si le spot est designe par son rang.
+            spot = self[spot] # On recupere l&#39;instance du spot lui-meme.
+        if isinstance(spot, Spot): # Si le spot est trop complexe.
+            if space is None or space == &#34;camera&#34;:
+                spot = spot.get_position()
+            elif space == &#34;gnomonic&#34;:
+                spot = spot.get_gnomonic()
+            elif space == &#34;angle&#34;:
+                spot = spot.get_theta_chi()
+            else:
+                raise ValueError(f&#34;L&#39;espace {space} est pas connu. &#34;
+                    &#34;Seul, &#39;camera&#39;, &#39;gnomonic&#39; et &#39;angle&#39; sont admissibles.&#34;)
+        elif isinstance(spot, tuple):
+            if len(spot) != 2:
+                raise ValueError(&#34;Si le spot de reference est un tuple, il doit &#34;
+                    f&#34;contenir exactement 2 elements, pas {len(spot)}.&#34;)
+            if type(spot[0]) != type(spot[1]):
+                raise TypeError(&#34;Les 2 coordonnees doivent etre homogenes&#34;)
+
+            # Recherche de la metrique
+            if not isinstance(spot[0], (int, np.integer, float)):
+                raise TypeError(&#34;Les 2 coordonnes doivent etre de type int ou float, &#34;
+                    f&#34;pas de type {type(spot[0]).__name__}.&#34;)
+            if space is None:
+                space = &#34;camera&#34; if isinstance(spot[0], (int, np.integer)) else &#34;gnomonic&#34;
+
+        else:
+            raise TypeError(&#34;Seul les types &#39;int&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportees. &#34;
+                f&#34;Or le type fourni est {type(spot).__name__}.&#34;)
+        
+        if space is None:
+            space = &#34;camera&#34;
+
+        # Recherche des voisins
+        from laue.spot import distance
+
+        d_list = distance(spot, self.select_spots(), space=space)
+        nbr = len(self)
+        if d_max is not None:
+            if not isinstance(d_max, (float, int)):
+                raise TypeError(f&#34;&#39;d_max&#39; has to be a number, not a {type(d_max).__name__}.&#34;)
+            if d_max &lt;= 0:
+                raise ValueError(f&#34;&#39;d_max&#39; doit etre strictement positif. Or il vaut {d_max}.&#34;)
+            nbr = (d_list &lt;= d_max).sum()
+        if n_max is not None:
+            if not isinstance(n_max, int):
+                raise TypeError(f&#34;&#39;n_max&#39; has to be a integer, not a {type(n_max).__name__}.&#34;)
+            if n_max &lt; 1:
+                raise ValueError(f&#34;Il faut selectioner au moin 1 voisin. {n_max} c&#39;est pas suffisant.&#34;)
+            nbr = min(nbr, n_max)
+
+        return [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
 
     def select_spots(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -436,15 +555,18 @@ class LaueDiagram(Splitable):
 
         Examples
         --------
+        &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_gnomonic_positions().shape
         (2, 78)
-        &gt;&gt;&gt; diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0])
-        array([[-0.0978478 , -0.20958039, -0.04084784, -0.3524825 ],
-               [ 0.5766271 ,  0.48377115,  0.56894475,  0.36476415]],
-              dtype=float32)
+        &gt;&gt;&gt; np.round(
+        ...     diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0]),
+        ...     2)
+        ...
+        array([[-0.1 , -0.21, -0.04, -0.35],
+               [ 0.58,  0.48,  0.57,  0.36]], dtype=float32)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # On calcul les projections pour tous les points a la fois.
@@ -795,19 +917,19 @@ class LaueDiagram(Splitable):
             self.spots_set = set(self)
         return spot in self.spots_set
 
-    def __getitem__(self, items):
+    def __getitem__(self, item):
         &#34;&#34;&#34;
         ** Permet de recuperer des elements. **
 
         Parameters
         ----------
-        items : int, slice, tuple, laue.spot.Spot
+        items : int, slice, laue.spot.Spot, tuple
             C&#39;est un element qui permet de choisir un ou plusieurs
-            spot dans ce diagram de laue.
+            spot.s dans ce diagram de laue.
 
         Returns
         -------
-        spots : list, laue.spot.Spot
+        spots : laue.spot.Spot, list
             - L&#39;element renvoye depend du parametre d&#39;entree ``items``:
                 - int =&gt; Renvoi le item(ieme) spot. Comme si un
                 ``LaueDiagram`` etait une liste de ``laue.spot.Spot``.
@@ -815,33 +937,19 @@ class LaueDiagram(Splitable):
                 - slice =&gt; Renvoi la liste des spots compris dans
                 l&#39;intervalle fournit. Comme si ``LaueDiagram`` est aussi une liste.
                     - Type renvoye: ``list``.
-                - tuple =&gt; Cherche un spot ou plusieur selon une notion de distance.
-                    - Le premier et/ou deuxieme argument peut etre un spot ou bien 2 nombres x et y.
-                    - Le troisieme argument (factultatif) permet de preciser l&#39;espace
-                    et la metrique a utiliser pour comparer les spots a la reference.
-                    C&#39;est une chaine de caracetere expicite:
-                        - &#34;camera&#34; (valeur par defaut si x et y de type ``int``
-                        ou que le premier argument est un spot) =&gt;
-                        Distance euclidiene dans le plan de la camera (pxl).
-                        - &#34;gnomonic&#34; (valeur par defaut si x et y de type ``float``) =&gt;
-                        Distance euclidiene dans le plan gnomonique (mm).
-                        - &#34;angle&#34; =&gt; Cosine distance entre les vecteurs ``uq`` (axe de reflexion)
-                        de chaquns des points (en degre).
-                        Le premier argument est interprete comme ``2*theta`` et le second comme ``chi``.
-                    - Le quatrieme argument correspond au nombre de voisins a prendre.
-                    La valeur par defaut est 1. Cet argument doit etre un entier positif.
-                    - Type renvoye: ``list``.
-                - spot =&gt; equivalent a ``self[spot, &#34;camera&#34;]``.
+                - ``laue.spot.Spot`` or tuple =&gt; equivalent a ``self.get_neighbors(item, n_max=1).pop()``.
 
         Raises
         ------
         IndexError
-            Si aucun spot n&#39;est quandidat ou qu&#39;on shouaite acceder a un spot qui n&#39;existe pas.
+            Si aucun spot n&#39;est candidat ou qu&#39;on shouaite acceder a un spot qui n&#39;existe pas.
         ValueError
             Si les arguments fournis ne sont pas conformes.
+        TypeError
+            Si les arguments fournis ne sont pas du bon type.
 
         Examples
-        -------
+        --------
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
@@ -852,103 +960,26 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt; type(diag[3:22]), len(diag[3:22])
         (&lt;class &#39;list&#39;&gt;, 19)
         &gt;&gt;&gt;
-        &gt;&gt;&gt; type(diag[500, 700]), len(diag[500, 700])
-        (&lt;class &#39;list&#39;&gt;, 1)
-        &gt;&gt;&gt; np.round(diag[500, 700].pop().get_position(), 3)
-        array([521.018, 724.495])
+        &gt;&gt;&gt; diag[622, 1657]
+        Spot(position=(622.09, 1656.72), quality=0.949)
         &gt;&gt;&gt;
-        &gt;&gt;&gt; type(diag[.2, -.3]), len(diag[.2, -.3])
-        (&lt;class &#39;list&#39;&gt;, 1)
-        &gt;&gt;&gt; np.round(diag[.2, -.3].pop().get_gnomonic(), 3)
-        array([ 0.266, -0.299])
-        &gt;&gt;&gt;
-        &gt;&gt;&gt; len(diag[0.2, .5, &#34;gnomonic&#34;, 6])
-        6
-        &gt;&gt;&gt; np.array([d.get_gnomonic() for d in diag[0.2, .5, &#34;gnomonic&#34;, 3]])
-        array([[0.29464949, 0.39670733],
-               [0.06846284, 0.55485944],
-               [0.07130572, 0.41748433]])
+        &gt;&gt;&gt; diag[0.3, 0.3]
+        Spot(position=(622.09, 1656.72), quality=0.949)
+        &gt;&gt;&gt; np.round(diag[0.3, 0.3].get_gnomonic(), 2)
+        array([0.25, 0.32])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        if isinstance(items, (int, np.integer)):
-            return self.spots[items]
+        if isinstance(item, (int, np.integer)):
+            return self.spots[item]
 
-        if isinstance(items, slice):
-            return self.spots[items]
+        if isinstance(item, slice):
+            return self.spots[item]
 
-        if isinstance(items, tuple):
-            if not items:
-                raise ValueError(&#34;Vous ne pouvez pas fournir un tuple vide.&#34;)
+        if isinstance(item, (Spot, tuple)):
+            return self.get_neighbors(item, n_max=1).pop()
 
-            # Recuperation des informations.
-            if isinstance(items[0], Spot):
-                spot, *infos = items
-
-                # Recherche de la metrique
-                if not infos or infos[0] is None:
-                    if infos:
-                        _, *infos = infos
-                    space = &#34;camera&#34;
-                else:
-                    space, *infos = infos
-
-                x, y = {&#34;camera&#34;: lambda spot: spot.get_position(),
-                        &#34;gnomonic&#34;: lambda spot: spot.get_gnomonic(),
-                        &#34;angle&#34;: lambda spot: spot.get_twicetheta_chi()
-                        }.get(space, lambda spot: (None, None))[spot]
-            else:
-                if len(items) &lt; 2:
-                    raise ValueError(&#34;Si vous chercher a recuperer les spots&#34;
-                        &#34;d&#39;un voisinage, vous devez fournir au moins 2 arguments\n.&#34;
-                        f&#34;Or il y en a {len(items)}.&#34;)
-                x, y, *infos = items
-
-                # Recherche de la metrique
-                if type(x) != type(y):
-                    raise ValueError(&#34;Les 2 premieres coordonnees doivent etre homogenes&#34;)
-                if not isinstance(x, (int, float)):
-                    raise ValueError(&#34;Les 2 premiers elements doivent etre de type int ou float, &#34;
-                        f&#34;pas de type {type(x).__name__}.&#34;)
-                if not infos or infos[0] is None:
-                    if infos:
-                        _, *infos = infos
-                    space = &#34;camera&#34; if isinstance(x, int) else &#34;gnomonic&#34;
-                else:
-                    space, *infos = infos
-
-            # Recherche du nombre de voisins.
-            if not infos or infos[0] is None:
-                if infos:
-                    _, *infos = infos
-                nbr_voisins = 1
-            else:
-                nbr_voisins, *infos = infos
-
-            # Verifications
-            if not isinstance(nbr_voisins, int):
-                raise ValueError(&#34;Le nombre de voisin doit etre un entier, &#34;
-                    f&#34;pas {type(nbr_voisins).__name__}&#34;)
-            if nbr_voisins &lt; 1:
-                raise ValueError(&#34;Le nombre de voisin doit etre strictement positif.&#34;)
-            if space not in {&#34;camera&#34;, &#34;gnomonic&#34;, &#34;angle&#34;}:
-                raise ValueError(&#34;Le dernier argument ne peut etre que &#34;
-                    f&#34;&#39;camera&#39;, &#39;gnomonic&#39; ou &#39;angle&#39;. Pas {repr(space)}&#34;)
-            if infos:
-                raise ValueError(&#34;Il y a trop de parametres.&#34;)
-
-            # Recherche des voisins
-            from laue.spot import distance
-
-            d_list = distance((x, y), self.select_spots(), space=space)
-            if nbr_voisins == 1:
-                return [self.spots[np.argmin(d_list)]]
-            return [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr_voisins]]
-
-        if isinstance(items, Spot):
-            return self[items, None, None]
-
-        raise ValueError(&#34;Seul les types &#39;int&#39;, &#39;slice&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportees. &#34;
-            f&#34;Or le type fourni est {type(items).__name__}.&#34;)
+        raise ValueError(&#34;Seul les types &#39;int&#39;, &#39;slice&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportes. &#34;
+            f&#34;Or le type fourni est {type(item).__name__}.&#34;)
 
     def __hash__(self):
         &#34;&#34;&#34;
@@ -1170,12 +1201,12 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         # Creation des objets &#39;ZoneAxis&#39;.
         from laue.zone_axis import ZoneAxis
         self.axis[(dmax, nbr, tol)] = [
-                ZoneAxis(diagram=self,
+            ZoneAxis(diagram=self,
                      spots_ind=spots_ind,
                      identifier=i,
                      angle=angle,
                      dist=dist)
-                for i, (angle, dist, spots_ind) in enumerate(zip(angles, dists, axis_spots_ind))]
+            for i, (angle, dist, spots_ind) in enumerate(zip(angles, dists, axis_spots_ind))]
 
         # Attribution des axes aux spots.
         for spot, axes_ind in zip(self, spots_axes_ind):
@@ -1295,6 +1326,125 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return self.name
+
+    def get_neighbors(self, spot, *, space=None, n_max=None, d_max=None):
+        &#34;&#34;&#34;
+        ** Recupere des spots proches. **
+
+        Parameters
+        ----------
+        spot : int, laue.spot.Spot, tuple
+            - Le spot a considerer, celui de reference.
+                - int =&gt; Considere le item(ieme) spot. Comme si un
+                    ``LaueDiagram`` etait une liste de ``laue.spot.Spot``.
+                - ``laue.spot.Spot`` =&gt; Prend directement le
+                    spot fourni come spot de reference.
+                - tuple =&gt; Les 2 coordonnees qui caracterisent le spot.
+                    Il peuvent etre exprime dans 3 reperes differents.
+                    Celui de la camera, celui dans le plan gnomonic, et celui angulaire en theta chi.
+                    - (int, int) =&gt; Interprete comme x_camera et y_camera en pxl.
+                    - (float, float) =&gt; Interprete comme x_gnomonic et y_gnomonic en mm.
+        space : str
+            Given to ``laue.spot.distance``.
+        n_max : int
+            C&#39;est le nombre maximum de voisins (reference comprise) a renvoyer.
+            C&#39;est la taille maximal de la liste renvoyee. Par defaut, il n&#39;y a pas de limite.
+        d_max : number
+            C&#39;est la distance maximal qui peut separer le spot de reference
+            aux autres spots. Par defaut, ce rayon est infini.
+
+        Returns
+        -------
+        list
+            La liste contenant les spots de type ``laue.spot.Spot``.
+            Les spots sont ordonnes du plus proche au plus lointain.
+            Le premier element peut etre le spot de reference si il existe.
+
+        Raises
+        ------
+        ValueError
+            Si l&#39;une des valeur fournie n&#39;est pas coherente.
+        TypeError
+            Si l&#39;un des type est absurde.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; spot, = diag.select_spots(n=1, sort=&#34;intensity&#34;)
+        &gt;&gt;&gt; spot
+        Spot(position=(622.09, 1656.72), quality=0.949)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; type(diag.get_neighbors(0))
+        &lt;class &#39;list&#39;&gt;
+        &gt;&gt;&gt; len(diag.get_neighbors(0)) == len(diag)
+        True
+        &gt;&gt;&gt; len(diag.get_neighbors(0, n_max=2))
+        2
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; diag.get_neighbors((622, 1657), n_max=2)
+        [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(562.63, 1802.56), quality=0.603)]
+        &gt;&gt;&gt; diag.get_neighbors((622, 1657), d_max=10.0)
+        [Spot(position=(622.09, 1656.72), quality=0.949)]
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; diag.get_neighbors(spot, n_max=2)
+        [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(562.63, 1802.56), quality=0.603)]
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        # Extraction des position du spot.
+        if isinstance(spot, (int, np.integer)): # Si le spot est designe par son rang.
+            spot = self[spot] # On recupere l&#39;instance du spot lui-meme.
+        if isinstance(spot, Spot): # Si le spot est trop complexe.
+            if space is None or space == &#34;camera&#34;:
+                spot = spot.get_position()
+            elif space == &#34;gnomonic&#34;:
+                spot = spot.get_gnomonic()
+            elif space == &#34;angle&#34;:
+                spot = spot.get_theta_chi()
+            else:
+                raise ValueError(f&#34;L&#39;espace {space} est pas connu. &#34;
+                    &#34;Seul, &#39;camera&#39;, &#39;gnomonic&#39; et &#39;angle&#39; sont admissibles.&#34;)
+        elif isinstance(spot, tuple):
+            if len(spot) != 2:
+                raise ValueError(&#34;Si le spot de reference est un tuple, il doit &#34;
+                    f&#34;contenir exactement 2 elements, pas {len(spot)}.&#34;)
+            if type(spot[0]) != type(spot[1]):
+                raise TypeError(&#34;Les 2 coordonnees doivent etre homogenes&#34;)
+
+            # Recherche de la metrique
+            if not isinstance(spot[0], (int, np.integer, float)):
+                raise TypeError(&#34;Les 2 coordonnes doivent etre de type int ou float, &#34;
+                    f&#34;pas de type {type(spot[0]).__name__}.&#34;)
+            if space is None:
+                space = &#34;camera&#34; if isinstance(spot[0], (int, np.integer)) else &#34;gnomonic&#34;
+
+        else:
+            raise TypeError(&#34;Seul les types &#39;int&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportees. &#34;
+                f&#34;Or le type fourni est {type(spot).__name__}.&#34;)
+        
+        if space is None:
+            space = &#34;camera&#34;
+
+        # Recherche des voisins
+        from laue.spot import distance
+
+        d_list = distance(spot, self.select_spots(), space=space)
+        nbr = len(self)
+        if d_max is not None:
+            if not isinstance(d_max, (float, int)):
+                raise TypeError(f&#34;&#39;d_max&#39; has to be a number, not a {type(d_max).__name__}.&#34;)
+            if d_max &lt;= 0:
+                raise ValueError(f&#34;&#39;d_max&#39; doit etre strictement positif. Or il vaut {d_max}.&#34;)
+            nbr = (d_list &lt;= d_max).sum()
+        if n_max is not None:
+            if not isinstance(n_max, int):
+                raise TypeError(f&#34;&#39;n_max&#39; has to be a integer, not a {type(n_max).__name__}.&#34;)
+            if n_max &lt; 1:
+                raise ValueError(f&#34;Il faut selectioner au moin 1 voisin. {n_max} c&#39;est pas suffisant.&#34;)
+            nbr = min(nbr, n_max)
+
+        return [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
 
     def select_spots(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -1429,15 +1579,18 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
 
         Examples
         --------
+        &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_gnomonic_positions().shape
         (2, 78)
-        &gt;&gt;&gt; diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0])
-        array([[-0.0978478 , -0.20958039, -0.04084784, -0.3524825 ],
-               [ 0.5766271 ,  0.48377115,  0.56894475,  0.36476415]],
-              dtype=float32)
+        &gt;&gt;&gt; np.round(
+        ...     diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0]),
+        ...     2)
+        ...
+        array([[-0.1 , -0.21, -0.04, -0.35],
+               [ 0.58,  0.48,  0.57,  0.36]], dtype=float32)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # On calcul les projections pour tous les points a la fois.
@@ -1788,19 +1941,19 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             self.spots_set = set(self)
         return spot in self.spots_set
 
-    def __getitem__(self, items):
+    def __getitem__(self, item):
         &#34;&#34;&#34;
         ** Permet de recuperer des elements. **
 
         Parameters
         ----------
-        items : int, slice, tuple, laue.spot.Spot
+        items : int, slice, laue.spot.Spot, tuple
             C&#39;est un element qui permet de choisir un ou plusieurs
-            spot dans ce diagram de laue.
+            spot.s dans ce diagram de laue.
 
         Returns
         -------
-        spots : list, laue.spot.Spot
+        spots : laue.spot.Spot, list
             - L&#39;element renvoye depend du parametre d&#39;entree ``items``:
                 - int =&gt; Renvoi le item(ieme) spot. Comme si un
                 ``LaueDiagram`` etait une liste de ``laue.spot.Spot``.
@@ -1808,33 +1961,19 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
                 - slice =&gt; Renvoi la liste des spots compris dans
                 l&#39;intervalle fournit. Comme si ``LaueDiagram`` est aussi une liste.
                     - Type renvoye: ``list``.
-                - tuple =&gt; Cherche un spot ou plusieur selon une notion de distance.
-                    - Le premier et/ou deuxieme argument peut etre un spot ou bien 2 nombres x et y.
-                    - Le troisieme argument (factultatif) permet de preciser l&#39;espace
-                    et la metrique a utiliser pour comparer les spots a la reference.
-                    C&#39;est une chaine de caracetere expicite:
-                        - &#34;camera&#34; (valeur par defaut si x et y de type ``int``
-                        ou que le premier argument est un spot) =&gt;
-                        Distance euclidiene dans le plan de la camera (pxl).
-                        - &#34;gnomonic&#34; (valeur par defaut si x et y de type ``float``) =&gt;
-                        Distance euclidiene dans le plan gnomonique (mm).
-                        - &#34;angle&#34; =&gt; Cosine distance entre les vecteurs ``uq`` (axe de reflexion)
-                        de chaquns des points (en degre).
-                        Le premier argument est interprete comme ``2*theta`` et le second comme ``chi``.
-                    - Le quatrieme argument correspond au nombre de voisins a prendre.
-                    La valeur par defaut est 1. Cet argument doit etre un entier positif.
-                    - Type renvoye: ``list``.
-                - spot =&gt; equivalent a ``self[spot, &#34;camera&#34;]``.
+                - ``laue.spot.Spot`` or tuple =&gt; equivalent a ``self.get_neighbors(item, n_max=1).pop()``.
 
         Raises
         ------
         IndexError
-            Si aucun spot n&#39;est quandidat ou qu&#39;on shouaite acceder a un spot qui n&#39;existe pas.
+            Si aucun spot n&#39;est candidat ou qu&#39;on shouaite acceder a un spot qui n&#39;existe pas.
         ValueError
             Si les arguments fournis ne sont pas conformes.
+        TypeError
+            Si les arguments fournis ne sont pas du bon type.
 
         Examples
-        -------
+        --------
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
@@ -1845,103 +1984,26 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; type(diag[3:22]), len(diag[3:22])
         (&lt;class &#39;list&#39;&gt;, 19)
         &gt;&gt;&gt;
-        &gt;&gt;&gt; type(diag[500, 700]), len(diag[500, 700])
-        (&lt;class &#39;list&#39;&gt;, 1)
-        &gt;&gt;&gt; np.round(diag[500, 700].pop().get_position(), 3)
-        array([521.018, 724.495])
+        &gt;&gt;&gt; diag[622, 1657]
+        Spot(position=(622.09, 1656.72), quality=0.949)
         &gt;&gt;&gt;
-        &gt;&gt;&gt; type(diag[.2, -.3]), len(diag[.2, -.3])
-        (&lt;class &#39;list&#39;&gt;, 1)
-        &gt;&gt;&gt; np.round(diag[.2, -.3].pop().get_gnomonic(), 3)
-        array([ 0.266, -0.299])
-        &gt;&gt;&gt;
-        &gt;&gt;&gt; len(diag[0.2, .5, &#34;gnomonic&#34;, 6])
-        6
-        &gt;&gt;&gt; np.array([d.get_gnomonic() for d in diag[0.2, .5, &#34;gnomonic&#34;, 3]])
-        array([[0.29464949, 0.39670733],
-               [0.06846284, 0.55485944],
-               [0.07130572, 0.41748433]])
+        &gt;&gt;&gt; diag[0.3, 0.3]
+        Spot(position=(622.09, 1656.72), quality=0.949)
+        &gt;&gt;&gt; np.round(diag[0.3, 0.3].get_gnomonic(), 2)
+        array([0.25, 0.32])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        if isinstance(items, (int, np.integer)):
-            return self.spots[items]
+        if isinstance(item, (int, np.integer)):
+            return self.spots[item]
 
-        if isinstance(items, slice):
-            return self.spots[items]
+        if isinstance(item, slice):
+            return self.spots[item]
 
-        if isinstance(items, tuple):
-            if not items:
-                raise ValueError(&#34;Vous ne pouvez pas fournir un tuple vide.&#34;)
+        if isinstance(item, (Spot, tuple)):
+            return self.get_neighbors(item, n_max=1).pop()
 
-            # Recuperation des informations.
-            if isinstance(items[0], Spot):
-                spot, *infos = items
-
-                # Recherche de la metrique
-                if not infos or infos[0] is None:
-                    if infos:
-                        _, *infos = infos
-                    space = &#34;camera&#34;
-                else:
-                    space, *infos = infos
-
-                x, y = {&#34;camera&#34;: lambda spot: spot.get_position(),
-                        &#34;gnomonic&#34;: lambda spot: spot.get_gnomonic(),
-                        &#34;angle&#34;: lambda spot: spot.get_twicetheta_chi()
-                        }.get(space, lambda spot: (None, None))[spot]
-            else:
-                if len(items) &lt; 2:
-                    raise ValueError(&#34;Si vous chercher a recuperer les spots&#34;
-                        &#34;d&#39;un voisinage, vous devez fournir au moins 2 arguments\n.&#34;
-                        f&#34;Or il y en a {len(items)}.&#34;)
-                x, y, *infos = items
-
-                # Recherche de la metrique
-                if type(x) != type(y):
-                    raise ValueError(&#34;Les 2 premieres coordonnees doivent etre homogenes&#34;)
-                if not isinstance(x, (int, float)):
-                    raise ValueError(&#34;Les 2 premiers elements doivent etre de type int ou float, &#34;
-                        f&#34;pas de type {type(x).__name__}.&#34;)
-                if not infos or infos[0] is None:
-                    if infos:
-                        _, *infos = infos
-                    space = &#34;camera&#34; if isinstance(x, int) else &#34;gnomonic&#34;
-                else:
-                    space, *infos = infos
-
-            # Recherche du nombre de voisins.
-            if not infos or infos[0] is None:
-                if infos:
-                    _, *infos = infos
-                nbr_voisins = 1
-            else:
-                nbr_voisins, *infos = infos
-
-            # Verifications
-            if not isinstance(nbr_voisins, int):
-                raise ValueError(&#34;Le nombre de voisin doit etre un entier, &#34;
-                    f&#34;pas {type(nbr_voisins).__name__}&#34;)
-            if nbr_voisins &lt; 1:
-                raise ValueError(&#34;Le nombre de voisin doit etre strictement positif.&#34;)
-            if space not in {&#34;camera&#34;, &#34;gnomonic&#34;, &#34;angle&#34;}:
-                raise ValueError(&#34;Le dernier argument ne peut etre que &#34;
-                    f&#34;&#39;camera&#39;, &#39;gnomonic&#39; ou &#39;angle&#39;. Pas {repr(space)}&#34;)
-            if infos:
-                raise ValueError(&#34;Il y a trop de parametres.&#34;)
-
-            # Recherche des voisins
-            from laue.spot import distance
-
-            d_list = distance((x, y), self.select_spots(), space=space)
-            if nbr_voisins == 1:
-                return [self.spots[np.argmin(d_list)]]
-            return [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr_voisins]]
-
-        if isinstance(items, Spot):
-            return self[items, None, None]
-
-        raise ValueError(&#34;Seul les types &#39;int&#39;, &#39;slice&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportees. &#34;
-            f&#34;Or le type fourni est {type(items).__name__}.&#34;)
+        raise ValueError(&#34;Seul les types &#39;int&#39;, &#39;slice&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportes. &#34;
+            f&#34;Or le type fourni est {type(item).__name__}.&#34;)
 
     def __hash__(self):
         &#34;&#34;&#34;
@@ -2103,19 +2165,19 @@ True
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.__getitem__"><code class="name flex">
-<span>def <span class="ident">__getitem__</span></span>(<span>self, items)</span>
+<span>def <span class="ident">__getitem__</span></span>(<span>self, item)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Permet de recuperer des elements. </strong></p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>items</code></strong> :&ensp;<code>int, slice, tuple, <a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code></dt>
+<dt><strong><code>items</code></strong> :&ensp;<code>int, slice, <a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a>, tuple</code></dt>
 <dd>C'est un element qui permet de choisir un ou plusieurs
-spot dans ce diagram de laue.</dd>
+spot.s dans ce diagram de laue.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>spots</code></strong> :&ensp;<code>list, <a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code></dt>
+<dt><strong><code>spots</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a>, list</code></dt>
 <dd>
 <ul>
 <li>L'element renvoye depend du parametre d'entree <code>items</code>:<ul>
@@ -2129,27 +2191,7 @@ l'intervalle fournit. Comme si <code><a title="laue.diagram.LaueDiagram" href="#
 <li>Type renvoye: <code>list</code>.</li>
 </ul>
 </li>
-<li>tuple =&gt; Cherche un spot ou plusieur selon une notion de distance.<ul>
-<li>Le premier et/ou deuxieme argument peut etre un spot ou bien 2 nombres x et y.</li>
-<li>Le troisieme argument (factultatif) permet de preciser l'espace
-et la metrique a utiliser pour comparer les spots a la reference.
-C'est une chaine de caracetere expicite:<ul>
-<li>"camera" (valeur par defaut si x et y de type <code>int</code>
-ou que le premier argument est un spot) =&gt;
-Distance euclidiene dans le plan de la camera (pxl).</li>
-<li>"gnomonic" (valeur par defaut si x et y de type <code>float</code>) =&gt;
-Distance euclidiene dans le plan gnomonique (mm).</li>
-<li>"angle" =&gt; Cosine distance entre les vecteurs <code>uq</code> (axe de reflexion)
-de chaquns des points (en degre).
-Le premier argument est interprete comme <code>2*theta</code> et le second comme <code>chi</code>.</li>
-</ul>
-</li>
-<li>Le quatrieme argument correspond au nombre de voisins a prendre.
-La valeur par defaut est 1. Cet argument doit etre un entier positif.</li>
-<li>Type renvoye: <code>list</code>.</li>
-</ul>
-</li>
-<li>spot =&gt; equivalent a <code>self[spot, "camera"]</code>.</li>
+<li><code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code> or tuple =&gt; equivalent a <code>self.get_neighbors(item, n_max=1).pop()</code>.</li>
 </ul>
 </li>
 </ul>
@@ -2158,9 +2200,11 @@ La valeur par defaut est 1. Cet argument doit etre un entier positif.</li>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>IndexError</code></dt>
-<dd>Si aucun spot n'est quandidat ou qu'on shouaite acceder a un spot qui n'existe pas.</dd>
+<dd>Si aucun spot n'est candidat ou qu'on shouaite acceder a un spot qui n'existe pas.</dd>
 <dt><code>ValueError</code></dt>
 <dd>Si les arguments fournis ne sont pas conformes.</dd>
+<dt><code>TypeError</code></dt>
+<dd>Si les arguments fournis ne sont pas du bon type.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
@@ -2173,41 +2217,32 @@ La valeur par defaut est 1. Cet argument doit etre un entier positif.</li>
 &gt;&gt;&gt; type(diag[3:22]), len(diag[3:22])
 (&lt;class 'list'&gt;, 19)
 &gt;&gt;&gt;
-&gt;&gt;&gt; type(diag[500, 700]), len(diag[500, 700])
-(&lt;class 'list'&gt;, 1)
-&gt;&gt;&gt; np.round(diag[500, 700].pop().get_position(), 3)
-array([521.018, 724.495])
+&gt;&gt;&gt; diag[622, 1657]
+Spot(position=(622.09, 1656.72), quality=0.949)
 &gt;&gt;&gt;
-&gt;&gt;&gt; type(diag[.2, -.3]), len(diag[.2, -.3])
-(&lt;class 'list'&gt;, 1)
-&gt;&gt;&gt; np.round(diag[.2, -.3].pop().get_gnomonic(), 3)
-array([ 0.266, -0.299])
-&gt;&gt;&gt;
-&gt;&gt;&gt; len(diag[0.2, .5, &quot;gnomonic&quot;, 6])
-6
-&gt;&gt;&gt; np.array([d.get_gnomonic() for d in diag[0.2, .5, &quot;gnomonic&quot;, 3]])
-array([[0.29464949, 0.39670733],
-       [0.06846284, 0.55485944],
-       [0.07130572, 0.41748433]])
+&gt;&gt;&gt; diag[0.3, 0.3]
+Spot(position=(622.09, 1656.72), quality=0.949)
+&gt;&gt;&gt; np.round(diag[0.3, 0.3].get_gnomonic(), 2)
+array([0.25, 0.32])
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def __getitem__(self, items):
+<pre><code class="python">def __getitem__(self, item):
     &#34;&#34;&#34;
     ** Permet de recuperer des elements. **
 
     Parameters
     ----------
-    items : int, slice, tuple, laue.spot.Spot
+    items : int, slice, laue.spot.Spot, tuple
         C&#39;est un element qui permet de choisir un ou plusieurs
-        spot dans ce diagram de laue.
+        spot.s dans ce diagram de laue.
 
     Returns
     -------
-    spots : list, laue.spot.Spot
+    spots : laue.spot.Spot, list
         - L&#39;element renvoye depend du parametre d&#39;entree ``items``:
             - int =&gt; Renvoi le item(ieme) spot. Comme si un
             ``LaueDiagram`` etait une liste de ``laue.spot.Spot``.
@@ -2215,33 +2250,19 @@ array([[0.29464949, 0.39670733],
             - slice =&gt; Renvoi la liste des spots compris dans
             l&#39;intervalle fournit. Comme si ``LaueDiagram`` est aussi une liste.
                 - Type renvoye: ``list``.
-            - tuple =&gt; Cherche un spot ou plusieur selon une notion de distance.
-                - Le premier et/ou deuxieme argument peut etre un spot ou bien 2 nombres x et y.
-                - Le troisieme argument (factultatif) permet de preciser l&#39;espace
-                et la metrique a utiliser pour comparer les spots a la reference.
-                C&#39;est une chaine de caracetere expicite:
-                    - &#34;camera&#34; (valeur par defaut si x et y de type ``int``
-                    ou que le premier argument est un spot) =&gt;
-                    Distance euclidiene dans le plan de la camera (pxl).
-                    - &#34;gnomonic&#34; (valeur par defaut si x et y de type ``float``) =&gt;
-                    Distance euclidiene dans le plan gnomonique (mm).
-                    - &#34;angle&#34; =&gt; Cosine distance entre les vecteurs ``uq`` (axe de reflexion)
-                    de chaquns des points (en degre).
-                    Le premier argument est interprete comme ``2*theta`` et le second comme ``chi``.
-                - Le quatrieme argument correspond au nombre de voisins a prendre.
-                La valeur par defaut est 1. Cet argument doit etre un entier positif.
-                - Type renvoye: ``list``.
-            - spot =&gt; equivalent a ``self[spot, &#34;camera&#34;]``.
+            - ``laue.spot.Spot`` or tuple =&gt; equivalent a ``self.get_neighbors(item, n_max=1).pop()``.
 
     Raises
     ------
     IndexError
-        Si aucun spot n&#39;est quandidat ou qu&#39;on shouaite acceder a un spot qui n&#39;existe pas.
+        Si aucun spot n&#39;est candidat ou qu&#39;on shouaite acceder a un spot qui n&#39;existe pas.
     ValueError
         Si les arguments fournis ne sont pas conformes.
+    TypeError
+        Si les arguments fournis ne sont pas du bon type.
 
     Examples
-    -------
+    --------
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
@@ -2252,103 +2273,26 @@ array([[0.29464949, 0.39670733],
     &gt;&gt;&gt; type(diag[3:22]), len(diag[3:22])
     (&lt;class &#39;list&#39;&gt;, 19)
     &gt;&gt;&gt;
-    &gt;&gt;&gt; type(diag[500, 700]), len(diag[500, 700])
-    (&lt;class &#39;list&#39;&gt;, 1)
-    &gt;&gt;&gt; np.round(diag[500, 700].pop().get_position(), 3)
-    array([521.018, 724.495])
+    &gt;&gt;&gt; diag[622, 1657]
+    Spot(position=(622.09, 1656.72), quality=0.949)
     &gt;&gt;&gt;
-    &gt;&gt;&gt; type(diag[.2, -.3]), len(diag[.2, -.3])
-    (&lt;class &#39;list&#39;&gt;, 1)
-    &gt;&gt;&gt; np.round(diag[.2, -.3].pop().get_gnomonic(), 3)
-    array([ 0.266, -0.299])
-    &gt;&gt;&gt;
-    &gt;&gt;&gt; len(diag[0.2, .5, &#34;gnomonic&#34;, 6])
-    6
-    &gt;&gt;&gt; np.array([d.get_gnomonic() for d in diag[0.2, .5, &#34;gnomonic&#34;, 3]])
-    array([[0.29464949, 0.39670733],
-           [0.06846284, 0.55485944],
-           [0.07130572, 0.41748433]])
+    &gt;&gt;&gt; diag[0.3, 0.3]
+    Spot(position=(622.09, 1656.72), quality=0.949)
+    &gt;&gt;&gt; np.round(diag[0.3, 0.3].get_gnomonic(), 2)
+    array([0.25, 0.32])
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    if isinstance(items, (int, np.integer)):
-        return self.spots[items]
+    if isinstance(item, (int, np.integer)):
+        return self.spots[item]
 
-    if isinstance(items, slice):
-        return self.spots[items]
+    if isinstance(item, slice):
+        return self.spots[item]
 
-    if isinstance(items, tuple):
-        if not items:
-            raise ValueError(&#34;Vous ne pouvez pas fournir un tuple vide.&#34;)
+    if isinstance(item, (Spot, tuple)):
+        return self.get_neighbors(item, n_max=1).pop()
 
-        # Recuperation des informations.
-        if isinstance(items[0], Spot):
-            spot, *infos = items
-
-            # Recherche de la metrique
-            if not infos or infos[0] is None:
-                if infos:
-                    _, *infos = infos
-                space = &#34;camera&#34;
-            else:
-                space, *infos = infos
-
-            x, y = {&#34;camera&#34;: lambda spot: spot.get_position(),
-                    &#34;gnomonic&#34;: lambda spot: spot.get_gnomonic(),
-                    &#34;angle&#34;: lambda spot: spot.get_twicetheta_chi()
-                    }.get(space, lambda spot: (None, None))[spot]
-        else:
-            if len(items) &lt; 2:
-                raise ValueError(&#34;Si vous chercher a recuperer les spots&#34;
-                    &#34;d&#39;un voisinage, vous devez fournir au moins 2 arguments\n.&#34;
-                    f&#34;Or il y en a {len(items)}.&#34;)
-            x, y, *infos = items
-
-            # Recherche de la metrique
-            if type(x) != type(y):
-                raise ValueError(&#34;Les 2 premieres coordonnees doivent etre homogenes&#34;)
-            if not isinstance(x, (int, float)):
-                raise ValueError(&#34;Les 2 premiers elements doivent etre de type int ou float, &#34;
-                    f&#34;pas de type {type(x).__name__}.&#34;)
-            if not infos or infos[0] is None:
-                if infos:
-                    _, *infos = infos
-                space = &#34;camera&#34; if isinstance(x, int) else &#34;gnomonic&#34;
-            else:
-                space, *infos = infos
-
-        # Recherche du nombre de voisins.
-        if not infos or infos[0] is None:
-            if infos:
-                _, *infos = infos
-            nbr_voisins = 1
-        else:
-            nbr_voisins, *infos = infos
-
-        # Verifications
-        if not isinstance(nbr_voisins, int):
-            raise ValueError(&#34;Le nombre de voisin doit etre un entier, &#34;
-                f&#34;pas {type(nbr_voisins).__name__}&#34;)
-        if nbr_voisins &lt; 1:
-            raise ValueError(&#34;Le nombre de voisin doit etre strictement positif.&#34;)
-        if space not in {&#34;camera&#34;, &#34;gnomonic&#34;, &#34;angle&#34;}:
-            raise ValueError(&#34;Le dernier argument ne peut etre que &#34;
-                f&#34;&#39;camera&#39;, &#39;gnomonic&#39; ou &#39;angle&#39;. Pas {repr(space)}&#34;)
-        if infos:
-            raise ValueError(&#34;Il y a trop de parametres.&#34;)
-
-        # Recherche des voisins
-        from laue.spot import distance
-
-        d_list = distance((x, y), self.select_spots(), space=space)
-        if nbr_voisins == 1:
-            return [self.spots[np.argmin(d_list)]]
-        return [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr_voisins]]
-
-    if isinstance(items, Spot):
-        return self[items, None, None]
-
-    raise ValueError(&#34;Seul les types &#39;int&#39;, &#39;slice&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportees. &#34;
-        f&#34;Or le type fourni est {type(items).__name__}.&#34;)</code></pre>
+    raise ValueError(&#34;Seul les types &#39;int&#39;, &#39;slice&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportes. &#34;
+        f&#34;Or le type fourni est {type(item).__name__}.&#34;)</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.__hash__"><code class="name flex">
@@ -2597,12 +2541,12 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
     # Creation des objets &#39;ZoneAxis&#39;.
     from laue.zone_axis import ZoneAxis
     self.axis[(dmax, nbr, tol)] = [
-            ZoneAxis(diagram=self,
+        ZoneAxis(diagram=self,
                  spots_ind=spots_ind,
                  identifier=i,
                  angle=angle,
                  dist=dist)
-            for i, (angle, dist, spots_ind) in enumerate(zip(angles, dists, axis_spots_ind))]
+        for i, (angle, dist, spots_ind) in enumerate(zip(angles, dists, axis_spots_ind))]
 
     # Attribution des axes aux spots.
     for spot, axes_ind in zip(self, spots_axes_ind):
@@ -2639,15 +2583,18 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
 En general l'un des parametres de set_calibration.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.get_gnomonic_positions().shape
 (2, 78)
-&gt;&gt;&gt; diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0])
-array([[-0.0978478 , -0.20958039, -0.04084784, -0.3524825 ],
-       [ 0.5766271 ,  0.48377115,  0.56894475,  0.36476415]],
-      dtype=float32)
+&gt;&gt;&gt; np.round(
+...     diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0]),
+...     2)
+...
+array([[-0.1 , -0.21, -0.04, -0.35],
+       [ 0.58,  0.48,  0.57,  0.36]], dtype=float32)
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -2679,15 +2626,18 @@ array([[-0.0978478 , -0.20958039, -0.04084784, -0.3524825 ],
 
     Examples
     --------
+    &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; diag.get_gnomonic_positions().shape
     (2, 78)
-    &gt;&gt;&gt; diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0])
-    array([[-0.0978478 , -0.20958039, -0.04084784, -0.3524825 ],
-           [ 0.5766271 ,  0.48377115,  0.56894475,  0.36476415]],
-          dtype=float32)
+    &gt;&gt;&gt; np.round(
+    ...     diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0]),
+    ...     2)
+    ...
+    array([[-0.1 , -0.21, -0.04, -0.35],
+           [ 0.58,  0.48,  0.57,  0.36]], dtype=float32)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     # On calcul les projections pour tous les points a la fois.
@@ -2916,6 +2866,203 @@ array([[0, 0, 0, ..., 0, 0, 0],
         self.image_xy = image
 
     return image</code></pre>
+</details>
+</dd>
+<dt id="laue.diagram.LaueDiagram.get_neighbors"><code class="name flex">
+<span>def <span class="ident">get_neighbors</span></span>(<span>self, spot, *, space=None, n_max=None, d_max=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere des spots proches. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>spot</code></strong> :&ensp;<code>int, <a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a>, tuple</code></dt>
+<dd>
+<ul>
+<li>Le spot a considerer, celui de reference.<ul>
+<li>int =&gt; Considere le item(ieme) spot. Comme si un
+<code><a title="laue.diagram.LaueDiagram" href="#laue.diagram.LaueDiagram">LaueDiagram</a></code> etait une liste de <code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code>.</li>
+<li><code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code> =&gt; Prend directement le
+spot fourni come spot de reference.</li>
+<li>tuple =&gt; Les 2 coordonnees qui caracterisent le spot.
+Il peuvent etre exprime dans 3 reperes differents.
+Celui de la camera, celui dans le plan gnomonic, et celui angulaire en theta chi.<ul>
+<li>(int, int) =&gt; Interprete comme x_camera et y_camera en pxl.</li>
+<li>(float, float) =&gt; Interprete comme x_gnomonic et y_gnomonic en mm.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt><strong><code>space</code></strong> :&ensp;<code>str</code></dt>
+<dd>Given to <code><a title="laue.spot.distance" href="spot.html#laue.spot.distance">distance()</a></code>.</dd>
+<dt><strong><code>n_max</code></strong> :&ensp;<code>int</code></dt>
+<dd>C'est le nombre maximum de voisins (reference comprise) a renvoyer.
+C'est la taille maximal de la liste renvoyee. Par defaut, il n'y a pas de limite.</dd>
+<dt><strong><code>d_max</code></strong> :&ensp;<code>number</code></dt>
+<dd>C'est la distance maximal qui peut separer le spot de reference
+aux autres spots. Par defaut, ce rayon est infini.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>La liste contenant les spots de type <code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code>.
+Les spots sont ordonnes du plus proche au plus lointain.
+Le premier element peut etre le spot de reference si il existe.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>Si l'une des valeur fournie n'est pas coherente.</dd>
+<dt><code>TypeError</code></dt>
+<dd>Si l'un des type est absurde.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; spot, = diag.select_spots(n=1, sort=&quot;intensity&quot;)
+&gt;&gt;&gt; spot
+Spot(position=(622.09, 1656.72), quality=0.949)
+&gt;&gt;&gt;
+&gt;&gt;&gt; type(diag.get_neighbors(0))
+&lt;class 'list'&gt;
+&gt;&gt;&gt; len(diag.get_neighbors(0)) == len(diag)
+True
+&gt;&gt;&gt; len(diag.get_neighbors(0, n_max=2))
+2
+&gt;&gt;&gt;
+&gt;&gt;&gt; diag.get_neighbors((622, 1657), n_max=2)
+[Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(562.63, 1802.56), quality=0.603)]
+&gt;&gt;&gt; diag.get_neighbors((622, 1657), d_max=10.0)
+[Spot(position=(622.09, 1656.72), quality=0.949)]
+&gt;&gt;&gt;
+&gt;&gt;&gt; diag.get_neighbors(spot, n_max=2)
+[Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(562.63, 1802.56), quality=0.603)]
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_neighbors(self, spot, *, space=None, n_max=None, d_max=None):
+    &#34;&#34;&#34;
+    ** Recupere des spots proches. **
+
+    Parameters
+    ----------
+    spot : int, laue.spot.Spot, tuple
+        - Le spot a considerer, celui de reference.
+            - int =&gt; Considere le item(ieme) spot. Comme si un
+                ``LaueDiagram`` etait une liste de ``laue.spot.Spot``.
+            - ``laue.spot.Spot`` =&gt; Prend directement le
+                spot fourni come spot de reference.
+            - tuple =&gt; Les 2 coordonnees qui caracterisent le spot.
+                Il peuvent etre exprime dans 3 reperes differents.
+                Celui de la camera, celui dans le plan gnomonic, et celui angulaire en theta chi.
+                - (int, int) =&gt; Interprete comme x_camera et y_camera en pxl.
+                - (float, float) =&gt; Interprete comme x_gnomonic et y_gnomonic en mm.
+    space : str
+        Given to ``laue.spot.distance``.
+    n_max : int
+        C&#39;est le nombre maximum de voisins (reference comprise) a renvoyer.
+        C&#39;est la taille maximal de la liste renvoyee. Par defaut, il n&#39;y a pas de limite.
+    d_max : number
+        C&#39;est la distance maximal qui peut separer le spot de reference
+        aux autres spots. Par defaut, ce rayon est infini.
+
+    Returns
+    -------
+    list
+        La liste contenant les spots de type ``laue.spot.Spot``.
+        Les spots sont ordonnes du plus proche au plus lointain.
+        Le premier element peut etre le spot de reference si il existe.
+
+    Raises
+    ------
+    ValueError
+        Si l&#39;une des valeur fournie n&#39;est pas coherente.
+    TypeError
+        Si l&#39;un des type est absurde.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; spot, = diag.select_spots(n=1, sort=&#34;intensity&#34;)
+    &gt;&gt;&gt; spot
+    Spot(position=(622.09, 1656.72), quality=0.949)
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; type(diag.get_neighbors(0))
+    &lt;class &#39;list&#39;&gt;
+    &gt;&gt;&gt; len(diag.get_neighbors(0)) == len(diag)
+    True
+    &gt;&gt;&gt; len(diag.get_neighbors(0, n_max=2))
+    2
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; diag.get_neighbors((622, 1657), n_max=2)
+    [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(562.63, 1802.56), quality=0.603)]
+    &gt;&gt;&gt; diag.get_neighbors((622, 1657), d_max=10.0)
+    [Spot(position=(622.09, 1656.72), quality=0.949)]
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; diag.get_neighbors(spot, n_max=2)
+    [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(562.63, 1802.56), quality=0.603)]
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    # Extraction des position du spot.
+    if isinstance(spot, (int, np.integer)): # Si le spot est designe par son rang.
+        spot = self[spot] # On recupere l&#39;instance du spot lui-meme.
+    if isinstance(spot, Spot): # Si le spot est trop complexe.
+        if space is None or space == &#34;camera&#34;:
+            spot = spot.get_position()
+        elif space == &#34;gnomonic&#34;:
+            spot = spot.get_gnomonic()
+        elif space == &#34;angle&#34;:
+            spot = spot.get_theta_chi()
+        else:
+            raise ValueError(f&#34;L&#39;espace {space} est pas connu. &#34;
+                &#34;Seul, &#39;camera&#39;, &#39;gnomonic&#39; et &#39;angle&#39; sont admissibles.&#34;)
+    elif isinstance(spot, tuple):
+        if len(spot) != 2:
+            raise ValueError(&#34;Si le spot de reference est un tuple, il doit &#34;
+                f&#34;contenir exactement 2 elements, pas {len(spot)}.&#34;)
+        if type(spot[0]) != type(spot[1]):
+            raise TypeError(&#34;Les 2 coordonnees doivent etre homogenes&#34;)
+
+        # Recherche de la metrique
+        if not isinstance(spot[0], (int, np.integer, float)):
+            raise TypeError(&#34;Les 2 coordonnes doivent etre de type int ou float, &#34;
+                f&#34;pas de type {type(spot[0]).__name__}.&#34;)
+        if space is None:
+            space = &#34;camera&#34; if isinstance(spot[0], (int, np.integer)) else &#34;gnomonic&#34;
+
+    else:
+        raise TypeError(&#34;Seul les types &#39;int&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportees. &#34;
+            f&#34;Or le type fourni est {type(spot).__name__}.&#34;)
+    
+    if space is None:
+        space = &#34;camera&#34;
+
+    # Recherche des voisins
+    from laue.spot import distance
+
+    d_list = distance(spot, self.select_spots(), space=space)
+    nbr = len(self)
+    if d_max is not None:
+        if not isinstance(d_max, (float, int)):
+            raise TypeError(f&#34;&#39;d_max&#39; has to be a number, not a {type(d_max).__name__}.&#34;)
+        if d_max &lt;= 0:
+            raise ValueError(f&#34;&#39;d_max&#39; doit etre strictement positif. Or il vaut {d_max}.&#34;)
+        nbr = (d_list &lt;= d_max).sum()
+    if n_max is not None:
+        if not isinstance(n_max, int):
+            raise TypeError(f&#34;&#39;n_max&#39; has to be a integer, not a {type(n_max).__name__}.&#34;)
+        if n_max &lt; 1:
+            raise ValueError(f&#34;Il faut selectioner au moin 1 voisin. {n_max} c&#39;est pas suffisant.&#34;)
+        nbr = min(nbr, n_max)
+
+    return [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.get_positions"><code class="name flex">
@@ -3571,6 +3718,7 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 <li><code><a title="laue.diagram.LaueDiagram.get_id" href="#laue.diagram.LaueDiagram.get_id">get_id</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.get_image_gnomonic" href="#laue.diagram.LaueDiagram.get_image_gnomonic">get_image_gnomonic</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.get_image_xy" href="#laue.diagram.LaueDiagram.get_image_xy">get_image_xy</a></code></li>
+<li><code><a title="laue.diagram.LaueDiagram.get_neighbors" href="#laue.diagram.LaueDiagram.get_neighbors">get_neighbors</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.get_positions" href="#laue.diagram.LaueDiagram.get_positions">get_positions</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.get_quality" href="#laue.diagram.LaueDiagram.get_quality">get_quality</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.plot_all" href="#laue.diagram.LaueDiagram.plot_all">plot_all</a></code></li>

@@ -328,7 +328,7 @@ class Experiment:
             diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:4])
             best_diagrams = [next(diagrams)]
             best_diagrams.extend([dia for dia in diagrams
-                if dia.get_quality() &gt; 0.75*best_diagrams[0].get_quality()])
+                if dia.get_quality() &gt; 0.8*best_diagrams[0].get_quality()])
         else: # Si l&#39;utilisateur nous en fournit.
             best_diagrams = diagrams # C&#39;est un tuple et non pas une liste mais c&#39;est pas genant.
         if self.verbose &gt;= 2:
@@ -1574,7 +1574,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
             diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:4])
             best_diagrams = [next(diagrams)]
             best_diagrams.extend([dia for dia in diagrams
-                if dia.get_quality() &gt; 0.75*best_diagrams[0].get_quality()])
+                if dia.get_quality() &gt; 0.8*best_diagrams[0].get_quality()])
         else: # Si l&#39;utilisateur nous en fournit.
             best_diagrams = diagrams # C&#39;est un tuple et non pas une liste mais c&#39;est pas genant.
         if self.verbose &gt;= 2:
@@ -3560,7 +3560,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
         diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:4])
         best_diagrams = [next(diagrams)]
         best_diagrams.extend([dia for dia in diagrams
-            if dia.get_quality() &gt; 0.75*best_diagrams[0].get_quality()])
+            if dia.get_quality() &gt; 0.8*best_diagrams[0].get_quality()])
     else: # Si l&#39;utilisateur nous en fournit.
         best_diagrams = diagrams # C&#39;est un tuple et non pas une liste mais c&#39;est pas genant.
     if self.verbose &gt;= 2:

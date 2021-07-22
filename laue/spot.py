@@ -359,7 +359,7 @@ class Spot:
         self.quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
         return self.quality
 
-    def get_twicetheta_chi(self):
+    def get_theta_chi(self):
         """
         ** Cherche les angles du rayon reflechi. **
 

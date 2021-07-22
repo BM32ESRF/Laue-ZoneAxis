@@ -117,7 +117,7 @@ def distance(axis1, axis2, *, weight=.5):
     &gt;&gt;&gt; axes = laue.Experiment(image,
     ...     config_file=&#34;laue/examples/ge_blanc.det&#34;
     ...     )[0].find_zone_axes()
-    &gt;&gt;&gt; axes.sort(key=lambda axis: axis.get_quality())
+    &gt;&gt;&gt; axes.sort(key=lambda axis: len(axis)-axis.get_quality())
     &gt;&gt;&gt; ax1, ax2, *axes = axes
     &gt;&gt;&gt; np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
     array([[-2.719  ,  0.2432 ],
@@ -230,7 +230,7 @@ class ZoneAxis:
         self.diagram = diagram
         self.spots = collections.OrderedDict(
             (
-                (ind, diagram[ind])
+                (int(ind), diagram[ind])
                 for ind in sorted(spots_ind)
             ))
         self.identifier = identifier
@@ -248,13 +248,14 @@ class ZoneAxis:
 
         Examples
         --------
-        &gt;&gt;&gt; import numpy
+        &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-        &gt;&gt;&gt; np.float16(axis.dist_mean())
-        5.054e-05
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; type(axis.dist_mean())
+        &lt;class &#39;numpy.float32&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         theta_vect, dist_vect = self.get_polar_coords()
@@ -279,10 +280,13 @@ class ZoneAxis:
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+        &gt;&gt;&gt;
         &gt;&gt;&gt; angle, dist = axis.get_polar_coords()
-        &gt;&gt;&gt; np.float16(angle), np.float16(dist)
-        (-0.504, 0.0664)
+        &gt;&gt;&gt; type(angle) # In radian.
+        &lt;class &#39;numpy.float32&#39;&gt;
+        &gt;&gt;&gt; type(dist) # In mm.
+        &lt;class &#39;numpy.float32&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return self.angle, self.dist
@@ -302,14 +306,14 @@ class ZoneAxis:
 
         Examples
         --------
-        &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; qualities = sorted(axis.get_quality() for axis in diag.find_zone_axes())
-        &gt;&gt;&gt; np.array(qualities, dtype=np.float16)
-        array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
-               0.8496], dtype=float16)
+        &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
+        &gt;&gt;&gt; round(min(qualities), 1)
+        0.3
+        &gt;&gt;&gt; round(max(qualities), 1)
+        0.8
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         def dmean_2_score(dmean, d_max=.0117):
@@ -362,7 +366,7 @@ class ZoneAxis:
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; axis.plot_gnomonic(display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
@@ -410,7 +414,7 @@ class ZoneAxis:
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; axis.plot_xy(display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
@@ -467,18 +471,19 @@ class ZoneAxis:
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-        &gt;&gt;&gt; axis
-        ZoneAxis(spots_ind=(2, 5, 8, 12, 22, 25, 27, 29, 31, 33, 35, 38, 39, 42), identifier=1, angle=-0.5040, dist=0.0664)
-        &gt;&gt;&gt; spot2, spot3 = diag[2], diag[3]
-        &gt;&gt;&gt; spot2 in axis
-        True
-        &gt;&gt;&gt; spot3 in axis
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+        &gt;&gt;&gt; spot0, i_ok = diag[0], next(iter(axis.spots))
+        &gt;&gt;&gt; type(spot0), type(i_ok)
+        (&lt;class &#39;laue.spot.Spot&#39;&gt;, &lt;class &#39;int&#39;&gt;)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; spot0 in axis
         False
-        &gt;&gt;&gt; 2 in axis
+        &gt;&gt;&gt; i_ok in axis
         True
-        &gt;&gt;&gt; 3 in axis
+        &gt;&gt;&gt; 0 in axis
         False
+        &gt;&gt;&gt; diag[i_ok] in axis
+        True
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if isinstance(spot, int):
@@ -516,7 +521,7 @@ class ZoneAxis:
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt; for spot in axis:
         ...     pass
         ...
@@ -533,9 +538,11 @@ class ZoneAxis:
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-        &gt;&gt;&gt; len(axis)
-        14
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+        &gt;&gt;&gt; type(len(axis))
+        &lt;class &#39;int&#39;&gt;
+        &gt;&gt;&gt; len(axis) &gt;= 6
+        True
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return len(self.spots)
@@ -747,7 +754,7 @@ du cluster a l'axe isole est renvoye.</li>
 &gt;&gt;&gt; axes = laue.Experiment(image,
 ...     config_file=&quot;laue/examples/ge_blanc.det&quot;
 ...     )[0].find_zone_axes()
-&gt;&gt;&gt; axes.sort(key=lambda axis: axis.get_quality())
+&gt;&gt;&gt; axes.sort(key=lambda axis: len(axis)-axis.get_quality())
 &gt;&gt;&gt; ax1, ax2, *axes = axes
 &gt;&gt;&gt; np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
 array([[-2.719  ,  0.2432 ],
@@ -823,7 +830,7 @@ array([[-2.719  ,  0.2432 ],
     &gt;&gt;&gt; axes = laue.Experiment(image,
     ...     config_file=&#34;laue/examples/ge_blanc.det&#34;
     ...     )[0].find_zone_axes()
-    &gt;&gt;&gt; axes.sort(key=lambda axis: axis.get_quality())
+    &gt;&gt;&gt; axes.sort(key=lambda axis: len(axis)-axis.get_quality())
     &gt;&gt;&gt; ax1, ax2, *axes = axes
     &gt;&gt;&gt; np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
     array([[-2.719  ,  0.2432 ],
@@ -975,7 +982,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         self.diagram = diagram
         self.spots = collections.OrderedDict(
             (
-                (ind, diagram[ind])
+                (int(ind), diagram[ind])
                 for ind in sorted(spots_ind)
             ))
         self.identifier = identifier
@@ -993,13 +1000,14 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
 
         Examples
         --------
-        &gt;&gt;&gt; import numpy
+        &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-        &gt;&gt;&gt; np.float16(axis.dist_mean())
-        5.054e-05
+        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; type(axis.dist_mean())
+        &lt;class &#39;numpy.float32&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         theta_vect, dist_vect = self.get_polar_coords()
@@ -1024,10 +1032,13 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+        &gt;&gt;&gt;
         &gt;&gt;&gt; angle, dist = axis.get_polar_coords()
-        &gt;&gt;&gt; np.float16(angle), np.float16(dist)
-        (-0.504, 0.0664)
+        &gt;&gt;&gt; type(angle) # In radian.
+        &lt;class &#39;numpy.float32&#39;&gt;
+        &gt;&gt;&gt; type(dist) # In mm.
+        &lt;class &#39;numpy.float32&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return self.angle, self.dist
@@ -1047,14 +1058,14 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
 
         Examples
         --------
-        &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; qualities = sorted(axis.get_quality() for axis in diag.find_zone_axes())
-        &gt;&gt;&gt; np.array(qualities, dtype=np.float16)
-        array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
-               0.8496], dtype=float16)
+        &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
+        &gt;&gt;&gt; round(min(qualities), 1)
+        0.3
+        &gt;&gt;&gt; round(max(qualities), 1)
+        0.8
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         def dmean_2_score(dmean, d_max=.0117):
@@ -1107,7 +1118,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; axis.plot_gnomonic(display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
@@ -1155,7 +1166,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; axis.plot_xy(display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
@@ -1212,18 +1223,19 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-        &gt;&gt;&gt; axis
-        ZoneAxis(spots_ind=(2, 5, 8, 12, 22, 25, 27, 29, 31, 33, 35, 38, 39, 42), identifier=1, angle=-0.5040, dist=0.0664)
-        &gt;&gt;&gt; spot2, spot3 = diag[2], diag[3]
-        &gt;&gt;&gt; spot2 in axis
-        True
-        &gt;&gt;&gt; spot3 in axis
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+        &gt;&gt;&gt; spot0, i_ok = diag[0], next(iter(axis.spots))
+        &gt;&gt;&gt; type(spot0), type(i_ok)
+        (&lt;class &#39;laue.spot.Spot&#39;&gt;, &lt;class &#39;int&#39;&gt;)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; spot0 in axis
         False
-        &gt;&gt;&gt; 2 in axis
+        &gt;&gt;&gt; i_ok in axis
         True
-        &gt;&gt;&gt; 3 in axis
+        &gt;&gt;&gt; 0 in axis
         False
+        &gt;&gt;&gt; diag[i_ok] in axis
+        True
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if isinstance(spot, int):
@@ -1261,7 +1273,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt; for spot in axis:
         ...     pass
         ...
@@ -1278,9 +1290,11 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-        &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-        &gt;&gt;&gt; len(axis)
-        14
+        &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+        &gt;&gt;&gt; type(len(axis))
+        &lt;class &#39;int&#39;&gt;
+        &gt;&gt;&gt; len(axis) &gt;= 6
+        True
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return len(self.spots)
@@ -1327,18 +1341,19 @@ au sein de <code><a title="laue.diagram.LaueDiagram" href="diagram.html#laue.dia
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
-&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-&gt;&gt;&gt; axis
-ZoneAxis(spots_ind=(2, 5, 8, 12, 22, 25, 27, 29, 31, 33, 35, 38, 39, 42), identifier=1, angle=-0.5040, dist=0.0664)
-&gt;&gt;&gt; spot2, spot3 = diag[2], diag[3]
-&gt;&gt;&gt; spot2 in axis
-True
-&gt;&gt;&gt; spot3 in axis
+&gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+&gt;&gt;&gt; spot0, i_ok = diag[0], next(iter(axis.spots))
+&gt;&gt;&gt; type(spot0), type(i_ok)
+(&lt;class 'laue.spot.Spot'&gt;, &lt;class 'int'&gt;)
+&gt;&gt;&gt;
+&gt;&gt;&gt; spot0 in axis
 False
-&gt;&gt;&gt; 2 in axis
+&gt;&gt;&gt; i_ok in axis
 True
-&gt;&gt;&gt; 3 in axis
+&gt;&gt;&gt; 0 in axis
 False
+&gt;&gt;&gt; diag[i_ok] in axis
+True
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1366,18 +1381,19 @@ False
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-    &gt;&gt;&gt; axis
-    ZoneAxis(spots_ind=(2, 5, 8, 12, 22, 25, 27, 29, 31, 33, 35, 38, 39, 42), identifier=1, angle=-0.5040, dist=0.0664)
-    &gt;&gt;&gt; spot2, spot3 = diag[2], diag[3]
-    &gt;&gt;&gt; spot2 in axis
-    True
-    &gt;&gt;&gt; spot3 in axis
+    &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+    &gt;&gt;&gt; spot0, i_ok = diag[0], next(iter(axis.spots))
+    &gt;&gt;&gt; type(spot0), type(i_ok)
+    (&lt;class &#39;laue.spot.Spot&#39;&gt;, &lt;class &#39;int&#39;&gt;)
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; spot0 in axis
     False
-    &gt;&gt;&gt; 2 in axis
+    &gt;&gt;&gt; i_ok in axis
     True
-    &gt;&gt;&gt; 3 in axis
+    &gt;&gt;&gt; 0 in axis
     False
+    &gt;&gt;&gt; diag[i_ok] in axis
+    True
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     if isinstance(spot, int):
@@ -1431,7 +1447,7 @@ False
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
-&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+&gt;&gt;&gt; axis = diag.find_zone_axes()[0]
 &gt;&gt;&gt; for spot in axis:
 ...     pass
 ...
@@ -1455,7 +1471,7 @@ False
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+    &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
     &gt;&gt;&gt; for spot in axis:
     ...     pass
     ...
@@ -1473,9 +1489,11 @@ False
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
-&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-&gt;&gt;&gt; len(axis)
-14
+&gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+&gt;&gt;&gt; type(len(axis))
+&lt;class 'int'&gt;
+&gt;&gt;&gt; len(axis) &gt;= 6
+True
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1491,9 +1509,11 @@ False
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-    &gt;&gt;&gt; len(axis)
-    14
+    &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+    &gt;&gt;&gt; type(len(axis))
+    &lt;class &#39;int&#39;&gt;
+    &gt;&gt;&gt; len(axis) &gt;= 6
+    True
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     return len(self.spots)</code></pre>
@@ -1510,13 +1530,14 @@ False
 <dd>La moyenne des distances. Voir <code><a title="laue.geometry.Transformer.dist_line" href="geometry.html#laue.geometry.Transformer.dist_line">Transformer.dist_line()</a></code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
-&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-&gt;&gt;&gt; np.float16(axis.dist_mean())
-5.054e-05
+&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
+&gt;&gt;&gt;
+&gt;&gt;&gt; type(axis.dist_mean())
+&lt;class 'numpy.float32'&gt;
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1534,13 +1555,14 @@ False
 
     Examples
     --------
-    &gt;&gt;&gt; import numpy
+    &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
-    &gt;&gt;&gt; np.float16(axis.dist_mean())
-    5.054e-05
+    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; type(axis.dist_mean())
+    &lt;class &#39;numpy.float32&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     theta_vect, dist_vect = self.get_polar_coords()
@@ -1566,10 +1588,13 @@ False
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
-&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+&gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+&gt;&gt;&gt;
 &gt;&gt;&gt; angle, dist = axis.get_polar_coords()
-&gt;&gt;&gt; np.float16(angle), np.float16(dist)
-(-0.504, 0.0664)
+&gt;&gt;&gt; type(angle) # In radian.
+&lt;class 'numpy.float32'&gt;
+&gt;&gt;&gt; type(dist) # In mm.
+&lt;class 'numpy.float32'&gt;
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1592,10 +1617,13 @@ False
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+    &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
+    &gt;&gt;&gt;
     &gt;&gt;&gt; angle, dist = axis.get_polar_coords()
-    &gt;&gt;&gt; np.float16(angle), np.float16(dist)
-    (-0.504, 0.0664)
+    &gt;&gt;&gt; type(angle) # In radian.
+    &lt;class &#39;numpy.float32&#39;&gt;
+    &gt;&gt;&gt; type(dist) # In mm.
+    &lt;class &#39;numpy.float32&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     return self.angle, self.dist</code></pre>
@@ -1622,14 +1650,14 @@ et la proximite des spots lies a cet axe.<ul>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
-&gt;&gt;&gt; qualities = sorted(axis.get_quality() for axis in diag.find_zone_axes())
-&gt;&gt;&gt; np.array(qualities, dtype=np.float16)
-array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
-       0.8496], dtype=float16)
+&gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
+&gt;&gt;&gt; round(min(qualities), 1)
+0.3
+&gt;&gt;&gt; round(max(qualities), 1)
+0.8
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1651,14 +1679,14 @@ array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
 
     Examples
     --------
-    &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-    &gt;&gt;&gt; qualities = sorted(axis.get_quality() for axis in diag.find_zone_axes())
-    &gt;&gt;&gt; np.array(qualities, dtype=np.float16)
-    array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
-           0.8496], dtype=float16)
+    &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
+    &gt;&gt;&gt; round(min(qualities), 1)
+    0.3
+    &gt;&gt;&gt; round(max(qualities), 1)
+    0.8
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     def dmean_2_score(dmean, d_max=.0117):
@@ -1712,7 +1740,7 @@ array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
-&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+&gt;&gt;&gt; axis = diag.find_zone_axes()[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; axis.plot_gnomonic(display=False)
 &lt;AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'&gt;
@@ -1745,7 +1773,7 @@ array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
     &gt;&gt;&gt;
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+    &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; axis.plot_gnomonic(display=False)
     &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
@@ -1794,7 +1822,7 @@ array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
-&gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+&gt;&gt;&gt; axis = diag.find_zone_axes()[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; axis.plot_xy(display=False)
 &lt;AxesSubplot:title={'center':'plan camera'}, xlabel='x.Ci (pxl)', ylabel='y.Cj (pxl)'&gt;
@@ -1827,7 +1855,7 @@ array([0.3242, 0.3245, 0.3247, 0.3667, 0.367 , 0.505 , 0.505 , 0.779 ,
     &gt;&gt;&gt;
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
-    &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda axis: axis.get_quality()).pop()
+    &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; axis.plot_xy(display=False)
     &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;

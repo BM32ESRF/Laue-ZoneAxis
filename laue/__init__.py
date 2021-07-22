@@ -34,7 +34,7 @@ recuperation des diagrammes
 ...     print(type(diag))
 ...
 <class 'laue.diagram.LaueDiagram'>
->>> 
+>>>
 
 """
 

@@ -11,6 +11,7 @@ Le module ``numexpr`` permet d'accelerer les calculs si il est installe.
 
 import collections
 import hashlib
+import inspect
 import math
 import multiprocessing
 import os
@@ -112,13 +113,12 @@ class Compilator:
         # Recherche des droites normales au plan christalin.
         u_f = o_p.normalized() # Vecteur norme du rayon diffracte u_f.
         u_q = u_f - self.u_i # Relation de reflexion.
-        u_q = u_q.normalized() # On normalize le vecteur de facon a simplifier les calculs par la suite
 
         # Recherche du vecteur O'''P'.
-        dist = 1*sympy.tan(sympy.acos(u_q.dot(self.gk))) # ||O'''P'|| car le plan est tangent a la sphere de rayon 1.
-        oppp_pp = dist * (u_q - u_q.dot(self.gk)*self.gk).normalized() # Inspire du procede ge Gramm-Shmitz
+        oppp_pp = u_q / u_q.dot(self.gk) # Point d'intersection avec le plan gnomonic. (Normalisation de l'axe gk.)
 
         # Projection dans le plan gnomonic pour remonter a x_g, y_g
+        oppp_pp = sympy.simplify(oppp_pp)
         x_g = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
         y_g = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
 
@@ -142,7 +142,7 @@ class Compilator:
 
         # Lois de la reflexion.
         u_f = self.u_i - 2*u_q.dot(self.u_i)*u_q # Vecteur unitaire reflechi.
-        u_f = sympy.simplify(u_f) # Permet d'accelerer les calculs par la suite.
+        # u_f = sympy.simplify(u_f) # Permet d'accelerer les calculs par la suite.
 
         # Expression du vecteur O''P.
         opp_op = self.pixelsize * (self.xcen*self.ci + self.ycen*self.cj) # Vecteur O''O'.
@@ -154,6 +154,7 @@ class Compilator:
         opp_p = opp_op + op_o + o_p # Relation de Chasles.
 
         # Projection dans le plan de la camera pour remonter a x_c, y_c
+        opp_p = sympy.simplify(opp_p)
         x_c = opp_p.dot(self.ci) / self.pixelsize # Coordonnees en pxl axe x de la camera.
         y_c = opp_p.dot(self.cj) / self.pixelsize # Coordonnees en pxl axe y de la camera.
 
@@ -176,15 +177,14 @@ class Compilator:
         # Recherche des droites normales au plan christalin.
         u_f = rot_refl @ self.u_i # Vecteur norme du rayon diffracte u_f.
         u_q = u_f - self.u_i # Relation de reflexion.
-        u_q = u_q.normalized() # On normalize le vecteur de facon a simplifier les calculs par la suite
 
         # Recherche du vecteur O'''P'.
-        dist = 1*sympy.tan(sympy.acos(u_q.dot(self.gk))) # ||O'''P'|| car le plan est tangent a la sphere de rayon 1.
-        oppp_pp = dist * (u_q - u_q.dot(self.gk)*self.gk).normalized() # Inspire du procede ge Gramm-Shmitz
+        oppp_pp = u_q / u_q.dot(self.gk) # Point d'intersection avec le plan gnomonic. (Normalisation de l'axe gk.)
 
         # Projection dans le plan gnomonic pour remonter a x_g, y_g
-        x_g = oppp_pp.dot(self.gi).simplify() # Coordonnees en mm axe x du plan gnomonic.
-        y_g = oppp_pp.dot(self.gj).simplify() # Coordonnees en mm axe y du plan gnomonic.
+        oppp_pp = sympy.simplify(oppp_pp)
+        x_g = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
+        y_g = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
 
         globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"] = _Lambdify(
             args=[self.theta, self.chi],
@@ -206,12 +206,11 @@ class Compilator:
 
         # Lois de la reflexion.
         u_f = self.u_i - 2*u_q.dot(self.u_i)*u_q # Vecteur unitaire reflechi.
-        u_f = sympy.simplify(u_f) # Permet d'accelerer les calculs par la suite.
 
         # Projection et normalisation dans le plan normal a x pour acceder a chi.
-        chi = sympy.asin(u_f.dot(self.ry) / (u_f.dot(self.rz)**2 + u_f.dot(self.ry)**2))
-
         # Projection et normalisation dans le plan normal a y pour acceder a theta.
+        u_f = sympy.simplify(u_f) # Permet d'accelerer les calculs par la suite.
+        chi = sympy.asin(u_f.dot(self.ry) / (u_f.dot(self.rz)**2 + u_f.dot(self.ry)**2))
         theta = sympy.acos(u_f.dot(self.rx) / (u_f.dot(self.rx)**2 + u_f.dot(self.rz)**2)) / 2
 
         globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"] = _Lambdify(
@@ -235,6 +234,7 @@ class Compilator:
 
         # Projection des points.
         distance = line.distance(sympy.Point(x, y)) # La distance entre la droite et un point.
+        distance = sympy.simplify(distance)
 
         # Vectorisation de l'expression.
         globals()["compiled_expressions"]["fct_dist_line"] = _Lambdify([theta, dist, x, y], distance, modules="numexpr")
@@ -254,6 +254,7 @@ class Compilator:
         # Calcul de la distance entre la droite et l'origine.
         d1 = sympy.Line(sympy.Point(xa, ya), sympy.Point(xb, yb)) # C'est la droite passant par les 2 points.
         dist = d1.distance(sympy.Point(0, 0)) # La distance separant l'origine de la droite.
+        dist = sympy.simplify(dist)
 
         # Calcul de l'angle entre l'axe horizontal et la droite.
         p = d1.projection(sympy.Point(0, 0)) # Le point ou la distance entre ce point de la droite et l'origine est minimale.
@@ -261,6 +262,7 @@ class Compilator:
         theta_abs = sympy.acos(n.x) # La valeur absolue de theta.
         theta_sign = sympy.sign(n.y) # Si il est negatif c'est que theta < 0, si il est positif alors theta > 0
         theta = theta_abs * theta_sign # Compris entre -pi et +pi
+        theta = sympy.simplify(theta)
 
         # Vectorisation des expressions.
         globals()["compiled_expressions"]["fct_hough"] = _Lambdify([xa, ya, xb, yb], [theta, dist], modules="numexpr")
@@ -284,18 +286,21 @@ class Compilator:
 
         # Calcul des coordonnes du point d'intersection.
         point = line1.intersection(line2)[0]
+        inter_x = sympy.simplify(point.x)
+        inter_y = sympy.simplify(point.y)
 
         # Vectorisation des expressions.
         globals()["compiled_expressions"]["fct_inter_line"] = _Lambdify(
-            [theta_1, dist_1, theta_2, dist_2], [point.x, point.y], modules="numexpr")
+            [theta_1, dist_1, theta_2, dist_2], [inter_x, inter_y], modules="numexpr")
         return globals()["compiled_expressions"]["fct_inter_line"]
 
     def _hash(self):
         """
         ** Retourne le hash de ce code. **
         """
-        with open(__file__, "rb") as f:
-            return hashlib.md5(f.read()).hexdigest()
+        return hashlib.md5(
+            inspect.getsource(Compilator).encode(encoding="utf-8")
+            ).hexdigest()
 
     def save(self):
         """
@@ -308,7 +313,7 @@ class Compilator:
         file = os.path.join(dirname, "geometry.data")
         self.load() # Recuperation du contenu du fichier.
         content = {
-            "hash": self._hash,
+            "hash": self._hash(),
             "expr": globals()["compiled_expressions"]
             }
         with open(file, "wb") as f:
@@ -323,11 +328,14 @@ class Compilator:
         dirname = os.path.dirname(os.path.abspath(__file__))
         file = os.path.join(dirname, "geometry.data")
         
-        if os.path.exists(file):
-            with open(file, "rb") as f:
-                content = cloudpickle.load(f)
-            if content["hash"] == self._hash(): # Si les donnees sont a jour.
-                globals()["compiled_expressions"] = {**globals()["compiled_expressions"], **content["expr"]}
+        # if os.path.exists(file):
+        #     with open(file, "rb") as f:
+        #         try:
+        #             content = cloudpickle.load(f)
+        #         except ValueError: # Si c'est pas le bon protocol
+        #             content = {"hash": None}
+        #     if content["hash"] == self._hash(): # Si les donnees sont a jour.
+        #         globals()["compiled_expressions"] = {**globals()["compiled_expressions"], **content["expr"]}
         return globals()["compiled_expressions"]
 
 
@@ -345,7 +353,7 @@ class Transformer(Compilator):
         self.pixelsize = sympy.Symbol("alpha", real=True, positive=True) # Taille des pixels en mm/pxl.
 
         # Les variables.
-        self.x_cam, self.y_cam = sympy.symbols("x_cam y_cam", real=True) # Position du pxl dans le repere du plan de la camera.
+        self.x_cam, self.y_cam = sympy.symbols("x_cam y_cam", real=True, positive=True) # Position du pxl dans le repere du plan de la camera.
         self.x_gnom, self.y_gnom = sympy.symbols("x_gnom y_gnom", real=True) # Position des points dans le plan gnomonic.
         self.theta, self.chi = sympy.symbols("theta chi", real=True) # Les angles decrivant le rayon reflechit.
 
@@ -361,10 +369,10 @@ class Transformer(Compilator):
         self.cj = self.rot_camera @ self.rx # Vecteur Ycamera.
         self.ck = self.rot_camera @ self.rz # Vecteur Zcamera normal au plan de la camera.
 
-        self.rot_gnom = sympy.rot_axis2(sympy.pi/4) # Rotation du repere de plan gnomonic par rapport au repere du cristal.
-        self.gi = self.rot_gnom @ self.rx # Vecteur Xgnomonic.
+        self.rot_gnom = sympy.rot_axis2(-sympy.pi/4) # Rotation du repere de plan gnomonic par rapport au repere du cristal.
+        self.gi = self.rot_gnom @ self.rz # Vecteur Xgnomonic.
         self.gj = self.rot_gnom @ self.ry # Vecteur Ygnomonic.
-        self.gk = self.rot_gnom @ self.rz # Vecteur Zgnomonic normal au plan gnomonic.
+        self.gk = self.rot_gnom @ -self.rx # Vecteur Zgnomonic normal au plan gnomonic.
 
         Compilator.__init__(self) # Globalisation des expressions.
 
@@ -406,13 +414,11 @@ class Transformer(Compilator):
         >>> from laue.tools.parsing import extract_parameters
         >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
-        >>> x_cam, y_cam = np.linspace(0, 2048, 10), np.linspace(0, 2048, 10)
+        >>> x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
         >>>
-        >>> transformer.cam_to_gnomonic(x_cam, y_cam, parameters)
-        array([[-0.51266708, -0.43506905, -0.33524306, -0.21016549, -0.06838059,
-                 0.06003179,  0.14156191,  0.17075392,  0.16291835,  0.13417314],
-               [ 0.40327626,  0.3636033 ,  0.30560982,  0.21786714,  0.08565898,
-                -0.09746608, -0.31488732, -0.53823265, -0.74848253, -0.93854752]])
+        >>> transformer.cam_to_gnomonic(x_cam, y_cam, parameters).astype(np.float16)
+        array([[-0.5127, -0.3064,  0.    ,  0.1676,  0.1342],
+               [ 0.4033,  0.287 , -0.    , -0.4832, -0.9385]], dtype=float16)
         >>>
         """
         assert isinstance(pxl_x, (float, int, np.ndarray)), \

@@ -393,7 +393,7 @@ class Spot:
         self.quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
         return self.quality
 
-    def get_twicetheta_chi(self):
+    def get_theta_chi(self):
         &#34;&#34;&#34;
         ** Cherche les angles du rayon reflechi. **
 
@@ -1054,7 +1054,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         self.quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
         return self.quality
 
-    def get_twicetheta_chi(self):
+    def get_theta_chi(self):
         &#34;&#34;&#34;
         ** Cherche les angles du rayon reflechi. **
 
@@ -1775,8 +1775,8 @@ Spot(position=(1370.52, 1874.78), quality=0.573)
     return self.quality</code></pre>
 </details>
 </dd>
-<dt id="laue.spot.Spot.get_twicetheta_chi"><code class="name flex">
-<span>def <span class="ident">get_twicetheta_chi</span></span>(<span>self)</span>
+<dt id="laue.spot.Spot.get_theta_chi"><code class="name flex">
+<span>def <span class="ident">get_theta_chi</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Cherche les angles du rayon reflechi. </strong></p>
@@ -1793,7 +1793,7 @@ projection sur le plan <code>(x, y)</code> de l'axe du rayon reflechit.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_twicetheta_chi(self):
+<pre><code class="python">def get_theta_chi(self):
     &#34;&#34;&#34;
     ** Cherche les angles du rayon reflechi. **
 
@@ -2000,7 +2000,7 @@ projection sur le plan <code>(x, y)</code> de l'axe du rayon reflechit.</dd>
 <li><code><a title="laue.spot.Spot.get_intensity" href="#laue.spot.Spot.get_intensity">get_intensity</a></code></li>
 <li><code><a title="laue.spot.Spot.get_position" href="#laue.spot.Spot.get_position">get_position</a></code></li>
 <li><code><a title="laue.spot.Spot.get_quality" href="#laue.spot.Spot.get_quality">get_quality</a></code></li>
-<li><code><a title="laue.spot.Spot.get_twicetheta_chi" href="#laue.spot.Spot.get_twicetheta_chi">get_twicetheta_chi</a></code></li>
+<li><code><a title="laue.spot.Spot.get_theta_chi" href="#laue.spot.Spot.get_theta_chi">get_theta_chi</a></code></li>
 <li><code><a title="laue.spot.Spot.plot_gnomonic" href="#laue.spot.Spot.plot_gnomonic">plot_gnomonic</a></code></li>
 <li><code><a title="laue.spot.Spot.plot_xy" href="#laue.spot.Spot.plot_xy">plot_xy</a></code></li>
 </ul>

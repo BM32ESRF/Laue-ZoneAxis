@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 """
-** Script qui permet de faire passer des tests. **
---------------------------------------------------
-
-Il y a 2 types de tests, les docs-tests et des tests classiques.
+** Script qui permet de faire passer des tests sur des donnees reeles. **
+-------------------------------------------------------------------------
 
 Les resultats des tests pousses sont ecrit dans le fichier 'tests_results.txt'
 """
@@ -18,6 +16,28 @@ import time
 
 CALIBRATION_PARAMETERS = None
 
+# Tests theorique repetables.
+
+def test_bij_cam_gnom():
+    """
+    S'assure qu'il y ai bien une bijection entre
+    les equations de passage du plan gnomonic
+    a celui de la camera et inversement.
+    """
+    _print("========= TEST BIJECTION CAM <=> GNO =========")
+    with CWDasRoot():
+        from laue.geometry import Transformer
+    t = Transformer()
+    xg, yg = t.get_expr_cam_to_gnomonic().get_expr()
+    xc, yc = t.get_expr_gnomonic_to_cam().get_expr()
+
+    a = xg.subs({"c_cam": xc, "y_cam": yc})
+    _print(f"expression brute: {a}")
+    a = a.simplify()
+    _print(f"expression simple: {a}")
+
+
+# Tests sur les donnes reelles.
 
 def test_read_images():
     _print("============== TEST READ IMAGES ==============")
@@ -182,7 +202,3 @@ class CWDasRoot:
 
     def __exit__(self, type, value, traceback):
         os.chdir(self.old_cwd)
-
-if __name__ == "__main__":
-    with CWDasRoot():
-        os.system("clear && pytest --doctest-modules laue/ && pytest laue/tools/tests.py")

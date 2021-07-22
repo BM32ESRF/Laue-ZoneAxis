@@ -293,7 +293,7 @@ class Experiment:
             diagrams = iter(sorted(diagrams, key=lambda dia: dia.get_quality(), reverse=True)[:4])
             best_diagrams = [next(diagrams)]
             best_diagrams.extend([dia for dia in diagrams
-                if dia.get_quality() > 0.75*best_diagrams[0].get_quality()])
+                if dia.get_quality() > 0.8*best_diagrams[0].get_quality()])
         else: # Si l'utilisateur nous en fournit.
             best_diagrams = diagrams # C'est un tuple et non pas une liste mais c'est pas genant.
         if self.verbose >= 2:
