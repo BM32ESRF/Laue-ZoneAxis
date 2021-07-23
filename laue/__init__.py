@@ -45,6 +45,7 @@ recuperation des diagrammes
 
 __all__ = ["Experiment"]
 __pdoc__ = {"Experiment.__iter__": True,
-            "Experiment.__len__": True}
+            "Experiment.__len__": True,
+            "tools.fork_lambdify": False}
 
 from laue.experiment.base_experiment import Experiment

@@ -9,8 +9,17 @@ a maximiser les performances.
 
 Notes
 -----
-Si le module ``numexpr`` est installe, certaines optimisations pourrons etre faites.
+Si le module ``numexpr`` est installe, certaines optimisations pourront etre faites.
 """
+
+from typing import Any, Dict, Iterable
+
+import numpy as np
+
+
+__pdoc__ = {"cse_minimize_memory": False,
+            "cse_homogeneous": False}
+
 
 def cse_minimize_memory(r, e):
     """
@@ -44,6 +53,7 @@ def cse_minimize_memory(r, e):
     (_1, x)
     >>> print(rvs)
     (_0, _1, _2, _3, _4)
+    >>>
     """
     if not r:
         return r, e
@@ -146,3 +156,45 @@ def cse_homogeneous(exprs, **kwargs):
         return replacements, reduced_exprs
 
 
+class Lambdify:
+    """
+    ** Permet de manipuler plus simplement une fonction. **
+    """
+    def __init__(self, args: Iterable, expr, **kwargs):
+        """
+        ** Prepare la fonction. **
+
+        Parameters
+        ----------
+        args : iterable
+            Les parametres d'entre de la fonction.
+        expr : sympy.core
+            L'expresion sympy a vectoriser.
+        **kwargs
+            Voir ``sympy.lambdify``.
+        """
+        self.args = list(args)
+        self.expr = expr
+        self.modules = modules
+
+    def __repr__(self):
+        """
+        ** Offre une representation evaluable de l'objet. **
+
+        Examples
+        --------
+        >>> from sympy.abc import x, y
+        >>> from sympy import cos
+        >>> from laue.tools.lambdify import Lambdify
+        >>>
+        >>> Lambdify([x, y], cos(x + y) + x + y)
+        Lambdify([x, y], x + y + cos(x + y))
+        >>>
+        """
+        return f"Lambdify({self.args}, {self.expr})"
+
+    def __call__(self, *args):
+        """
+        ** Evalue la fonction. **
+
+        """
