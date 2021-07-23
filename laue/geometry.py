@@ -118,9 +118,14 @@ class Compilator:
         oppp_pp = u_q / u_q.dot(self.gk) # Point d'intersection avec le plan gnomonic. (Normalisation de l'axe gk.)
 
         # Projection dans le plan gnomonic pour remonter a x_g, y_g
-        oppp_pp = sympy.simplify(oppp_pp)
         x_g = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
         y_g = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
+
+        # Optimisation
+        x_g, y_g = (
+            sympy.together(sympy.cancel(sympy.trigsimp(x_g))),
+            sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
+            ) # Permet un gain de 7.48
 
         globals()["compiled_expressions"]["expr_cam_to_gnomonic"] = _Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
@@ -154,9 +159,14 @@ class Compilator:
         opp_p = opp_op + op_o + o_p # Relation de Chasles.
 
         # Projection dans le plan de la camera pour remonter a x_c, y_c
-        opp_p = sympy.simplify(opp_p)
         x_c = opp_p.dot(self.ci) / self.pixelsize # Coordonnees en pxl axe x de la camera.
         y_c = opp_p.dot(self.cj) / self.pixelsize # Coordonnees en pxl axe y de la camera.
+
+        # Optimisation.
+        x_c, y_c = (
+            sympy.together(sympy.cancel(sympy.trigsimp(x_c))),
+            sympy.together(sympy.cancel(sympy.trigsimp(y_c)))
+            ) # Permet un gain de 1.44
 
         globals()["compiled_expressions"]["expr_gnomonic_to_cam"] = _Lambdify(
             args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
@@ -182,9 +192,14 @@ class Compilator:
         oppp_pp = u_q / u_q.dot(self.gk) # Point d'intersection avec le plan gnomonic. (Normalisation de l'axe gk.)
 
         # Projection dans le plan gnomonic pour remonter a x_g, y_g
-        oppp_pp = sympy.simplify(oppp_pp)
         x_g = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
         y_g = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
+
+        # Optimisation.
+        x_g, y_g = (
+            sympy.together(sympy.cancel(sympy.trigsimp(x_g))),
+            sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
+            ) # Permet un gain de 2.16
 
         globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"] = _Lambdify(
             args=[self.theta, self.chi],
@@ -209,9 +224,12 @@ class Compilator:
 
         # Projection et normalisation dans le plan normal a x pour acceder a chi.
         # Projection et normalisation dans le plan normal a y pour acceder a theta.
-        u_f = sympy.simplify(u_f) # Permet d'accelerer les calculs par la suite.
         chi = sympy.asin(u_f.dot(self.ry) / (u_f.dot(self.rz)**2 + u_f.dot(self.ry)**2))
         theta = sympy.acos(u_f.dot(self.rx) / (u_f.dot(self.rx)**2 + u_f.dot(self.rz)**2)) / 2
+
+        # Optimisation.
+        chi = sympy.simplify(chi)
+        theta = sympy.simplify(theta) # gain de 2.15
 
         globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"] = _Lambdify(
             args=[self.x_gnom, self.y_gnom],
@@ -234,7 +252,9 @@ class Compilator:
 
         # Projection des points.
         distance = line.distance(sympy.Point(x, y)) # La distance entre la droite et un point.
-        distance = sympy.simplify(distance)
+
+        # Optimisation.
+        distance = sympy.trigsimp(distance) # Permet un gain de 2.90
 
         # Vectorisation de l'expression.
         globals()["compiled_expressions"]["fct_dist_line"] = _Lambdify([theta, dist, x, y], distance, modules="numexpr")
@@ -254,7 +274,6 @@ class Compilator:
         # Calcul de la distance entre la droite et l'origine.
         d1 = sympy.Line(sympy.Point(xa, ya), sympy.Point(xb, yb)) # C'est la droite passant par les 2 points.
         dist = d1.distance(sympy.Point(0, 0)) # La distance separant l'origine de la droite.
-        dist = sympy.simplify(dist)
 
         # Calcul de l'angle entre l'axe horizontal et la droite.
         p = d1.projection(sympy.Point(0, 0)) # Le point ou la distance entre ce point de la droite et l'origine est minimale.
@@ -262,7 +281,11 @@ class Compilator:
         theta_abs = sympy.acos(n.x) # La valeur absolue de theta.
         theta_sign = sympy.sign(n.y) # Si il est negatif c'est que theta < 0, si il est positif alors theta > 0
         theta = theta_abs * theta_sign # Compris entre -pi et +pi
-        theta = sympy.simplify(theta)
+        # theta = sympy.simplify(theta)
+
+        # Optimisation.
+        theta = theta # Permet un gain de 1.00
+        dist = sympy.trigsimp(sympy.cancel(dist)) # Permet un gain de 1.40
 
         # Vectorisation des expressions.
         globals()["compiled_expressions"]["fct_hough"] = _Lambdify([xa, ya, xb, yb], [theta, dist], modules="numexpr")
@@ -286,8 +309,11 @@ class Compilator:
 
         # Calcul des coordonnes du point d'intersection.
         point = line1.intersection(line2)[0]
-        inter_x = sympy.simplify(point.x)
-        inter_y = sympy.simplify(point.y)
+        inter_x = point.x
+        inter_y = point.y
+
+        # Optimisation.
+        # Il n'y en a pas car les expressions sont deja tres simples.
 
         # Vectorisation des expressions.
         globals()["compiled_expressions"]["fct_inter_line"] = _Lambdify(
@@ -1155,7 +1181,7 @@ class _Lambdify:
 
         max_red_expr = [expr for expr, red in complete_hist.items() if red == max_red] # Seul les elements les plus redondants.
 
-        dephs = [self._len(expr) for expr in max_red_expr] # 3 La profondeur respective de chaque arbre.
+        dephs = [_Lambdify._len(expr) for expr in max_red_expr] # 3 La profondeur respective de chaque arbre.
         sub_expr = max_red_expr[np.argmax(dephs)] # L'expression de l'element a remplacer.
         self.sub_var_cmp += 1 # On incremente le conteur pour creer une nouvelle variable unique.
         sub_var = sympy.Symbol(f"subvar_{self.sub_var_cmp}") # Nom de la variable intermediaire.
@@ -1190,10 +1216,29 @@ class _Lambdify:
                 hist[little_child] += occur
         return hist
 
-    def _len(self, expr):
+    def _len(expr):
         """
         Cherche le nombres d'elements.
 
         * Pas de verification pour une question de performance
         """
-        return 1 + sum(self._len(child) for child in expr.args)
+        return 1 + sum(_Lambdify._len(child) for child in expr.args)
+
+    def _cost(expr):
+        """
+        Recherche le nombre d'aditions.
+        """
+        def nbr_add(expr):
+            if isinstance(expr, sympy.core.basic.Atom): # Si on est sur une feuille.
+                return 0
+            if isinstance(expr, sympy.core.add.Add):
+                return (len(expr.args) - 1) + sum(nbr_add(child) for child in expr.args)
+            return sum(nbr_add(child) for child in expr.args)
+
+        sub_exprs, final = sympy.cse(expr, optimizations="basic")
+        cost = sum(nbr_add(ex) for _, ex in sub_exprs) + nbr_add(final[0])
+        print("cout:", cost)
+        return cost
+
+        
+
