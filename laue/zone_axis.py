@@ -74,32 +74,29 @@ def distance(axis1, axis2, *, weight=.5):
 
     Examples
     -------
-    >>> import numpy as np
     >>> import laue
     >>> from laue.zone_axis import distance
+    >>> ax1, ax2 = (-2.719, 0.2432), (0.02063, 0.0799)
     >>> image = "laue/examples/ge_blanc.mccd"
     >>> axes = laue.Experiment(image,
     ...     config_file="laue/examples/ge_blanc.det"
-    ...     )[0].find_zone_axes()
-    >>> axes.sort(key=lambda axis: len(axis)-axis.get_quality())
-    >>> ax1, ax2, *axes = axes
-    >>> np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
-    array([[-2.719  ,  0.2432 ],
-           [ 0.02063,  0.0799 ]], dtype=float16)
-    >>> np.float16(distance(ax1, ax2, weight=0.0))
-    0.1632
-    >>> np.float16(distance(ax1, ax2, weight=1.0))
-    2.738
-    >>> np.float16(distance(ax1, ax2))
-    1.372
+    ...     )[0].find_zone_axes()[:3]
+    >>>
+    >>> round(distance(ax1, ax2, weight=0.0), 2)
+    0.16
+    >>> round(distance(ax1, ax2, weight=1.0), 2)
+    2.74
+    >>> round(distance(ax1, ax2), 2)
+    1.37
+    >>>
     >>> type(distance(ax1, axes))
     <class 'numpy.ndarray'>
     >>> distance(ax1, axes).shape
-    (7,)
+    (3,)
     >>> type(distance(axes, axes))
     <class 'numpy.ndarray'>
     >>> distance(axes, axes).shape
-    (7, 7)
+    (3, 3)
     >>>
     """
     assert isinstance(axis1, (ZoneAxis, np.ndarray, list, tuple)), \
@@ -274,10 +271,9 @@ class ZoneAxis:
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
-        >>> round(min(qualities), 1)
-        0.3
-        >>> round(max(qualities), 1)
-        0.8
+        >>>
+        >>> 0 < min(qualities) <= max(qualities) < 1
+        True
         >>>
         """
         def dmean_2_score(dmean, d_max=.0117):

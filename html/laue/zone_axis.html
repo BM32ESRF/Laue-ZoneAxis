@@ -110,32 +110,29 @@ def distance(axis1, axis2, *, weight=.5):
 
     Examples
     -------
-    &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; from laue.zone_axis import distance
+    &gt;&gt;&gt; ax1, ax2 = (-2.719, 0.2432), (0.02063, 0.0799)
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; axes = laue.Experiment(image,
     ...     config_file=&#34;laue/examples/ge_blanc.det&#34;
-    ...     )[0].find_zone_axes()
-    &gt;&gt;&gt; axes.sort(key=lambda axis: len(axis)-axis.get_quality())
-    &gt;&gt;&gt; ax1, ax2, *axes = axes
-    &gt;&gt;&gt; np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
-    array([[-2.719  ,  0.2432 ],
-           [ 0.02063,  0.0799 ]], dtype=float16)
-    &gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=0.0))
-    0.1632
-    &gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=1.0))
-    2.738
-    &gt;&gt;&gt; np.float16(distance(ax1, ax2))
-    1.372
+    ...     )[0].find_zone_axes()[:3]
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; round(distance(ax1, ax2, weight=0.0), 2)
+    0.16
+    &gt;&gt;&gt; round(distance(ax1, ax2, weight=1.0), 2)
+    2.74
+    &gt;&gt;&gt; round(distance(ax1, ax2), 2)
+    1.37
+    &gt;&gt;&gt;
     &gt;&gt;&gt; type(distance(ax1, axes))
     &lt;class &#39;numpy.ndarray&#39;&gt;
     &gt;&gt;&gt; distance(ax1, axes).shape
-    (7,)
+    (3,)
     &gt;&gt;&gt; type(distance(axes, axes))
     &lt;class &#39;numpy.ndarray&#39;&gt;
     &gt;&gt;&gt; distance(axes, axes).shape
-    (7, 7)
+    (3, 3)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     assert isinstance(axis1, (ZoneAxis, np.ndarray, list, tuple)), \
@@ -310,10 +307,9 @@ class ZoneAxis:
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
-        &gt;&gt;&gt; round(min(qualities), 1)
-        0.3
-        &gt;&gt;&gt; round(max(qualities), 1)
-        0.8
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; 0 &lt; min(qualities) &lt;= max(qualities) &lt; 1
+        True
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         def dmean_2_score(dmean, d_max=.0117):
@@ -747,32 +743,29 @@ du cluster a l'axe isole est renvoye.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; from laue.zone_axis import distance
+&gt;&gt;&gt; ax1, ax2 = (-2.719, 0.2432), (0.02063, 0.0799)
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; axes = laue.Experiment(image,
 ...     config_file=&quot;laue/examples/ge_blanc.det&quot;
-...     )[0].find_zone_axes()
-&gt;&gt;&gt; axes.sort(key=lambda axis: len(axis)-axis.get_quality())
-&gt;&gt;&gt; ax1, ax2, *axes = axes
-&gt;&gt;&gt; np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
-array([[-2.719  ,  0.2432 ],
-       [ 0.02063,  0.0799 ]], dtype=float16)
-&gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=0.0))
-0.1632
-&gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=1.0))
-2.738
-&gt;&gt;&gt; np.float16(distance(ax1, ax2))
-1.372
+...     )[0].find_zone_axes()[:3]
+&gt;&gt;&gt;
+&gt;&gt;&gt; round(distance(ax1, ax2, weight=0.0), 2)
+0.16
+&gt;&gt;&gt; round(distance(ax1, ax2, weight=1.0), 2)
+2.74
+&gt;&gt;&gt; round(distance(ax1, ax2), 2)
+1.37
+&gt;&gt;&gt;
 &gt;&gt;&gt; type(distance(ax1, axes))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; distance(ax1, axes).shape
-(7,)
+(3,)
 &gt;&gt;&gt; type(distance(axes, axes))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; distance(axes, axes).shape
-(7, 7)
+(3, 3)
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -823,32 +816,29 @@ array([[-2.719  ,  0.2432 ],
 
     Examples
     -------
-    &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; from laue.zone_axis import distance
+    &gt;&gt;&gt; ax1, ax2 = (-2.719, 0.2432), (0.02063, 0.0799)
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; axes = laue.Experiment(image,
     ...     config_file=&#34;laue/examples/ge_blanc.det&#34;
-    ...     )[0].find_zone_axes()
-    &gt;&gt;&gt; axes.sort(key=lambda axis: len(axis)-axis.get_quality())
-    &gt;&gt;&gt; ax1, ax2, *axes = axes
-    &gt;&gt;&gt; np.array([ax1.get_polar_coords(), ax2.get_polar_coords()], dtype=np.float16)
-    array([[-2.719  ,  0.2432 ],
-           [ 0.02063,  0.0799 ]], dtype=float16)
-    &gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=0.0))
-    0.1632
-    &gt;&gt;&gt; np.float16(distance(ax1, ax2, weight=1.0))
-    2.738
-    &gt;&gt;&gt; np.float16(distance(ax1, ax2))
-    1.372
+    ...     )[0].find_zone_axes()[:3]
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; round(distance(ax1, ax2, weight=0.0), 2)
+    0.16
+    &gt;&gt;&gt; round(distance(ax1, ax2, weight=1.0), 2)
+    2.74
+    &gt;&gt;&gt; round(distance(ax1, ax2), 2)
+    1.37
+    &gt;&gt;&gt;
     &gt;&gt;&gt; type(distance(ax1, axes))
     &lt;class &#39;numpy.ndarray&#39;&gt;
     &gt;&gt;&gt; distance(ax1, axes).shape
-    (7,)
+    (3,)
     &gt;&gt;&gt; type(distance(axes, axes))
     &lt;class &#39;numpy.ndarray&#39;&gt;
     &gt;&gt;&gt; distance(axes, axes).shape
-    (7, 7)
+    (3, 3)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     assert isinstance(axis1, (ZoneAxis, np.ndarray, list, tuple)), \
@@ -1062,10 +1052,9 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
-        &gt;&gt;&gt; round(min(qualities), 1)
-        0.3
-        &gt;&gt;&gt; round(max(qualities), 1)
-        0.8
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; 0 &lt; min(qualities) &lt;= max(qualities) &lt; 1
+        True
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         def dmean_2_score(dmean, d_max=.0117):
@@ -1654,10 +1643,9 @@ et la proximite des spots lies a cet axe.<ul>
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
-&gt;&gt;&gt; round(min(qualities), 1)
-0.3
-&gt;&gt;&gt; round(max(qualities), 1)
-0.8
+&gt;&gt;&gt;
+&gt;&gt;&gt; 0 &lt; min(qualities) &lt;= max(qualities) &lt; 1
+True
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1683,10 +1671,9 @@ et la proximite des spots lies a cet axe.<ul>
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
-    &gt;&gt;&gt; round(min(qualities), 1)
-    0.3
-    &gt;&gt;&gt; round(max(qualities), 1)
-    0.8
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; 0 &lt; min(qualities) &lt;= max(qualities) &lt; 1
+    True
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     def dmean_2_score(dmean, d_max=.0117):

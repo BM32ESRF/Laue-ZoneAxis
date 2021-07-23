@@ -14,6 +14,7 @@ import hashlib
 import inspect
 import math
 import multiprocessing
+import numbers
 import os
 
 import cloudpickle
@@ -79,7 +80,7 @@ class Compilator:
             assert set(parameters) == {"dd", "xbet", "xgam", "xcen", "ycen", "pixelsize"}, \
                 ("Les clefs doivent etres 'dd', 'xbet', 'xgam', 'xcen', 'ycen' et 'pixelsize'. "
                 f"Or les clefs sont {set(parameters)}.")
-            assert all(isinstance(v, (float, int)) for v in parameters.values()), \
+            assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
                 "La valeurs des parametres doivent toutes etre des nombres."
 
             hash_param = self._hash_parameters(parameters)
@@ -407,13 +408,12 @@ class Transformer(Compilator):
         self._fcts_gnomonic_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_gnom, y_gnom), les parametres sont deja remplaces.
         self._parameters_memory = {} # Permet d'eviter de relire le dictionaire des parametres a chaque fois.
 
-    def cam_to_gnomonic(self, pxl_x, pxl_y, parameters):
+    def cam_to_gnomonic(self, pxl_x, pxl_y, parameters, *, dtype=np.float32):
         """
         ** Passe des points de la camera dans un plan gnomonic. **
 
         Notes
         -----
-        * Les calculs sont effectues avec des float32 pour des histoire de performance.
         * Cette methode va 1.8 a 3.3 fois plus vite que celle de LaueTools.
         * Contrairement a LaueTools, cette methode prend en charge les vecteurs a n dimenssions.
 
@@ -425,6 +425,9 @@ class Transformer(Compilator):
             Coordonnee.s du.des pxl.s selon l'axe y dans le repere de la camera. (en pxl)
         parameters : dict
             Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
+        dtype : type, optional
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
         Returns
         -------
@@ -442,9 +445,9 @@ class Transformer(Compilator):
         >>> transformer = Transformer()
         >>> x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
         >>>
-        >>> transformer.cam_to_gnomonic(x_cam, y_cam, parameters).astype(np.float16)
-        array([[-0.5127, -0.3064,  0.    ,  0.1676,  0.1342],
-               [ 0.4033,  0.287 , -0.    , -0.4832, -0.9385]], dtype=float16)
+        >>> np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
+        array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
+               [ 0.4 ,  0.29, -0.  , -0.48, -0.94]])
         >>>
         """
         assert isinstance(pxl_x, (float, int, np.ndarray)), \
@@ -463,11 +466,14 @@ class Transformer(Compilator):
             f"Or les clefs sont {set(parameters)}.")
         assert all(isinstance(v, (float, int)) for v in parameters.values()), \
             "La valeurs des parametres doivent toutes etre des nombres."
+        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+            f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}."
 
         if isinstance(pxl_x, np.ndarray):
-            pxl_x, pxl_y = pxl_x.astype(np.float32, copy=False), pxl_y.astype(np.float32, copy=False)
+            pxl_x, pxl_y = pxl_x.astype(dtype, copy=False), pxl_y.astype(dtype, copy=False)
         else:
-            pxl_x, pxl_y = np.float32(pxl_x), np.float32(pxl_y)
+            pxl_x, pxl_y = dtype(pxl_x), dtype(pxl_y)
+        parameters = {k: dtype(v) for k, v in parameters.items()}
 
         hash_param = self._hash_parameters(parameters) # Recuperation de la 'signature' des parametres.
         optimized_func = self._fcts_cam_to_gnomonic[hash_param] # On regarde si il y a une fonction deja optimisee.
@@ -553,7 +559,7 @@ class Transformer(Compilator):
                            for theta, dist
                            in zip(theta_vect.ravel(), dist_vect.ravel())
                           ], dtype=np.float32).reshape((*nbr_droites, *nbr_points))
-        return result
+        return np.nan_to_num(result, copy=False, nan=0.0)
 
     def gnomonic_to_cam(self, gnom_x, gnom_y, parameters):
         """
@@ -741,12 +747,17 @@ class Transformer(Compilator):
         >>> x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
         ...         np.array([ 0.,  1.,  1., -1.,  1.]))
         >>> theta, dist = transformer.hough(x, y)
-        >>> transformer.hough_reduce(theta, dist, nbr=3)
-        array([[-0.7853982 ,  1.5707964 ],
-               [ 0.70710677,  1.        ]], dtype=float32)
-        >>> transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
-        array([array([[-0.7853982 ,  1.5707964 ],
-                      [ 0.70710677,  1.        ]], dtype=float32)], dtype=object)
+        >>> np.round(transformer.hough_reduce(theta, dist, nbr=3), 2)
+        array([[-0.79,  1.57],
+               [ 0.71,  1.  ]], dtype=float32)
+        >>> res = transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
+        >>> res.dtype
+        dtype('O')
+        >>> res.shape
+        (1,)
+        >>> np.round(res[0], 2)
+        array([[-0.79,  1.57],
+               [ 0.71,  1.  ]], dtype=float32)
         >>>
 
         Les dimensions de retour.
@@ -1155,7 +1166,10 @@ class _Lambdify:
             f"'expression' has to be list, tuple or sympy expr, not {type(expression).__name__}."
 
         if isinstance(expr, sympy.core.basic.Basic):
-            return expr
+            try:
+                return expr.evalf()
+            except AttributeError:
+                return expr
 
         if isinstance(expr, str):
             standard_transformations = sympy.parsing.sympy_parser.standard_transformations

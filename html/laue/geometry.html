@@ -47,6 +47,7 @@ import hashlib
 import inspect
 import math
 import multiprocessing
+import numbers
 import os
 
 import cloudpickle
@@ -112,7 +113,7 @@ class Compilator:
             assert set(parameters) == {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;pixelsize&#34;}, \
                 (&#34;Les clefs doivent etres &#39;dd&#39;, &#39;xbet&#39;, &#39;xgam&#39;, &#39;xcen&#39;, &#39;ycen&#39; et &#39;pixelsize&#39;. &#34;
                 f&#34;Or les clefs sont {set(parameters)}.&#34;)
-            assert all(isinstance(v, (float, int)) for v in parameters.values()), \
+            assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
                 &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
 
             hash_param = self._hash_parameters(parameters)
@@ -151,9 +152,14 @@ class Compilator:
         oppp_pp = u_q / u_q.dot(self.gk) # Point d&#39;intersection avec le plan gnomonic. (Normalisation de l&#39;axe gk.)
 
         # Projection dans le plan gnomonic pour remonter a x_g, y_g
-        oppp_pp = sympy.simplify(oppp_pp)
         x_g = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
         y_g = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
+
+        # Optimisation
+        x_g, y_g = (
+            sympy.together(sympy.cancel(sympy.trigsimp(x_g))),
+            sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
+            ) # Permet un gain de 7.48
 
         globals()[&#34;compiled_expressions&#34;][&#34;expr_cam_to_gnomonic&#34;] = _Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
@@ -187,9 +193,14 @@ class Compilator:
         opp_p = opp_op + op_o + o_p # Relation de Chasles.
 
         # Projection dans le plan de la camera pour remonter a x_c, y_c
-        opp_p = sympy.simplify(opp_p)
         x_c = opp_p.dot(self.ci) / self.pixelsize # Coordonnees en pxl axe x de la camera.
         y_c = opp_p.dot(self.cj) / self.pixelsize # Coordonnees en pxl axe y de la camera.
+
+        # Optimisation.
+        x_c, y_c = (
+            sympy.together(sympy.cancel(sympy.trigsimp(x_c))),
+            sympy.together(sympy.cancel(sympy.trigsimp(y_c)))
+            ) # Permet un gain de 1.44
 
         globals()[&#34;compiled_expressions&#34;][&#34;expr_gnomonic_to_cam&#34;] = _Lambdify(
             args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
@@ -215,9 +226,14 @@ class Compilator:
         oppp_pp = u_q / u_q.dot(self.gk) # Point d&#39;intersection avec le plan gnomonic. (Normalisation de l&#39;axe gk.)
 
         # Projection dans le plan gnomonic pour remonter a x_g, y_g
-        oppp_pp = sympy.simplify(oppp_pp)
         x_g = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
         y_g = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
+
+        # Optimisation.
+        x_g, y_g = (
+            sympy.together(sympy.cancel(sympy.trigsimp(x_g))),
+            sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
+            ) # Permet un gain de 2.16
 
         globals()[&#34;compiled_expressions&#34;][&#34;expr_thetachi_to_gnomonic&#34;] = _Lambdify(
             args=[self.theta, self.chi],
@@ -242,9 +258,12 @@ class Compilator:
 
         # Projection et normalisation dans le plan normal a x pour acceder a chi.
         # Projection et normalisation dans le plan normal a y pour acceder a theta.
-        u_f = sympy.simplify(u_f) # Permet d&#39;accelerer les calculs par la suite.
         chi = sympy.asin(u_f.dot(self.ry) / (u_f.dot(self.rz)**2 + u_f.dot(self.ry)**2))
         theta = sympy.acos(u_f.dot(self.rx) / (u_f.dot(self.rx)**2 + u_f.dot(self.rz)**2)) / 2
+
+        # Optimisation.
+        chi = sympy.simplify(chi)
+        theta = sympy.simplify(theta) # gain de 2.15
 
         globals()[&#34;compiled_expressions&#34;][&#34;expr_gnomonic_to_thetachi&#34;] = _Lambdify(
             args=[self.x_gnom, self.y_gnom],
@@ -267,7 +286,9 @@ class Compilator:
 
         # Projection des points.
         distance = line.distance(sympy.Point(x, y)) # La distance entre la droite et un point.
-        distance = sympy.simplify(distance)
+
+        # Optimisation.
+        distance = sympy.trigsimp(distance) # Permet un gain de 2.90
 
         # Vectorisation de l&#39;expression.
         globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;] = _Lambdify([theta, dist, x, y], distance, modules=&#34;numexpr&#34;)
@@ -287,7 +308,6 @@ class Compilator:
         # Calcul de la distance entre la droite et l&#39;origine.
         d1 = sympy.Line(sympy.Point(xa, ya), sympy.Point(xb, yb)) # C&#39;est la droite passant par les 2 points.
         dist = d1.distance(sympy.Point(0, 0)) # La distance separant l&#39;origine de la droite.
-        dist = sympy.simplify(dist)
 
         # Calcul de l&#39;angle entre l&#39;axe horizontal et la droite.
         p = d1.projection(sympy.Point(0, 0)) # Le point ou la distance entre ce point de la droite et l&#39;origine est minimale.
@@ -295,7 +315,11 @@ class Compilator:
         theta_abs = sympy.acos(n.x) # La valeur absolue de theta.
         theta_sign = sympy.sign(n.y) # Si il est negatif c&#39;est que theta &lt; 0, si il est positif alors theta &gt; 0
         theta = theta_abs * theta_sign # Compris entre -pi et +pi
-        theta = sympy.simplify(theta)
+        # theta = sympy.simplify(theta)
+
+        # Optimisation.
+        theta = theta # Permet un gain de 1.00
+        dist = sympy.trigsimp(sympy.cancel(dist)) # Permet un gain de 1.40
 
         # Vectorisation des expressions.
         globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;] = _Lambdify([xa, ya, xb, yb], [theta, dist], modules=&#34;numexpr&#34;)
@@ -319,8 +343,11 @@ class Compilator:
 
         # Calcul des coordonnes du point d&#39;intersection.
         point = line1.intersection(line2)[0]
-        inter_x = sympy.simplify(point.x)
-        inter_y = sympy.simplify(point.y)
+        inter_x = point.x
+        inter_y = point.y
+
+        # Optimisation.
+        # Il n&#39;y en a pas car les expressions sont deja tres simples.
 
         # Vectorisation des expressions.
         globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;] = _Lambdify(
@@ -414,13 +441,12 @@ class Transformer(Compilator):
         self._fcts_gnomonic_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_gnom, y_gnom), les parametres sont deja remplaces.
         self._parameters_memory = {} # Permet d&#39;eviter de relire le dictionaire des parametres a chaque fois.
 
-    def cam_to_gnomonic(self, pxl_x, pxl_y, parameters):
+    def cam_to_gnomonic(self, pxl_x, pxl_y, parameters, *, dtype=np.float32):
         &#34;&#34;&#34;
         ** Passe des points de la camera dans un plan gnomonic. **
 
         Notes
         -----
-        * Les calculs sont effectues avec des float32 pour des histoire de performance.
         * Cette methode va 1.8 a 3.3 fois plus vite que celle de LaueTools.
         * Contrairement a LaueTools, cette methode prend en charge les vecteurs a n dimenssions.
 
@@ -432,6 +458,9 @@ class Transformer(Compilator):
             Coordonnee.s du.des pxl.s selon l&#39;axe y dans le repere de la camera. (en pxl)
         parameters : dict
             Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
+        dtype : type, optional
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
         Returns
         -------
@@ -449,9 +478,9 @@ class Transformer(Compilator):
         &gt;&gt;&gt; transformer = Transformer()
         &gt;&gt;&gt; x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
         &gt;&gt;&gt;
-        &gt;&gt;&gt; transformer.cam_to_gnomonic(x_cam, y_cam, parameters).astype(np.float16)
-        array([[-0.5127, -0.3064,  0.    ,  0.1676,  0.1342],
-               [ 0.4033,  0.287 , -0.    , -0.4832, -0.9385]], dtype=float16)
+        &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
+        array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
+               [ 0.4 ,  0.29, -0.  , -0.48, -0.94]])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert isinstance(pxl_x, (float, int, np.ndarray)), \
@@ -470,11 +499,14 @@ class Transformer(Compilator):
             f&#34;Or les clefs sont {set(parameters)}.&#34;)
         assert all(isinstance(v, (float, int)) for v in parameters.values()), \
             &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
 
         if isinstance(pxl_x, np.ndarray):
-            pxl_x, pxl_y = pxl_x.astype(np.float32, copy=False), pxl_y.astype(np.float32, copy=False)
+            pxl_x, pxl_y = pxl_x.astype(dtype, copy=False), pxl_y.astype(dtype, copy=False)
         else:
-            pxl_x, pxl_y = np.float32(pxl_x), np.float32(pxl_y)
+            pxl_x, pxl_y = dtype(pxl_x), dtype(pxl_y)
+        parameters = {k: dtype(v) for k, v in parameters.items()}
 
         hash_param = self._hash_parameters(parameters) # Recuperation de la &#39;signature&#39; des parametres.
         optimized_func = self._fcts_cam_to_gnomonic[hash_param] # On regarde si il y a une fonction deja optimisee.
@@ -560,7 +592,7 @@ class Transformer(Compilator):
                            for theta, dist
                            in zip(theta_vect.ravel(), dist_vect.ravel())
                           ], dtype=np.float32).reshape((*nbr_droites, *nbr_points))
-        return result
+        return np.nan_to_num(result, copy=False, nan=0.0)
 
     def gnomonic_to_cam(self, gnom_x, gnom_y, parameters):
         &#34;&#34;&#34;
@@ -748,12 +780,17 @@ class Transformer(Compilator):
         &gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
         ...         np.array([ 0.,  1.,  1., -1.,  1.]))
         &gt;&gt;&gt; theta, dist = transformer.hough(x, y)
-        &gt;&gt;&gt; transformer.hough_reduce(theta, dist, nbr=3)
-        array([[-0.7853982 ,  1.5707964 ],
-               [ 0.70710677,  1.        ]], dtype=float32)
-        &gt;&gt;&gt; transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
-        array([array([[-0.7853982 ,  1.5707964 ],
-                      [ 0.70710677,  1.        ]], dtype=float32)], dtype=object)
+        &gt;&gt;&gt; np.round(transformer.hough_reduce(theta, dist, nbr=3), 2)
+        array([[-0.79,  1.57],
+               [ 0.71,  1.  ]], dtype=float32)
+        &gt;&gt;&gt; res = transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
+        &gt;&gt;&gt; res.dtype
+        dtype(&#39;O&#39;)
+        &gt;&gt;&gt; res.shape
+        (1,)
+        &gt;&gt;&gt; np.round(res[0], 2)
+        array([[-0.79,  1.57],
+               [ 0.71,  1.  ]], dtype=float32)
         &gt;&gt;&gt;
 
         Les dimensions de retour.
@@ -1162,7 +1199,10 @@ class _Lambdify:
             f&#34;&#39;expression&#39; has to be list, tuple or sympy expr, not {type(expression).__name__}.&#34;
 
         if isinstance(expr, sympy.core.basic.Basic):
-            return expr
+            try:
+                return expr.evalf()
+            except AttributeError:
+                return expr
 
         if isinstance(expr, str):
             standard_transformations = sympy.parsing.sympy_parser.standard_transformations
@@ -1188,7 +1228,7 @@ class _Lambdify:
 
         max_red_expr = [expr for expr, red in complete_hist.items() if red == max_red] # Seul les elements les plus redondants.
 
-        dephs = [self._len(expr) for expr in max_red_expr] # 3 La profondeur respective de chaque arbre.
+        dephs = [_Lambdify._len(expr) for expr in max_red_expr] # 3 La profondeur respective de chaque arbre.
         sub_expr = max_red_expr[np.argmax(dephs)] # L&#39;expression de l&#39;element a remplacer.
         self.sub_var_cmp += 1 # On incremente le conteur pour creer une nouvelle variable unique.
         sub_var = sympy.Symbol(f&#34;subvar_{self.sub_var_cmp}&#34;) # Nom de la variable intermediaire.
@@ -1223,13 +1263,31 @@ class _Lambdify:
                 hist[little_child] += occur
         return hist
 
-    def _len(self, expr):
+    def _len(expr):
         &#34;&#34;&#34;
         Cherche le nombres d&#39;elements.
 
         * Pas de verification pour une question de performance
         &#34;&#34;&#34;
-        return 1 + sum(self._len(child) for child in expr.args)</code></pre>
+        return 1 + sum(_Lambdify._len(child) for child in expr.args)
+
+    def _cost(expr):
+        &#34;&#34;&#34;
+        Recherche le nombre d&#39;aditions.
+        &#34;&#34;&#34;
+        def nbr_add(expr):
+            if isinstance(expr, sympy.core.basic.Atom): # Si on est sur une feuille.
+                return 0
+            if isinstance(expr, sympy.core.add.Add):
+                return (len(expr.args) - 1) + sum(nbr_add(child) for child in expr.args)
+            return sum(nbr_add(child) for child in expr.args)
+
+        sub_exprs, final = sympy.cse(expr, optimizations=&#34;basic&#34;)
+        cost = sum(nbr_add(ex) for _, ex in sub_exprs) + nbr_add(final[0])
+        print(&#34;cout:&#34;, cost)
+        return cost
+
+        </code></pre>
 </details>
 </section>
 <section>
@@ -1516,13 +1574,12 @@ s'ammuser avec la transformee de Hough.</p>
         self._fcts_gnomonic_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_gnom, y_gnom), les parametres sont deja remplaces.
         self._parameters_memory = {} # Permet d&#39;eviter de relire le dictionaire des parametres a chaque fois.
 
-    def cam_to_gnomonic(self, pxl_x, pxl_y, parameters):
+    def cam_to_gnomonic(self, pxl_x, pxl_y, parameters, *, dtype=np.float32):
         &#34;&#34;&#34;
         ** Passe des points de la camera dans un plan gnomonic. **
 
         Notes
         -----
-        * Les calculs sont effectues avec des float32 pour des histoire de performance.
         * Cette methode va 1.8 a 3.3 fois plus vite que celle de LaueTools.
         * Contrairement a LaueTools, cette methode prend en charge les vecteurs a n dimenssions.
 
@@ -1534,6 +1591,9 @@ s'ammuser avec la transformee de Hough.</p>
             Coordonnee.s du.des pxl.s selon l&#39;axe y dans le repere de la camera. (en pxl)
         parameters : dict
             Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
+        dtype : type, optional
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
         Returns
         -------
@@ -1551,9 +1611,9 @@ s'ammuser avec la transformee de Hough.</p>
         &gt;&gt;&gt; transformer = Transformer()
         &gt;&gt;&gt; x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
         &gt;&gt;&gt;
-        &gt;&gt;&gt; transformer.cam_to_gnomonic(x_cam, y_cam, parameters).astype(np.float16)
-        array([[-0.5127, -0.3064,  0.    ,  0.1676,  0.1342],
-               [ 0.4033,  0.287 , -0.    , -0.4832, -0.9385]], dtype=float16)
+        &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
+        array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
+               [ 0.4 ,  0.29, -0.  , -0.48, -0.94]])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert isinstance(pxl_x, (float, int, np.ndarray)), \
@@ -1572,11 +1632,14 @@ s'ammuser avec la transformee de Hough.</p>
             f&#34;Or les clefs sont {set(parameters)}.&#34;)
         assert all(isinstance(v, (float, int)) for v in parameters.values()), \
             &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
 
         if isinstance(pxl_x, np.ndarray):
-            pxl_x, pxl_y = pxl_x.astype(np.float32, copy=False), pxl_y.astype(np.float32, copy=False)
+            pxl_x, pxl_y = pxl_x.astype(dtype, copy=False), pxl_y.astype(dtype, copy=False)
         else:
-            pxl_x, pxl_y = np.float32(pxl_x), np.float32(pxl_y)
+            pxl_x, pxl_y = dtype(pxl_x), dtype(pxl_y)
+        parameters = {k: dtype(v) for k, v in parameters.items()}
 
         hash_param = self._hash_parameters(parameters) # Recuperation de la &#39;signature&#39; des parametres.
         optimized_func = self._fcts_cam_to_gnomonic[hash_param] # On regarde si il y a une fonction deja optimisee.
@@ -1662,7 +1725,7 @@ s'ammuser avec la transformee de Hough.</p>
                            for theta, dist
                            in zip(theta_vect.ravel(), dist_vect.ravel())
                           ], dtype=np.float32).reshape((*nbr_droites, *nbr_points))
-        return result
+        return np.nan_to_num(result, copy=False, nan=0.0)
 
     def gnomonic_to_cam(self, gnom_x, gnom_y, parameters):
         &#34;&#34;&#34;
@@ -1850,12 +1913,17 @@ s'ammuser avec la transformee de Hough.</p>
         &gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
         ...         np.array([ 0.,  1.,  1., -1.,  1.]))
         &gt;&gt;&gt; theta, dist = transformer.hough(x, y)
-        &gt;&gt;&gt; transformer.hough_reduce(theta, dist, nbr=3)
-        array([[-0.7853982 ,  1.5707964 ],
-               [ 0.70710677,  1.        ]], dtype=float32)
-        &gt;&gt;&gt; transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
-        array([array([[-0.7853982 ,  1.5707964 ],
-                      [ 0.70710677,  1.        ]], dtype=float32)], dtype=object)
+        &gt;&gt;&gt; np.round(transformer.hough_reduce(theta, dist, nbr=3), 2)
+        array([[-0.79,  1.57],
+               [ 0.71,  1.  ]], dtype=float32)
+        &gt;&gt;&gt; res = transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
+        &gt;&gt;&gt; res.dtype
+        dtype(&#39;O&#39;)
+        &gt;&gt;&gt; res.shape
+        (1,)
+        &gt;&gt;&gt; np.round(res[0], 2)
+        array([[-0.79,  1.57],
+               [ 0.71,  1.  ]], dtype=float32)
         &gt;&gt;&gt;
 
         Les dimensions de retour.
@@ -2070,13 +2138,12 @@ s'ammuser avec la transformee de Hough.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="laue.geometry.Transformer.cam_to_gnomonic"><code class="name flex">
-<span>def <span class="ident">cam_to_gnomonic</span></span>(<span>self, pxl_x, pxl_y, parameters)</span>
+<span>def <span class="ident">cam_to_gnomonic</span></span>(<span>self, pxl_x, pxl_y, parameters, *, dtype=numpy.float32)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Passe des points de la camera dans un plan gnomonic. </strong></p>
 <h2 id="notes">Notes</h2>
 <ul>
-<li>Les calculs sont effectues avec des float32 pour des histoire de performance.</li>
 <li>Cette methode va 1.8 a 3.3 fois plus vite que celle de LaueTools.</li>
 <li>Contrairement a LaueTools, cette methode prend en charge les vecteurs a n dimenssions.</li>
 </ul>
@@ -2088,6 +2155,9 @@ s'ammuser avec la transformee de Hough.</p>
 <dd>Coordonnee.s du.des pxl.s selon l'axe y dans le repere de la camera. (en pxl)</dd>
 <dt><strong><code>parameters</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Le dictionaire issue de la fonction <code><a title="laue.tools.parsing.extract_parameters" href="tools/parsing.html#laue.tools.parsing.extract_parameters">extract_parameters()</a></code>.</dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
+<dd>La representation machine des nombres. Par defaut <code>np.float32</code> permet des calculs rapide
+mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <code>np.float128</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2104,22 +2174,21 @@ shape de sortie = (2, *shape_d_entree)</dd>
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
 &gt;&gt;&gt;
-&gt;&gt;&gt; transformer.cam_to_gnomonic(x_cam, y_cam, parameters).astype(np.float16)
-array([[-0.5127, -0.3064,  0.    ,  0.1676,  0.1342],
-       [ 0.4033,  0.287 , -0.    , -0.4832, -0.9385]], dtype=float16)
+&gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
+array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
+       [ 0.4 ,  0.29, -0.  , -0.48, -0.94]])
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def cam_to_gnomonic(self, pxl_x, pxl_y, parameters):
+<pre><code class="python">def cam_to_gnomonic(self, pxl_x, pxl_y, parameters, *, dtype=np.float32):
     &#34;&#34;&#34;
     ** Passe des points de la camera dans un plan gnomonic. **
 
     Notes
     -----
-    * Les calculs sont effectues avec des float32 pour des histoire de performance.
     * Cette methode va 1.8 a 3.3 fois plus vite que celle de LaueTools.
     * Contrairement a LaueTools, cette methode prend en charge les vecteurs a n dimenssions.
 
@@ -2131,6 +2200,9 @@ array([[-0.5127, -0.3064,  0.    ,  0.1676,  0.1342],
         Coordonnee.s du.des pxl.s selon l&#39;axe y dans le repere de la camera. (en pxl)
     parameters : dict
         Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
+    dtype : type, optional
+        La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+        mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
     Returns
     -------
@@ -2148,9 +2220,9 @@ array([[-0.5127, -0.3064,  0.    ,  0.1676,  0.1342],
     &gt;&gt;&gt; transformer = Transformer()
     &gt;&gt;&gt; x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
     &gt;&gt;&gt;
-    &gt;&gt;&gt; transformer.cam_to_gnomonic(x_cam, y_cam, parameters).astype(np.float16)
-    array([[-0.5127, -0.3064,  0.    ,  0.1676,  0.1342],
-           [ 0.4033,  0.287 , -0.    , -0.4832, -0.9385]], dtype=float16)
+    &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
+    array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
+           [ 0.4 ,  0.29, -0.  , -0.48, -0.94]])
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     assert isinstance(pxl_x, (float, int, np.ndarray)), \
@@ -2169,11 +2241,14 @@ array([[-0.5127, -0.3064,  0.    ,  0.1676,  0.1342],
         f&#34;Or les clefs sont {set(parameters)}.&#34;)
     assert all(isinstance(v, (float, int)) for v in parameters.values()), \
         &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
+    assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
 
     if isinstance(pxl_x, np.ndarray):
-        pxl_x, pxl_y = pxl_x.astype(np.float32, copy=False), pxl_y.astype(np.float32, copy=False)
+        pxl_x, pxl_y = pxl_x.astype(dtype, copy=False), pxl_y.astype(dtype, copy=False)
     else:
-        pxl_x, pxl_y = np.float32(pxl_x), np.float32(pxl_y)
+        pxl_x, pxl_y = dtype(pxl_x), dtype(pxl_y)
+    parameters = {k: dtype(v) for k, v in parameters.items()}
 
     hash_param = self._hash_parameters(parameters) # Recuperation de la &#39;signature&#39; des parametres.
     optimized_func = self._fcts_cam_to_gnomonic[hash_param] # On regarde si il y a une fonction deja optimisee.
@@ -2306,7 +2381,7 @@ array([[1., 0., 2., 1.],
                        for theta, dist
                        in zip(theta_vect.ravel(), dist_vect.ravel())
                       ], dtype=np.float32).reshape((*nbr_droites, *nbr_points))
-    return result</code></pre>
+    return np.nan_to_num(result, copy=False, nan=0.0)</code></pre>
 </details>
 </dd>
 <dt id="laue.geometry.Transformer.gnomonic_to_cam"><code class="name flex">
@@ -2610,12 +2685,17 @@ de l'appel de cette fonction sur le nuage de points unique correspondant.</li>
 <pre><code class="language-python-repl">&gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
 ...         np.array([ 0.,  1.,  1., -1.,  1.]))
 &gt;&gt;&gt; theta, dist = transformer.hough(x, y)
-&gt;&gt;&gt; transformer.hough_reduce(theta, dist, nbr=3)
-array([[-0.7853982 ,  1.5707964 ],
-       [ 0.70710677,  1.        ]], dtype=float32)
-&gt;&gt;&gt; transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
-array([array([[-0.7853982 ,  1.5707964 ],
-              [ 0.70710677,  1.        ]], dtype=float32)], dtype=object)
+&gt;&gt;&gt; np.round(transformer.hough_reduce(theta, dist, nbr=3), 2)
+array([[-0.79,  1.57],
+       [ 0.71,  1.  ]], dtype=float32)
+&gt;&gt;&gt; res = transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
+&gt;&gt;&gt; res.dtype
+dtype('O')
+&gt;&gt;&gt; res.shape
+(1,)
+&gt;&gt;&gt; np.round(res[0], 2)
+array([[-0.79,  1.57],
+       [ 0.71,  1.  ]], dtype=float32)
 &gt;&gt;&gt;
 </code></pre>
 <p>Les dimensions de retour.</p>
@@ -2680,12 +2760,17 @@ array([array([[-0.7853982 ,  1.5707964 ],
     &gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
     ...         np.array([ 0.,  1.,  1., -1.,  1.]))
     &gt;&gt;&gt; theta, dist = transformer.hough(x, y)
-    &gt;&gt;&gt; transformer.hough_reduce(theta, dist, nbr=3)
-    array([[-0.7853982 ,  1.5707964 ],
-           [ 0.70710677,  1.        ]], dtype=float32)
-    &gt;&gt;&gt; transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
-    array([array([[-0.7853982 ,  1.5707964 ],
-                  [ 0.70710677,  1.        ]], dtype=float32)], dtype=object)
+    &gt;&gt;&gt; np.round(transformer.hough_reduce(theta, dist, nbr=3), 2)
+    array([[-0.79,  1.57],
+           [ 0.71,  1.  ]], dtype=float32)
+    &gt;&gt;&gt; res = transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
+    &gt;&gt;&gt; res.dtype
+    dtype(&#39;O&#39;)
+    &gt;&gt;&gt; res.shape
+    (1,)
+    &gt;&gt;&gt; np.round(res[0], 2)
+    array([[-0.79,  1.57],
+           [ 0.71,  1.  ]], dtype=float32)
     &gt;&gt;&gt;
 
     Les dimensions de retour.
