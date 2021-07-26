@@ -25,7 +25,7 @@ except ImportError:
     numexpr = None
 import sympy
 
-from laue.tools.lambdify import Lambdify
+from laue.tools.lambdify import Lambdify, subs
 
 __all__ = ["Transformer", "comb2ind", "ind2comb"]
 
@@ -85,18 +85,20 @@ class Compilator:
                 "La valeurs des parametres doivent toutes etre des nombres."
 
             hash_param = self._hash_parameters(parameters)
-            contants = {self.dd: parameters["dd"], # C'est qu'il est tant de faire de l'optimisation.
+            constants = {self.dd: parameters["dd"], # C'est qu'il est tant de faire de l'optimisation.
                         self.xcen: parameters["xcen"],
                         self.ycen: parameters["ycen"],
                         self.xbet: parameters["xbet"],
                         self.xgam: parameters["xgam"],
                         self.pixelsize: parameters["pixelsize"]}
+            # Dans le cas ou l'expression est deserialise, les pointeurs ne sont plus les memes.
+            constants = {str(var): value for var, value in constants.items()}
             self._fcts_cam_to_gnomonic[hash_param] = Lambdify(
                     args=[self.x_cam, self.y_cam],
-                    expr=[e.subs(contants) for e in self.get_expr_cam_to_gnomonic()()])
+                    expr=subs(self.get_expr_cam_to_gnomonic()(), constants))
             self._fcts_gnomonic_to_cam[hash_param] = Lambdify(
                     args=[self.x_gnom, self.y_gnom],
-                    expr=[e.subs(contants) for e in self.get_expr_gnomonic_to_cam()()])
+                    expr=subs(self.get_expr_gnomonic_to_cam()(), constants))
 
     def get_expr_cam_to_gnomonic(self):
         """
@@ -336,7 +338,9 @@ class Compilator:
         self.load() # Recuperation du contenu du fichier.
         content = {
             "hash": self._hash(),
-            "expr": globals()["compiled_expressions"]
+            "expr": {name: l.dumps()
+                for name, l in globals()["compiled_expressions"].items()
+                }
             }
         with open(file, "wb") as f:
             cloudpickle.dump(content, f)
@@ -350,14 +354,17 @@ class Compilator:
         dirname = os.path.dirname(os.path.abspath(__file__))
         file = os.path.join(dirname, "geometry.data")
         
-        # if os.path.exists(file):
-        #     with open(file, "rb") as f:
-        #         try:
-        #             content = cloudpickle.load(f)
-        #         except ValueError: # Si c'est pas le bon protocol
-        #             content = {"hash": None}
-        #     if content["hash"] == self._hash(): # Si les donnees sont a jour.
-        #         globals()["compiled_expressions"] = {**globals()["compiled_expressions"], **content["expr"]}
+        if os.path.exists(file):
+            with open(file, "rb") as f:
+                try:
+                    content = cloudpickle.load(f)
+                except ValueError: # Si c'est pas le bon protocol
+                    content = {"hash": None}
+                else:
+                    from laue.tools.lambdify import Lambdify
+                    content["expr"] = {name: Lambdify.loads(data) for name, data in content["expr"].items()}
+            if content["hash"] == self._hash(): # Si les donnees sont a jour.
+                globals()["compiled_expressions"] = {**globals()["compiled_expressions"], **content["expr"]}
         return globals()["compiled_expressions"]
 
 
@@ -421,6 +428,7 @@ class Transformer(Compilator):
         parameters : dict
             Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
         dtype : type, optional
+            Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
             La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
             mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
@@ -524,6 +532,7 @@ class Transformer(Compilator):
             L'ensemble des coordonnees y des points.
             shape = ``(*nbr_points)``
         dtype : type, optional
+            Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
             La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
             mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
@@ -598,6 +607,7 @@ class Transformer(Compilator):
         parameters : dict
             Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
         dtype : type, optional
+            Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
             La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
             mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
@@ -614,7 +624,6 @@ class Transformer(Compilator):
         >>> from laue.tools.parsing import extract_parameters
         >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
-        >>> x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
         >>> x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
         ...                              0.09978235,  0.17156848,  0.13417314 ],
         ...                            [ 0.40283853,  0.31846303,  0.14362221, 

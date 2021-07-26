@@ -14,6 +14,7 @@ Si le module ``numexpr`` est installe, certaines optimisations pourront etre fai
 
 from typing import Any, Dict, Iterable
 
+import cloudpickle
 import numpy as np
 import sympy
 
@@ -162,7 +163,7 @@ def evalf(x, n=15, **options):
     """
     ** Alias vers ``sympy.N``. **
 
-    Gerere recursivement les objets qui n'ont pas
+    Gere recursivement les objets qui n'ont pas
     de methodes ``evalf``.
     """
     try:
@@ -172,6 +173,39 @@ def evalf(x, n=15, **options):
             return type(x)([evalf(e) for e in x])
         try:
             return type(x)(*(evalf(e) for e in x.args))
+        except AttributeError:
+            return x
+
+def simplify(x, **kwargs):
+    """
+    ** Alias vers ``sympy.simplify``. **
+
+    Gere recursivement les objets qui n'ont pas
+    de methodes pour etre directement simplifiables.
+    """
+    try:
+        return sympy.simplify(x, **kwargs)
+    except AttributeError:
+        if isinstance(x, (tuple, list, set)):
+            return type(x)([simplify(e, **kwargs) for e in x])
+        try:
+            return type(x)(*(simplify(e, **kwargs) for e in x.args))
+        except AttributeError:
+            return x
+
+def subs(x, *args, **kwargs):
+    """
+    ** Alias vers ``sympy.subs``. **
+
+    Gere recursivement les objets qui n'ont pas de methode ``.subs``.
+    """
+    try:
+        return x.subs(*args, **kwargs)
+    except AttributeError:
+        if isinstance(x, (tuple, list, set)):
+            return type(x)([subs(e, *args, **kwargs) for e in x])
+        try:
+            return type(x)(*(subs(e, *args, **kwargs) for e in x.args))
         except AttributeError:
             return x
 
@@ -200,22 +234,6 @@ def time_cost(x):
     # print("cout:", cost)
     # return cost
 
-def simplify(x, **kwargs):
-    """
-    ** Alias vers ``sympy.simplify``. **
-
-    Gerere recursivement les objets qui n'ont pas
-    de methodes pour etre directement simplifiables.
-    """
-    try:
-        return sympy.simplify(x, **kwargs)
-    except AttributeError:
-        if isinstance(x, (tuple, list, set)):
-            return type(x)([simplify(e) for e in x])
-        try:
-            return type(x)(*(simplify(e) for e in x.args))
-        except AttributeError:
-            return x
 
 class Lambdify:
     """
@@ -239,8 +257,7 @@ class Lambdify:
         self.expr = expr
 
         # Preparation vectoriele.
-        self.n_expr = evalf(self.expr) if _simplify else self.expr
-        self.n_expr = simplify(self.n_expr, measure=time_cost) if _simplify else self.n_expr
+        self.n_expr = simplify(evalf(self.expr), measure=time_cost) if _simplify else self.expr
         self.fct = lambdify(self.args, self.n_expr, cse=True, modules="numpy")
         try:
             self.fct_numexpr = lambdify(self.args, self.n_expr, cse=True, modules="numexpr")
@@ -256,11 +273,11 @@ class Lambdify:
         >>> from sympy.abc import x, y; from sympy import cos
         >>> from laue.tools.lambdify import Lambdify
         >>>
-        >>> print(Lambdify([x, y], cos(x + y) + x + y))
+        >>> print(Lambdify([x, y], cos(x + y) + x + y), end="")
         def _lambdifygenerated(x, y):
             x0 = x + y
             _0 = x0 + cos(x0)
-            x0 = None
+            del x0
             return _0
         >>>
         """
@@ -342,12 +359,59 @@ class Lambdify:
         # Cas symbolique.
         if any(isinstance(a, sympy.Basic) for a in args):
             sub = {arg: value for arg, value in zip(self.args, args)}
-            return self.expr.subs(sub)
+            return subs(self.expr, sub)
 
         # Cas numerique.
-        if ((self.fct_numexpr is not None)
-            and (157741 >= max((a.size for a in args if isinstance(a, np.ndarray)), default=0))
-            and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
-                ):
+        if (
+                (self.fct_numexpr is not None)
+                and (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
+                and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
+            ):
             return self.fct_numexpr(*args)
         return self.fct(*args)
+
+    def dumps(self):
+        """
+        ** Transforme cet objet en binaire. **
+
+        Examples
+        --------
+        >>> from sympy.abc import x, y; from sympy import cos
+        >>> from laue.tools.lambdify import Lambdify
+        >>>
+        >>> l = Lambdify([x, y], cos(x + y) + x + y)
+        >>> type(l.dumps())
+        <class 'bytes'>
+        >>>
+        """
+        return cloudpickle.dumps(
+            {
+                "args": self.args,
+                "expr": self.expr,
+                "n_expr": self.n_expr
+            }
+        )
+
+    def loads(data):
+        """
+        ** Recre un objet a partir du binaire. **
+
+        Examples
+        --------
+        >>> from sympy.abc import x, y; from sympy import cos
+        >>> from laue.tools.lambdify import Lambdify
+        >>>
+        >>> l = Lambdify([x, y], cos(x + y) + x + y)
+        >>> data = l.dumps()
+        >>> type(data)
+        <class 'bytes'>
+        >>> type(Lambdify.loads(data))
+        <class 'laue.tools.lambdify.Lambdify'>
+        >>> Lambdify.loads(data)()
+        x + y + cos(x + y)
+        >>>
+        """
+        attr = cloudpickle.loads(data)
+        l = Lambdify(attr["args"], attr["n_expr"], _simplify=False)
+        l.expr = attr["expr"]
+        return l

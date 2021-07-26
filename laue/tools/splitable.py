@@ -25,7 +25,7 @@ class Splitable:
     """
     Interface pour la classe ``laue.diagram.LaueDiagram``.
     """
-    def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08):
+    def find_subsets(self, *, angle_max=math.pi/24, spots_max=30, distance_max=.08):
         """
         ** Recherche des spots qui appartiennent a un meme grain. **
 

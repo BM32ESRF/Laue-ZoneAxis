@@ -13,8 +13,6 @@ import os
 import sys
 import time
 
-import numpy as np
-
 
 CALIBRATION_PARAMETERS = None
 
@@ -24,6 +22,7 @@ def test_geometry_dtype_shape():
     """
     S'assure que les types soient concerve et les shapes aussi.
     """
+    import numpy as np
     with CWDasRoot():
         from laue.geometry import Transformer
         from laue.tools.parsing import extract_parameters
@@ -34,25 +33,36 @@ def test_geometry_dtype_shape():
     for _ in range(2): # On fait 2 boucle car ca recompile en cours de route.
         for func in [transformer.cam_to_gnomonic, transformer.gnomonic_to_cam]:
             for dtype in [np.float16, np.float32, np.float64, np.float128]:
-                res = func(np.zeros(shape=shape), np.zeros(shape=shape), parameters)
-                assert func(0.0, 0.0, parameters, dtype=dtype).dtype == dtype
+                res = func(np.zeros(shape=shape), np.zeros(shape=shape), parameters, dtype=dtype)
                 assert res.shape == (2,) + shape
-                assert res.dtype == dtype
+                assert str(res.dtype) == dtype.__name__
 
-def test_bij_cam_gnom():
+def test_geometry_bij():
     """
     S'assure qu'il y ai bien une bijection entre
     les equations de passage du plan gnomonic
     a celui de la camera et inversement.
     """
+    _print("=============== TEST BIJECTION ===============")
+    import sympy
     with CWDasRoot():
         from laue.geometry import Transformer
-    t = Transformer()
-    # xg, yg = t.get_expr_cam_to_gnomonic()()
-    # xc, yc = t.get_expr_gnomonic_to_cam()()
+    transformer = Transformer()
+    xg, yg = sympy.symbols("x_g y_g", real=True)
+    xc, yc = sympy.symbols("x_c y_c", real=True)
 
-    # a = xg.subs({"c_cam": xc, "y_cam": yc})
-    # a = a.simplify()
+    cam_to_gnom = transformer.get_expr_cam_to_gnomonic()
+    _print(f"cam_to_gnom(xc, yc): {cam_to_gnom(xc, yc)}")
+    gnom_to_cam = transformer.get_expr_gnomonic_to_cam()
+    _print(f"gnom_to_cam(xg, yg): {gnom_to_cam(xg, yg)}")
+
+    camgnom_rond_gnomcam = cam_to_gnom(*gnom_to_cam(xg, yg))
+    _print(f"(cam_to_gnom o gnom_to_cam)(xg, yg): {camgnom_rond_gnomcam}")
+    gnomcam_rond_camgnom = gnom_to_cam(*cam_to_gnom(xc, yc))
+    _print(f"(gnom_to_cam o cam_to_gnom)(xc, yc): {gnomcam_rond_camgnom}")
+
+    assert camgnom_rond_gnomcam == [xg, yg]
+    assert gnomcam_rond_camgnom == [xc, yc]
 
 
 # Tests sur les donnes reelles.
