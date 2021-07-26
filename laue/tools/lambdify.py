@@ -15,6 +15,9 @@ Si le module ``numexpr`` est installe, certaines optimisations pourront etre fai
 from typing import Any, Dict, Iterable
 
 import numpy as np
+import sympy
+
+from laue.tools.fork_lambdify import lambdify
 
 
 __pdoc__ = {"cse_minimize_memory": False,
@@ -155,12 +158,70 @@ def cse_homogeneous(exprs, **kwargs):
     else:
         return replacements, reduced_exprs
 
+def evalf(x, n=15, **options):
+    """
+    ** Alias vers ``sympy.N``. **
+
+    Gerere recursivement les objets qui n'ont pas
+    de methodes ``evalf``.
+    """
+    try:
+        return sympy.N(x, n=n, **options)
+    except AttributeError:
+        if isinstance(x, (tuple, list, set)):
+            return type(x)([evalf(e) for e in x])
+        try:
+            return type(x)(*(evalf(e) for e in x.args))
+        except AttributeError:
+            return x
+
+def time_cost(x):
+    """
+    ** Estime la complexite d'une expression. **
+
+    Cela est tres utile pour ``sympy.simplify`` concernant
+    l'argument ``measure``. Cette metrique permet de minimiser
+    le temps de calcul plutot que l'elegence de l'expression.
+    """
+    if hasattr(x, "__iter__"):
+        return sum(time_cost(x_) for x_ in x)
+
+    return sympy.count_ops(x) # Mauvais estimateur.
+
+    # def nbr_add(expr):
+    #     if isinstance(expr, sympy.core.basic.Atom): # Si on est sur une feuille.
+    #         return 0
+    #     if isinstance(expr, sympy.core.add.Add):
+    #         return (len(expr.args) - 1) + sum(nbr_add(child) for child in expr.args)
+    #     return sum(nbr_add(child) for child in expr.args)
+
+    # sub_exprs, final = sympy.cse(expr, optimizations="basic")
+    # cost = sum(nbr_add(ex) for _, ex in sub_exprs) + nbr_add(final[0])
+    # print("cout:", cost)
+    # return cost
+
+def simplify(x, **kwargs):
+    """
+    ** Alias vers ``sympy.simplify``. **
+
+    Gerere recursivement les objets qui n'ont pas
+    de methodes pour etre directement simplifiables.
+    """
+    try:
+        return sympy.simplify(x, **kwargs)
+    except AttributeError:
+        if isinstance(x, (tuple, list, set)):
+            return type(x)([simplify(e) for e in x])
+        try:
+            return type(x)(*(simplify(e) for e in x.args))
+        except AttributeError:
+            return x
 
 class Lambdify:
     """
     ** Permet de manipuler plus simplement une fonction. **
     """
-    def __init__(self, args: Iterable, expr, **kwargs):
+    def __init__(self, args: Iterable, expr, *, _simplify=True):
         """
         ** Prepare la fonction. **
 
@@ -170,12 +231,40 @@ class Lambdify:
             Les parametres d'entre de la fonction.
         expr : sympy.core
             L'expresion sympy a vectoriser.
-        **kwargs
-            Voir ``sympy.lambdify``.
         """
-        self.args = list(args)
+        # Preparation symbolique.
+        self.args = [arg for arg in sympy.sympify(args)]
+        self.args_name = [str(arg) for arg in self.args]
+        self.args_position = {arg: i for i, arg in enumerate(self.args_name)}
         self.expr = expr
-        self.modules = modules
+
+        # Preparation vectoriele.
+        self.n_expr = evalf(self.expr) if _simplify else self.expr
+        self.n_expr = simplify(self.n_expr, measure=time_cost) if _simplify else self.n_expr
+        self.fct = lambdify(self.args, self.n_expr, cse=True, modules="numpy")
+        try:
+            self.fct_numexpr = lambdify(self.args, self.n_expr, cse=True, modules="numexpr")
+        except (TypeError, RuntimeError):
+            self.fct_numexpr = None
+
+    def __str__(self):
+        """
+        ** Offre une representation explicite de la fonction. **
+
+        Examples
+        --------
+        >>> from sympy.abc import x, y; from sympy import cos
+        >>> from laue.tools.lambdify import Lambdify
+        >>>
+        >>> print(Lambdify([x, y], cos(x + y) + x + y))
+        def _lambdifygenerated(x, y):
+            x0 = x + y
+            _0 = x0 + cos(x0)
+            x0 = None
+            return _0
+        >>>
+        """
+        return self.fct.__doc__
 
     def __repr__(self):
         """
@@ -183,18 +272,82 @@ class Lambdify:
 
         Examples
         --------
-        >>> from sympy.abc import x, y
-        >>> from sympy import cos
+        >>> from sympy.abc import x, y; from sympy import cos
         >>> from laue.tools.lambdify import Lambdify
         >>>
         >>> Lambdify([x, y], cos(x + y) + x + y)
         Lambdify([x, y], x + y + cos(x + y))
         >>>
         """
-        return f"Lambdify({self.args}, {self.expr})"
+        return f"Lambdify([{', '.join(self.args_name)}], {self.expr})"
 
-    def __call__(self, *args):
+    def __call__(self, *args, **kwargs):
         """
         ** Evalue la fonction. **
 
+        Parameters
+        ----------
+        *args
+            Les parametres ordonnes de la fonction.
+        **kwargs
+            Les parametres nomes de la fonction. Ils
+            ont le dessus sur les args en cas d'ambiguite.
+
+        Examples
+        --------
+        >>> from sympy.abc import x, y; from sympy import cos
+        >>> from laue.tools.lambdify import Lambdify
+        >>> l = Lambdify([x, y], x + y + cos(x + y))
+
+        Les cas symboliques.
+        >>> l() # Retourne l'expression sympy.
+        x + y + cos(x + y)
+        >>> l(x) # Complete la suite en rajoutant 'y'.
+        x + y + cos(x + y)
+        >>> l(y) # Complete aussi en rajoutant 'y'.
+        2*y + cos(2*y)
+        >>> l(x, y) # Retourne une copie de l'expression sympy.
+        x + y + cos(x + y)
+        >>> l(1, y=2*y) # Il est possible de faire un melange symbolique / numerique.
+        2*y + cos(2*y + 1) + 1
+        >>>
+
+        Les cas purement numeriques.
+        >>> import numpy as np
+        >>> l(-1, 1)
+        1.0
+        >>> l(x=-1, y=1)
+        1.0
+        >>> np.round(l(0, np.linspace(-1, 1, 5)), 2)
+        array([-0.46,  0.38,  1.  ,  1.38,  1.54])
+        >>>
         """
+        # Cas patologiques.
+        if not args and not kwargs:
+            return self.expr
+        if len(args) > len(self.args):
+            raise IndexError(f"La fonction ne prend que {len(self.args)} arguments. "
+                f"Or vous en avez fournis {len(args)}.")
+        
+        # Recuperation des arguments complets.
+        args = list(args)
+        args += self.args[len(args):]
+        if kwargs:
+            if set(kwargs) - set(self.args_position):
+                raise NameError(f"Les parametres {set(kwargs) - set(self.args_position)} "
+                    f"ne sont pas admissible, seul {set(self.args_position)} sont admissibles.")
+            for arg, value in kwargs.items():
+                args[self.args_position[arg]] = value
+
+        # Cas symbolique.
+        if any(isinstance(a, sympy.Basic) for a in args):
+            sub = {arg: value for arg, value in zip(self.args, args)}
+            return self.expr.subs(sub)
+
+        # Cas numerique.
+        if ((self.fct_numexpr is not None)
+            and (157741 >= max((a.size for a in args if isinstance(a, np.ndarray)), default=0))
+            and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
+                ):
+            return self.fct_numexpr(*args)
+        return self.fct(*args)

@@ -13,10 +13,31 @@ import os
 import sys
 import time
 
+import numpy as np
+
 
 CALIBRATION_PARAMETERS = None
 
 # Tests theorique repetables.
+
+def test_geometry_dtype_shape():
+    """
+    S'assure que les types soient concerve et les shapes aussi.
+    """
+    with CWDasRoot():
+        from laue.geometry import Transformer
+        from laue.tools.parsing import extract_parameters
+    parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+    shape = (1, 2, 3, 4, 5, 1)
+    transformer = Transformer()
+
+    for _ in range(2): # On fait 2 boucle car ca recompile en cours de route.
+        for func in [transformer.cam_to_gnomonic, transformer.gnomonic_to_cam]:
+            for dtype in [np.float16, np.float32, np.float64, np.float128]:
+                res = func(np.zeros(shape=shape), np.zeros(shape=shape), parameters)
+                assert func(0.0, 0.0, parameters, dtype=dtype).dtype == dtype
+                assert res.shape == (2,) + shape
+                assert res.dtype == dtype
 
 def test_bij_cam_gnom():
     """
@@ -24,17 +45,14 @@ def test_bij_cam_gnom():
     les equations de passage du plan gnomonic
     a celui de la camera et inversement.
     """
-    _print("========= TEST BIJECTION CAM <=> GNO =========")
     with CWDasRoot():
         from laue.geometry import Transformer
     t = Transformer()
-    xg, yg = t.get_expr_cam_to_gnomonic().get_expr()
-    xc, yc = t.get_expr_gnomonic_to_cam().get_expr()
+    # xg, yg = t.get_expr_cam_to_gnomonic()()
+    # xc, yc = t.get_expr_gnomonic_to_cam()()
 
-    a = xg.subs({"c_cam": xc, "y_cam": yc})
-    _print(f"expression brute: {a}")
-    a = a.simplify()
-    _print(f"expression simple: {a}")
+    # a = xg.subs({"c_cam": xc, "y_cam": yc})
+    # a = a.simplify()
 
 
 # Tests sur les donnes reelles.

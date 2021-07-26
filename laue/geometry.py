@@ -25,6 +25,7 @@ except ImportError:
     numexpr = None
 import sympy
 
+from laue.tools.lambdify import Lambdify
 
 __all__ = ["Transformer", "comb2ind", "ind2comb"]
 
@@ -90,14 +91,12 @@ class Compilator:
                         self.xbet: parameters["xbet"],
                         self.xgam: parameters["xgam"],
                         self.pixelsize: parameters["pixelsize"]}
-            self._fcts_cam_to_gnomonic[hash_param] = _Lambdify(
+            self._fcts_cam_to_gnomonic[hash_param] = Lambdify(
                     args=[self.x_cam, self.y_cam],
-                    expr=self.get_expr_cam_to_gnomonic().get_expr().subs(contants),
-                    modules="numexpr")
-            self._fcts_gnomonic_to_cam[hash_param] = _Lambdify(
+                    expr=[e.subs(contants) for e in self.get_expr_cam_to_gnomonic()()])
+            self._fcts_gnomonic_to_cam[hash_param] = Lambdify(
                     args=[self.x_gnom, self.y_gnom],
-                    expr=self.get_expr_gnomonic_to_cam().get_expr().subs(contants),
-                    modules="numexpr")
+                    expr=[e.subs(contants) for e in self.get_expr_gnomonic_to_cam()()])
 
     def get_expr_cam_to_gnomonic(self):
         """
@@ -128,10 +127,9 @@ class Compilator:
             sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
             ) # Permet un gain de 7.48
 
-        globals()["compiled_expressions"]["expr_cam_to_gnomonic"] = _Lambdify(
+        globals()["compiled_expressions"]["expr_cam_to_gnomonic"] = Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[x_g, y_g], # Les imprecisions de calculs donnent parfois des complexes!
-            modules="numexpr") # On l'enregistre une bonne fois pour toutes.
+            expr=[x_g, y_g]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["expr_cam_to_gnomonic"]
 
     def get_expr_gnomonic_to_cam(self):
@@ -169,10 +167,9 @@ class Compilator:
             sympy.together(sympy.cancel(sympy.trigsimp(y_c)))
             ) # Permet un gain de 1.44
 
-        globals()["compiled_expressions"]["expr_gnomonic_to_cam"] = _Lambdify(
+        globals()["compiled_expressions"]["expr_gnomonic_to_cam"] = Lambdify(
             args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[x_c, y_c],
-            modules="numexpr") # On l'enregistre une bonne fois pour toutes.
+            expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["expr_gnomonic_to_cam"]
 
     def get_expr_thetachi_to_gnomonic(self):
@@ -202,10 +199,9 @@ class Compilator:
             sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
             ) # Permet un gain de 2.16
 
-        globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"] = _Lambdify(
+        globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"] = Lambdify(
             args=[self.theta, self.chi],
-            expr=[x_g, y_g], # Les imprecisions de calculs donnent parfois des complexes!
-            modules="numexpr") # On l'enregistre une bonne fois pour toutes.
+            expr=[x_g, y_g]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"]
 
     def get_expr_gnomonic_to_thetachi(self):
@@ -232,10 +228,9 @@ class Compilator:
         chi = sympy.simplify(chi)
         theta = sympy.simplify(theta) # gain de 2.15
 
-        globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"] = _Lambdify(
+        globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"] = Lambdify(
             args=[self.x_gnom, self.y_gnom],
-            expr=[theta, chi], # Les imprecisions de calculs donnent parfois des complexes!
-            modules="numexpr") # On l'enregistre une bonne fois pour toutes.
+            expr=[theta, chi]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"]
 
     def get_fct_dist_line(self):
@@ -258,7 +253,7 @@ class Compilator:
         distance = sympy.trigsimp(distance) # Permet un gain de 2.90
 
         # Vectorisation de l'expression.
-        globals()["compiled_expressions"]["fct_dist_line"] = _Lambdify([theta, dist, x, y], distance, modules="numexpr")
+        globals()["compiled_expressions"]["fct_dist_line"] = Lambdify([theta, dist, x, y], distance)
         return globals()["compiled_expressions"]["fct_dist_line"]
 
     def get_fct_hough(self):
@@ -289,7 +284,7 @@ class Compilator:
         dist = sympy.trigsimp(sympy.cancel(dist)) # Permet un gain de 1.40
 
         # Vectorisation des expressions.
-        globals()["compiled_expressions"]["fct_hough"] = _Lambdify([xa, ya, xb, yb], [theta, dist], modules="numexpr")
+        globals()["compiled_expressions"]["fct_hough"] = Lambdify([xa, ya, xb, yb], [theta, dist])
         return globals()["compiled_expressions"]["fct_hough"]
 
     def get_fct_inter_line(self):
@@ -317,8 +312,8 @@ class Compilator:
         # Il n'y en a pas car les expressions sont deja tres simples.
 
         # Vectorisation des expressions.
-        globals()["compiled_expressions"]["fct_inter_line"] = _Lambdify(
-            [theta_1, dist_1, theta_2, dist_2], [inter_x, inter_y], modules="numexpr")
+        globals()["compiled_expressions"]["fct_inter_line"] = Lambdify(
+            [theta_1, dist_1, theta_2, dist_2], [inter_x, inter_y])
         return globals()["compiled_expressions"]["fct_inter_line"]
 
     def _hash(self):
@@ -441,13 +436,29 @@ class Transformer(Compilator):
         >>> import numpy as np
         >>> from laue.geometry import Transformer
         >>> from laue.tools.parsing import extract_parameters
-        >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+        >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
-        >>> x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
+        >>> x_cam, y_cam = np.linspace(3, 2048, 6), np.linspace(3, 2048, 6)
         >>>
+
+        Output type
+        >>> type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
+        <class 'numpy.ndarray'>
         >>> np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
-        array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
-               [ 0.4 ,  0.29, -0.  , -0.48, -0.94]])
+        array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float32)
+        >>> np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters, dtype=np.float128), 2)
+        array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float128)
+        >>>
+        
+        Output shape
+        >>> transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
+        (2,)
+        >>> x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
+        ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
+        >>> transformer.cam_to_gnomonic(x_cam, y_cam, parameters).shape
+        (2, 1, 2, 3)
         >>>
         """
         assert isinstance(pxl_x, (float, int, np.ndarray)), \
@@ -464,7 +475,7 @@ class Transformer(Compilator):
         assert set(parameters) == {"dd", "xbet", "xgam", "xcen", "ycen", "pixelsize"}, \
             ("Les clefs doivent etres 'dd', 'xbet', 'xgam', 'xcen', 'ycen' et 'pixelsize'. "
             f"Or les clefs sont {set(parameters)}.")
-        assert all(isinstance(v, (float, int)) for v in parameters.values()), \
+        assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             "La valeurs des parametres doivent toutes etre des nombres."
         assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
             f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}."
@@ -484,13 +495,13 @@ class Transformer(Compilator):
             if nbr_access + 1 == 4: # Si c'est la 4 eme fois qu'on accede a la fonction.
                 self.compile(parameters) # On optimise la fonction.
             else: # Si ce n'est pas encore le moment de perdre du temps a optimiser.
-                return self.get_expr_cam_to_gnomonic()(pxl_x, pxl_y,
+                return np.stack(self.get_expr_cam_to_gnomonic()(pxl_x, pxl_y,
                     parameters["dd"], parameters["xcen"], parameters["ycen"],
-                    parameters["xbet"], parameters["xgam"], parameters["pixelsize"])
+                    parameters["xbet"], parameters["xgam"], parameters["pixelsize"]))
 
-        return self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y)
+        return np.stack(self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y))
 
-    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect):
+    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float32):
         """
         ** Calcul les distances projetees des points sur une droite. **
 
@@ -512,6 +523,9 @@ class Transformer(Compilator):
         y_vect : np.ndarray
             L'ensemble des coordonnees y des points.
             shape = ``(*nbr_points)``
+        dtype : type, optional
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
         Returns
         -------
@@ -524,14 +538,22 @@ class Transformer(Compilator):
         >>> import numpy as np
         >>> from laue.geometry import Transformer
         >>> from laue.tools.parsing import extract_parameters
-        >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+        >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
         >>>
         >>> lines = (np.array([0, np.pi/2]), np.array([1, 1])) # Horizontale et verticale passant par (1, 1)
-        >>> points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]))
+        >>> points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1])) # Le points (0, 1), ...
         >>> np.round(transformer.dist_line(*lines, *points))
         array([[1., 0., 2., 1.],
                [1., 0., 2., 0.]], dtype=float32)
+        >>> np.round(transformer.dist_line(*lines, *points, dtype=np.float128))
+        array([[1., 0., 2., 1.],
+               [1., 0., 2., 0.]], dtype=float128)
+        >>>
+        >>> theta_vect, dist_vect = np.random.normal(size=(1, 2)), np.random.normal(size=(1, 2))
+        >>> x_vect, y_vect = np.random.normal(size=(3, 4, 5)), np.random.normal(size=(3, 4, 5))
+        >>> transformer.dist_line(theta_vect, dist_vect, x_vect, y_vect).shape
+        (1, 2, 3, 4, 5)
         >>>
         """
         assert isinstance(theta_vect, np.ndarray), \
@@ -546,9 +568,11 @@ class Transformer(Compilator):
             f"'y_vect' has to be of type np.ndarray, not {type(y_vect).__name__}."
         assert x_vect.shape == y_vect.shape, \
             f"Les 2 coordonnees des points doivent avoir la meme shape: {x_vect.shape} vs {y_vect.shape}."
+        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+            f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}."
 
-        theta_vect, dist_vect = theta_vect.astype(np.float32, copy=False), dist_vect.astype(np.float32, copy=False)
-        x_vect, y_vect = x_vect.astype(np.float32, copy=False), y_vect.astype(np.float32, copy=False)
+        theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
+        x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
 
         nbr_droites = theta_vect.shape
         nbr_points = x_vect.shape
@@ -558,10 +582,10 @@ class Transformer(Compilator):
         result = np.array([func(theta, dist, x_vect, y_vect)
                            for theta, dist
                            in zip(theta_vect.ravel(), dist_vect.ravel())
-                          ], dtype=np.float32).reshape((*nbr_droites, *nbr_points))
+                          ], dtype=dtype).reshape((*nbr_droites, *nbr_points))
         return np.nan_to_num(result, copy=False, nan=0.0)
 
-    def gnomonic_to_cam(self, gnom_x, gnom_y, parameters):
+    def gnomonic_to_cam(self, gnom_x, gnom_y, parameters, *, dtype=np.float32):
         """
         ** Passe des points du plan gnomonic vers la camera. **
 
@@ -573,6 +597,9 @@ class Transformer(Compilator):
             Coordonnee.s du.des point.s selon l'axe y du repere du plan gnomonic. (en mm)
         parameters : dict
             Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
+        dtype : type, optional
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
         Returns
         -------
@@ -585,14 +612,33 @@ class Transformer(Compilator):
         >>> import numpy as np
         >>> from laue.geometry import Transformer
         >>> from laue.tools.parsing import extract_parameters
-        >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+        >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
-        >>> gnom_x, gnom_y = np.random.normal(size=(2, 10, 4))
+        >>> x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
+        >>> x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
+        ...                              0.09978235,  0.17156848,  0.13417314 ],
+        ...                            [ 0.40283853,  0.31846303,  0.14362221, 
+        ...                             -0.18308422, -0.58226374, -0.93854752 ]])
         >>>
-        >>> transformer.gnomonic_to_cam(gnom_x, gnom_y, parameters).shape
-        (2, 10, 4)
-        >>> transformer.gnomonic_to_cam(.0, .0, parameters)
-        array([1024., 1024.])
+
+        Output type
+        >>> type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+        <class 'numpy.ndarray'>
+        >>> np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+        array([[   3.,  412.,  821., 1230., 1639., 2048.],
+               [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float32)
+        >>> np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters, dtype=np.float128))
+        array([[   3.,  412.,  821., 1230., 1639., 2048.],
+               [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float128)
+        >>>
+        
+        Output shape
+        >>> transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
+        (2,)
+        >>> x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
+        ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
+        >>> transformer.gnomonic_to_cam(x_cam, y_cam, parameters).shape
+        (2, 1, 2, 3)
         >>>
         """
         assert isinstance(gnom_x, (float, int, np.ndarray)), \
@@ -609,13 +655,16 @@ class Transformer(Compilator):
         assert set(parameters) == {"dd", "xbet", "xgam", "xcen", "ycen", "pixelsize"}, \
             ("Les clefs doivent etres 'dd', 'xbet', 'xgam', 'xcen', 'ycen' et 'pixelsize'. "
             f"Or les clefs sont {set(parameters)}.")
-        assert all(isinstance(v, (float, int)) for v in parameters.values()), \
+        assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             "La valeurs des parametres doivent toutes etre des nombres."
+        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+            f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}."
 
         if isinstance(gnom_x, np.ndarray):
-            gnom_x, gnom_y = gnom_x.astype(np.float32, copy=False), gnom_y.astype(np.float32, copy=False)
+            gnom_x, gnom_y = gnom_x.astype(dtype, copy=False), gnom_y.astype(dtype, copy=False)
         else:
-            gnom_x, gnom_y = np.float32(gnom_x), np.float32(gnom_y)
+            gnom_x, gnom_y = dtype(gnom_x), dtype(gnom_y)
+        parameters = {k: dtype(v) for k, v in parameters.items()}
 
         hash_param = self._hash_parameters(parameters) # Recuperation de la 'signature' des parametres.
         optimized_func = self._fcts_gnomonic_to_cam[hash_param] # On regarde si il y a une fonction deja optimisee.
@@ -626,11 +675,11 @@ class Transformer(Compilator):
             if nbr_access + 1 == 4: # Si c'est la 4 eme fois qu'on accede a la fonction.
                 self.compile(parameters) # On optimise la fonction.
             else: # Si ce n'est pas encore le moment de perdre du temps a optimiser.
-                return self.get_expr_gnomonic_to_cam()(gnom_x, gnom_y,
+                return np.stack(self.get_expr_gnomonic_to_cam()(gnom_x, gnom_y,
                     parameters["dd"], parameters["xcen"], parameters["ycen"],
-                    parameters["xbet"], parameters["xgam"], parameters["pixelsize"])
+                    parameters["xbet"], parameters["xgam"], parameters["pixelsize"]))
 
-        return self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y)
+        return np.stack(self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y))
 
     def hough(self, x_vect, y_vect):
         r"""
@@ -650,17 +699,18 @@ class Transformer(Compilator):
 
         Returns
         -------
-        theta : np.ndarray
-            * Les angles au sens trigomometrique des vecteurs reliant l'origine
-            ``O`` (0, 0) au point ``P`` appartenant a la droite tel que ``||OP||``
-            soit la plus petite possible.
-            * theta € [-pi, pi]
-            * shape = ``(*over_dims, n*(n-1)/2)``
-        dist : np.ndarray
-            * Ce sont les normes des vecteur ``OP``.
-            * dist € [0, +oo].
-            * shape = ``(*over_dims, n*(n-1)/2)``
-        * Ces 2 grandeurs sont concatenees dans une seule array de
+        np.ndarray
+            * theta : np.ndarray
+                * Les angles au sens trigomometrique des vecteurs reliant l'origine
+                ``O`` (0, 0) au point ``P`` appartenant a la droite tel que ``||OP||``
+                soit la plus petite possible.
+                * theta € [-pi, pi]
+                * shape = ``(*over_dims, n*(n-1)/2)``
+            * dist : np.ndarray
+                * Ce sont les normes des vecteur ``OP``.
+                * dist € [0, +oo].
+                * shape = ``(*over_dims, n*(n-1)/2)``
+            * Ces 2 grandeurs sont concatenees dans une seule array de
         shape = ``(2, *over_dims, n*(n-1)/2)``
 
         Examples
@@ -693,7 +743,7 @@ class Transformer(Compilator):
         yb = np.concatenate([y_vect[..., i+1:] for i in range(n-1)], axis=-1)
 
         return np.nan_to_num(
-            self.get_fct_hough()(xa, ya, xb, yb),
+            np.stack(self.get_fct_hough()(xa, ya, xb, yb)),
             copy=False,
             nan=0.0)
 
@@ -894,7 +944,7 @@ class Transformer(Compilator):
         theta_2 = np.concatenate([theta_vect[..., i+1:] for i in range(n-1)], axis=-1)
         dist_2 = np.concatenate([dist_vect[..., i+1:] for i in range(n-1)], axis=-1)
 
-        return self.get_fct_inter_line()(theta_1, dist_1, theta_2, dist_2)
+        return np.stack(self.get_fct_inter_line()(theta_1, dist_1, theta_2, dist_2))
 
     def _clustering_1d(self, theta_vect_1d, dist_vect_1d, std, tol, nbr):
         """
@@ -1090,169 +1140,3 @@ def ind2comb(comb, n):
     ind1 = homogeneous_int(np.ceil(n - np.sqrt(-8*comb + 4*n**2 - 4*n - 7)/2 - 3/2))
     ind2 = comb + (ind1**2 + 3*ind1)//2 - ind1*n + 1
     return ind1, ind2
-
-
-class _Lambdify:
-    """
-    Vectorize une expression sympy.
-    """
-    def __init__(self, args, expr, modules=None):
-        """
-        Notes
-        -----
-        * Est plus efficace si le module ``numexpr`` est installe.
-        * Force a convertir le type de retour en float.
-
-        Parameters
-        ----------
-        :param parameters: Les parametres constant a remplacer.
-        For all other parameters, they are exactly the same as  ``sympy.lambdify``.
-        """
-        self.sub_var_cmp = 0 # Compteur qui permet de creer plein de variables sympy.
-
-        self.args = args
-        self.modules = modules
-        self.expr = self._expr2sym(expr)
-        self.operations = collections.OrderedDict() # Contient la suite d'operations.
-        self._gather(args, self.expr) # Remplissage des etapes de calcul.
-        # self.operations["final_result"] = (sympy.lambdify(args, self.expr), self.expr, [])
-
-    def __call__(self, *args):
-        """
-        Evalue la fonction.
-        """
-        intermediate = collections.OrderedDict(zip(self.args, args)) # Ce sont les resultats intermediaires.
-        for var, (func, _, useless_vars) in self.operations.items():
-            intermediate[var] = func(*intermediate.values())
-            for var_u in useless_vars:
-                del intermediate[var_u]
-        return np.real(intermediate["final_result"])
-
-    def __repr__(self):
-        """
-        Donne une representation evaluable de soi.
-        """
-        return f"_Lambdify({self.args}, {self.expr})"
-
-    def __str__(self):
-        """
-        Retourne le code deplie.
-        """
-        code = f"def _lambdifygenerated({', '.join(map(str, self.args))}):\n"
-        for var, (_, expr, useless_vars) in self.operations.items():
-            code += f"\t{var} = {expr}\n"
-            if useless_vars:
-                code += f"\tdel {', '.join(map(str, useless_vars))}\n"
-        code += "\treturn final_result\n"
-        return code
-
-    def get_expr(self):
-        """
-        Recupere l'expression brute sympy.
-
-        :returns: L'expression sympy liee au parametre 'expr' de self.__init__.
-        :rtype: sympy.core.basic.Basic
-        """
-        return self.expr
-
-    def _expr2sym(self, expr):
-        """
-        Transforme 'expr' en expression sympy.
-
-        :param expr: Expression sympy, tuple, liste, str
-        :returns: Une expression sympy complete.
-        """
-        assert isinstance(expr, (sympy.core.basic.Basic, list, tuple, str)), \
-            f"'expression' has to be list, tuple or sympy expr, not {type(expression).__name__}."
-
-        if isinstance(expr, sympy.core.basic.Basic):
-            try:
-                return expr.evalf()
-            except AttributeError:
-                return expr
-
-        if isinstance(expr, str):
-            standard_transformations = sympy.parsing.sympy_parser.standard_transformations
-            implicit_multiplication_application = sympy.parsing.sympy_parser.implicit_multiplication_application
-            transformations = (standard_transformations + (implicit_multiplication_application,))
-            return self._expr2sym(sympy.parse_expr(expr, transformations=transformations))
-
-        return sympy.Tuple(*[self._expr2sym(child) for child in expr])
-
-    def _gather(self, variables, expr):
-        """
-        Supprime la redondance.
-        """
-        if isinstance(expr, sympy.core.basic.Atom): # Si il n'y a rien a symplifier.
-            self.operations["final_result"] = (sympy.lambdify(variables, expr), expr, [])
-            return
-
-        complete_hist = self._hist_sub_expr(expr) # Histograme complet des descendances.
-        max_red = max(complete_hist.values()) # Redondance maximale.
-        if max_red == 1: # Si il n'y a pas de redondance.
-            self.operations["final_result"] = (sympy.lambdify(variables, expr), expr, [])
-            return
-
-        max_red_expr = [expr for expr, red in complete_hist.items() if red == max_red] # Seul les elements les plus redondants.
-
-        dephs = [_Lambdify._len(expr) for expr in max_red_expr] # 3 La profondeur respective de chaque arbre.
-        sub_expr = max_red_expr[np.argmax(dephs)] # L'expression de l'element a remplacer.
-        self.sub_var_cmp += 1 # On incremente le conteur pour creer une nouvelle variable unique.
-        sub_var = sympy.Symbol(f"subvar_{self.sub_var_cmp}") # Nom de la variable intermediaire.
-        expr = expr.xreplace({sub_expr: sub_var})
-
-        useless_vars = set(variables) - expr.free_symbols # Se sont les variables inutiles par la suite.
-        try:
-            self.operations[sub_var] = (sympy.lambdify(variables, sub_expr, modules=self.modules), sub_expr, useless_vars) # ajoute de l'etape de calcul.
-        except (ImportError, TypeError):
-            self.operations[sub_var] = (sympy.lambdify(variables, sub_expr), sub_expr, useless_vars)
-        variables = [var for var in variables if var not in useless_vars] # On vire les variables inutiles.
-
-        return self._gather(variables+[sub_var], expr) # On simplifie, puis on recommence.
-
-    def _hist_sub_expr(self, expr):
-        """
-        Fait l'histograme des enfants.
-
-        * Ne fait pas de verification pour plus de permormances.
-        * Ne compte pas les symbols et les nombres.
-
-        :param expr: Expression sympy derivee de sympy.core.basic.Basic
-        :returns: Le dictionaire qui a chaque enfant et descendant en general,
-            associ son nombre d'apparition.
-        """
-        hist = collections.defaultdict(lambda: 0)
-        for child in expr.args:
-            if child.is_number or child.is_symbol:
-                continue
-            hist[child] += 1
-            for little_child, occur in self._hist_sub_expr(child).items():
-                hist[little_child] += occur
-        return hist
-
-    def _len(expr):
-        """
-        Cherche le nombres d'elements.
-
-        * Pas de verification pour une question de performance
-        """
-        return 1 + sum(_Lambdify._len(child) for child in expr.args)
-
-    def _cost(expr):
-        """
-        Recherche le nombre d'aditions.
-        """
-        def nbr_add(expr):
-            if isinstance(expr, sympy.core.basic.Atom): # Si on est sur une feuille.
-                return 0
-            if isinstance(expr, sympy.core.add.Add):
-                return (len(expr.args) - 1) + sum(nbr_add(child) for child in expr.args)
-            return sum(nbr_add(child) for child in expr.args)
-
-        sub_exprs, final = sympy.cse(expr, optimizations="basic")
-        cost = sum(nbr_add(ex) for _, ex in sub_exprs) + nbr_add(final[0])
-        print("cout:", cost)
-        return cost
-
-        
-
