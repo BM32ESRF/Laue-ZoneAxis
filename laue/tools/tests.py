@@ -13,29 +13,112 @@ import os
 import sys
 import time
 
+import numpy as np
+
 
 CALIBRATION_PARAMETERS = None
 
-# Tests theorique repetables.
+# Tests theoriques.
 
-def test_geometry_dtype_shape():
+def test_geometry_dtype():
     """
-    S'assure que les types soient concerve et les shapes aussi.
+    S'assure que les types soient bien concerves aux cours
+    des operations de transformation geometriques.
     """
-    import numpy as np
+    _print("============ TEST GEOMETRY DTYPE =============")
     with CWDasRoot():
         from laue.geometry import Transformer
         from laue.tools.parsing import extract_parameters
     parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
-    shape = (1, 2, 3, 4, 5, 1)
+    trans = Transformer()
+
+    _print("cam_to_gnomonic:")
+    for dtype in [np.float16, np.float32, np.float64, np.float128]:
+        for boucle in range(3):
+            rtype = trans.cam_to_gnomonic(np.zeros(1), np.zeros(1), parameters, dtype=dtype).dtype.type
+            _print(f"\tboucle {boucle}: {dtype.__name__}->{rtype.__name__}")
+            assert rtype == dtype
+
+    _print("gnomonic_to_cam:")
+    for dtype in [np.float16, np.float32, np.float64, np.float128]:
+        for boucle in range(3):
+            rtype = trans.gnomonic_to_cam(np.zeros(1), np.zeros(1), parameters, dtype=dtype).dtype.type
+            _print(f"\tboucle {boucle}: {dtype.__name__}->{rtype.__name__}")
+            assert rtype == dtype
+
+    _print("dist_line:")
+    for dtype in [np.float16, np.float32, np.float64, np.float128]:
+        rtype = trans.dist_line(
+            np.array([0, np.pi/2]), np.array([1, 1]),
+            np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]),
+            dtype=dtype).dtype.type
+        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        assert rtype == dtype
+
+    _print("hough:")
+    for dtype in [np.float16, np.float32, np.float64, np.float128]:
+        rtype = trans.hough(
+            np.array([-1, 0, 1]), np.array([-1, 0, 1]),
+            dtype=dtype).dtype.type
+        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        assert rtype == dtype
+
+    _print("hough_reduce:")
+    for dtype in [np.float16, np.float32, np.float64]:
+        rtype = trans.hough_reduce(
+            *trans.hough(
+                np.array([-1, 0, 1]), np.array([-1, 0, 1]),
+                dtype=dtype
+            ),
+            dtype=dtype
+        ).dtype.type
+        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        assert rtype == dtype
+
+    _print("inter_lines:")
+    for dtype in [np.float16, np.float32, np.float64, np.float128]:
+        rtype = trans.inter_lines(
+            np.array([0, np.pi/2]), np.array([1, 1]),
+            dtype=dtype).dtype.type
+        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        assert rtype == dtype
+
+def test_geometry_shape():
+    """
+    S'assure que les dimensions soient concervees..
+    """
+    _print("============ TEST GEOMETRY SHAPE =============")
+    with CWDasRoot():
+        from laue.geometry import Transformer
+        from laue.tools.parsing import extract_parameters
+    parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
     transformer = Transformer()
 
-    for _ in range(2): # On fait 2 boucle car ca recompile en cours de route.
+    shape = tuple(np.random.randint(1, 10, size=np.random.randint(1, 5)))
+    _print(f"shape: {shape}")
+
+    for boucle in range(3): # On fait 2 boucle car ca recompile en cours de route.
         for func in [transformer.cam_to_gnomonic, transformer.gnomonic_to_cam]:
-            for dtype in [np.float16, np.float32, np.float64, np.float128]:
-                res = func(np.zeros(shape=shape), np.zeros(shape=shape), parameters, dtype=dtype)
-                assert res.shape == (2,) + shape
-                assert str(res.dtype) == dtype.__name__
+            res = func(np.zeros(shape=shape), np.zeros(shape=shape), parameters)
+            _print(f"boucle {boucle}, {func}(...).shape -> {res.shape}")
+            assert res.shape == (2,) + shape
+
+    res = transformer.dist_line(
+        np.ones(shape=shape), np.ones(shape=shape),
+        np.zeros(shape=shape), np.zeros(shape=shape))
+    _print(f"dist_line(...).shape -> {res.shape}")
+    assert res.shape == (*shape, *shape)
+
+    res = transformer.hough(
+        np.random.normal(size=shape), np.random.normal(size=shape))
+    _print(f"hough(...).shape -> {res.shape}")
+    assert res.shape == (2,) + shape[:-1] + ((shape[-1]*(shape[-1]-1))//2,)
+
+    res = transformer.inter_lines(
+        np.random.uniform(-np.pi, np.pi, size=shape),
+        np.random.uniform(0, 2, size=shape))
+    _print(f"inter_lines(...).shape -> {res.shape}")
+    assert res.shape == (2,) + shape[:-1] + ((shape[-1]*(shape[-1]-1))//2,)
 
 def test_geometry_bij():
     """

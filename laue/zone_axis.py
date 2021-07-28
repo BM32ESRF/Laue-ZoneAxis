@@ -216,7 +216,7 @@ class ZoneAxis:
         >>> axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
         >>>
         >>> type(axis.dist_mean())
-        <class 'numpy.float32'>
+        <class 'numpy.float64'>
         >>>
         """
         theta_vect, dist_vect = self.get_polar_coords()
@@ -576,7 +576,7 @@ def _get_zone_axes_pickle(args):
     angles, dists = transformer.hough_reduce(
         *transformer.hough(*gnomonics),
         nbr=nbr, tol=tol) # Recuperation des axes.
-    if len(angles) <= 1: # Si on a pas trouver suffisement de choses.
+    if len(angles) <= 1: # Si on a pas trouve suffisement de choses.
         return (), (), (), ((),)*gnomonics.shape[-1]
 
     # Attribution des points aux droites.

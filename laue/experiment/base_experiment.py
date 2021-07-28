@@ -193,7 +193,7 @@ class Experiment:
         -------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> experiment = laue.Experiment(image)
+        >>> experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
         >>> parameters = experiment.set_calibration()
         >>> sorted(parameters.keys())
         ['dd', 'pixelsize', 'xbet', 'xcen', 'xgam', 'ycen']
@@ -298,7 +298,10 @@ class Experiment:
                 print(f"\t\t{dia.get_id()}")
 
         # Vectorisation des donnees pour de bonnes perfs.
-        min_size = min(len(dia) for dia in best_diagrams) # Le plus petit nombre de points.
+        min_size = min(
+            200,
+            min(len(dia) for dia in best_diagrams)
+            ) # Le plus petit nombre de points.
         spots_position = np.array(
             [dia.get_positions(n=min_size, sort="quality")
              for dia in best_diagrams],
@@ -306,7 +309,7 @@ class Experiment:
         spots_position = np.swapaxes(spots_position, 0, 1) # shape: (2, n_diagrams, nbr_spots)
 
         # Perparations des parametres pour la suite.
-        vect_labels = tuple(unknown_parameters) # On recupere les nom des parametre inconus seulement.
+        vect_labels = tuple(unknown_parameters) # On recupere les nom des parametres inconus seulement.
         bounds = [(parameters_min[name], parameters_max[name]) for name in vect_labels] # Les limites des variables.
         args = (given_parameters, vect_labels, spots_position) # Les arguments en plus de la fonction de cout.
         if self.verbose >= 2:

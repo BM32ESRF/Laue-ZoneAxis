@@ -65,9 +65,9 @@ def limited_imap(pool, func, iterable, **kwargs):
                     if buff_size < self.max_tasks:
                         break
                     if buff_size > 10*self.max_tasks: # Si il y a suffisement de resultats en avance.
-                        time.sleep(.5) # On fait une grande pause.
+                        time.sleep(.1) # On fait une grande pause.
                         continue # Et on attend que ca se decante.
-                    cpu = min(psutil.cpu_percent(interval=0.1, percpu=True))
+                    cpu = min(psutil.cpu_percent(interval=0.05, percpu=True))
                     mem = psutil.virtual_memory().percent
                     if cpu < 50 and mem < 75: # Si il y a suffisement de ressources.
                         break

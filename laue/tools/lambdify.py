@@ -12,8 +12,6 @@ Notes
 Si le module ``numexpr`` est installe, certaines optimisations pourront etre faites.
 """
 
-from typing import Iterable
-
 import cloudpickle
 import numpy as np
 import sympy
@@ -175,10 +173,7 @@ def evalf(x, n=15, **options):
     except AttributeError:
         if isinstance(x, (tuple, list, set)):
             return type(x)([evalf(e) for e in x])
-        try:
-            return type(x)(*(evalf(e) for e in x.args))
-        except AttributeError:
-            return x
+        return type(x)(*(evalf(e) for e in x.args))
 
 def simplify(x, **kwargs):
     """
@@ -192,26 +187,20 @@ def simplify(x, **kwargs):
     except AttributeError:
         if isinstance(x, (tuple, list, set)):
             return type(x)([simplify(e, **kwargs) for e in x])
-        try:
-            return type(x)(*(simplify(e, **kwargs) for e in x.args))
-        except AttributeError:
-            return x
+        return type(x)(*(simplify(e, **kwargs) for e in x.args))
 
-def subs(x, *args, **kwargs):
+def subs(x, replacements):
     """
     ** Alias vers ``sympy.subs``. **
 
     Gere recursivement les objets qui n'ont pas de methode ``.subs``.
     """
     try:
-        return x.subs(*args, **kwargs)
+        return x.subs(replacements)
     except AttributeError:
         if isinstance(x, (tuple, list, set)):
-            return type(x)([subs(e, *args, **kwargs) for e in x])
-        try:
-            return type(x)(*(subs(e, *args, **kwargs) for e in x.args))
-        except AttributeError:
-            return x
+            return type(x)([subs(e, replacements) for e in x])
+        return type(x)(*(subs(e, replacements) for e in x.args))
 
 def time_cost(x):
     """
@@ -232,7 +221,7 @@ class Lambdify:
     """
     ** Permet de manipuler plus simplement une fonction. **
     """
-    def __init__(self, args: Iterable, expr, *, _simplify=True):
+    def __init__(self, args, expr, *, _simplify=True):
         """
         ** Prepare la fonction. **
 
