@@ -61,8 +61,10 @@ def test_geometry_bij():
     gnomcam_rond_camgnom = gnom_to_cam(*cam_to_gnom(xc, yc))
     _print(f"(gnom_to_cam o cam_to_gnom)(xc, yc): {gnomcam_rond_camgnom}")
 
-    assert camgnom_rond_gnomcam == [xg, yg]
-    assert gnomcam_rond_camgnom == [xc, yc]
+    assert camgnom_rond_gnomcam[0].simplify() == xg
+    assert camgnom_rond_gnomcam[1].simplify() == yg
+    assert gnomcam_rond_camgnom[0].simplify() == xc
+    assert gnomcam_rond_camgnom[1].simplify() == yc
 
 
 # Tests sur les donnes reelles.

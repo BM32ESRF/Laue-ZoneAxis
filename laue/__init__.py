@@ -26,7 +26,7 @@ creation d'une experience
 >>> experiment = laue.Experiment(image)
 >>>
 >>> experiment
-Experiment(images='laue/examples/ge_blanc.mccd', verbose=False, max_space=5, threshold=5.1)
+Experiment(verbose=False, max_space=5, threshold=5.1)
 >>>
 
 recuperation des diagrammes
@@ -44,7 +44,8 @@ recuperation des diagrammes
 # $ python3 -m pytest --doctest-modules laue && python3 -m pytest laue/tools/tests.py
 
 __all__ = ["Experiment"]
-__pdoc__ = {"Experiment.__iter__": True,
+__pdoc__ = {"Experiment.__getitem__": True,
+            "Experiment.__iter__": True,
             "Experiment.__len__": True,
             "tools.fork_lambdify": False}
 

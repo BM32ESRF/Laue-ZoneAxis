@@ -225,6 +225,24 @@ class ZoneAxis:
         return self.diagram.experiment.transformer.dist_line(
             theta_vect, dist_vect, x_vect, y_vect).mean()
 
+    def get_id(self):
+        """
+        ** Recupere le numero de cet axe. **
+
+        Au seins d'un diagrame les axes ont des identifiants
+        allant de [0, nbr_axes[.
+
+        Examples
+        --------
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
+        True
+        >>>
+        """
+        return self.identifier
+
     def get_polar_coords(self):
         """
         ** Recupere l'angle et la distance representant l'axe. **

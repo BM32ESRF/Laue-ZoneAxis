@@ -58,6 +58,7 @@ except ImportError:
     numexpr = None
 import sympy
 
+import laue.tools.lambdify as lambdify
 
 __all__ = [&#34;Transformer&#34;, &#34;comb2ind&#34;, &#34;ind2comb&#34;]
 
@@ -117,20 +118,20 @@ class Compilator:
                 &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
 
             hash_param = self._hash_parameters(parameters)
-            contants = {self.dd: parameters[&#34;dd&#34;], # C&#39;est qu&#39;il est tant de faire de l&#39;optimisation.
+            constants = {self.dd: parameters[&#34;dd&#34;], # C&#39;est qu&#39;il est tant de faire de l&#39;optimisation.
                         self.xcen: parameters[&#34;xcen&#34;],
                         self.ycen: parameters[&#34;ycen&#34;],
                         self.xbet: parameters[&#34;xbet&#34;],
                         self.xgam: parameters[&#34;xgam&#34;],
                         self.pixelsize: parameters[&#34;pixelsize&#34;]}
-            self._fcts_cam_to_gnomonic[hash_param] = _Lambdify(
+            # Dans le cas ou l&#39;expression est deserialise, les pointeurs ne sont plus les memes.
+            constants = {str(var): value for var, value in constants.items()}
+            self._fcts_cam_to_gnomonic[hash_param] = lambdify.Lambdify(
                     args=[self.x_cam, self.y_cam],
-                    expr=self.get_expr_cam_to_gnomonic().get_expr().subs(contants),
-                    modules=&#34;numexpr&#34;)
-            self._fcts_gnomonic_to_cam[hash_param] = _Lambdify(
+                    expr=lambdify.subs(self.get_expr_cam_to_gnomonic()(), constants))
+            self._fcts_gnomonic_to_cam[hash_param] = lambdify.Lambdify(
                     args=[self.x_gnom, self.y_gnom],
-                    expr=self.get_expr_gnomonic_to_cam().get_expr().subs(contants),
-                    modules=&#34;numexpr&#34;)
+                    expr=lambdify.subs(self.get_expr_gnomonic_to_cam()(), constants))
 
     def get_expr_cam_to_gnomonic(self):
         &#34;&#34;&#34;
@@ -161,10 +162,9 @@ class Compilator:
             sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
             ) # Permet un gain de 7.48
 
-        globals()[&#34;compiled_expressions&#34;][&#34;expr_cam_to_gnomonic&#34;] = _Lambdify(
+        globals()[&#34;compiled_expressions&#34;][&#34;expr_cam_to_gnomonic&#34;] = lambdify.Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[x_g, y_g], # Les imprecisions de calculs donnent parfois des complexes!
-            modules=&#34;numexpr&#34;) # On l&#39;enregistre une bonne fois pour toutes.
+            expr=[x_g, y_g]) # On l&#39;enregistre une bonne fois pour toutes.
         return globals()[&#34;compiled_expressions&#34;][&#34;expr_cam_to_gnomonic&#34;]
 
     def get_expr_gnomonic_to_cam(self):
@@ -202,10 +202,9 @@ class Compilator:
             sympy.together(sympy.cancel(sympy.trigsimp(y_c)))
             ) # Permet un gain de 1.44
 
-        globals()[&#34;compiled_expressions&#34;][&#34;expr_gnomonic_to_cam&#34;] = _Lambdify(
+        globals()[&#34;compiled_expressions&#34;][&#34;expr_gnomonic_to_cam&#34;] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[x_c, y_c],
-            modules=&#34;numexpr&#34;) # On l&#39;enregistre une bonne fois pour toutes.
+            expr=[x_c, y_c]) # On l&#39;enregistre une bonne fois pour toutes.
         return globals()[&#34;compiled_expressions&#34;][&#34;expr_gnomonic_to_cam&#34;]
 
     def get_expr_thetachi_to_gnomonic(self):
@@ -235,10 +234,9 @@ class Compilator:
             sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
             ) # Permet un gain de 2.16
 
-        globals()[&#34;compiled_expressions&#34;][&#34;expr_thetachi_to_gnomonic&#34;] = _Lambdify(
+        globals()[&#34;compiled_expressions&#34;][&#34;expr_thetachi_to_gnomonic&#34;] = lambdify.Lambdify(
             args=[self.theta, self.chi],
-            expr=[x_g, y_g], # Les imprecisions de calculs donnent parfois des complexes!
-            modules=&#34;numexpr&#34;) # On l&#39;enregistre une bonne fois pour toutes.
+            expr=[x_g, y_g]) # On l&#39;enregistre une bonne fois pour toutes.
         return globals()[&#34;compiled_expressions&#34;][&#34;expr_thetachi_to_gnomonic&#34;]
 
     def get_expr_gnomonic_to_thetachi(self):
@@ -265,10 +263,9 @@ class Compilator:
         chi = sympy.simplify(chi)
         theta = sympy.simplify(theta) # gain de 2.15
 
-        globals()[&#34;compiled_expressions&#34;][&#34;expr_gnomonic_to_thetachi&#34;] = _Lambdify(
+        globals()[&#34;compiled_expressions&#34;][&#34;expr_gnomonic_to_thetachi&#34;] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom],
-            expr=[theta, chi], # Les imprecisions de calculs donnent parfois des complexes!
-            modules=&#34;numexpr&#34;) # On l&#39;enregistre une bonne fois pour toutes.
+            expr=[theta, chi]) # On l&#39;enregistre une bonne fois pour toutes.
         return globals()[&#34;compiled_expressions&#34;][&#34;expr_gnomonic_to_thetachi&#34;]
 
     def get_fct_dist_line(self):
@@ -291,7 +288,7 @@ class Compilator:
         distance = sympy.trigsimp(distance) # Permet un gain de 2.90
 
         # Vectorisation de l&#39;expression.
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;] = _Lambdify([theta, dist, x, y], distance, modules=&#34;numexpr&#34;)
+        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;] = lambdify.Lambdify([theta, dist, x, y], distance)
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;]
 
     def get_fct_hough(self):
@@ -322,7 +319,7 @@ class Compilator:
         dist = sympy.trigsimp(sympy.cancel(dist)) # Permet un gain de 1.40
 
         # Vectorisation des expressions.
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;] = _Lambdify([xa, ya, xb, yb], [theta, dist], modules=&#34;numexpr&#34;)
+        globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;] = lambdify.Lambdify([xa, ya, xb, yb], [theta, dist])
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;]
 
     def get_fct_inter_line(self):
@@ -350,8 +347,8 @@ class Compilator:
         # Il n&#39;y en a pas car les expressions sont deja tres simples.
 
         # Vectorisation des expressions.
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;] = _Lambdify(
-            [theta_1, dist_1, theta_2, dist_2], [inter_x, inter_y], modules=&#34;numexpr&#34;)
+        globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;] = lambdify.Lambdify(
+            [theta_1, dist_1, theta_2, dist_2], [inter_x, inter_y])
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;]
 
     def _hash(self):
@@ -360,6 +357,7 @@ class Compilator:
         &#34;&#34;&#34;
         return hashlib.md5(
             inspect.getsource(Compilator).encode(encoding=&#34;utf-8&#34;)
+          + inspect.getsource(lambdify).encode(encoding=&#34;utf-8&#34;)
             ).hexdigest()
 
     def save(self):
@@ -374,7 +372,9 @@ class Compilator:
         self.load() # Recuperation du contenu du fichier.
         content = {
             &#34;hash&#34;: self._hash(),
-            &#34;expr&#34;: globals()[&#34;compiled_expressions&#34;]
+            &#34;expr&#34;: {name: l.dumps()
+                for name, l in globals()[&#34;compiled_expressions&#34;].items()
+                }
             }
         with open(file, &#34;wb&#34;) as f:
             cloudpickle.dump(content, f)
@@ -388,14 +388,16 @@ class Compilator:
         dirname = os.path.dirname(os.path.abspath(__file__))
         file = os.path.join(dirname, &#34;geometry.data&#34;)
         
-        # if os.path.exists(file):
-        #     with open(file, &#34;rb&#34;) as f:
-        #         try:
-        #             content = cloudpickle.load(f)
-        #         except ValueError: # Si c&#39;est pas le bon protocol
-        #             content = {&#34;hash&#34;: None}
-        #     if content[&#34;hash&#34;] == self._hash(): # Si les donnees sont a jour.
-        #         globals()[&#34;compiled_expressions&#34;] = {**globals()[&#34;compiled_expressions&#34;], **content[&#34;expr&#34;]}
+        if os.path.exists(file):
+            with open(file, &#34;rb&#34;) as f:
+                try:
+                    content = cloudpickle.load(f)
+                except ValueError: # Si c&#39;est pas le bon protocol
+                    content = {&#34;hash&#34;: None}
+                else:
+                    content[&#34;expr&#34;] = {name: lambdify.Lambdify.loads(data) for name, data in content[&#34;expr&#34;].items()}
+            if content[&#34;hash&#34;] == self._hash(): # Si les donnees sont a jour.
+                globals()[&#34;compiled_expressions&#34;] = {**globals()[&#34;compiled_expressions&#34;], **content[&#34;expr&#34;]}
         return globals()[&#34;compiled_expressions&#34;]
 
 
@@ -459,6 +461,7 @@ class Transformer(Compilator):
         parameters : dict
             Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
         dtype : type, optional
+            Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
             La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
             mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
@@ -474,13 +477,29 @@ class Transformer(Compilator):
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; from laue.geometry import Transformer
         &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         &gt;&gt;&gt; transformer = Transformer()
-        &gt;&gt;&gt; x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
+        &gt;&gt;&gt; x_cam, y_cam = np.linspace(3, 2048, 6), np.linspace(3, 2048, 6)
         &gt;&gt;&gt;
+
+        Output type
+        &gt;&gt;&gt; type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
+        &lt;class &#39;numpy.ndarray&#39;&gt;
         &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
-        array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
-               [ 0.4 ,  0.29, -0.  , -0.48, -0.94]])
+        array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float32)
+        &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters, dtype=np.float128), 2)
+        array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float128)
+        &gt;&gt;&gt;
+        
+        Output shape
+        &gt;&gt;&gt; transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
+        (2,)
+        &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
+        ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
+        &gt;&gt;&gt; transformer.cam_to_gnomonic(x_cam, y_cam, parameters).shape
+        (2, 1, 2, 3)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert isinstance(pxl_x, (float, int, np.ndarray)), \
@@ -497,7 +516,7 @@ class Transformer(Compilator):
         assert set(parameters) == {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;pixelsize&#34;}, \
             (&#34;Les clefs doivent etres &#39;dd&#39;, &#39;xbet&#39;, &#39;xgam&#39;, &#39;xcen&#39;, &#39;ycen&#39; et &#39;pixelsize&#39;. &#34;
             f&#34;Or les clefs sont {set(parameters)}.&#34;)
-        assert all(isinstance(v, (float, int)) for v in parameters.values()), \
+        assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
         assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
             f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
@@ -517,13 +536,13 @@ class Transformer(Compilator):
             if nbr_access + 1 == 4: # Si c&#39;est la 4 eme fois qu&#39;on accede a la fonction.
                 self.compile(parameters) # On optimise la fonction.
             else: # Si ce n&#39;est pas encore le moment de perdre du temps a optimiser.
-                return self.get_expr_cam_to_gnomonic()(pxl_x, pxl_y,
+                return np.stack(self.get_expr_cam_to_gnomonic()(pxl_x, pxl_y,
                     parameters[&#34;dd&#34;], parameters[&#34;xcen&#34;], parameters[&#34;ycen&#34;],
-                    parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;])
+                    parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;]))
 
-        return self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y)
+        return np.stack(self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y))
 
-    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect):
+    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float32):
         &#34;&#34;&#34;
         ** Calcul les distances projetees des points sur une droite. **
 
@@ -545,6 +564,10 @@ class Transformer(Compilator):
         y_vect : np.ndarray
             L&#39;ensemble des coordonnees y des points.
             shape = ``(*nbr_points)``
+        dtype : type, optional
+            Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
         Returns
         -------
@@ -557,14 +580,22 @@ class Transformer(Compilator):
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; from laue.geometry import Transformer
         &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         &gt;&gt;&gt; transformer = Transformer()
         &gt;&gt;&gt;
         &gt;&gt;&gt; lines = (np.array([0, np.pi/2]), np.array([1, 1])) # Horizontale et verticale passant par (1, 1)
-        &gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]))
+        &gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1])) # Le points (0, 1), ...
         &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points))
         array([[1., 0., 2., 1.],
                [1., 0., 2., 0.]], dtype=float32)
+        &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points, dtype=np.float128))
+        array([[1., 0., 2., 1.],
+               [1., 0., 2., 0.]], dtype=float128)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; theta_vect, dist_vect = np.random.normal(size=(1, 2)), np.random.normal(size=(1, 2))
+        &gt;&gt;&gt; x_vect, y_vect = np.random.normal(size=(3, 4, 5)), np.random.normal(size=(3, 4, 5))
+        &gt;&gt;&gt; transformer.dist_line(theta_vect, dist_vect, x_vect, y_vect).shape
+        (1, 2, 3, 4, 5)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert isinstance(theta_vect, np.ndarray), \
@@ -579,9 +610,11 @@ class Transformer(Compilator):
             f&#34;&#39;y_vect&#39; has to be of type np.ndarray, not {type(y_vect).__name__}.&#34;
         assert x_vect.shape == y_vect.shape, \
             f&#34;Les 2 coordonnees des points doivent avoir la meme shape: {x_vect.shape} vs {y_vect.shape}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
 
-        theta_vect, dist_vect = theta_vect.astype(np.float32, copy=False), dist_vect.astype(np.float32, copy=False)
-        x_vect, y_vect = x_vect.astype(np.float32, copy=False), y_vect.astype(np.float32, copy=False)
+        theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
+        x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
 
         nbr_droites = theta_vect.shape
         nbr_points = x_vect.shape
@@ -591,10 +624,10 @@ class Transformer(Compilator):
         result = np.array([func(theta, dist, x_vect, y_vect)
                            for theta, dist
                            in zip(theta_vect.ravel(), dist_vect.ravel())
-                          ], dtype=np.float32).reshape((*nbr_droites, *nbr_points))
+                          ], dtype=dtype).reshape((*nbr_droites, *nbr_points))
         return np.nan_to_num(result, copy=False, nan=0.0)
 
-    def gnomonic_to_cam(self, gnom_x, gnom_y, parameters):
+    def gnomonic_to_cam(self, gnom_x, gnom_y, parameters, *, dtype=np.float32):
         &#34;&#34;&#34;
         ** Passe des points du plan gnomonic vers la camera. **
 
@@ -606,6 +639,10 @@ class Transformer(Compilator):
             Coordonnee.s du.des point.s selon l&#39;axe y du repere du plan gnomonic. (en mm)
         parameters : dict
             Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
+        dtype : type, optional
+            Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
         Returns
         -------
@@ -618,14 +655,32 @@ class Transformer(Compilator):
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; from laue.geometry import Transformer
         &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         &gt;&gt;&gt; transformer = Transformer()
-        &gt;&gt;&gt; gnom_x, gnom_y = np.random.normal(size=(2, 10, 4))
+        &gt;&gt;&gt; x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
+        ...                              0.09978235,  0.17156848,  0.13417314 ],
+        ...                            [ 0.40283853,  0.31846303,  0.14362221, 
+        ...                             -0.18308422, -0.58226374, -0.93854752 ]])
         &gt;&gt;&gt;
-        &gt;&gt;&gt; transformer.gnomonic_to_cam(gnom_x, gnom_y, parameters).shape
-        (2, 10, 4)
-        &gt;&gt;&gt; transformer.gnomonic_to_cam(.0, .0, parameters)
-        array([1024., 1024.])
+
+        Output type
+        &gt;&gt;&gt; type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+        &lt;class &#39;numpy.ndarray&#39;&gt;
+        &gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+        array([[   3.,  412.,  821., 1230., 1639., 2048.],
+               [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float32)
+        &gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters, dtype=np.float128))
+        array([[   3.,  412.,  821., 1230., 1639., 2048.],
+               [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float128)
+        &gt;&gt;&gt;
+        
+        Output shape
+        &gt;&gt;&gt; transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
+        (2,)
+        &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
+        ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
+        &gt;&gt;&gt; transformer.gnomonic_to_cam(x_cam, y_cam, parameters).shape
+        (2, 1, 2, 3)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert isinstance(gnom_x, (float, int, np.ndarray)), \
@@ -642,13 +697,16 @@ class Transformer(Compilator):
         assert set(parameters) == {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;pixelsize&#34;}, \
             (&#34;Les clefs doivent etres &#39;dd&#39;, &#39;xbet&#39;, &#39;xgam&#39;, &#39;xcen&#39;, &#39;ycen&#39; et &#39;pixelsize&#39;. &#34;
             f&#34;Or les clefs sont {set(parameters)}.&#34;)
-        assert all(isinstance(v, (float, int)) for v in parameters.values()), \
+        assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
 
         if isinstance(gnom_x, np.ndarray):
-            gnom_x, gnom_y = gnom_x.astype(np.float32, copy=False), gnom_y.astype(np.float32, copy=False)
+            gnom_x, gnom_y = gnom_x.astype(dtype, copy=False), gnom_y.astype(dtype, copy=False)
         else:
-            gnom_x, gnom_y = np.float32(gnom_x), np.float32(gnom_y)
+            gnom_x, gnom_y = dtype(gnom_x), dtype(gnom_y)
+        parameters = {k: dtype(v) for k, v in parameters.items()}
 
         hash_param = self._hash_parameters(parameters) # Recuperation de la &#39;signature&#39; des parametres.
         optimized_func = self._fcts_gnomonic_to_cam[hash_param] # On regarde si il y a une fonction deja optimisee.
@@ -659,11 +717,11 @@ class Transformer(Compilator):
             if nbr_access + 1 == 4: # Si c&#39;est la 4 eme fois qu&#39;on accede a la fonction.
                 self.compile(parameters) # On optimise la fonction.
             else: # Si ce n&#39;est pas encore le moment de perdre du temps a optimiser.
-                return self.get_expr_gnomonic_to_cam()(gnom_x, gnom_y,
+                return np.stack(self.get_expr_gnomonic_to_cam()(gnom_x, gnom_y,
                     parameters[&#34;dd&#34;], parameters[&#34;xcen&#34;], parameters[&#34;ycen&#34;],
-                    parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;])
+                    parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;]))
 
-        return self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y)
+        return np.stack(self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y))
 
     def hough(self, x_vect, y_vect):
         r&#34;&#34;&#34;
@@ -683,17 +741,18 @@ class Transformer(Compilator):
 
         Returns
         -------
-        theta : np.ndarray
-            * Les angles au sens trigomometrique des vecteurs reliant l&#39;origine
-            ``O`` (0, 0) au point ``P`` appartenant a la droite tel que ``||OP||``
-            soit la plus petite possible.
-            * theta € [-pi, pi]
-            * shape = ``(*over_dims, n*(n-1)/2)``
-        dist : np.ndarray
-            * Ce sont les normes des vecteur ``OP``.
-            * dist € [0, +oo].
-            * shape = ``(*over_dims, n*(n-1)/2)``
-        * Ces 2 grandeurs sont concatenees dans une seule array de
+        np.ndarray
+            * theta : np.ndarray
+                * Les angles au sens trigomometrique des vecteurs reliant l&#39;origine
+                ``O`` (0, 0) au point ``P`` appartenant a la droite tel que ``||OP||``
+                soit la plus petite possible.
+                * theta € [-pi, pi]
+                * shape = ``(*over_dims, n*(n-1)/2)``
+            * dist : np.ndarray
+                * Ce sont les normes des vecteur ``OP``.
+                * dist € [0, +oo].
+                * shape = ``(*over_dims, n*(n-1)/2)``
+            * Ces 2 grandeurs sont concatenees dans une seule array de
         shape = ``(2, *over_dims, n*(n-1)/2)``
 
         Examples
@@ -726,7 +785,7 @@ class Transformer(Compilator):
         yb = np.concatenate([y_vect[..., i+1:] for i in range(n-1)], axis=-1)
 
         return np.nan_to_num(
-            self.get_fct_hough()(xa, ya, xb, yb),
+            np.stack(self.get_fct_hough()(xa, ya, xb, yb)),
             copy=False,
             nan=0.0)
 
@@ -927,7 +986,7 @@ class Transformer(Compilator):
         theta_2 = np.concatenate([theta_vect[..., i+1:] for i in range(n-1)], axis=-1)
         dist_2 = np.concatenate([dist_vect[..., i+1:] for i in range(n-1)], axis=-1)
 
-        return self.get_fct_inter_line()(theta_1, dist_1, theta_2, dist_2)
+        return np.stack(self.get_fct_inter_line()(theta_1, dist_1, theta_2, dist_2))
 
     def _clustering_1d(self, theta_vect_1d, dist_vect_1d, std, tol, nbr):
         &#34;&#34;&#34;
@@ -1122,172 +1181,7 @@ def ind2comb(comb, n):
     homogeneous_int = lambda x: x.astype(int) if isinstance(x, np.ndarray) else int(x)
     ind1 = homogeneous_int(np.ceil(n - np.sqrt(-8*comb + 4*n**2 - 4*n - 7)/2 - 3/2))
     ind2 = comb + (ind1**2 + 3*ind1)//2 - ind1*n + 1
-    return ind1, ind2
-
-
-class _Lambdify:
-    &#34;&#34;&#34;
-    Vectorize une expression sympy.
-    &#34;&#34;&#34;
-    def __init__(self, args, expr, modules=None):
-        &#34;&#34;&#34;
-        Notes
-        -----
-        * Est plus efficace si le module ``numexpr`` est installe.
-        * Force a convertir le type de retour en float.
-
-        Parameters
-        ----------
-        :param parameters: Les parametres constant a remplacer.
-        For all other parameters, they are exactly the same as  ``sympy.lambdify``.
-        &#34;&#34;&#34;
-        self.sub_var_cmp = 0 # Compteur qui permet de creer plein de variables sympy.
-
-        self.args = args
-        self.modules = modules
-        self.expr = self._expr2sym(expr)
-        self.operations = collections.OrderedDict() # Contient la suite d&#39;operations.
-        self._gather(args, self.expr) # Remplissage des etapes de calcul.
-        # self.operations[&#34;final_result&#34;] = (sympy.lambdify(args, self.expr), self.expr, [])
-
-    def __call__(self, *args):
-        &#34;&#34;&#34;
-        Evalue la fonction.
-        &#34;&#34;&#34;
-        intermediate = collections.OrderedDict(zip(self.args, args)) # Ce sont les resultats intermediaires.
-        for var, (func, _, useless_vars) in self.operations.items():
-            intermediate[var] = func(*intermediate.values())
-            for var_u in useless_vars:
-                del intermediate[var_u]
-        return np.real(intermediate[&#34;final_result&#34;])
-
-    def __repr__(self):
-        &#34;&#34;&#34;
-        Donne une representation evaluable de soi.
-        &#34;&#34;&#34;
-        return f&#34;_Lambdify({self.args}, {self.expr})&#34;
-
-    def __str__(self):
-        &#34;&#34;&#34;
-        Retourne le code deplie.
-        &#34;&#34;&#34;
-        code = f&#34;def _lambdifygenerated({&#39;, &#39;.join(map(str, self.args))}):\n&#34;
-        for var, (_, expr, useless_vars) in self.operations.items():
-            code += f&#34;\t{var} = {expr}\n&#34;
-            if useless_vars:
-                code += f&#34;\tdel {&#39;, &#39;.join(map(str, useless_vars))}\n&#34;
-        code += &#34;\treturn final_result\n&#34;
-        return code
-
-    def get_expr(self):
-        &#34;&#34;&#34;
-        Recupere l&#39;expression brute sympy.
-
-        :returns: L&#39;expression sympy liee au parametre &#39;expr&#39; de self.__init__.
-        :rtype: sympy.core.basic.Basic
-        &#34;&#34;&#34;
-        return self.expr
-
-    def _expr2sym(self, expr):
-        &#34;&#34;&#34;
-        Transforme &#39;expr&#39; en expression sympy.
-
-        :param expr: Expression sympy, tuple, liste, str
-        :returns: Une expression sympy complete.
-        &#34;&#34;&#34;
-        assert isinstance(expr, (sympy.core.basic.Basic, list, tuple, str)), \
-            f&#34;&#39;expression&#39; has to be list, tuple or sympy expr, not {type(expression).__name__}.&#34;
-
-        if isinstance(expr, sympy.core.basic.Basic):
-            try:
-                return expr.evalf()
-            except AttributeError:
-                return expr
-
-        if isinstance(expr, str):
-            standard_transformations = sympy.parsing.sympy_parser.standard_transformations
-            implicit_multiplication_application = sympy.parsing.sympy_parser.implicit_multiplication_application
-            transformations = (standard_transformations + (implicit_multiplication_application,))
-            return self._expr2sym(sympy.parse_expr(expr, transformations=transformations))
-
-        return sympy.Tuple(*[self._expr2sym(child) for child in expr])
-
-    def _gather(self, variables, expr):
-        &#34;&#34;&#34;
-        Supprime la redondance.
-        &#34;&#34;&#34;
-        if isinstance(expr, sympy.core.basic.Atom): # Si il n&#39;y a rien a symplifier.
-            self.operations[&#34;final_result&#34;] = (sympy.lambdify(variables, expr), expr, [])
-            return
-
-        complete_hist = self._hist_sub_expr(expr) # Histograme complet des descendances.
-        max_red = max(complete_hist.values()) # Redondance maximale.
-        if max_red == 1: # Si il n&#39;y a pas de redondance.
-            self.operations[&#34;final_result&#34;] = (sympy.lambdify(variables, expr), expr, [])
-            return
-
-        max_red_expr = [expr for expr, red in complete_hist.items() if red == max_red] # Seul les elements les plus redondants.
-
-        dephs = [_Lambdify._len(expr) for expr in max_red_expr] # 3 La profondeur respective de chaque arbre.
-        sub_expr = max_red_expr[np.argmax(dephs)] # L&#39;expression de l&#39;element a remplacer.
-        self.sub_var_cmp += 1 # On incremente le conteur pour creer une nouvelle variable unique.
-        sub_var = sympy.Symbol(f&#34;subvar_{self.sub_var_cmp}&#34;) # Nom de la variable intermediaire.
-        expr = expr.xreplace({sub_expr: sub_var})
-
-        useless_vars = set(variables) - expr.free_symbols # Se sont les variables inutiles par la suite.
-        try:
-            self.operations[sub_var] = (sympy.lambdify(variables, sub_expr, modules=self.modules), sub_expr, useless_vars) # ajoute de l&#39;etape de calcul.
-        except (ImportError, TypeError):
-            self.operations[sub_var] = (sympy.lambdify(variables, sub_expr), sub_expr, useless_vars)
-        variables = [var for var in variables if var not in useless_vars] # On vire les variables inutiles.
-
-        return self._gather(variables+[sub_var], expr) # On simplifie, puis on recommence.
-
-    def _hist_sub_expr(self, expr):
-        &#34;&#34;&#34;
-        Fait l&#39;histograme des enfants.
-
-        * Ne fait pas de verification pour plus de permormances.
-        * Ne compte pas les symbols et les nombres.
-
-        :param expr: Expression sympy derivee de sympy.core.basic.Basic
-        :returns: Le dictionaire qui a chaque enfant et descendant en general,
-            associ son nombre d&#39;apparition.
-        &#34;&#34;&#34;
-        hist = collections.defaultdict(lambda: 0)
-        for child in expr.args:
-            if child.is_number or child.is_symbol:
-                continue
-            hist[child] += 1
-            for little_child, occur in self._hist_sub_expr(child).items():
-                hist[little_child] += occur
-        return hist
-
-    def _len(expr):
-        &#34;&#34;&#34;
-        Cherche le nombres d&#39;elements.
-
-        * Pas de verification pour une question de performance
-        &#34;&#34;&#34;
-        return 1 + sum(_Lambdify._len(child) for child in expr.args)
-
-    def _cost(expr):
-        &#34;&#34;&#34;
-        Recherche le nombre d&#39;aditions.
-        &#34;&#34;&#34;
-        def nbr_add(expr):
-            if isinstance(expr, sympy.core.basic.Atom): # Si on est sur une feuille.
-                return 0
-            if isinstance(expr, sympy.core.add.Add):
-                return (len(expr.args) - 1) + sum(nbr_add(child) for child in expr.args)
-            return sum(nbr_add(child) for child in expr.args)
-
-        sub_exprs, final = sympy.cse(expr, optimizations=&#34;basic&#34;)
-        cost = sum(nbr_add(ex) for _, ex in sub_exprs) + nbr_add(final[0])
-        print(&#34;cout:&#34;, cost)
-        return cost
-
-        </code></pre>
+    return ind1, ind2</code></pre>
 </details>
 </section>
 <section>
@@ -1592,6 +1486,7 @@ s'ammuser avec la transformee de Hough.</p>
         parameters : dict
             Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
         dtype : type, optional
+            Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
             La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
             mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
@@ -1607,13 +1502,29 @@ s'ammuser avec la transformee de Hough.</p>
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; from laue.geometry import Transformer
         &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         &gt;&gt;&gt; transformer = Transformer()
-        &gt;&gt;&gt; x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
+        &gt;&gt;&gt; x_cam, y_cam = np.linspace(3, 2048, 6), np.linspace(3, 2048, 6)
         &gt;&gt;&gt;
+
+        Output type
+        &gt;&gt;&gt; type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
+        &lt;class &#39;numpy.ndarray&#39;&gt;
         &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
-        array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
-               [ 0.4 ,  0.29, -0.  , -0.48, -0.94]])
+        array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float32)
+        &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters, dtype=np.float128), 2)
+        array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float128)
+        &gt;&gt;&gt;
+        
+        Output shape
+        &gt;&gt;&gt; transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
+        (2,)
+        &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
+        ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
+        &gt;&gt;&gt; transformer.cam_to_gnomonic(x_cam, y_cam, parameters).shape
+        (2, 1, 2, 3)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert isinstance(pxl_x, (float, int, np.ndarray)), \
@@ -1630,7 +1541,7 @@ s'ammuser avec la transformee de Hough.</p>
         assert set(parameters) == {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;pixelsize&#34;}, \
             (&#34;Les clefs doivent etres &#39;dd&#39;, &#39;xbet&#39;, &#39;xgam&#39;, &#39;xcen&#39;, &#39;ycen&#39; et &#39;pixelsize&#39;. &#34;
             f&#34;Or les clefs sont {set(parameters)}.&#34;)
-        assert all(isinstance(v, (float, int)) for v in parameters.values()), \
+        assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
         assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
             f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
@@ -1650,13 +1561,13 @@ s'ammuser avec la transformee de Hough.</p>
             if nbr_access + 1 == 4: # Si c&#39;est la 4 eme fois qu&#39;on accede a la fonction.
                 self.compile(parameters) # On optimise la fonction.
             else: # Si ce n&#39;est pas encore le moment de perdre du temps a optimiser.
-                return self.get_expr_cam_to_gnomonic()(pxl_x, pxl_y,
+                return np.stack(self.get_expr_cam_to_gnomonic()(pxl_x, pxl_y,
                     parameters[&#34;dd&#34;], parameters[&#34;xcen&#34;], parameters[&#34;ycen&#34;],
-                    parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;])
+                    parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;]))
 
-        return self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y)
+        return np.stack(self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y))
 
-    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect):
+    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float32):
         &#34;&#34;&#34;
         ** Calcul les distances projetees des points sur une droite. **
 
@@ -1678,6 +1589,10 @@ s'ammuser avec la transformee de Hough.</p>
         y_vect : np.ndarray
             L&#39;ensemble des coordonnees y des points.
             shape = ``(*nbr_points)``
+        dtype : type, optional
+            Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
         Returns
         -------
@@ -1690,14 +1605,22 @@ s'ammuser avec la transformee de Hough.</p>
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; from laue.geometry import Transformer
         &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         &gt;&gt;&gt; transformer = Transformer()
         &gt;&gt;&gt;
         &gt;&gt;&gt; lines = (np.array([0, np.pi/2]), np.array([1, 1])) # Horizontale et verticale passant par (1, 1)
-        &gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]))
+        &gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1])) # Le points (0, 1), ...
         &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points))
         array([[1., 0., 2., 1.],
                [1., 0., 2., 0.]], dtype=float32)
+        &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points, dtype=np.float128))
+        array([[1., 0., 2., 1.],
+               [1., 0., 2., 0.]], dtype=float128)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; theta_vect, dist_vect = np.random.normal(size=(1, 2)), np.random.normal(size=(1, 2))
+        &gt;&gt;&gt; x_vect, y_vect = np.random.normal(size=(3, 4, 5)), np.random.normal(size=(3, 4, 5))
+        &gt;&gt;&gt; transformer.dist_line(theta_vect, dist_vect, x_vect, y_vect).shape
+        (1, 2, 3, 4, 5)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert isinstance(theta_vect, np.ndarray), \
@@ -1712,9 +1635,11 @@ s'ammuser avec la transformee de Hough.</p>
             f&#34;&#39;y_vect&#39; has to be of type np.ndarray, not {type(y_vect).__name__}.&#34;
         assert x_vect.shape == y_vect.shape, \
             f&#34;Les 2 coordonnees des points doivent avoir la meme shape: {x_vect.shape} vs {y_vect.shape}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
 
-        theta_vect, dist_vect = theta_vect.astype(np.float32, copy=False), dist_vect.astype(np.float32, copy=False)
-        x_vect, y_vect = x_vect.astype(np.float32, copy=False), y_vect.astype(np.float32, copy=False)
+        theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
+        x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
 
         nbr_droites = theta_vect.shape
         nbr_points = x_vect.shape
@@ -1724,10 +1649,10 @@ s'ammuser avec la transformee de Hough.</p>
         result = np.array([func(theta, dist, x_vect, y_vect)
                            for theta, dist
                            in zip(theta_vect.ravel(), dist_vect.ravel())
-                          ], dtype=np.float32).reshape((*nbr_droites, *nbr_points))
+                          ], dtype=dtype).reshape((*nbr_droites, *nbr_points))
         return np.nan_to_num(result, copy=False, nan=0.0)
 
-    def gnomonic_to_cam(self, gnom_x, gnom_y, parameters):
+    def gnomonic_to_cam(self, gnom_x, gnom_y, parameters, *, dtype=np.float32):
         &#34;&#34;&#34;
         ** Passe des points du plan gnomonic vers la camera. **
 
@@ -1739,6 +1664,10 @@ s'ammuser avec la transformee de Hough.</p>
             Coordonnee.s du.des point.s selon l&#39;axe y du repere du plan gnomonic. (en mm)
         parameters : dict
             Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
+        dtype : type, optional
+            Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
         Returns
         -------
@@ -1751,14 +1680,32 @@ s'ammuser avec la transformee de Hough.</p>
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; from laue.geometry import Transformer
         &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+        &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         &gt;&gt;&gt; transformer = Transformer()
-        &gt;&gt;&gt; gnom_x, gnom_y = np.random.normal(size=(2, 10, 4))
+        &gt;&gt;&gt; x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
+        ...                              0.09978235,  0.17156848,  0.13417314 ],
+        ...                            [ 0.40283853,  0.31846303,  0.14362221, 
+        ...                             -0.18308422, -0.58226374, -0.93854752 ]])
         &gt;&gt;&gt;
-        &gt;&gt;&gt; transformer.gnomonic_to_cam(gnom_x, gnom_y, parameters).shape
-        (2, 10, 4)
-        &gt;&gt;&gt; transformer.gnomonic_to_cam(.0, .0, parameters)
-        array([1024., 1024.])
+
+        Output type
+        &gt;&gt;&gt; type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+        &lt;class &#39;numpy.ndarray&#39;&gt;
+        &gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+        array([[   3.,  412.,  821., 1230., 1639., 2048.],
+               [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float32)
+        &gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters, dtype=np.float128))
+        array([[   3.,  412.,  821., 1230., 1639., 2048.],
+               [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float128)
+        &gt;&gt;&gt;
+        
+        Output shape
+        &gt;&gt;&gt; transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
+        (2,)
+        &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
+        ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
+        &gt;&gt;&gt; transformer.gnomonic_to_cam(x_cam, y_cam, parameters).shape
+        (2, 1, 2, 3)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert isinstance(gnom_x, (float, int, np.ndarray)), \
@@ -1775,13 +1722,16 @@ s'ammuser avec la transformee de Hough.</p>
         assert set(parameters) == {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;pixelsize&#34;}, \
             (&#34;Les clefs doivent etres &#39;dd&#39;, &#39;xbet&#39;, &#39;xgam&#39;, &#39;xcen&#39;, &#39;ycen&#39; et &#39;pixelsize&#39;. &#34;
             f&#34;Or les clefs sont {set(parameters)}.&#34;)
-        assert all(isinstance(v, (float, int)) for v in parameters.values()), \
+        assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
 
         if isinstance(gnom_x, np.ndarray):
-            gnom_x, gnom_y = gnom_x.astype(np.float32, copy=False), gnom_y.astype(np.float32, copy=False)
+            gnom_x, gnom_y = gnom_x.astype(dtype, copy=False), gnom_y.astype(dtype, copy=False)
         else:
-            gnom_x, gnom_y = np.float32(gnom_x), np.float32(gnom_y)
+            gnom_x, gnom_y = dtype(gnom_x), dtype(gnom_y)
+        parameters = {k: dtype(v) for k, v in parameters.items()}
 
         hash_param = self._hash_parameters(parameters) # Recuperation de la &#39;signature&#39; des parametres.
         optimized_func = self._fcts_gnomonic_to_cam[hash_param] # On regarde si il y a une fonction deja optimisee.
@@ -1792,11 +1742,11 @@ s'ammuser avec la transformee de Hough.</p>
             if nbr_access + 1 == 4: # Si c&#39;est la 4 eme fois qu&#39;on accede a la fonction.
                 self.compile(parameters) # On optimise la fonction.
             else: # Si ce n&#39;est pas encore le moment de perdre du temps a optimiser.
-                return self.get_expr_gnomonic_to_cam()(gnom_x, gnom_y,
+                return np.stack(self.get_expr_gnomonic_to_cam()(gnom_x, gnom_y,
                     parameters[&#34;dd&#34;], parameters[&#34;xcen&#34;], parameters[&#34;ycen&#34;],
-                    parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;])
+                    parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;]))
 
-        return self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y)
+        return np.stack(self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y))
 
     def hough(self, x_vect, y_vect):
         r&#34;&#34;&#34;
@@ -1816,17 +1766,18 @@ s'ammuser avec la transformee de Hough.</p>
 
         Returns
         -------
-        theta : np.ndarray
-            * Les angles au sens trigomometrique des vecteurs reliant l&#39;origine
-            ``O`` (0, 0) au point ``P`` appartenant a la droite tel que ``||OP||``
-            soit la plus petite possible.
-            * theta € [-pi, pi]
-            * shape = ``(*over_dims, n*(n-1)/2)``
-        dist : np.ndarray
-            * Ce sont les normes des vecteur ``OP``.
-            * dist € [0, +oo].
-            * shape = ``(*over_dims, n*(n-1)/2)``
-        * Ces 2 grandeurs sont concatenees dans une seule array de
+        np.ndarray
+            * theta : np.ndarray
+                * Les angles au sens trigomometrique des vecteurs reliant l&#39;origine
+                ``O`` (0, 0) au point ``P`` appartenant a la droite tel que ``||OP||``
+                soit la plus petite possible.
+                * theta € [-pi, pi]
+                * shape = ``(*over_dims, n*(n-1)/2)``
+            * dist : np.ndarray
+                * Ce sont les normes des vecteur ``OP``.
+                * dist € [0, +oo].
+                * shape = ``(*over_dims, n*(n-1)/2)``
+            * Ces 2 grandeurs sont concatenees dans une seule array de
         shape = ``(2, *over_dims, n*(n-1)/2)``
 
         Examples
@@ -1859,7 +1810,7 @@ s'ammuser avec la transformee de Hough.</p>
         yb = np.concatenate([y_vect[..., i+1:] for i in range(n-1)], axis=-1)
 
         return np.nan_to_num(
-            self.get_fct_hough()(xa, ya, xb, yb),
+            np.stack(self.get_fct_hough()(xa, ya, xb, yb)),
             copy=False,
             nan=0.0)
 
@@ -2060,7 +2011,7 @@ s'ammuser avec la transformee de Hough.</p>
         theta_2 = np.concatenate([theta_vect[..., i+1:] for i in range(n-1)], axis=-1)
         dist_2 = np.concatenate([dist_vect[..., i+1:] for i in range(n-1)], axis=-1)
 
-        return self.get_fct_inter_line()(theta_1, dist_1, theta_2, dist_2)
+        return np.stack(self.get_fct_inter_line()(theta_1, dist_1, theta_2, dist_2))
 
     def _clustering_1d(self, theta_vect_1d, dist_vect_1d, std, tol, nbr):
         &#34;&#34;&#34;
@@ -2156,7 +2107,8 @@ s'ammuser avec la transformee de Hough.</p>
 <dt><strong><code>parameters</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Le dictionaire issue de la fonction <code><a title="laue.tools.parsing.extract_parameters" href="tools/parsing.html#laue.tools.parsing.extract_parameters">extract_parameters()</a></code>.</dd>
 <dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
-<dd>La representation machine des nombres. Par defaut <code>np.float32</code> permet des calculs rapide
+<dd>Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en <code>float</code>.
+La representation machine des nombres. Par defaut <code>np.float32</code> permet des calculs rapide
 mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <code>np.float128</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -2170,13 +2122,29 @@ shape de sortie = (2, *shape_d_entree)</dd>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue.geometry import Transformer
 &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-&gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+&gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
 &gt;&gt;&gt; transformer = Transformer()
-&gt;&gt;&gt; x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
+&gt;&gt;&gt; x_cam, y_cam = np.linspace(3, 2048, 6), np.linspace(3, 2048, 6)
 &gt;&gt;&gt;
+</code></pre>
+<p>Output type</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
+&lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
-array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
-       [ 0.4 ,  0.29, -0.  , -0.48, -0.94]])
+array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+       [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float32)
+&gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters, dtype=np.float128), 2)
+array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+       [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float128)
+&gt;&gt;&gt;
+</code></pre>
+<p>Output shape</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
+(2,)
+&gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
+...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
+&gt;&gt;&gt; transformer.cam_to_gnomonic(x_cam, y_cam, parameters).shape
+(2, 1, 2, 3)
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -2201,6 +2169,7 @@ array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
     parameters : dict
         Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
     dtype : type, optional
+        Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
         La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
         mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
@@ -2216,13 +2185,29 @@ array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; from laue.geometry import Transformer
     &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-    &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+    &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
     &gt;&gt;&gt; transformer = Transformer()
-    &gt;&gt;&gt; x_cam, y_cam = np.linspace(0, 2048, 5), np.linspace(0, 2048, 5)
+    &gt;&gt;&gt; x_cam, y_cam = np.linspace(3, 2048, 6), np.linspace(3, 2048, 6)
     &gt;&gt;&gt;
+
+    Output type
+    &gt;&gt;&gt; type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
+    &lt;class &#39;numpy.ndarray&#39;&gt;
     &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
-    array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
-           [ 0.4 ,  0.29, -0.  , -0.48, -0.94]])
+    array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+           [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float32)
+    &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters, dtype=np.float128), 2)
+    array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+           [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float128)
+    &gt;&gt;&gt;
+    
+    Output shape
+    &gt;&gt;&gt; transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
+    (2,)
+    &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
+    ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
+    &gt;&gt;&gt; transformer.cam_to_gnomonic(x_cam, y_cam, parameters).shape
+    (2, 1, 2, 3)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     assert isinstance(pxl_x, (float, int, np.ndarray)), \
@@ -2239,7 +2224,7 @@ array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
     assert set(parameters) == {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;pixelsize&#34;}, \
         (&#34;Les clefs doivent etres &#39;dd&#39;, &#39;xbet&#39;, &#39;xgam&#39;, &#39;xcen&#39;, &#39;ycen&#39; et &#39;pixelsize&#39;. &#34;
         f&#34;Or les clefs sont {set(parameters)}.&#34;)
-    assert all(isinstance(v, (float, int)) for v in parameters.values()), \
+    assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
         &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
     assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
         f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
@@ -2259,15 +2244,15 @@ array([[-0.51, -0.31, -0.  ,  0.17,  0.13],
         if nbr_access + 1 == 4: # Si c&#39;est la 4 eme fois qu&#39;on accede a la fonction.
             self.compile(parameters) # On optimise la fonction.
         else: # Si ce n&#39;est pas encore le moment de perdre du temps a optimiser.
-            return self.get_expr_cam_to_gnomonic()(pxl_x, pxl_y,
+            return np.stack(self.get_expr_cam_to_gnomonic()(pxl_x, pxl_y,
                 parameters[&#34;dd&#34;], parameters[&#34;xcen&#34;], parameters[&#34;ycen&#34;],
-                parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;])
+                parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;]))
 
-    return self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y)</code></pre>
+    return np.stack(self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y))</code></pre>
 </details>
 </dd>
 <dt id="laue.geometry.Transformer.dist_line"><code class="name flex">
-<span>def <span class="ident">dist_line</span></span>(<span>self, theta_vect, dist_vect, x_vect, y_vect)</span>
+<span>def <span class="ident">dist_line</span></span>(<span>self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=numpy.float32)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Calcul les distances projetees des points sur une droite. </strong></p>
@@ -2287,6 +2272,10 @@ shape = <code>(*nbr_points)</code></dd>
 <dt><strong><code>y_vect</code></strong> :&ensp;<code>np.ndarray</code></dt>
 <dd>L'ensemble des coordonnees y des points.
 shape = <code>(*nbr_points)</code></dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
+<dd>Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en <code>float</code>.
+La representation machine des nombres. Par defaut <code>np.float32</code> permet des calculs rapide
+mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <code>np.float128</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2298,21 +2287,29 @@ shape = <code>(*nbr_droites, *nbr_points)</code></dd>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue.geometry import Transformer
 &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-&gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+&gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt;
 &gt;&gt;&gt; lines = (np.array([0, np.pi/2]), np.array([1, 1])) # Horizontale et verticale passant par (1, 1)
-&gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]))
+&gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1])) # Le points (0, 1), ...
 &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points))
 array([[1., 0., 2., 1.],
        [1., 0., 2., 0.]], dtype=float32)
+&gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points, dtype=np.float128))
+array([[1., 0., 2., 1.],
+       [1., 0., 2., 0.]], dtype=float128)
+&gt;&gt;&gt;
+&gt;&gt;&gt; theta_vect, dist_vect = np.random.normal(size=(1, 2)), np.random.normal(size=(1, 2))
+&gt;&gt;&gt; x_vect, y_vect = np.random.normal(size=(3, 4, 5)), np.random.normal(size=(3, 4, 5))
+&gt;&gt;&gt; transformer.dist_line(theta_vect, dist_vect, x_vect, y_vect).shape
+(1, 2, 3, 4, 5)
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dist_line(self, theta_vect, dist_vect, x_vect, y_vect):
+<pre><code class="python">def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float32):
     &#34;&#34;&#34;
     ** Calcul les distances projetees des points sur une droite. **
 
@@ -2334,6 +2331,10 @@ array([[1., 0., 2., 1.],
     y_vect : np.ndarray
         L&#39;ensemble des coordonnees y des points.
         shape = ``(*nbr_points)``
+    dtype : type, optional
+        Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+        La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+        mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
     Returns
     -------
@@ -2346,14 +2347,22 @@ array([[1., 0., 2., 1.],
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; from laue.geometry import Transformer
     &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-    &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+    &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
     &gt;&gt;&gt; transformer = Transformer()
     &gt;&gt;&gt;
     &gt;&gt;&gt; lines = (np.array([0, np.pi/2]), np.array([1, 1])) # Horizontale et verticale passant par (1, 1)
-    &gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]))
+    &gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1])) # Le points (0, 1), ...
     &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points))
     array([[1., 0., 2., 1.],
            [1., 0., 2., 0.]], dtype=float32)
+    &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points, dtype=np.float128))
+    array([[1., 0., 2., 1.],
+           [1., 0., 2., 0.]], dtype=float128)
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; theta_vect, dist_vect = np.random.normal(size=(1, 2)), np.random.normal(size=(1, 2))
+    &gt;&gt;&gt; x_vect, y_vect = np.random.normal(size=(3, 4, 5)), np.random.normal(size=(3, 4, 5))
+    &gt;&gt;&gt; transformer.dist_line(theta_vect, dist_vect, x_vect, y_vect).shape
+    (1, 2, 3, 4, 5)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     assert isinstance(theta_vect, np.ndarray), \
@@ -2368,9 +2377,11 @@ array([[1., 0., 2., 1.],
         f&#34;&#39;y_vect&#39; has to be of type np.ndarray, not {type(y_vect).__name__}.&#34;
     assert x_vect.shape == y_vect.shape, \
         f&#34;Les 2 coordonnees des points doivent avoir la meme shape: {x_vect.shape} vs {y_vect.shape}.&#34;
+    assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
 
-    theta_vect, dist_vect = theta_vect.astype(np.float32, copy=False), dist_vect.astype(np.float32, copy=False)
-    x_vect, y_vect = x_vect.astype(np.float32, copy=False), y_vect.astype(np.float32, copy=False)
+    theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
+    x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
 
     nbr_droites = theta_vect.shape
     nbr_points = x_vect.shape
@@ -2380,12 +2391,12 @@ array([[1., 0., 2., 1.],
     result = np.array([func(theta, dist, x_vect, y_vect)
                        for theta, dist
                        in zip(theta_vect.ravel(), dist_vect.ravel())
-                      ], dtype=np.float32).reshape((*nbr_droites, *nbr_points))
+                      ], dtype=dtype).reshape((*nbr_droites, *nbr_points))
     return np.nan_to_num(result, copy=False, nan=0.0)</code></pre>
 </details>
 </dd>
 <dt id="laue.geometry.Transformer.gnomonic_to_cam"><code class="name flex">
-<span>def <span class="ident">gnomonic_to_cam</span></span>(<span>self, gnom_x, gnom_y, parameters)</span>
+<span>def <span class="ident">gnomonic_to_cam</span></span>(<span>self, gnom_x, gnom_y, parameters, *, dtype=numpy.float32)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Passe des points du plan gnomonic vers la camera. </strong></p>
@@ -2397,6 +2408,10 @@ array([[1., 0., 2., 1.],
 <dd>Coordonnee.s du.des point.s selon l'axe y du repere du plan gnomonic. (en mm)</dd>
 <dt><strong><code>parameters</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Le dictionaire issue de la fonction <code><a title="laue.tools.parsing.extract_parameters" href="tools/parsing.html#laue.tools.parsing.extract_parameters">extract_parameters()</a></code>.</dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
+<dd>Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en <code>float</code>.
+La representation machine des nombres. Par defaut <code>np.float32</code> permet des calculs rapide
+mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <code>np.float128</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2412,21 +2427,39 @@ array([[1., 0., 2., 1.],
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue.geometry import Transformer
 &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-&gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+&gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
 &gt;&gt;&gt; transformer = Transformer()
-&gt;&gt;&gt; gnom_x, gnom_y = np.random.normal(size=(2, 10, 4))
+&gt;&gt;&gt; x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
+...                              0.09978235,  0.17156848,  0.13417314 ],
+...                            [ 0.40283853,  0.31846303,  0.14362221, 
+...                             -0.18308422, -0.58226374, -0.93854752 ]])
 &gt;&gt;&gt;
-&gt;&gt;&gt; transformer.gnomonic_to_cam(gnom_x, gnom_y, parameters).shape
-(2, 10, 4)
-&gt;&gt;&gt; transformer.gnomonic_to_cam(.0, .0, parameters)
-array([1024., 1024.])
+</code></pre>
+<p>Output type</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+&lt;class 'numpy.ndarray'&gt;
+&gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+array([[   3.,  412.,  821., 1230., 1639., 2048.],
+       [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float32)
+&gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters, dtype=np.float128))
+array([[   3.,  412.,  821., 1230., 1639., 2048.],
+       [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float128)
+&gt;&gt;&gt;
+</code></pre>
+<p>Output shape</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
+(2,)
+&gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
+...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
+&gt;&gt;&gt; transformer.gnomonic_to_cam(x_cam, y_cam, parameters).shape
+(2, 1, 2, 3)
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def gnomonic_to_cam(self, gnom_x, gnom_y, parameters):
+<pre><code class="python">def gnomonic_to_cam(self, gnom_x, gnom_y, parameters, *, dtype=np.float32):
     &#34;&#34;&#34;
     ** Passe des points du plan gnomonic vers la camera. **
 
@@ -2438,6 +2471,10 @@ array([1024., 1024.])
         Coordonnee.s du.des point.s selon l&#39;axe y du repere du plan gnomonic. (en mm)
     parameters : dict
         Le dictionaire issue de la fonction ``laue.tools.parsing.extract_parameters``.
+    dtype : type, optional
+        Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+        La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+        mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
     Returns
     -------
@@ -2450,14 +2487,32 @@ array([1024., 1024.])
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; from laue.geometry import Transformer
     &gt;&gt;&gt; from laue.tools.parsing import extract_parameters
-    &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+    &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
     &gt;&gt;&gt; transformer = Transformer()
-    &gt;&gt;&gt; gnom_x, gnom_y = np.random.normal(size=(2, 10, 4))
+    &gt;&gt;&gt; x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
+    ...                              0.09978235,  0.17156848,  0.13417314 ],
+    ...                            [ 0.40283853,  0.31846303,  0.14362221, 
+    ...                             -0.18308422, -0.58226374, -0.93854752 ]])
     &gt;&gt;&gt;
-    &gt;&gt;&gt; transformer.gnomonic_to_cam(gnom_x, gnom_y, parameters).shape
-    (2, 10, 4)
-    &gt;&gt;&gt; transformer.gnomonic_to_cam(.0, .0, parameters)
-    array([1024., 1024.])
+
+    Output type
+    &gt;&gt;&gt; type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+    &lt;class &#39;numpy.ndarray&#39;&gt;
+    &gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+    array([[   3.,  412.,  821., 1230., 1639., 2048.],
+           [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float32)
+    &gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters, dtype=np.float128))
+    array([[   3.,  412.,  821., 1230., 1639., 2048.],
+           [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float128)
+    &gt;&gt;&gt;
+    
+    Output shape
+    &gt;&gt;&gt; transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
+    (2,)
+    &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
+    ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
+    &gt;&gt;&gt; transformer.gnomonic_to_cam(x_cam, y_cam, parameters).shape
+    (2, 1, 2, 3)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     assert isinstance(gnom_x, (float, int, np.ndarray)), \
@@ -2474,13 +2529,16 @@ array([1024., 1024.])
     assert set(parameters) == {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;pixelsize&#34;}, \
         (&#34;Les clefs doivent etres &#39;dd&#39;, &#39;xbet&#39;, &#39;xgam&#39;, &#39;xcen&#39;, &#39;ycen&#39; et &#39;pixelsize&#39;. &#34;
         f&#34;Or les clefs sont {set(parameters)}.&#34;)
-    assert all(isinstance(v, (float, int)) for v in parameters.values()), \
+    assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
         &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
+    assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
 
     if isinstance(gnom_x, np.ndarray):
-        gnom_x, gnom_y = gnom_x.astype(np.float32, copy=False), gnom_y.astype(np.float32, copy=False)
+        gnom_x, gnom_y = gnom_x.astype(dtype, copy=False), gnom_y.astype(dtype, copy=False)
     else:
-        gnom_x, gnom_y = np.float32(gnom_x), np.float32(gnom_y)
+        gnom_x, gnom_y = dtype(gnom_x), dtype(gnom_y)
+    parameters = {k: dtype(v) for k, v in parameters.items()}
 
     hash_param = self._hash_parameters(parameters) # Recuperation de la &#39;signature&#39; des parametres.
     optimized_func = self._fcts_gnomonic_to_cam[hash_param] # On regarde si il y a une fonction deja optimisee.
@@ -2491,11 +2549,11 @@ array([1024., 1024.])
         if nbr_access + 1 == 4: # Si c&#39;est la 4 eme fois qu&#39;on accede a la fonction.
             self.compile(parameters) # On optimise la fonction.
         else: # Si ce n&#39;est pas encore le moment de perdre du temps a optimiser.
-            return self.get_expr_gnomonic_to_cam()(gnom_x, gnom_y,
+            return np.stack(self.get_expr_gnomonic_to_cam()(gnom_x, gnom_y,
                 parameters[&#34;dd&#34;], parameters[&#34;xcen&#34;], parameters[&#34;ycen&#34;],
-                parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;])
+                parameters[&#34;xbet&#34;], parameters[&#34;xgam&#34;], parameters[&#34;pixelsize&#34;]))
 
-    return self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y)</code></pre>
+    return np.stack(self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y))</code></pre>
 </details>
 </dd>
 <dt id="laue.geometry.Transformer.hough"><code class="name flex">
@@ -2517,29 +2575,28 @@ array([1024., 1024.])
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>theta</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dt><code>np.ndarray</code></dt>
 <dd>
 <ul>
+<li>theta : np.ndarray<ul>
 <li>Les angles au sens trigomometrique des vecteurs reliant l'origine
 <code>O</code> (0, 0) au point <code>P</code> appartenant a la droite tel que <code>||OP||</code>
 soit la plus petite possible.</li>
 <li>theta € [-pi, pi]</li>
 <li>shape = <code>(*over_dims, n*(n-1)/2)</code></li>
 </ul>
-</dd>
-<dt><strong><code>dist</code></strong> :&ensp;<code>np.ndarray</code></dt>
-<dd>
-<ul>
+</li>
+<li>dist : np.ndarray<ul>
 <li>Ce sont les normes des vecteur <code>OP</code>.</li>
 <li>dist € [0, +oo].</li>
 <li>shape = <code>(*over_dims, n*(n-1)/2)</code></li>
 </ul>
+</li>
+<li>Ces 2 grandeurs sont concatenees dans une seule array de</li>
+</ul>
 </dd>
 </dl>
-<ul>
-<li>Ces 2 grandeurs sont concatenees dans une seule array de
-shape = <code>(2, *over_dims, n*(n-1)/2)</code></li>
-</ul>
+<p>shape = <code>(2, *over_dims, n*(n-1)/2)</code></p>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import geometry
@@ -2575,17 +2632,18 @@ shape = <code>(2, *over_dims, n*(n-1)/2)</code></li>
 
     Returns
     -------
-    theta : np.ndarray
-        * Les angles au sens trigomometrique des vecteurs reliant l&#39;origine
-        ``O`` (0, 0) au point ``P`` appartenant a la droite tel que ``||OP||``
-        soit la plus petite possible.
-        * theta € [-pi, pi]
-        * shape = ``(*over_dims, n*(n-1)/2)``
-    dist : np.ndarray
-        * Ce sont les normes des vecteur ``OP``.
-        * dist € [0, +oo].
-        * shape = ``(*over_dims, n*(n-1)/2)``
-    * Ces 2 grandeurs sont concatenees dans une seule array de
+    np.ndarray
+        * theta : np.ndarray
+            * Les angles au sens trigomometrique des vecteurs reliant l&#39;origine
+            ``O`` (0, 0) au point ``P`` appartenant a la droite tel que ``||OP||``
+            soit la plus petite possible.
+            * theta € [-pi, pi]
+            * shape = ``(*over_dims, n*(n-1)/2)``
+        * dist : np.ndarray
+            * Ce sont les normes des vecteur ``OP``.
+            * dist € [0, +oo].
+            * shape = ``(*over_dims, n*(n-1)/2)``
+        * Ces 2 grandeurs sont concatenees dans une seule array de
     shape = ``(2, *over_dims, n*(n-1)/2)``
 
     Examples
@@ -2618,7 +2676,7 @@ shape = <code>(2, *over_dims, n*(n-1)/2)</code></li>
     yb = np.concatenate([y_vect[..., i+1:] for i in range(n-1)], axis=-1)
 
     return np.nan_to_num(
-        self.get_fct_hough()(xa, ya, xb, yb),
+        np.stack(self.get_fct_hough()(xa, ya, xb, yb)),
         copy=False,
         nan=0.0)</code></pre>
 </details>
@@ -2972,7 +3030,7 @@ La shape du tenseur final est donc: <strong> shape = <code>(2, *over_dims, n*(n-
     theta_2 = np.concatenate([theta_vect[..., i+1:] for i in range(n-1)], axis=-1)
     dist_2 = np.concatenate([dist_vect[..., i+1:] for i in range(n-1)], axis=-1)
 
-    return self.get_fct_inter_line()(theta_1, dist_1, theta_2, dist_2)</code></pre>
+    return np.stack(self.get_fct_inter_line()(theta_1, dist_1, theta_2, dist_2))</code></pre>
 </details>
 </dd>
 </dl>

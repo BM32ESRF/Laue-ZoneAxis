@@ -170,7 +170,7 @@ class Spot:
     &#34;&#34;&#34;
     Represente un spot sur un diagramme de laue.
     &#34;&#34;&#34;
-    def __init__(self, bbox, spot_im, distortion, diagram):
+    def __init__(self, bbox, spot_im, distortion, diagram, identifier):
         &#34;&#34;&#34;
         ** Initialisation du spot. **
 
@@ -194,12 +194,15 @@ class Spot:
             Le facteur de distortion accessible par l&#39;accesseur ``Spot.get_distortion``.
         diagram : LaueDiagram
             Le diagram qui contient ces spots. De sorte a pouvoir remonter.
+        identifier : int
+            Le rang de ce spot au sein du diagrame.
         &#34;&#34;&#34;
         # Constantes.
         self.x, self.y, self.w, self.h = bbox
         self.spot_im = spot_im
         self.distortion = distortion # Facteur de diformite.
         self.diagram = diagram # Le contenaur.
+        self.identifier = identifier # Le rang.
 
         # Declaration des variables futur.
         self.intensity = None # Intensite du spot.
@@ -208,7 +211,7 @@ class Spot:
         self.twicetheta_chi = None # Angles du rayon diffractes ayant engendre ce point.
         self.quality = None # Beautee du point.
         self.hkl = None # Les 3 indices de Miller h, k et l.
-        self.axes = None
+        self.axes = None # Les axes de zone.
 
     def get_bbox(self):
         &#34;&#34;&#34;
@@ -300,6 +303,23 @@ class Spot:
             Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
         &#34;&#34;&#34;
         raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
+
+    def get_id(self):
+        &#34;&#34;&#34;
+        ** Renvoi le numero de ce spot. **
+
+        Au sein d&#39;un diagrame, chaque numero de spot est unique.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; all(spot.get_id() == i for i, spot in enumerate(diag))
+        True
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.identifier
 
     def get_intensity(self):
         r&#34;&#34;&#34;
@@ -408,7 +428,7 @@ class Spot:
         &#34;&#34;&#34;
         raise NotImplementedError
 
-    def find_zone_axes(self):
+    def find_zone_axes(self, **kwds):
         &#34;&#34;&#34;
         ** Renvoi les axes de zone qui contienent ce point. **
 
@@ -435,7 +455,7 @@ class Spot:
         &#34;&#34;&#34;
         if self.axes is not None:
             return self.axes
-        self.diagram.find_zone_axes() # met automatiquement a jour self.axes.
+        self.diagram.find_zone_axes(**kwds) # met automatiquement a jour self.axes.
         return self.axes
 
     def plot_gnomonic(self, axe_pyplot=None, *, display=True):
@@ -797,7 +817,7 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
 <dl>
 <dt id="laue.spot.Spot"><code class="flex name class">
 <span>class <span class="ident">Spot</span></span>
-<span>(</span><span>bbox, spot_im, distortion, diagram)</span>
+<span>(</span><span>bbox, spot_im, distortion, diagram, identifier)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Represente un spot sur un diagramme de laue.</p>
@@ -822,6 +842,8 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
 <dd>Le facteur de distortion accessible par l'accesseur <code><a title="laue.spot.Spot.get_distortion" href="#laue.spot.Spot.get_distortion">Spot.get_distortion()</a></code>.</dd>
 <dt><strong><code>diagram</code></strong> :&ensp;<code>LaueDiagram</code></dt>
 <dd>Le diagram qui contient ces spots. De sorte a pouvoir remonter.</dd>
+<dt><strong><code>identifier</code></strong> :&ensp;<code>int</code></dt>
+<dd>Le rang de ce spot au sein du diagrame.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -831,7 +853,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
     &#34;&#34;&#34;
     Represente un spot sur un diagramme de laue.
     &#34;&#34;&#34;
-    def __init__(self, bbox, spot_im, distortion, diagram):
+    def __init__(self, bbox, spot_im, distortion, diagram, identifier):
         &#34;&#34;&#34;
         ** Initialisation du spot. **
 
@@ -855,12 +877,15 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
             Le facteur de distortion accessible par l&#39;accesseur ``Spot.get_distortion``.
         diagram : LaueDiagram
             Le diagram qui contient ces spots. De sorte a pouvoir remonter.
+        identifier : int
+            Le rang de ce spot au sein du diagrame.
         &#34;&#34;&#34;
         # Constantes.
         self.x, self.y, self.w, self.h = bbox
         self.spot_im = spot_im
         self.distortion = distortion # Facteur de diformite.
         self.diagram = diagram # Le contenaur.
+        self.identifier = identifier # Le rang.
 
         # Declaration des variables futur.
         self.intensity = None # Intensite du spot.
@@ -869,7 +894,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         self.twicetheta_chi = None # Angles du rayon diffractes ayant engendre ce point.
         self.quality = None # Beautee du point.
         self.hkl = None # Les 3 indices de Miller h, k et l.
-        self.axes = None
+        self.axes = None # Les axes de zone.
 
     def get_bbox(self):
         &#34;&#34;&#34;
@@ -961,6 +986,23 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
             Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
         &#34;&#34;&#34;
         raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
+
+    def get_id(self):
+        &#34;&#34;&#34;
+        ** Renvoi le numero de ce spot. **
+
+        Au sein d&#39;un diagrame, chaque numero de spot est unique.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; all(spot.get_id() == i for i, spot in enumerate(diag))
+        True
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.identifier
 
     def get_intensity(self):
         r&#34;&#34;&#34;
@@ -1069,7 +1111,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &#34;&#34;&#34;
         raise NotImplementedError
 
-    def find_zone_axes(self):
+    def find_zone_axes(self, **kwds):
         &#34;&#34;&#34;
         ** Renvoi les axes de zone qui contienent ce point. **
 
@@ -1096,7 +1138,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &#34;&#34;&#34;
         if self.axes is not None:
             return self.axes
-        self.diagram.find_zone_axes() # met automatiquement a jour self.axes.
+        self.diagram.find_zone_axes(**kwds) # met automatiquement a jour self.axes.
         return self.axes
 
     def plot_gnomonic(self, axe_pyplot=None, *, display=True):
@@ -1350,7 +1392,7 @@ des distances avec <code>np.meshgrid</code>.</li>
 </details>
 </dd>
 <dt id="laue.spot.Spot.find_zone_axes"><code class="name flex">
-<span>def <span class="ident">find_zone_axes</span></span>(<span>self)</span>
+<span>def <span class="ident">find_zone_axes</span></span>(<span>self, **kwds)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Renvoi les axes de zone qui contienent ce point. </strong></p>
@@ -1378,7 +1420,7 @@ l'ensemble contiendra plusieurs elements.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_zone_axes(self):
+<pre><code class="python">def find_zone_axes(self, **kwds):
     &#34;&#34;&#34;
     ** Renvoi les axes de zone qui contienent ce point. **
 
@@ -1405,7 +1447,7 @@ l'ensemble contiendra plusieurs elements.</dd>
     &#34;&#34;&#34;
     if self.axes is not None:
         return self.axes
-    self.diagram.find_zone_axes() # met automatiquement a jour self.axes.
+    self.diagram.find_zone_axes(**kwds) # met automatiquement a jour self.axes.
     return self.axes</code></pre>
 </details>
 </dd>
@@ -1594,6 +1636,42 @@ array([ 0.3137, -0.4409])
         Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
     &#34;&#34;&#34;
     raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)</code></pre>
+</details>
+</dd>
+<dt id="laue.spot.Spot.get_id"><code class="name flex">
+<span>def <span class="ident">get_id</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Renvoi le numero de ce spot. </strong></p>
+<p>Au sein d'un diagrame, chaque numero de spot est unique.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; all(spot.get_id() == i for i, spot in enumerate(diag))
+True
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_id(self):
+    &#34;&#34;&#34;
+    ** Renvoi le numero de ce spot. **
+
+    Au sein d&#39;un diagrame, chaque numero de spot est unique.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; all(spot.get_id() == i for i, spot in enumerate(diag))
+    True
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return self.identifier</code></pre>
 </details>
 </dd>
 <dt id="laue.spot.Spot.get_intensity"><code class="name flex">
@@ -1997,6 +2075,7 @@ projection sur le plan <code>(x, y)</code> de l'axe du rayon reflechit.</dd>
 <li><code><a title="laue.spot.Spot.get_distortion" href="#laue.spot.Spot.get_distortion">get_distortion</a></code></li>
 <li><code><a title="laue.spot.Spot.get_gnomonic" href="#laue.spot.Spot.get_gnomonic">get_gnomonic</a></code></li>
 <li><code><a title="laue.spot.Spot.get_hkl" href="#laue.spot.Spot.get_hkl">get_hkl</a></code></li>
+<li><code><a title="laue.spot.Spot.get_id" href="#laue.spot.Spot.get_id">get_id</a></code></li>
 <li><code><a title="laue.spot.Spot.get_intensity" href="#laue.spot.Spot.get_intensity">get_intensity</a></code></li>
 <li><code><a title="laue.spot.Spot.get_position" href="#laue.spot.Spot.get_position">get_position</a></code></li>
 <li><code><a title="laue.spot.Spot.get_quality" href="#laue.spot.Spot.get_quality">get_quality</a></code></li>

@@ -261,6 +261,24 @@ class ZoneAxis:
         return self.diagram.experiment.transformer.dist_line(
             theta_vect, dist_vect, x_vect, y_vect).mean()
 
+    def get_id(self):
+        &#34;&#34;&#34;
+        ** Recupere le numero de cet axe. **
+
+        Au seins d&#39;un diagrame les axes ont des identifiants
+        allant de [0, nbr_axes[.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
+        True
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.identifier
+
     def get_polar_coords(self):
         &#34;&#34;&#34;
         ** Recupere l&#39;angle et la distance representant l&#39;axe. **
@@ -1006,6 +1024,24 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         return self.diagram.experiment.transformer.dist_line(
             theta_vect, dist_vect, x_vect, y_vect).mean()
 
+    def get_id(self):
+        &#34;&#34;&#34;
+        ** Recupere le numero de cet axe. **
+
+        Au seins d&#39;un diagrame les axes ont des identifiants
+        allant de [0, nbr_axes[.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
+        True
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.identifier
+
     def get_polar_coords(self):
         &#34;&#34;&#34;
         ** Recupere l&#39;angle et la distance representant l&#39;axe. **
@@ -1561,6 +1597,44 @@ True
         theta_vect, dist_vect, x_vect, y_vect).mean()</code></pre>
 </details>
 </dd>
+<dt id="laue.zone_axis.ZoneAxis.get_id"><code class="name flex">
+<span>def <span class="ident">get_id</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere le numero de cet axe. </strong></p>
+<p>Au seins d'un diagrame les axes ont des identifiants
+allant de [0, nbr_axes[.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
+True
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_id(self):
+    &#34;&#34;&#34;
+    ** Recupere le numero de cet axe. **
+
+    Au seins d&#39;un diagrame les axes ont des identifiants
+    allant de [0, nbr_axes[.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
+    True
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return self.identifier</code></pre>
+</details>
+</dd>
 <dt id="laue.zone_axis.ZoneAxis.get_polar_coords"><code class="name flex">
 <span>def <span class="ident">get_polar_coords</span></span>(<span>self)</span>
 </code></dt>
@@ -1913,6 +1987,7 @@ True
 <li><code><a title="laue.zone_axis.ZoneAxis.__iter__" href="#laue.zone_axis.ZoneAxis.__iter__">__iter__</a></code></li>
 <li><code><a title="laue.zone_axis.ZoneAxis.__len__" href="#laue.zone_axis.ZoneAxis.__len__">__len__</a></code></li>
 <li><code><a title="laue.zone_axis.ZoneAxis.dist_mean" href="#laue.zone_axis.ZoneAxis.dist_mean">dist_mean</a></code></li>
+<li><code><a title="laue.zone_axis.ZoneAxis.get_id" href="#laue.zone_axis.ZoneAxis.get_id">get_id</a></code></li>
 <li><code><a title="laue.zone_axis.ZoneAxis.get_polar_coords" href="#laue.zone_axis.ZoneAxis.get_polar_coords">get_polar_coords</a></code></li>
 <li><code><a title="laue.zone_axis.ZoneAxis.get_quality" href="#laue.zone_axis.ZoneAxis.get_quality">get_quality</a></code></li>
 <li><code><a title="laue.zone_axis.ZoneAxis.plot_gnomonic" href="#laue.zone_axis.ZoneAxis.plot_gnomonic">plot_gnomonic</a></code></li>

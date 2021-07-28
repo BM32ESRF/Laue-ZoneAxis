@@ -136,7 +136,7 @@ class Spot:
     """
     Represente un spot sur un diagramme de laue.
     """
-    def __init__(self, bbox, spot_im, distortion, diagram):
+    def __init__(self, bbox, spot_im, distortion, diagram, identifier):
         """
         ** Initialisation du spot. **
 
@@ -160,12 +160,15 @@ class Spot:
             Le facteur de distortion accessible par l'accesseur ``Spot.get_distortion``.
         diagram : LaueDiagram
             Le diagram qui contient ces spots. De sorte a pouvoir remonter.
+        identifier : int
+            Le rang de ce spot au sein du diagrame.
         """
         # Constantes.
         self.x, self.y, self.w, self.h = bbox
         self.spot_im = spot_im
         self.distortion = distortion # Facteur de diformite.
         self.diagram = diagram # Le contenaur.
+        self.identifier = identifier # Le rang.
 
         # Declaration des variables futur.
         self.intensity = None # Intensite du spot.
@@ -174,7 +177,7 @@ class Spot:
         self.twicetheta_chi = None # Angles du rayon diffractes ayant engendre ce point.
         self.quality = None # Beautee du point.
         self.hkl = None # Les 3 indices de Miller h, k et l.
-        self.axes = None
+        self.axes = None # Les axes de zone.
 
     def get_bbox(self):
         """
@@ -266,6 +269,23 @@ class Spot:
             Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
         """
         raise NotImplementedError("Demandez a Ravis, il sera ravis de vous repondre!")
+
+    def get_id(self):
+        """
+        ** Renvoi le numero de ce spot. **
+
+        Au sein d'un diagrame, chaque numero de spot est unique.
+
+        Examples
+        --------
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image)[0]
+        >>> all(spot.get_id() == i for i, spot in enumerate(diag))
+        True
+        >>>
+        """
+        return self.identifier
 
     def get_intensity(self):
         r"""
@@ -374,7 +394,7 @@ class Spot:
         """
         raise NotImplementedError
 
-    def find_zone_axes(self):
+    def find_zone_axes(self, **kwds):
         """
         ** Renvoi les axes de zone qui contienent ce point. **
 
@@ -401,7 +421,7 @@ class Spot:
         """
         if self.axes is not None:
             return self.axes
-        self.diagram.find_zone_axes() # met automatiquement a jour self.axes.
+        self.diagram.find_zone_axes(**kwds) # met automatiquement a jour self.axes.
         return self.axes
 
     def plot_gnomonic(self, axe_pyplot=None, *, display=True):

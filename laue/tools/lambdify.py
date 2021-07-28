@@ -12,17 +12,21 @@ Notes
 Si le module ``numexpr`` est installe, certaines optimisations pourront etre faites.
 """
 
-from typing import Any, Dict, Iterable
+from typing import Iterable
 
 import cloudpickle
 import numpy as np
 import sympy
+import time
 
 from laue.tools.fork_lambdify import lambdify
 
 
 __pdoc__ = {"cse_minimize_memory": False,
-            "cse_homogeneous": False}
+            "cse_homogeneous": False,
+            "evalf": False,
+            "simplify": False,
+            "subs": False}
 
 
 def cse_minimize_memory(r, e):
@@ -217,22 +221,11 @@ def time_cost(x):
     l'argument ``measure``. Cette metrique permet de minimiser
     le temps de calcul plutot que l'elegence de l'expression.
     """
-    if hasattr(x, "__iter__"):
-        return sum(time_cost(x_) for x_ in x)
+    # if hasattr(x, "__iter__"):
+    #     return sum(time_cost(x_) for x_ in x)
 
-    return sympy.count_ops(x) # Mauvais estimateur.
-
-    # def nbr_add(expr):
-    #     if isinstance(expr, sympy.core.basic.Atom): # Si on est sur une feuille.
-    #         return 0
-    #     if isinstance(expr, sympy.core.add.Add):
-    #         return (len(expr.args) - 1) + sum(nbr_add(child) for child in expr.args)
-    #     return sum(nbr_add(child) for child in expr.args)
-
-    # sub_exprs, final = sympy.cse(expr, optimizations="basic")
-    # cost = sum(nbr_add(ex) for _, ex in sub_exprs) + nbr_add(final[0])
-    # print("cout:", cost)
-    # return cost
+    defs, rvs = cse_minimize_memory(*sympy.cse(x))
+    return sum(sympy.count_ops(expr) for var, expr in defs)
 
 
 class Lambdify:

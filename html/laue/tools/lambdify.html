@@ -28,7 +28,7 @@
 <p>Est capable de metre en forme les expressions symbolique <code>sympy</code> de sorte
 a maximiser les performances.</p>
 <h2 id="notes">Notes</h2>
-<p>Si le module <code>numexpr</code> est installe, certaines optimisations pourrons etre faites.</p>
+<p>Si le module <code>numexpr</code> est installe, certaines optimisations pourront etre faites.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -44,8 +44,25 @@ a maximiser les performances.
 
 Notes
 -----
-Si le module ``numexpr`` est installe, certaines optimisations pourrons etre faites.
+Si le module ``numexpr`` est installe, certaines optimisations pourront etre faites.
 &#34;&#34;&#34;
+
+from typing import Iterable
+
+import cloudpickle
+import numpy as np
+import sympy
+import time
+
+from laue.tools.fork_lambdify import lambdify
+
+
+__pdoc__ = {&#34;cse_minimize_memory&#34;: False,
+            &#34;cse_homogeneous&#34;: False,
+            &#34;evalf&#34;: False,
+            &#34;simplify&#34;: False,
+            &#34;subs&#34;: False}
+
 
 def cse_minimize_memory(r, e):
     &#34;&#34;&#34;
@@ -79,6 +96,7 @@ def cse_minimize_memory(r, e):
     (_1, x)
     &gt;&gt;&gt; print(rvs)
     (_0, _1, _2, _3, _4)
+    &gt;&gt;&gt;
     &#34;&#34;&#34;
     if not r:
         return r, e
@@ -178,7 +196,253 @@ def cse_homogeneous(exprs, **kwargs):
     except TypeError: # For example &#39;mpf&#39; objects
         return [], exprs
     else:
-        return replacements, reduced_exprs</code></pre>
+        return replacements, reduced_exprs
+
+def evalf(x, n=15, **options):
+    &#34;&#34;&#34;
+    ** Alias vers ``sympy.N``. **
+
+    Gere recursivement les objets qui n&#39;ont pas
+    de methodes ``evalf``.
+    &#34;&#34;&#34;
+    try:
+        return sympy.N(x, n=n, **options)
+    except AttributeError:
+        if isinstance(x, (tuple, list, set)):
+            return type(x)([evalf(e) for e in x])
+        try:
+            return type(x)(*(evalf(e) for e in x.args))
+        except AttributeError:
+            return x
+
+def simplify(x, **kwargs):
+    &#34;&#34;&#34;
+    ** Alias vers ``sympy.simplify``. **
+
+    Gere recursivement les objets qui n&#39;ont pas
+    de methodes pour etre directement simplifiables.
+    &#34;&#34;&#34;
+    try:
+        return sympy.simplify(x, **kwargs)
+    except AttributeError:
+        if isinstance(x, (tuple, list, set)):
+            return type(x)([simplify(e, **kwargs) for e in x])
+        try:
+            return type(x)(*(simplify(e, **kwargs) for e in x.args))
+        except AttributeError:
+            return x
+
+def subs(x, *args, **kwargs):
+    &#34;&#34;&#34;
+    ** Alias vers ``sympy.subs``. **
+
+    Gere recursivement les objets qui n&#39;ont pas de methode ``.subs``.
+    &#34;&#34;&#34;
+    try:
+        return x.subs(*args, **kwargs)
+    except AttributeError:
+        if isinstance(x, (tuple, list, set)):
+            return type(x)([subs(e, *args, **kwargs) for e in x])
+        try:
+            return type(x)(*(subs(e, *args, **kwargs) for e in x.args))
+        except AttributeError:
+            return x
+
+def time_cost(x):
+    &#34;&#34;&#34;
+    ** Estime la complexite d&#39;une expression. **
+
+    Cela est tres utile pour ``sympy.simplify`` concernant
+    l&#39;argument ``measure``. Cette metrique permet de minimiser
+    le temps de calcul plutot que l&#39;elegence de l&#39;expression.
+    &#34;&#34;&#34;
+    # if hasattr(x, &#34;__iter__&#34;):
+    #     return sum(time_cost(x_) for x_ in x)
+
+    defs, rvs = cse_minimize_memory(*sympy.cse(x))
+    return sum(sympy.count_ops(expr) for var, expr in defs)
+
+
+class Lambdify:
+    &#34;&#34;&#34;
+    ** Permet de manipuler plus simplement une fonction. **
+    &#34;&#34;&#34;
+    def __init__(self, args: Iterable, expr, *, _simplify=True):
+        &#34;&#34;&#34;
+        ** Prepare la fonction. **
+
+        Parameters
+        ----------
+        args : iterable
+            Les parametres d&#39;entre de la fonction.
+        expr : sympy.core
+            L&#39;expresion sympy a vectoriser.
+        &#34;&#34;&#34;
+        # Preparation symbolique.
+        self.args = [arg for arg in sympy.sympify(args)]
+        self.args_name = [str(arg) for arg in self.args]
+        self.args_position = {arg: i for i, arg in enumerate(self.args_name)}
+        self.expr = expr
+
+        # Preparation vectoriele.
+        self.n_expr = simplify(evalf(self.expr), measure=time_cost) if _simplify else self.expr
+        self.fct = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numpy&#34;)
+        try:
+            self.fct_numexpr = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numexpr&#34;)
+        except (TypeError, RuntimeError):
+            self.fct_numexpr = None
+
+    def __str__(self):
+        &#34;&#34;&#34;
+        ** Offre une representation explicite de la fonction. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+        &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; print(Lambdify([x, y], cos(x + y) + x + y), end=&#34;&#34;)
+        def _lambdifygenerated(x, y):
+            x0 = x + y
+            _0 = x0 + cos(x0)
+            del x0
+            return _0
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.fct.__doc__
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        ** Offre une representation evaluable de l&#39;objet. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+        &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; Lambdify([x, y], cos(x + y) + x + y)
+        Lambdify([x, y], x + y + cos(x + y))
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return f&#34;Lambdify([{&#39;, &#39;.join(self.args_name)}], {self.expr})&#34;
+
+    def __call__(self, *args, **kwargs):
+        &#34;&#34;&#34;
+        ** Evalue la fonction. **
+
+        Parameters
+        ----------
+        *args
+            Les parametres ordonnes de la fonction.
+        **kwargs
+            Les parametres nomes de la fonction. Ils
+            ont le dessus sur les args en cas d&#39;ambiguite.
+
+        Examples
+        --------
+        &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+        &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+        &gt;&gt;&gt; l = Lambdify([x, y], x + y + cos(x + y))
+
+        Les cas symboliques.
+        &gt;&gt;&gt; l() # Retourne l&#39;expression sympy.
+        x + y + cos(x + y)
+        &gt;&gt;&gt; l(x) # Complete la suite en rajoutant &#39;y&#39;.
+        x + y + cos(x + y)
+        &gt;&gt;&gt; l(y) # Complete aussi en rajoutant &#39;y&#39;.
+        2*y + cos(2*y)
+        &gt;&gt;&gt; l(x, y) # Retourne une copie de l&#39;expression sympy.
+        x + y + cos(x + y)
+        &gt;&gt;&gt; l(1, y=2*y) # Il est possible de faire un melange symbolique / numerique.
+        2*y + cos(2*y + 1) + 1
+        &gt;&gt;&gt;
+
+        Les cas purement numeriques.
+        &gt;&gt;&gt; import numpy as np
+        &gt;&gt;&gt; l(-1, 1)
+        1.0
+        &gt;&gt;&gt; l(x=-1, y=1)
+        1.0
+        &gt;&gt;&gt; np.round(l(0, np.linspace(-1, 1, 5)), 2)
+        array([-0.46,  0.38,  1.  ,  1.38,  1.54])
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        # Cas patologiques.
+        if not args and not kwargs:
+            return self.expr
+        if len(args) &gt; len(self.args):
+            raise IndexError(f&#34;La fonction ne prend que {len(self.args)} arguments. &#34;
+                f&#34;Or vous en avez fournis {len(args)}.&#34;)
+        
+        # Recuperation des arguments complets.
+        args = list(args)
+        args += self.args[len(args):]
+        if kwargs:
+            if set(kwargs) - set(self.args_position):
+                raise NameError(f&#34;Les parametres {set(kwargs) - set(self.args_position)} &#34;
+                    f&#34;ne sont pas admissible, seul {set(self.args_position)} sont admissibles.&#34;)
+            for arg, value in kwargs.items():
+                args[self.args_position[arg]] = value
+
+        # Cas symbolique.
+        if any(isinstance(a, sympy.Basic) for a in args):
+            sub = {arg: value for arg, value in zip(self.args, args)}
+            return subs(self.expr, sub)
+
+        # Cas numerique.
+        if (
+                (self.fct_numexpr is not None)
+                and (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) &gt;= 157741)
+                and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
+            ):
+            return self.fct_numexpr(*args)
+        return self.fct(*args)
+
+    def dumps(self):
+        &#34;&#34;&#34;
+        ** Transforme cet objet en binaire. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+        &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+        &gt;&gt;&gt; type(l.dumps())
+        &lt;class &#39;bytes&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return cloudpickle.dumps(
+            {
+                &#34;args&#34;: self.args,
+                &#34;expr&#34;: self.expr,
+                &#34;n_expr&#34;: self.n_expr
+            }
+        )
+
+    def loads(data):
+        &#34;&#34;&#34;
+        ** Recre un objet a partir du binaire. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+        &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+        &gt;&gt;&gt; data = l.dumps()
+        &gt;&gt;&gt; type(data)
+        &lt;class &#39;bytes&#39;&gt;
+        &gt;&gt;&gt; type(Lambdify.loads(data))
+        &lt;class &#39;laue.tools.lambdify.Lambdify&#39;&gt;
+        &gt;&gt;&gt; Lambdify.loads(data)()
+        x + y + cos(x + y)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        attr = cloudpickle.loads(data)
+        l = Lambdify(attr[&#34;args&#34;], attr[&#34;n_expr&#34;], _simplify=False)
+        l.expr = attr[&#34;expr&#34;]
+        return l</code></pre>
 </details>
 </section>
 <section>
@@ -188,229 +452,331 @@ def cse_homogeneous(exprs, **kwargs):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="laue.tools.lambdify.cse_homogeneous"><code class="name flex">
-<span>def <span class="ident">cse_homogeneous</span></span>(<span>exprs, **kwargs)</span>
+<dt id="laue.tools.lambdify.time_cost"><code class="name flex">
+<span>def <span class="ident">time_cost</span></span>(<span>x)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Same as <code>cse</code> but the <code>reduced_exprs</code> are returned
-with the same type as <code>exprs</code> or a sympified version of the same.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>exprs</code></strong> :&ensp;<code>an Expr, iterable</code> of <code>Expr</code> or <code>dictionary with Expr values</code></dt>
-<dd>the expressions in which repeated subexpressions will be identified</dd>
-<dt><strong><code>kwargs</code></strong> :&ensp;<code>additional arguments for the <code>cse</code> function</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>replacements</code></strong> :&ensp;<code>list</code> of <code>(Symbol, expression) pairs</code></dt>
-<dd>All of the common subexpressions that were replaced. Subexpressions
-earlier in this list might show up in subexpressions later in this
-list.</dd>
-<dt><strong><code>reduced_exprs</code></strong> :&ensp;<code>list</code> of <code>sympy expressions</code></dt>
-<dd>The reduced expressions with all of the replacements above.</dd>
-</dl>
-<h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy.simplify.cse_main import cse
-&gt;&gt;&gt; from sympy import cos, Tuple, Matrix
-&gt;&gt;&gt; from sympy.abc import x
-&gt;&gt;&gt; from laue.tools.lambdify import cse_homogeneous
-&gt;&gt;&gt; output = lambda x: type(cse_homogeneous(x)[1])
-&gt;&gt;&gt; output(1)
-&lt;class 'sympy.core.numbers.One'&gt;
-&gt;&gt;&gt; output('cos(x)')
-&lt;class 'str'&gt;
-&gt;&gt;&gt; output(cos(x))
-cos
-&gt;&gt;&gt; output(Tuple(1, x))
-&lt;class 'sympy.core.containers.Tuple'&gt;
-&gt;&gt;&gt; output(Matrix([[1,0], [0,1]]))
-&lt;class 'sympy.matrices.dense.MutableDenseMatrix'&gt;
-&gt;&gt;&gt; output([1, x])
-&lt;class 'list'&gt;
-&gt;&gt;&gt; output((1, x))
-&lt;class 'tuple'&gt;
-&gt;&gt;&gt; output({1, x})
-&lt;class 'set'&gt;
-</code></pre></div>
+<div class="desc"><p><strong> Estime la complexite d'une expression. </strong></p>
+<p>Cela est tres utile pour <code>sympy.simplify</code> concernant
+l'argument <code>measure</code>. Cette metrique permet de minimiser
+le temps de calcul plutot que l'elegence de l'expression.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def cse_homogeneous(exprs, **kwargs):
+<pre><code class="python">def time_cost(x):
     &#34;&#34;&#34;
-    Same as ``cse`` but the ``reduced_exprs`` are returned
-    with the same type as ``exprs`` or a sympified version of the same.
+    ** Estime la complexite d&#39;une expression. **
 
-    Parameters
-    ----------
-    exprs : an Expr, iterable of Expr or dictionary with Expr values
-        the expressions in which repeated subexpressions will be identified
-    kwargs : additional arguments for the ``cse`` function
-
-    Returns
-    -------
-    replacements : list of (Symbol, expression) pairs
-        All of the common subexpressions that were replaced. Subexpressions
-        earlier in this list might show up in subexpressions later in this
-        list.
-    reduced_exprs : list of sympy expressions
-        The reduced expressions with all of the replacements above.
-
-    Examples
-    --------
-    &gt;&gt;&gt; from sympy.simplify.cse_main import cse
-    &gt;&gt;&gt; from sympy import cos, Tuple, Matrix
-    &gt;&gt;&gt; from sympy.abc import x
-    &gt;&gt;&gt; from laue.tools.lambdify import cse_homogeneous
-    &gt;&gt;&gt; output = lambda x: type(cse_homogeneous(x)[1])
-    &gt;&gt;&gt; output(1)
-    &lt;class &#39;sympy.core.numbers.One&#39;&gt;
-    &gt;&gt;&gt; output(&#39;cos(x)&#39;)
-    &lt;class &#39;str&#39;&gt;
-    &gt;&gt;&gt; output(cos(x))
-    cos
-    &gt;&gt;&gt; output(Tuple(1, x))
-    &lt;class &#39;sympy.core.containers.Tuple&#39;&gt;
-    &gt;&gt;&gt; output(Matrix([[1,0], [0,1]]))
-    &lt;class &#39;sympy.matrices.dense.MutableDenseMatrix&#39;&gt;
-    &gt;&gt;&gt; output([1, x])
-    &lt;class &#39;list&#39;&gt;
-    &gt;&gt;&gt; output((1, x))
-    &lt;class &#39;tuple&#39;&gt;
-    &gt;&gt;&gt; output({1, x})
-    &lt;class &#39;set&#39;&gt;
+    Cela est tres utile pour ``sympy.simplify`` concernant
+    l&#39;argument ``measure``. Cette metrique permet de minimiser
+    le temps de calcul plutot que l&#39;elegence de l&#39;expression.
     &#34;&#34;&#34;
-    from sympy import cse
-    if isinstance(exprs, str):
-        from sympy import sympify
-        replacements, reduced_exprs = cse_homogeneous(
-            sympify(exprs), **kwargs)
-        return replacements, repr(reduced_exprs)
-    if isinstance(exprs, (list, tuple, set)):
-        replacements, reduced_exprs = cse(exprs, **kwargs)
-        return replacements, type(exprs)(reduced_exprs)
-    if isinstance(exprs, dict):
-        keys = list(exprs.keys()) # In order to guarantee the order of the elements.
-        replacements, values = cse([exprs[k] for k in keys], **kwargs)
-        reduced_exprs = dict(zip(keys, values))
-        return replacements, reduced_exprs
+    # if hasattr(x, &#34;__iter__&#34;):
+    #     return sum(time_cost(x_) for x_ in x)
 
-    try:
-        replacements, (reduced_exprs,) = cse(exprs, **kwargs)
-    except TypeError: # For example &#39;mpf&#39; objects
-        return [], exprs
-    else:
-        return replacements, reduced_exprs</code></pre>
-</details>
-</dd>
-<dt id="laue.tools.lambdify.cse_minimize_memory"><code class="name flex">
-<span>def <span class="ident">cse_minimize_memory</span></span>(<span>r, e)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return tuples giving <code>(a, b)</code> where <code>a</code> is a symbol and <code>b</code> is
-either an expression or None. The value of None is used when a
-symbol is no longer needed for subsequent expressions.</p>
-<p>Use of such output can reduce the memory footprint of lambdified
-expressions that contain large, repeated subexpressions.</p>
-<h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy import cse
-&gt;&gt;&gt; from laue.tools.lambdify import cse_minimize_memory
-&gt;&gt;&gt; from sympy.abc import x, y
-&gt;&gt;&gt; eqs = [(x + y - 1)**2, x, x + y, (x + y)/(2*x + 1) + (x + y - 1)**2, (2*x + 1)**(x + y)]
-&gt;&gt;&gt; defs, rvs = cse_minimize_memory(*cse(eqs))
-&gt;&gt;&gt; for i in defs:
-...     print(i)
-...
-(x0, x + y)
-(x1, (x0 - 1)**2)
-(x2, 2*x + 1)
-(_3, x0/x2 + x1)
-(_4, x2**x0)
-(x2, None)
-(_0, x1)
-(x1, None)
-(_2, x0)
-(x0, None)
-(_1, x)
-&gt;&gt;&gt; print(rvs)
-(_0, _1, _2, _3, _4)
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def cse_minimize_memory(r, e):
-    &#34;&#34;&#34;
-    Return tuples giving ``(a, b)`` where ``a`` is a symbol and ``b`` is
-    either an expression or None. The value of None is used when a
-    symbol is no longer needed for subsequent expressions.
-
-    Use of such output can reduce the memory footprint of lambdified
-    expressions that contain large, repeated subexpressions.
-
-    Examples
-    --------
-    &gt;&gt;&gt; from sympy import cse
-    &gt;&gt;&gt; from laue.tools.lambdify import cse_minimize_memory
-    &gt;&gt;&gt; from sympy.abc import x, y
-    &gt;&gt;&gt; eqs = [(x + y - 1)**2, x, x + y, (x + y)/(2*x + 1) + (x + y - 1)**2, (2*x + 1)**(x + y)]
-    &gt;&gt;&gt; defs, rvs = cse_minimize_memory(*cse(eqs))
-    &gt;&gt;&gt; for i in defs:
-    ...     print(i)
-    ...
-    (x0, x + y)
-    (x1, (x0 - 1)**2)
-    (x2, 2*x + 1)
-    (_3, x0/x2 + x1)
-    (_4, x2**x0)
-    (x2, None)
-    (_0, x1)
-    (x1, None)
-    (_2, x0)
-    (x0, None)
-    (_1, x)
-    &gt;&gt;&gt; print(rvs)
-    (_0, _1, _2, _3, _4)
-    &#34;&#34;&#34;
-    if not r:
-        return r, e
-
-    from sympy import symbols
-
-    s, p = zip(*r)
-    esyms = symbols(&#39;_:%d&#39; % len(e))
-    syms = list(esyms)
-    s = list(s)
-    in_use = set(s)
-    p = list(p)
-    # sort e so those with most sub-expressions appear first
-    e = [(e[i], syms[i]) for i in range(len(e))]
-    e, syms = zip(*sorted(e,
-        key=lambda x: -sum([p[s.index(i)].count_ops()
-        for i in x[0].free_symbols &amp; in_use])))
-    syms = list(syms)
-    p += e
-    rv = []
-    i = len(p) - 1
-    while i &gt;= 0:
-        _p = p.pop()
-        c = in_use &amp; _p.free_symbols
-        if c: # sorting for canonical results
-            rv.extend([(s, None) for s in sorted(c, key=str)])
-        if i &gt;= len(r):
-            rv.append((syms.pop(), _p))
-        else:
-            rv.append((s[i], _p))
-        in_use -= c
-        i -= 1
-    rv.reverse()
-    return rv, esyms</code></pre>
+    defs, rvs = cse_minimize_memory(*sympy.cse(x))
+    return sum(sympy.count_ops(expr) for var, expr in defs)</code></pre>
 </details>
 </dd>
 </dl>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="laue.tools.lambdify.Lambdify"><code class="flex name class">
+<span>class <span class="ident">Lambdify</span></span>
+<span>(</span><span>args: Iterable, expr)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Permet de manipuler plus simplement une fonction. </strong></p>
+<p><strong> Prepare la fonction. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>args</code></strong> :&ensp;<code>iterable</code></dt>
+<dd>Les parametres d'entre de la fonction.</dd>
+<dt><strong><code>expr</code></strong> :&ensp;<code>sympy.core</code></dt>
+<dd>L'expresion sympy a vectoriser.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Lambdify:
+    &#34;&#34;&#34;
+    ** Permet de manipuler plus simplement une fonction. **
+    &#34;&#34;&#34;
+    def __init__(self, args: Iterable, expr, *, _simplify=True):
+        &#34;&#34;&#34;
+        ** Prepare la fonction. **
+
+        Parameters
+        ----------
+        args : iterable
+            Les parametres d&#39;entre de la fonction.
+        expr : sympy.core
+            L&#39;expresion sympy a vectoriser.
+        &#34;&#34;&#34;
+        # Preparation symbolique.
+        self.args = [arg for arg in sympy.sympify(args)]
+        self.args_name = [str(arg) for arg in self.args]
+        self.args_position = {arg: i for i, arg in enumerate(self.args_name)}
+        self.expr = expr
+
+        # Preparation vectoriele.
+        self.n_expr = simplify(evalf(self.expr), measure=time_cost) if _simplify else self.expr
+        self.fct = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numpy&#34;)
+        try:
+            self.fct_numexpr = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numexpr&#34;)
+        except (TypeError, RuntimeError):
+            self.fct_numexpr = None
+
+    def __str__(self):
+        &#34;&#34;&#34;
+        ** Offre une representation explicite de la fonction. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+        &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; print(Lambdify([x, y], cos(x + y) + x + y), end=&#34;&#34;)
+        def _lambdifygenerated(x, y):
+            x0 = x + y
+            _0 = x0 + cos(x0)
+            del x0
+            return _0
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self.fct.__doc__
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        ** Offre une representation evaluable de l&#39;objet. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+        &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; Lambdify([x, y], cos(x + y) + x + y)
+        Lambdify([x, y], x + y + cos(x + y))
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return f&#34;Lambdify([{&#39;, &#39;.join(self.args_name)}], {self.expr})&#34;
+
+    def __call__(self, *args, **kwargs):
+        &#34;&#34;&#34;
+        ** Evalue la fonction. **
+
+        Parameters
+        ----------
+        *args
+            Les parametres ordonnes de la fonction.
+        **kwargs
+            Les parametres nomes de la fonction. Ils
+            ont le dessus sur les args en cas d&#39;ambiguite.
+
+        Examples
+        --------
+        &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+        &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+        &gt;&gt;&gt; l = Lambdify([x, y], x + y + cos(x + y))
+
+        Les cas symboliques.
+        &gt;&gt;&gt; l() # Retourne l&#39;expression sympy.
+        x + y + cos(x + y)
+        &gt;&gt;&gt; l(x) # Complete la suite en rajoutant &#39;y&#39;.
+        x + y + cos(x + y)
+        &gt;&gt;&gt; l(y) # Complete aussi en rajoutant &#39;y&#39;.
+        2*y + cos(2*y)
+        &gt;&gt;&gt; l(x, y) # Retourne une copie de l&#39;expression sympy.
+        x + y + cos(x + y)
+        &gt;&gt;&gt; l(1, y=2*y) # Il est possible de faire un melange symbolique / numerique.
+        2*y + cos(2*y + 1) + 1
+        &gt;&gt;&gt;
+
+        Les cas purement numeriques.
+        &gt;&gt;&gt; import numpy as np
+        &gt;&gt;&gt; l(-1, 1)
+        1.0
+        &gt;&gt;&gt; l(x=-1, y=1)
+        1.0
+        &gt;&gt;&gt; np.round(l(0, np.linspace(-1, 1, 5)), 2)
+        array([-0.46,  0.38,  1.  ,  1.38,  1.54])
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        # Cas patologiques.
+        if not args and not kwargs:
+            return self.expr
+        if len(args) &gt; len(self.args):
+            raise IndexError(f&#34;La fonction ne prend que {len(self.args)} arguments. &#34;
+                f&#34;Or vous en avez fournis {len(args)}.&#34;)
+        
+        # Recuperation des arguments complets.
+        args = list(args)
+        args += self.args[len(args):]
+        if kwargs:
+            if set(kwargs) - set(self.args_position):
+                raise NameError(f&#34;Les parametres {set(kwargs) - set(self.args_position)} &#34;
+                    f&#34;ne sont pas admissible, seul {set(self.args_position)} sont admissibles.&#34;)
+            for arg, value in kwargs.items():
+                args[self.args_position[arg]] = value
+
+        # Cas symbolique.
+        if any(isinstance(a, sympy.Basic) for a in args):
+            sub = {arg: value for arg, value in zip(self.args, args)}
+            return subs(self.expr, sub)
+
+        # Cas numerique.
+        if (
+                (self.fct_numexpr is not None)
+                and (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) &gt;= 157741)
+                and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
+            ):
+            return self.fct_numexpr(*args)
+        return self.fct(*args)
+
+    def dumps(self):
+        &#34;&#34;&#34;
+        ** Transforme cet objet en binaire. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+        &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+        &gt;&gt;&gt; type(l.dumps())
+        &lt;class &#39;bytes&#39;&gt;
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return cloudpickle.dumps(
+            {
+                &#34;args&#34;: self.args,
+                &#34;expr&#34;: self.expr,
+                &#34;n_expr&#34;: self.n_expr
+            }
+        )
+
+    def loads(data):
+        &#34;&#34;&#34;
+        ** Recre un objet a partir du binaire. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+        &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+        &gt;&gt;&gt; data = l.dumps()
+        &gt;&gt;&gt; type(data)
+        &lt;class &#39;bytes&#39;&gt;
+        &gt;&gt;&gt; type(Lambdify.loads(data))
+        &lt;class &#39;laue.tools.lambdify.Lambdify&#39;&gt;
+        &gt;&gt;&gt; Lambdify.loads(data)()
+        x + y + cos(x + y)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        attr = cloudpickle.loads(data)
+        l = Lambdify(attr[&#34;args&#34;], attr[&#34;n_expr&#34;], _simplify=False)
+        l.expr = attr[&#34;expr&#34;]
+        return l</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.tools.lambdify.Lambdify.dumps"><code class="name flex">
+<span>def <span class="ident">dumps</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Transforme cet objet en binaire. </strong></p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+&gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+&gt;&gt;&gt;
+&gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+&gt;&gt;&gt; type(l.dumps())
+&lt;class 'bytes'&gt;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dumps(self):
+    &#34;&#34;&#34;
+    ** Transforme cet objet en binaire. **
+
+    Examples
+    --------
+    &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+    &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+    &gt;&gt;&gt; type(l.dumps())
+    &lt;class &#39;bytes&#39;&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return cloudpickle.dumps(
+        {
+            &#34;args&#34;: self.args,
+            &#34;expr&#34;: self.expr,
+            &#34;n_expr&#34;: self.n_expr
+        }
+    )</code></pre>
+</details>
+</dd>
+<dt id="laue.tools.lambdify.Lambdify.loads"><code class="name flex">
+<span>def <span class="ident">loads</span></span>(<span>data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recre un objet a partir du binaire. </strong></p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+&gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+&gt;&gt;&gt;
+&gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+&gt;&gt;&gt; data = l.dumps()
+&gt;&gt;&gt; type(data)
+&lt;class 'bytes'&gt;
+&gt;&gt;&gt; type(Lambdify.loads(data))
+&lt;class 'laue.tools.lambdify.Lambdify'&gt;
+&gt;&gt;&gt; Lambdify.loads(data)()
+x + y + cos(x + y)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def loads(data):
+    &#34;&#34;&#34;
+    ** Recre un objet a partir du binaire. **
+
+    Examples
+    --------
+    &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+    &gt;&gt;&gt; from laue.tools.lambdify import Lambdify
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+    &gt;&gt;&gt; data = l.dumps()
+    &gt;&gt;&gt; type(data)
+    &lt;class &#39;bytes&#39;&gt;
+    &gt;&gt;&gt; type(Lambdify.loads(data))
+    &lt;class &#39;laue.tools.lambdify.Lambdify&#39;&gt;
+    &gt;&gt;&gt; Lambdify.loads(data)()
+    x + y + cos(x + y)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    attr = cloudpickle.loads(data)
+    l = Lambdify(attr[&#34;args&#34;], attr[&#34;n_expr&#34;], _simplify=False)
+    l.expr = attr[&#34;expr&#34;]
+    return l</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -429,8 +795,18 @@ expressions that contain large, repeated subexpressions.</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="laue.tools.lambdify.cse_homogeneous" href="#laue.tools.lambdify.cse_homogeneous">cse_homogeneous</a></code></li>
-<li><code><a title="laue.tools.lambdify.cse_minimize_memory" href="#laue.tools.lambdify.cse_minimize_memory">cse_minimize_memory</a></code></li>
+<li><code><a title="laue.tools.lambdify.time_cost" href="#laue.tools.lambdify.time_cost">time_cost</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="laue.tools.lambdify.Lambdify" href="#laue.tools.lambdify.Lambdify">Lambdify</a></code></h4>
+<ul class="">
+<li><code><a title="laue.tools.lambdify.Lambdify.dumps" href="#laue.tools.lambdify.Lambdify.dumps">dumps</a></code></li>
+<li><code><a title="laue.tools.lambdify.Lambdify.loads" href="#laue.tools.lambdify.Lambdify.loads">loads</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

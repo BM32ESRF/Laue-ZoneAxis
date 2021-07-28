@@ -65,7 +65,7 @@ class LaueDiagram(Splitable):
         self.quality = None # Facteur qui dit a quel point ce diagramme est joli a l'oeil.
         self.image_gnom = None # Image projete dans le plan gnomonic.
         self.sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
-        self.axis = {} # Les axes de zones
+        self.axes = {} # Les axes de zones
         self.spots_set = None # L'ensemble des spots pour une recherche plus rapide.
 
     def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
@@ -101,7 +101,7 @@ class LaueDiagram(Splitable):
             La liste des axes de zone de type ``laue.zone_axis.ZoneAxis``.
 
         Examples
-        -------
+        --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
@@ -129,8 +129,8 @@ class LaueDiagram(Splitable):
             gnomonics = self.get_gnomonic_positions()
             return gnomonics, dmax, nbr, tol
 
-        if (dmax, nbr, tol) in self.axis: # Si on a deja la solution.
-            return self.axis[(dmax, nbr, tol)]
+        if (dmax, nbr, tol) in self.axes: # Si on a deja la solution.
+            return self.axes[(dmax, nbr, tol)]
 
         if _axes_args is None: # Si le travail n'est pas premache.
             from laue.zone_axis import _get_zone_axes_pickle
@@ -143,7 +143,7 @@ class LaueDiagram(Splitable):
 
         # Creation des objets 'ZoneAxis'.
         from laue.zone_axis import ZoneAxis
-        self.axis[(dmax, nbr, tol)] = [
+        self.axes[(dmax, nbr, tol)] = [
             ZoneAxis(diagram=self,
                      spots_ind=spots_ind,
                      identifier=i,
@@ -153,8 +153,8 @@ class LaueDiagram(Splitable):
 
         # Attribution des axes aux spots.
         for spot, axes_ind in zip(self, spots_axes_ind):
-            spot.axes = {self.axis[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
-        return self.axis[(dmax, nbr, tol)]
+            spot.axes = {self.axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
+        return self.axes[(dmax, nbr, tol)]
 
     def get_image_gnomonic(self):
         """
@@ -595,14 +595,6 @@ class LaueDiagram(Splitable):
         self.quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
         return self.quality
 
-    def find_subsets(self, *args, **kwargs):
-        """
-        ** Alias to ``laue.tools.splitable.Splitable.find_subsets``. **
-
-        C'est une methode abstraite definie dans la classe mere.
-        """
-        return super().find_subsets(*args, **kwargs)
-
     def plot_all(self, *, display=True):
         """
         ** Affiche le diagramme a l'ecran. **
@@ -832,7 +824,7 @@ class LaueDiagram(Splitable):
         self.quality = None
         self.image_gnom = None
         self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
-        self.axis = {} # Les axis de zone depandent de beaucoup de choses, on reste donc prudent.
+        self.axes = {} # Les axes de zone depandent de beaucoup de choses, on reste donc prudent.
         self.spots_set = None # On libere de la memoire en faisant ca.
         for spot in self:
             spot._clean()

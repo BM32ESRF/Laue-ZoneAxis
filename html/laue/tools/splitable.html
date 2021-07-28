@@ -71,7 +71,8 @@ class Splitable:
     &#34;&#34;&#34;
     Interface pour la classe ``laue.diagram.LaueDiagram``.
     &#34;&#34;&#34;
-    def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08):
+    def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08,
+        _atomic_subsets_res=None, _get_args=False):
         &#34;&#34;&#34;
         ** Recherche des spots qui appartiennent a un meme grain. **
 
@@ -155,32 +156,6 @@ class Splitable:
         &lt;class &#39;laue.spot.Spot&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        def count_variant_axis(spot):
-            &#34;&#34;&#34;
-            Compte le nombre d&#39;axes de zone qui different beaucoup.
-            (ie considere 2 axes proche comme un seul axe)
-            &#34;&#34;&#34;
-            axes = spot.find_zone_axes()
-            if not axes:
-                return 0
-            if len(axes) == 1:
-                return 1
-            axes = list(axes)
-            nbr_near = (distance_axis(axes, axes, weight=1) &lt; angle_max).sum()
-            nbr = len(axes) - (nbr_near-len(axes))//2
-            return nbr
-
-        def simul_remove_axis(graph, axis, excluded):
-            &#34;&#34;&#34;
-            Retire les aretes liess a cet axe, puis regarde ce que ca donne.
-            &#34;&#34;&#34;
-            graph_bis = graph.copy()
-            for spot1, spot2, axis_found in graph.edges.data(&#34;axis&#34;):
-                if axis_found is axis:
-                    graph_bis.remove_edge(spot1, spot2)
-            excluded_bis = [edge for edge in excluded if networkx.algorithms.has_path(graph_bis, *edge)]
-            return excluded_bis, graph_bis
-
         assert isinstance(angle_max, float), \
             f&#34;&#39;angle_max&#39; has to be a float, not a {type(angle_max).__name__}.&#34;
         assert isinstance(spots_max, int), \
@@ -195,70 +170,153 @@ class Splitable:
             &#34;en mm dans le plan gnomonic. Elle doit etre comprise entre ]0, .3]. &#34;
             f&#34;Or elle vaut {distance_max}, ce qui sort de cet intervalle.&#34;)
 
-        from laue.zone_axis import distance as distance_axis
-        from laue.spot import distance as distance_pic
-        import networkx
+        args = _get_spots_axes(self)
+        config = dict(angle_max=angle_max,
+                      spots_max=spots_max,
+                      distance_max=distance_max)
+        if _get_args: # Si il faut seulement preparer le travail.
+            return args, config
 
-        # Creation des noeuds du graphe.
-        if self.experiment.verbose &gt;= 2:
-            print(&#34;\tExtraction des noeuds.&#34;)
-        graph = networkx.Graph()
-        spots_at_cross = self.select_spots(n=20, sort=lambda spot: -count_variant_axis(spot))
-        max_cross = count_variant_axis(spots_at_cross[0])
-        limit = math.sqrt(max(2**2, max_cross)) # Permet d&#39;eviter &#39;ValueError: math domain error&#39;
-        spots_at_cross = [spot for spot in spots_at_cross if count_variant_axis(spot) &gt;= limit]
-        graph.add_nodes_from(spots_at_cross)
+        if _atomic_subsets_res is None: # Si il faut faire les calculs.
+            _atomic_subsets_res = atomic_find_subsets(*args, **config)
+        
+        subsets = [{self[spot_id] for spot_id in subset} for subset in _atomic_subsets_res]
+        return subsets
 
-        # Ajout grossier de certaine aretes.
-        if self.experiment.verbose &gt;= 2:
-            print(&#34;\tAjout des aretes.&#34;)
-        excluded = [] # La liste des neuds appartenant a des grains differents.
-        axes = set() # La liste des axes de zone consideres.
-        for i, spot1 in enumerate(spots_at_cross[:-1]): # On faite toutes les combinaisons
-            for spot2 in spots_at_cross[i+1:]: # de 2 sommets possibles.
+def _get_spots_axes(diag):
+    &#34;&#34;&#34;
+    Recupere et met en forme les spots et les axes.
+    Retourne &#39;spots&#39; et &#39;axes&#39; compatible avec ``find_subset``.
+    &#34;&#34;&#34;
+    spots = {
+        i: {
+            &#34;gnom&#34;: spot.get_gnomonic(),
+            &#34;axes&#34;: {axis.get_id() for axis in spot.find_zone_axes()}
+        }
+        for i, spot in enumerate(diag)
+    }
+    axes = {
+        axes.get_id(): {
+            &#34;polar&#34;: axes.get_polar_coords(),
+            &#34;quality&#34;: axes.get_quality(),
+            &#34;spots&#34;: {spot.get_id() for spot in axes}
+        }
+        for axes in diag.find_zone_axes()
+    }
+    return spots, axes
 
-                ## Exclusion des spots trop proches.
-                if distance_pic(spot1, spot2, space=&#34;gnomonic&#34;) &lt; distance_max:
-                    excluded.append((spot1, spot2))
-                    continue
 
-                ## On ne relie pas les spots qui n&#39;ont pas d&#39;axe commun.
-                common_axes = spot1.find_zone_axes() &amp; spot2.find_zone_axes()
-                if not common_axes:
-                    continue
+def atomic_find_subsets(spots_dict, axes_dict, **kwargs):
+    &#34;&#34;&#34;
+    Help for pickelable ``find_subset``.
 
-                ## Exclusion des spots ayant 2 axes de zone paralleles.
-                axes1, axes2 = list(spot1.find_zone_axes()-common_axes), list(spot2.find_zone_axes()-common_axes)
-                if axes1 and axes2 and distance_axis(axes1, axes2, weight=1).min() &lt; angle_max: # tolerance angulaire de pi/32
-                    excluded.append((spot1, spot2))
-                    continue
+    Parameters
+    ----------
+    spots_dict : dict
+        {spot_ind: {&#34;gnom&#34;: (x, y), &#34;axes&#34;: {1, 2, 3}}, ...}
+    axes_dict : dict
+        {axe_ind: {&#34;polar&#34;: (theta, dist), &#34;quality&#34;: .7, &#34;spots&#34;: {1, 4, 5, 6}}, ...}
 
-                best_axis = sorted(common_axes, key=lambda axis: axis.get_quality())[-1]
-                axes.add(best_axis)
-                graph.add_edge(spot1, spot2, quality=best_axis.get_quality(), axis=best_axis)
+    Returns
+    -------
+    list
+        Chaque element est un ensemble de spot appartenant au meme grain.
+    &#34;&#34;&#34;
+    from laue.zone_axis import distance as distance_axis
+    from laue.spot import distance as distance_pic
+    import networkx
 
-        # Suppression des aretes en trop afin de discosier les grains.
-        if self.experiment.verbose &gt;= 2:
-            print(&#34;\tSuppression des aretes en trop.&#34;)
+    def count_variant_axis(spot_id):
+        &#34;&#34;&#34;
+        Compte le nombre d&#39;axes de zone qui different beaucoup.
+        (ie considere 2 axes proche comme un seul axe)
+        &#34;&#34;&#34;
+        axes_id = spots_dict[spot_id][&#34;axes&#34;]
+        if len(axes_id) &lt;= 1:
+            return len(axes_id)
+        axes = [axes_dict[axis_id][&#34;polar&#34;] for axis_id in axes_id]
+        nbr_near = (distance_axis(axes, axes, weight=1) &lt; kwargs[&#34;angle_max&#34;]).sum()
+        nbr = len(axes) - (nbr_near-len(axes))//2
+        return nbr
 
-        excluded = [edge for edge in excluded if networkx.algorithms.has_path(graph, *edge)]
-        while excluded:
-            predictions = [(*simul_remove_axis(graph, axis, excluded), axis) for axis in axes]
-            best_len = min(len(excluded_bis) for excluded_bis, _, _ in predictions)
-            predictions = [p for p in predictions if len(p[0]) == best_len]
-            costs = [axis.get_quality() for _, _, axis in predictions]
-            min_quality = min(costs)
-            predictions = [p for p in predictions if p[2].get_quality() == min_quality]
-            excluded, graph, axis = predictions.pop()
-            axes.remove(axis)
+    def simul_remove_axis(graph, axis, excluded):
+        &#34;&#34;&#34;
+        Retire les aretes liees a cet axe, puis regarde ce que ca donne.
+        &#34;&#34;&#34;
+        graph_bis = graph.copy()
+        for spot1, spot2, axis_found in graph.edges.data(&#34;axis&#34;):
+            if axis_found is axis:
+                graph_bis.remove_edge(spot1, spot2)
+        excluded_bis = [edge for edge in excluded if networkx.algorithms.has_path(graph_bis, *edge)]
+        return excluded_bis, graph_bis
 
-        # Creation des clusters.
-        conn = list(networkx.algorithms.connected_components(graph))
-        conn = sorted(conn, key=lambda con: len(con), reverse=True)
-        conn = [con for con in conn if len(con) &gt;= 2]
-        if self.experiment.verbose:
-            print(f&#34;\tOK: Les grain sont separes en {len(conn)} familles.&#34;)
-        return conn</code></pre>
+    # Extraction des spots.
+    spots_at_cross = sorted(spots_dict, key=count_variant_axis, reverse=True)[:kwargs[&#34;spots_max&#34;]]
+    max_cross = count_variant_axis(spots_at_cross[0])
+    limit = math.sqrt(max(2**2, max_cross)) # Permet d&#39;eviter &#39;ValueError: math domain error&#39;
+    spots_at_cross = [spot_id for spot_id in spots_at_cross if count_variant_axis(spot_id) &gt;= limit]
+
+    # Creation des noeuds du graphe.
+    graph = networkx.Graph()
+    graph.add_nodes_from(spots_at_cross)
+
+    # Ajout grossier de certaine aretes.
+    excluded = [] # La liste des noeuds appartenant a des grains differents.
+    candidate_axes = set() # L&#39;ensemble des axes de zone consideres.
+    for i, spot1 in enumerate(spots_at_cross[:-1]): # On faite toutes les combinaisons
+        for spot2 in spots_at_cross[i+1:]: # de 2 sommets possibles.
+
+            ## Exclusion des spots trop proches.
+            if distance_pic(
+                    spots_dict[spot1][&#34;gnom&#34;],
+                    spots_dict[spot2][&#34;gnom&#34;],
+                    space=&#34;gnomonic&#34;
+                    ) &lt; kwargs[&#34;distance_max&#34;]:
+                excluded.append((spot1, spot2))
+                continue
+
+            ## On ne relie pas les spots qui n&#39;ont pas d&#39;axe commun.
+            common_axes = spots_dict[spot1][&#34;axes&#34;] &amp; spots_dict[spot2][&#34;axes&#34;]
+            if not common_axes:
+                continue
+
+            ## Exclusion des spots ayant 2 axes de zone paralleles.
+            axes1, axes2 = spots_dict[spot1][&#34;axes&#34;]-common_axes, spots_dict[spot2][&#34;axes&#34;]-common_axes
+            if axes1 and axes2 and distance_axis(
+                    [axes_dict[axis_id][&#34;polar&#34;] for axis_id in axes1],
+                    [axes_dict[axis_id][&#34;polar&#34;] for axis_id in axes2],
+                    weight=1).min() &lt; kwargs[&#34;angle_max&#34;]: # tolerance angulaire de pi/32
+                excluded.append((spot1, spot2))
+                continue
+
+            ## Ajout dans le graphe.
+            best_axis = sorted(common_axes, key=lambda axis_id: axes_dict[axis_id][&#34;quality&#34;])[-1]
+            candidate_axes.add(best_axis)
+            graph.add_edge(spot1, spot2, quality=axes_dict[best_axis][&#34;quality&#34;], axis=best_axis)
+
+    # Suppression des aretes en trop afin de discosier les grains.
+    excluded = [edge for edge in excluded if networkx.algorithms.has_path(graph, *edge)]
+    while excluded:
+        predictions = [(*simul_remove_axis(graph, axis_id, excluded), axis_id) for axis_id in candidate_axes]
+        best_len = min(len(excluded_bis) for excluded_bis, _, _ in predictions)
+        predictions = [p for p in predictions if len(p[0]) == best_len]
+        costs = [axes_dict[axis_id][&#34;quality&#34;] for _, _, axis_id in predictions]
+        min_quality = min(costs)
+        predictions = [p for p in predictions if axes_dict[p[2]][&#34;quality&#34;] == min_quality]
+        excluded, graph, axis_id = predictions.pop()
+        candidate_axes.remove(axis_id)
+
+    # Creation des clusters.
+    subsets = list(networkx.algorithms.connected_components(graph))
+    subsets = sorted(subsets, key=lambda con: len(con), reverse=True)
+    subsets = [con for con in subsets if len(con) &gt;= 2]
+    return subsets
+
+def _pickelable(args):
+    &#34;&#34;&#34;
+    args = ((spots_dict, axes_dict), kwargs)
+    &#34;&#34;&#34;
+    return atomic_find_subsets(*args[0], **args[1])</code></pre>
 </details>
 </section>
 <section>
@@ -266,6 +324,137 @@ class Splitable:
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="laue.tools.splitable.atomic_find_subsets"><code class="name flex">
+<span>def <span class="ident">atomic_find_subsets</span></span>(<span>spots_dict, axes_dict, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Help for pickelable <code>find_subset</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>spots_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>{spot_ind: {"gnom": (x, y), "axes": {1, 2, 3}}, &hellip;}</dd>
+<dt><strong><code>axes_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>{axe_ind: {"polar": (theta, dist), "quality": .7, "spots": {1, 4, 5, 6}}, &hellip;}</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>Chaque element est un ensemble de spot appartenant au meme grain.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def atomic_find_subsets(spots_dict, axes_dict, **kwargs):
+    &#34;&#34;&#34;
+    Help for pickelable ``find_subset``.
+
+    Parameters
+    ----------
+    spots_dict : dict
+        {spot_ind: {&#34;gnom&#34;: (x, y), &#34;axes&#34;: {1, 2, 3}}, ...}
+    axes_dict : dict
+        {axe_ind: {&#34;polar&#34;: (theta, dist), &#34;quality&#34;: .7, &#34;spots&#34;: {1, 4, 5, 6}}, ...}
+
+    Returns
+    -------
+    list
+        Chaque element est un ensemble de spot appartenant au meme grain.
+    &#34;&#34;&#34;
+    from laue.zone_axis import distance as distance_axis
+    from laue.spot import distance as distance_pic
+    import networkx
+
+    def count_variant_axis(spot_id):
+        &#34;&#34;&#34;
+        Compte le nombre d&#39;axes de zone qui different beaucoup.
+        (ie considere 2 axes proche comme un seul axe)
+        &#34;&#34;&#34;
+        axes_id = spots_dict[spot_id][&#34;axes&#34;]
+        if len(axes_id) &lt;= 1:
+            return len(axes_id)
+        axes = [axes_dict[axis_id][&#34;polar&#34;] for axis_id in axes_id]
+        nbr_near = (distance_axis(axes, axes, weight=1) &lt; kwargs[&#34;angle_max&#34;]).sum()
+        nbr = len(axes) - (nbr_near-len(axes))//2
+        return nbr
+
+    def simul_remove_axis(graph, axis, excluded):
+        &#34;&#34;&#34;
+        Retire les aretes liees a cet axe, puis regarde ce que ca donne.
+        &#34;&#34;&#34;
+        graph_bis = graph.copy()
+        for spot1, spot2, axis_found in graph.edges.data(&#34;axis&#34;):
+            if axis_found is axis:
+                graph_bis.remove_edge(spot1, spot2)
+        excluded_bis = [edge for edge in excluded if networkx.algorithms.has_path(graph_bis, *edge)]
+        return excluded_bis, graph_bis
+
+    # Extraction des spots.
+    spots_at_cross = sorted(spots_dict, key=count_variant_axis, reverse=True)[:kwargs[&#34;spots_max&#34;]]
+    max_cross = count_variant_axis(spots_at_cross[0])
+    limit = math.sqrt(max(2**2, max_cross)) # Permet d&#39;eviter &#39;ValueError: math domain error&#39;
+    spots_at_cross = [spot_id for spot_id in spots_at_cross if count_variant_axis(spot_id) &gt;= limit]
+
+    # Creation des noeuds du graphe.
+    graph = networkx.Graph()
+    graph.add_nodes_from(spots_at_cross)
+
+    # Ajout grossier de certaine aretes.
+    excluded = [] # La liste des noeuds appartenant a des grains differents.
+    candidate_axes = set() # L&#39;ensemble des axes de zone consideres.
+    for i, spot1 in enumerate(spots_at_cross[:-1]): # On faite toutes les combinaisons
+        for spot2 in spots_at_cross[i+1:]: # de 2 sommets possibles.
+
+            ## Exclusion des spots trop proches.
+            if distance_pic(
+                    spots_dict[spot1][&#34;gnom&#34;],
+                    spots_dict[spot2][&#34;gnom&#34;],
+                    space=&#34;gnomonic&#34;
+                    ) &lt; kwargs[&#34;distance_max&#34;]:
+                excluded.append((spot1, spot2))
+                continue
+
+            ## On ne relie pas les spots qui n&#39;ont pas d&#39;axe commun.
+            common_axes = spots_dict[spot1][&#34;axes&#34;] &amp; spots_dict[spot2][&#34;axes&#34;]
+            if not common_axes:
+                continue
+
+            ## Exclusion des spots ayant 2 axes de zone paralleles.
+            axes1, axes2 = spots_dict[spot1][&#34;axes&#34;]-common_axes, spots_dict[spot2][&#34;axes&#34;]-common_axes
+            if axes1 and axes2 and distance_axis(
+                    [axes_dict[axis_id][&#34;polar&#34;] for axis_id in axes1],
+                    [axes_dict[axis_id][&#34;polar&#34;] for axis_id in axes2],
+                    weight=1).min() &lt; kwargs[&#34;angle_max&#34;]: # tolerance angulaire de pi/32
+                excluded.append((spot1, spot2))
+                continue
+
+            ## Ajout dans le graphe.
+            best_axis = sorted(common_axes, key=lambda axis_id: axes_dict[axis_id][&#34;quality&#34;])[-1]
+            candidate_axes.add(best_axis)
+            graph.add_edge(spot1, spot2, quality=axes_dict[best_axis][&#34;quality&#34;], axis=best_axis)
+
+    # Suppression des aretes en trop afin de discosier les grains.
+    excluded = [edge for edge in excluded if networkx.algorithms.has_path(graph, *edge)]
+    while excluded:
+        predictions = [(*simul_remove_axis(graph, axis_id, excluded), axis_id) for axis_id in candidate_axes]
+        best_len = min(len(excluded_bis) for excluded_bis, _, _ in predictions)
+        predictions = [p for p in predictions if len(p[0]) == best_len]
+        costs = [axes_dict[axis_id][&#34;quality&#34;] for _, _, axis_id in predictions]
+        min_quality = min(costs)
+        predictions = [p for p in predictions if axes_dict[p[2]][&#34;quality&#34;] == min_quality]
+        excluded, graph, axis_id = predictions.pop()
+        candidate_axes.remove(axis_id)
+
+    # Creation des clusters.
+    subsets = list(networkx.algorithms.connected_components(graph))
+    subsets = sorted(subsets, key=lambda con: len(con), reverse=True)
+    subsets = [con for con in subsets if len(con) &gt;= 2]
+    return subsets</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -283,7 +472,8 @@ class Splitable:
     &#34;&#34;&#34;
     Interface pour la classe ``laue.diagram.LaueDiagram``.
     &#34;&#34;&#34;
-    def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08):
+    def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08,
+        _atomic_subsets_res=None, _get_args=False):
         &#34;&#34;&#34;
         ** Recherche des spots qui appartiennent a un meme grain. **
 
@@ -367,32 +557,6 @@ class Splitable:
         &lt;class &#39;laue.spot.Spot&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        def count_variant_axis(spot):
-            &#34;&#34;&#34;
-            Compte le nombre d&#39;axes de zone qui different beaucoup.
-            (ie considere 2 axes proche comme un seul axe)
-            &#34;&#34;&#34;
-            axes = spot.find_zone_axes()
-            if not axes:
-                return 0
-            if len(axes) == 1:
-                return 1
-            axes = list(axes)
-            nbr_near = (distance_axis(axes, axes, weight=1) &lt; angle_max).sum()
-            nbr = len(axes) - (nbr_near-len(axes))//2
-            return nbr
-
-        def simul_remove_axis(graph, axis, excluded):
-            &#34;&#34;&#34;
-            Retire les aretes liess a cet axe, puis regarde ce que ca donne.
-            &#34;&#34;&#34;
-            graph_bis = graph.copy()
-            for spot1, spot2, axis_found in graph.edges.data(&#34;axis&#34;):
-                if axis_found is axis:
-                    graph_bis.remove_edge(spot1, spot2)
-            excluded_bis = [edge for edge in excluded if networkx.algorithms.has_path(graph_bis, *edge)]
-            return excluded_bis, graph_bis
-
         assert isinstance(angle_max, float), \
             f&#34;&#39;angle_max&#39; has to be a float, not a {type(angle_max).__name__}.&#34;
         assert isinstance(spots_max, int), \
@@ -407,70 +571,18 @@ class Splitable:
             &#34;en mm dans le plan gnomonic. Elle doit etre comprise entre ]0, .3]. &#34;
             f&#34;Or elle vaut {distance_max}, ce qui sort de cet intervalle.&#34;)
 
-        from laue.zone_axis import distance as distance_axis
-        from laue.spot import distance as distance_pic
-        import networkx
+        args = _get_spots_axes(self)
+        config = dict(angle_max=angle_max,
+                      spots_max=spots_max,
+                      distance_max=distance_max)
+        if _get_args: # Si il faut seulement preparer le travail.
+            return args, config
 
-        # Creation des noeuds du graphe.
-        if self.experiment.verbose &gt;= 2:
-            print(&#34;\tExtraction des noeuds.&#34;)
-        graph = networkx.Graph()
-        spots_at_cross = self.select_spots(n=20, sort=lambda spot: -count_variant_axis(spot))
-        max_cross = count_variant_axis(spots_at_cross[0])
-        limit = math.sqrt(max(2**2, max_cross)) # Permet d&#39;eviter &#39;ValueError: math domain error&#39;
-        spots_at_cross = [spot for spot in spots_at_cross if count_variant_axis(spot) &gt;= limit]
-        graph.add_nodes_from(spots_at_cross)
-
-        # Ajout grossier de certaine aretes.
-        if self.experiment.verbose &gt;= 2:
-            print(&#34;\tAjout des aretes.&#34;)
-        excluded = [] # La liste des neuds appartenant a des grains differents.
-        axes = set() # La liste des axes de zone consideres.
-        for i, spot1 in enumerate(spots_at_cross[:-1]): # On faite toutes les combinaisons
-            for spot2 in spots_at_cross[i+1:]: # de 2 sommets possibles.
-
-                ## Exclusion des spots trop proches.
-                if distance_pic(spot1, spot2, space=&#34;gnomonic&#34;) &lt; distance_max:
-                    excluded.append((spot1, spot2))
-                    continue
-
-                ## On ne relie pas les spots qui n&#39;ont pas d&#39;axe commun.
-                common_axes = spot1.find_zone_axes() &amp; spot2.find_zone_axes()
-                if not common_axes:
-                    continue
-
-                ## Exclusion des spots ayant 2 axes de zone paralleles.
-                axes1, axes2 = list(spot1.find_zone_axes()-common_axes), list(spot2.find_zone_axes()-common_axes)
-                if axes1 and axes2 and distance_axis(axes1, axes2, weight=1).min() &lt; angle_max: # tolerance angulaire de pi/32
-                    excluded.append((spot1, spot2))
-                    continue
-
-                best_axis = sorted(common_axes, key=lambda axis: axis.get_quality())[-1]
-                axes.add(best_axis)
-                graph.add_edge(spot1, spot2, quality=best_axis.get_quality(), axis=best_axis)
-
-        # Suppression des aretes en trop afin de discosier les grains.
-        if self.experiment.verbose &gt;= 2:
-            print(&#34;\tSuppression des aretes en trop.&#34;)
-
-        excluded = [edge for edge in excluded if networkx.algorithms.has_path(graph, *edge)]
-        while excluded:
-            predictions = [(*simul_remove_axis(graph, axis, excluded), axis) for axis in axes]
-            best_len = min(len(excluded_bis) for excluded_bis, _, _ in predictions)
-            predictions = [p for p in predictions if len(p[0]) == best_len]
-            costs = [axis.get_quality() for _, _, axis in predictions]
-            min_quality = min(costs)
-            predictions = [p for p in predictions if p[2].get_quality() == min_quality]
-            excluded, graph, axis = predictions.pop()
-            axes.remove(axis)
-
-        # Creation des clusters.
-        conn = list(networkx.algorithms.connected_components(graph))
-        conn = sorted(conn, key=lambda con: len(con), reverse=True)
-        conn = [con for con in conn if len(con) &gt;= 2]
-        if self.experiment.verbose:
-            print(f&#34;\tOK: Les grain sont separes en {len(conn)} familles.&#34;)
-        return conn</code></pre>
+        if _atomic_subsets_res is None: # Si il faut faire les calculs.
+            _atomic_subsets_res = atomic_find_subsets(*args, **config)
+        
+        subsets = [{self[spot_id] for spot_id in subset} for subset in _atomic_subsets_res]
+        return subsets</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -588,7 +700,8 @@ gnomonic (en mm).</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08):
+<pre><code class="python">def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08,
+    _atomic_subsets_res=None, _get_args=False):
     &#34;&#34;&#34;
     ** Recherche des spots qui appartiennent a un meme grain. **
 
@@ -672,32 +785,6 @@ gnomonic (en mm).</dd>
     &lt;class &#39;laue.spot.Spot&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    def count_variant_axis(spot):
-        &#34;&#34;&#34;
-        Compte le nombre d&#39;axes de zone qui different beaucoup.
-        (ie considere 2 axes proche comme un seul axe)
-        &#34;&#34;&#34;
-        axes = spot.find_zone_axes()
-        if not axes:
-            return 0
-        if len(axes) == 1:
-            return 1
-        axes = list(axes)
-        nbr_near = (distance_axis(axes, axes, weight=1) &lt; angle_max).sum()
-        nbr = len(axes) - (nbr_near-len(axes))//2
-        return nbr
-
-    def simul_remove_axis(graph, axis, excluded):
-        &#34;&#34;&#34;
-        Retire les aretes liess a cet axe, puis regarde ce que ca donne.
-        &#34;&#34;&#34;
-        graph_bis = graph.copy()
-        for spot1, spot2, axis_found in graph.edges.data(&#34;axis&#34;):
-            if axis_found is axis:
-                graph_bis.remove_edge(spot1, spot2)
-        excluded_bis = [edge for edge in excluded if networkx.algorithms.has_path(graph_bis, *edge)]
-        return excluded_bis, graph_bis
-
     assert isinstance(angle_max, float), \
         f&#34;&#39;angle_max&#39; has to be a float, not a {type(angle_max).__name__}.&#34;
     assert isinstance(spots_max, int), \
@@ -712,70 +799,18 @@ gnomonic (en mm).</dd>
         &#34;en mm dans le plan gnomonic. Elle doit etre comprise entre ]0, .3]. &#34;
         f&#34;Or elle vaut {distance_max}, ce qui sort de cet intervalle.&#34;)
 
-    from laue.zone_axis import distance as distance_axis
-    from laue.spot import distance as distance_pic
-    import networkx
+    args = _get_spots_axes(self)
+    config = dict(angle_max=angle_max,
+                  spots_max=spots_max,
+                  distance_max=distance_max)
+    if _get_args: # Si il faut seulement preparer le travail.
+        return args, config
 
-    # Creation des noeuds du graphe.
-    if self.experiment.verbose &gt;= 2:
-        print(&#34;\tExtraction des noeuds.&#34;)
-    graph = networkx.Graph()
-    spots_at_cross = self.select_spots(n=20, sort=lambda spot: -count_variant_axis(spot))
-    max_cross = count_variant_axis(spots_at_cross[0])
-    limit = math.sqrt(max(2**2, max_cross)) # Permet d&#39;eviter &#39;ValueError: math domain error&#39;
-    spots_at_cross = [spot for spot in spots_at_cross if count_variant_axis(spot) &gt;= limit]
-    graph.add_nodes_from(spots_at_cross)
-
-    # Ajout grossier de certaine aretes.
-    if self.experiment.verbose &gt;= 2:
-        print(&#34;\tAjout des aretes.&#34;)
-    excluded = [] # La liste des neuds appartenant a des grains differents.
-    axes = set() # La liste des axes de zone consideres.
-    for i, spot1 in enumerate(spots_at_cross[:-1]): # On faite toutes les combinaisons
-        for spot2 in spots_at_cross[i+1:]: # de 2 sommets possibles.
-
-            ## Exclusion des spots trop proches.
-            if distance_pic(spot1, spot2, space=&#34;gnomonic&#34;) &lt; distance_max:
-                excluded.append((spot1, spot2))
-                continue
-
-            ## On ne relie pas les spots qui n&#39;ont pas d&#39;axe commun.
-            common_axes = spot1.find_zone_axes() &amp; spot2.find_zone_axes()
-            if not common_axes:
-                continue
-
-            ## Exclusion des spots ayant 2 axes de zone paralleles.
-            axes1, axes2 = list(spot1.find_zone_axes()-common_axes), list(spot2.find_zone_axes()-common_axes)
-            if axes1 and axes2 and distance_axis(axes1, axes2, weight=1).min() &lt; angle_max: # tolerance angulaire de pi/32
-                excluded.append((spot1, spot2))
-                continue
-
-            best_axis = sorted(common_axes, key=lambda axis: axis.get_quality())[-1]
-            axes.add(best_axis)
-            graph.add_edge(spot1, spot2, quality=best_axis.get_quality(), axis=best_axis)
-
-    # Suppression des aretes en trop afin de discosier les grains.
-    if self.experiment.verbose &gt;= 2:
-        print(&#34;\tSuppression des aretes en trop.&#34;)
-
-    excluded = [edge for edge in excluded if networkx.algorithms.has_path(graph, *edge)]
-    while excluded:
-        predictions = [(*simul_remove_axis(graph, axis, excluded), axis) for axis in axes]
-        best_len = min(len(excluded_bis) for excluded_bis, _, _ in predictions)
-        predictions = [p for p in predictions if len(p[0]) == best_len]
-        costs = [axis.get_quality() for _, _, axis in predictions]
-        min_quality = min(costs)
-        predictions = [p for p in predictions if p[2].get_quality() == min_quality]
-        excluded, graph, axis = predictions.pop()
-        axes.remove(axis)
-
-    # Creation des clusters.
-    conn = list(networkx.algorithms.connected_components(graph))
-    conn = sorted(conn, key=lambda con: len(con), reverse=True)
-    conn = [con for con in conn if len(con) &gt;= 2]
-    if self.experiment.verbose:
-        print(f&#34;\tOK: Les grain sont separes en {len(conn)} familles.&#34;)
-    return conn</code></pre>
+    if _atomic_subsets_res is None: # Si il faut faire les calculs.
+        _atomic_subsets_res = atomic_find_subsets(*args, **config)
+    
+    subsets = [{self[spot_id] for spot_id in subset} for subset in _atomic_subsets_res]
+    return subsets</code></pre>
 </details>
 </dd>
 </dl>
@@ -794,6 +829,11 @@ gnomonic (en mm).</dd>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="laue.tools" href="index.html">laue.tools</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="laue.tools.splitable.atomic_find_subsets" href="#laue.tools.splitable.atomic_find_subsets">atomic_find_subsets</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

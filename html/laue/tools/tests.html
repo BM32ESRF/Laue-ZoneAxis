@@ -50,23 +50,53 @@ CALIBRATION_PARAMETERS = None
 
 # Tests theorique repetables.
 
-def test_bij_cam_gnom():
+def test_geometry_dtype_shape():
+    &#34;&#34;&#34;
+    S&#39;assure que les types soient concerve et les shapes aussi.
+    &#34;&#34;&#34;
+    import numpy as np
+    with CWDasRoot():
+        from laue.geometry import Transformer
+        from laue.tools.parsing import extract_parameters
+    parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+    shape = (1, 2, 3, 4, 5, 1)
+    transformer = Transformer()
+
+    for _ in range(2): # On fait 2 boucle car ca recompile en cours de route.
+        for func in [transformer.cam_to_gnomonic, transformer.gnomonic_to_cam]:
+            for dtype in [np.float16, np.float32, np.float64, np.float128]:
+                res = func(np.zeros(shape=shape), np.zeros(shape=shape), parameters, dtype=dtype)
+                assert res.shape == (2,) + shape
+                assert str(res.dtype) == dtype.__name__
+
+def test_geometry_bij():
     &#34;&#34;&#34;
     S&#39;assure qu&#39;il y ai bien une bijection entre
     les equations de passage du plan gnomonic
     a celui de la camera et inversement.
     &#34;&#34;&#34;
-    _print(&#34;========= TEST BIJECTION CAM &lt;=&gt; GNO =========&#34;)
+    _print(&#34;=============== TEST BIJECTION ===============&#34;)
+    import sympy
     with CWDasRoot():
         from laue.geometry import Transformer
-    t = Transformer()
-    xg, yg = t.get_expr_cam_to_gnomonic().get_expr()
-    xc, yc = t.get_expr_gnomonic_to_cam().get_expr()
+    transformer = Transformer()
+    xg, yg = sympy.symbols(&#34;x_g y_g&#34;, real=True)
+    xc, yc = sympy.symbols(&#34;x_c y_c&#34;, real=True)
 
-    a = xg.subs({&#34;c_cam&#34;: xc, &#34;y_cam&#34;: yc})
-    _print(f&#34;expression brute: {a}&#34;)
-    a = a.simplify()
-    _print(f&#34;expression simple: {a}&#34;)
+    cam_to_gnom = transformer.get_expr_cam_to_gnomonic()
+    _print(f&#34;cam_to_gnom(xc, yc): {cam_to_gnom(xc, yc)}&#34;)
+    gnom_to_cam = transformer.get_expr_gnomonic_to_cam()
+    _print(f&#34;gnom_to_cam(xg, yg): {gnom_to_cam(xg, yg)}&#34;)
+
+    camgnom_rond_gnomcam = cam_to_gnom(*gnom_to_cam(xg, yg))
+    _print(f&#34;(cam_to_gnom o gnom_to_cam)(xg, yg): {camgnom_rond_gnomcam}&#34;)
+    gnomcam_rond_camgnom = gnom_to_cam(*cam_to_gnom(xc, yc))
+    _print(f&#34;(gnom_to_cam o cam_to_gnom)(xc, yc): {gnomcam_rond_camgnom}&#34;)
+
+    assert camgnom_rond_gnomcam[0].simplify() == xg
+    assert camgnom_rond_gnomcam[1].simplify() == yg
+    assert gnomcam_rond_camgnom[0].simplify() == xc
+    assert gnomcam_rond_camgnom[1].simplify() == yc
 
 
 # Tests sur les donnes reelles.
@@ -243,36 +273,6 @@ class CWDasRoot:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="laue.tools.tests.test_bij_cam_gnom"><code class="name flex">
-<span>def <span class="ident">test_bij_cam_gnom</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>S'assure qu'il y ai bien une bijection entre
-les equations de passage du plan gnomonic
-a celui de la camera et inversement.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def test_bij_cam_gnom():
-    &#34;&#34;&#34;
-    S&#39;assure qu&#39;il y ai bien une bijection entre
-    les equations de passage du plan gnomonic
-    a celui de la camera et inversement.
-    &#34;&#34;&#34;
-    _print(&#34;========= TEST BIJECTION CAM &lt;=&gt; GNO =========&#34;)
-    with CWDasRoot():
-        from laue.geometry import Transformer
-    t = Transformer()
-    xg, yg = t.get_expr_cam_to_gnomonic().get_expr()
-    xc, yc = t.get_expr_gnomonic_to_cam().get_expr()
-
-    a = xg.subs({&#34;c_cam&#34;: xc, &#34;y_cam&#34;: yc})
-    _print(f&#34;expression brute: {a}&#34;)
-    a = a.simplify()
-    _print(f&#34;expression simple: {a}&#34;)</code></pre>
-</details>
-</dd>
 <dt id="laue.tools.tests.test_calibration"><code class="name flex">
 <span>def <span class="ident">test_calibration</span></span>(<span>)</span>
 </code></dt>
@@ -358,6 +358,76 @@ a celui de la camera et inversement.</p></div>
 
         all_axes2 = experiment.find_zone_axes(tense_flow=False)
         assert all_axes1 == all_axes2</code></pre>
+</details>
+</dd>
+<dt id="laue.tools.tests.test_geometry_bij"><code class="name flex">
+<span>def <span class="ident">test_geometry_bij</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>S'assure qu'il y ai bien une bijection entre
+les equations de passage du plan gnomonic
+a celui de la camera et inversement.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_geometry_bij():
+    &#34;&#34;&#34;
+    S&#39;assure qu&#39;il y ai bien une bijection entre
+    les equations de passage du plan gnomonic
+    a celui de la camera et inversement.
+    &#34;&#34;&#34;
+    _print(&#34;=============== TEST BIJECTION ===============&#34;)
+    import sympy
+    with CWDasRoot():
+        from laue.geometry import Transformer
+    transformer = Transformer()
+    xg, yg = sympy.symbols(&#34;x_g y_g&#34;, real=True)
+    xc, yc = sympy.symbols(&#34;x_c y_c&#34;, real=True)
+
+    cam_to_gnom = transformer.get_expr_cam_to_gnomonic()
+    _print(f&#34;cam_to_gnom(xc, yc): {cam_to_gnom(xc, yc)}&#34;)
+    gnom_to_cam = transformer.get_expr_gnomonic_to_cam()
+    _print(f&#34;gnom_to_cam(xg, yg): {gnom_to_cam(xg, yg)}&#34;)
+
+    camgnom_rond_gnomcam = cam_to_gnom(*gnom_to_cam(xg, yg))
+    _print(f&#34;(cam_to_gnom o gnom_to_cam)(xg, yg): {camgnom_rond_gnomcam}&#34;)
+    gnomcam_rond_camgnom = gnom_to_cam(*cam_to_gnom(xc, yc))
+    _print(f&#34;(gnom_to_cam o cam_to_gnom)(xc, yc): {gnomcam_rond_camgnom}&#34;)
+
+    assert camgnom_rond_gnomcam[0].simplify() == xg
+    assert camgnom_rond_gnomcam[1].simplify() == yg
+    assert gnomcam_rond_camgnom[0].simplify() == xc
+    assert gnomcam_rond_camgnom[1].simplify() == yc</code></pre>
+</details>
+</dd>
+<dt id="laue.tools.tests.test_geometry_dtype_shape"><code class="name flex">
+<span>def <span class="ident">test_geometry_dtype_shape</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>S'assure que les types soient concerve et les shapes aussi.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_geometry_dtype_shape():
+    &#34;&#34;&#34;
+    S&#39;assure que les types soient concerve et les shapes aussi.
+    &#34;&#34;&#34;
+    import numpy as np
+    with CWDasRoot():
+        from laue.geometry import Transformer
+        from laue.tools.parsing import extract_parameters
+    parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+    shape = (1, 2, 3, 4, 5, 1)
+    transformer = Transformer()
+
+    for _ in range(2): # On fait 2 boucle car ca recompile en cours de route.
+        for func in [transformer.cam_to_gnomonic, transformer.gnomonic_to_cam]:
+            for dtype in [np.float16, np.float32, np.float64, np.float128]:
+                res = func(np.zeros(shape=shape), np.zeros(shape=shape), parameters, dtype=dtype)
+                assert res.shape == (2,) + shape
+                assert str(res.dtype) == dtype.__name__</code></pre>
 </details>
 </dd>
 <dt id="laue.tools.tests.test_grain_separation"><code class="name flex">
@@ -465,10 +535,11 @@ a celui de la camera et inversement.</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="laue.tools.tests.test_bij_cam_gnom" href="#laue.tools.tests.test_bij_cam_gnom">test_bij_cam_gnom</a></code></li>
 <li><code><a title="laue.tools.tests.test_calibration" href="#laue.tools.tests.test_calibration">test_calibration</a></code></li>
 <li><code><a title="laue.tools.tests.test_find_diagrams" href="#laue.tools.tests.test_find_diagrams">test_find_diagrams</a></code></li>
 <li><code><a title="laue.tools.tests.test_find_zone_axis" href="#laue.tools.tests.test_find_zone_axis">test_find_zone_axis</a></code></li>
+<li><code><a title="laue.tools.tests.test_geometry_bij" href="#laue.tools.tests.test_geometry_bij">test_geometry_bij</a></code></li>
+<li><code><a title="laue.tools.tests.test_geometry_dtype_shape" href="#laue.tools.tests.test_geometry_dtype_shape">test_geometry_dtype_shape</a></code></li>
 <li><code><a title="laue.tools.tests.test_grain_separation" href="#laue.tools.tests.test_grain_separation">test_grain_separation</a></code></li>
 <li><code><a title="laue.tools.tests.test_read_images" href="#laue.tools.tests.test_read_images">test_read_images</a></code></li>
 </ul>

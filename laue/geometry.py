@@ -25,7 +25,7 @@ except ImportError:
     numexpr = None
 import sympy
 
-from laue.tools.lambdify import Lambdify, subs
+import laue.tools.lambdify as lambdify
 
 __all__ = ["Transformer", "comb2ind", "ind2comb"]
 
@@ -93,12 +93,12 @@ class Compilator:
                         self.pixelsize: parameters["pixelsize"]}
             # Dans le cas ou l'expression est deserialise, les pointeurs ne sont plus les memes.
             constants = {str(var): value for var, value in constants.items()}
-            self._fcts_cam_to_gnomonic[hash_param] = Lambdify(
+            self._fcts_cam_to_gnomonic[hash_param] = lambdify.Lambdify(
                     args=[self.x_cam, self.y_cam],
-                    expr=subs(self.get_expr_cam_to_gnomonic()(), constants))
-            self._fcts_gnomonic_to_cam[hash_param] = Lambdify(
+                    expr=lambdify.subs(self.get_expr_cam_to_gnomonic()(), constants))
+            self._fcts_gnomonic_to_cam[hash_param] = lambdify.Lambdify(
                     args=[self.x_gnom, self.y_gnom],
-                    expr=subs(self.get_expr_gnomonic_to_cam()(), constants))
+                    expr=lambdify.subs(self.get_expr_gnomonic_to_cam()(), constants))
 
     def get_expr_cam_to_gnomonic(self):
         """
@@ -129,7 +129,7 @@ class Compilator:
             sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
             ) # Permet un gain de 7.48
 
-        globals()["compiled_expressions"]["expr_cam_to_gnomonic"] = Lambdify(
+        globals()["compiled_expressions"]["expr_cam_to_gnomonic"] = lambdify.Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[x_g, y_g]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["expr_cam_to_gnomonic"]
@@ -169,7 +169,7 @@ class Compilator:
             sympy.together(sympy.cancel(sympy.trigsimp(y_c)))
             ) # Permet un gain de 1.44
 
-        globals()["compiled_expressions"]["expr_gnomonic_to_cam"] = Lambdify(
+        globals()["compiled_expressions"]["expr_gnomonic_to_cam"] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["expr_gnomonic_to_cam"]
@@ -201,7 +201,7 @@ class Compilator:
             sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
             ) # Permet un gain de 2.16
 
-        globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"] = Lambdify(
+        globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"] = lambdify.Lambdify(
             args=[self.theta, self.chi],
             expr=[x_g, y_g]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"]
@@ -230,7 +230,7 @@ class Compilator:
         chi = sympy.simplify(chi)
         theta = sympy.simplify(theta) # gain de 2.15
 
-        globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"] = Lambdify(
+        globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom],
             expr=[theta, chi]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"]
@@ -255,7 +255,7 @@ class Compilator:
         distance = sympy.trigsimp(distance) # Permet un gain de 2.90
 
         # Vectorisation de l'expression.
-        globals()["compiled_expressions"]["fct_dist_line"] = Lambdify([theta, dist, x, y], distance)
+        globals()["compiled_expressions"]["fct_dist_line"] = lambdify.Lambdify([theta, dist, x, y], distance)
         return globals()["compiled_expressions"]["fct_dist_line"]
 
     def get_fct_hough(self):
@@ -286,7 +286,7 @@ class Compilator:
         dist = sympy.trigsimp(sympy.cancel(dist)) # Permet un gain de 1.40
 
         # Vectorisation des expressions.
-        globals()["compiled_expressions"]["fct_hough"] = Lambdify([xa, ya, xb, yb], [theta, dist])
+        globals()["compiled_expressions"]["fct_hough"] = lambdify.Lambdify([xa, ya, xb, yb], [theta, dist])
         return globals()["compiled_expressions"]["fct_hough"]
 
     def get_fct_inter_line(self):
@@ -314,7 +314,7 @@ class Compilator:
         # Il n'y en a pas car les expressions sont deja tres simples.
 
         # Vectorisation des expressions.
-        globals()["compiled_expressions"]["fct_inter_line"] = Lambdify(
+        globals()["compiled_expressions"]["fct_inter_line"] = lambdify.Lambdify(
             [theta_1, dist_1, theta_2, dist_2], [inter_x, inter_y])
         return globals()["compiled_expressions"]["fct_inter_line"]
 
@@ -324,6 +324,7 @@ class Compilator:
         """
         return hashlib.md5(
             inspect.getsource(Compilator).encode(encoding="utf-8")
+          + inspect.getsource(lambdify).encode(encoding="utf-8")
             ).hexdigest()
 
     def save(self):
@@ -361,8 +362,7 @@ class Compilator:
                 except ValueError: # Si c'est pas le bon protocol
                     content = {"hash": None}
                 else:
-                    from laue.tools.lambdify import Lambdify
-                    content["expr"] = {name: Lambdify.loads(data) for name, data in content["expr"].items()}
+                    content["expr"] = {name: lambdify.Lambdify.loads(data) for name, data in content["expr"].items()}
             if content["hash"] == self._hash(): # Si les donnees sont a jour.
                 globals()["compiled_expressions"] = {**globals()["compiled_expressions"], **content["expr"]}
         return globals()["compiled_expressions"]

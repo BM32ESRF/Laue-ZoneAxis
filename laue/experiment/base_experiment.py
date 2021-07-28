@@ -127,7 +127,7 @@ class Experiment:
         if config_file is not None:
             kwargs["config_file"] = config_file
 
-        self.images = images
+        self._images = images
 
         self.verbose = verbose
         self.max_space = max_space
@@ -153,6 +153,7 @@ class Experiment:
         self._images_iterator = None # Iterateur unique des informations des images.
         self._diagrams_iterator = None # Iterateur unique qui genere les diagrammes.
         self._axes_iterator = None # Iterateur unique qui cede les axes de zonne de chaque diagramme.
+        self._subsets_iterator = None # Iterateur unique qui cede les bouts de grains.
 
     def set_calibration(self, *diagrams):
         """
@@ -598,20 +599,118 @@ class Experiment:
             laue_diagram = LaueDiagram(name, None, experiment=self)
 
         # Creation des ensembles de spots.
-        spots_open = [Spot(bbox=bbox, spot_im=spot_im, distortion=distortion, diagram=laue_diagram)
-                     for bbox, spot_im, distortion in spot_args]
+        spots_open = [Spot(bbox=bbox, spot_im=spot_im, distortion=distortion, diagram=laue_diagram, identifier=i)
+                     for i, (bbox, spot_im, distortion) in enumerate(spot_args)]
         laue_diagram.spots = spots_open
 
         return laue_diagram
+
+    def find_subsets(self, *, tense_flow=False, **kwds):
+        """
+        ** Estime les grains dans chaque diagrame. **
+
+        Sorte d'alias parallelise vers ``laue.diagram.LaueDiagram.find_subsets``.
+        Le resultat est le meme que: ``[diag.find_subsets(**kwds) for diag in self]``
+
+        Notes
+        -----
+        * Il est possible d'appeler plusieur fois cette methode en parallele.
+        * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+        
+        Parameters
+        ----------
+        tense_flow : boolean
+            * True : Permet de travailler a flux tendu, c'est a dire
+            de ceder les bouts de grains des diagrammes au fur a meusure qu'ils sont trouves.
+                * Le generateur termine quand toutes les images sont lues ou
+                que le generateur d'images leve un ``StopIteration``.
+                * A chaque nouvel appel de cette methode, l'iteration
+                recommence a partir du debut et l'ordre reste inchange.
+                * Equivalent a ``(diag.find_subsets(**kwds) for diag in self)``.
+            * False. Sinon, attend que tous les diagrammes soient lues afin de tout renvoyer en meme temps.
+                * C'est equvalent a ``[diag.find_subsets(**kwds) for diag in self]``.
+                * Au lieu de retourner un generateur, retourne une liste.
+        **kwds : number
+            Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_subsets``.
+
+        Returns
+        -------
+        list
+            Pour chaque diagramme de cette experience, cede une estimation des grains.
+
+        Examples
+        --------
+        >>> import laue
+        >>> images = "laue/examples/*.mccd"
+        >>> experiment = laue.Experiment(images, config_file="laue/examples/ge_blanc.det")
+        >>>
+        >>> type(experiment.find_subsets())
+        <class 'list'>
+        >>> type(experiment.find_subsets(tense_flow=True))
+        <class 'generator'>
+        >>> type(next(iter(experiment.find_subsets(tense_flow=True))))
+        <class 'list'>
+        >>>
+        """
+        def show_iterator_state(func):
+            """
+            Insere des commentaires.
+            """
+            def decorate(*func_args, **func_kwargs):
+                if self.verbose:
+                    print("Estimation des grains...")
+                
+                for i, groups in enumerate(func(*func_args, **func_kwargs)):
+                    if self.verbose >= 2:
+                        print(f"\tgrain du diagramme num {i} estimes: il y a {len(groups)} clusters")
+                    yield groups
+
+                if self.verbose:
+                    print("\tOK: Tous les clusters de grains sont estimes.")
+
+            return decorate
+
+        @show_iterator_state
+        def _subsets_extractor(self):
+            if multiprocessing.current_process().name == "MainProcess":
+                from laue.tools.splitable import _pickelable as atomic_find_subsets
+                from laue.tools.multi_core import limited_imap
+                with multiprocessing.Pool() as pool:
+                    yield from (
+                        diag.find_subsets(_atomic_subsets_res=args)
+                        for diag, args
+                        in zip(
+                            self,
+                            limited_imap(pool,
+                                atomic_find_subsets,
+                                (   # transformer, gnomonics, dmax, nbr, tol
+                                    diag.find_subsets(**kwds, _get_args=True)
+                                    for diag in self
+                                )
+                            )
+                        )
+                    )
+            else:
+                yield from (diag.find_subsets(**kwds) for diag in self)
+
+        if not tense_flow:
+            return list(self.find_subsets(tense_flow=True, **kwds))
+
+        if self._subsets_iterator is None:
+            self._subsets_iterator = iter(_subsets_extractor(self))
+
+        from laue.tools.multi_core import RecallingIterator
+        return (lambda x: (yield from x))(RecallingIterator(self._subsets_iterator, mother=self))
 
     def find_zone_axes(self, *, tense_flow=False, **kwds):
         """
         ** Recherche l'ensemble des axes de zones. **
 
+        Sorte d'alias parallelise vers ``laue.diagram.LaueDiagram.find_zone_axes``.
+        Le resultat est le meme que: ``[diag.find_zone_axes(**kwds) for diag in self]``
+
         Notes
         -----
-        * Le resultat est le meme que ``(diag.find_zone_axes() for diag in self)``
-            sauf qu'il y a de la parallelisation en plus.
         * Il est possible d'appeler plusieur fois cette methode en parallele.
         * Les sections critiques sont verouillees donc cette methode supporte le multithread.
 
@@ -624,9 +723,9 @@ class Experiment:
                 que le generateur d'images leve un ``StopIteration``.
                 * A chaque nouvel appel de cette methode, l'iteration
                 recommence a partir du debut et l'ordre reste inchange.
-                * Equivalent a ``(diag.find_zone_axes() for diag in self)``.
+                * Equivalent a ``(diag.find_zone_axes(**kwds) for diag in self)``.
             * False. Sinon, attend que tous les diagrammes soient lues afin de tout renvoyer en meme temps.
-                * C'est equvalent a ``[diag.find_zone_axes() for diag in self]``.
+                * C'est equvalent a ``[diag.find_zone_axes(**kwds) for diag in self]``.
                 * Au lieu de retourner un generateur, retourne une liste.
         **kwds : number
             Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
@@ -703,7 +802,7 @@ class Experiment:
                     )
 
             else:
-                yield from (diag.find_zone_axes() for diag in self)
+                yield from (diag.find_zone_axes(**kwds) for diag in self)
 
         if not tense_flow:
             return list(self.find_zone_axes(tense_flow=True, **kwds))
@@ -921,16 +1020,16 @@ class Experiment:
             Premiere vraie extraction.
             """
             # Convertion str vers generateur
-            if isinstance(self.images, str): # Dans le cas ou une chaine de caractere
-                if os.path.isdir(self.images): # decrit l'ensemble des images.
-                    self.images = (
+            if isinstance(self._images, str): # Dans le cas ou une chaine de caractere
+                if os.path.isdir(self._images): # decrit l'ensemble des images.
+                    self._images = (
                         os.path.join(father, file)
-                        for father, _, files in os.walk(self.images)
+                        for father, _, files in os.walk(self._images)
                         for file in files)
                 else:
-                    self.images = glob.iglob(self.images, recursive=True)
+                    self._images = glob.iglob(self._images, recursive=True)
 
-            yield from self.images
+            yield from self._images
 
         @prevent_generator_size(min_size=1)
         def jump_map(multi_image_iterator):
@@ -1140,7 +1239,7 @@ class Experiment:
         """
         ** Renvoi une chaine evaluable de self. **
         """
-        kwargs = ["images", "verbose", "max_space", "threshold"]
+        kwargs = ["verbose", "max_space", "threshold"]
         attr1 = [f"{kwarg}={repr(getattr(self, kwarg))}" for kwarg in kwargs]
         attr2 = [f"{k}={v}" for k, v in self.kwargs.items()]
         return "Experiment(%s)" % ", ".join(attr1 + attr2)

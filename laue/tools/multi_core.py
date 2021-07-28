@@ -104,7 +104,7 @@ def pickleable_method(args, serialize=False):
     Notes
     -----
     Comme l'utilisateur ne doit pas utiliser cette fonction, il n'y
-    a pas de verifications sur les entree de facon a provilegier la performance.
+    a pas de verifications sur les entree de facon a privilegier la performance.
 
     Parameters
     ----------
@@ -124,7 +124,11 @@ def pickleable_method(args, serialize=False):
         func, self, kwargs = args
     if isinstance(self, bytes):
         self = cloudpickle.loads(self)
-    return ((lambda x: cloudpickle.dumps(x)) if serialize else (lambda x: x))(func(self, **kwargs))
+    return (
+                (lambda x: cloudpickle.dumps(x))
+                if serialize else
+                (lambda x: x)
+            )(func(self, **kwargs))
 
 def prevent_generator_size(min_size=1, max_size=math.inf):
     """
@@ -165,6 +169,96 @@ def prevent_generator_size(min_size=1, max_size=math.inf):
 
         return generator
     return decorator
+
+def reduce_object(obj, attrs=None):
+    """
+    ** Reconstitue un objet partiel. **
+
+    Le but est de rendre un objet plus facilement serialisable et
+    aussi de l'alleger pour perdre moins de temps avec la
+    serialisation puis la deserialisation.
+
+    Parameters
+    ----------
+    obj : objet
+        Instance de la classe que l'on shouaite reduire.
+    attrs : iterable
+        Les noms des attributs qui resteront presents dans l'objet final.
+        Si il ne sont pas precise, seul les attributs serialisables sont gardes.
+
+    Examples
+    --------
+    >>> from laue.tools.multi_core import reduce_object
+    >>>
+    >>> class Foo:
+    ...     def __init__(self):
+    ...         self.attr1 = 1
+    ...         self.attr2 = 2
+    ...     def meth(self):
+    ...         pass
+    ...
+    >>> obj = Foo()
+    >>>
+    >>> little_obj = reduce_object(obj, ["attr1"])
+    >>> hasattr(little_obj, "attr1")
+    True
+    >>> hasattr(little_obj, "attr2")
+    False
+    >>> hasattr(little_obj, "meth")
+    True
+    >>> little_obj.attr1
+    1
+    >>> type(little_obj.meth)
+    <class 'method'>
+    >>>
+    """
+    class Partial(type(obj)):
+        def __init__(self):
+            pass
+
+    if attrs is None:
+        all_attrs = [attr for attr in dir(obj)
+            if type(getattr(obj, attr)).__name__ != "method"
+            and not attr.startswith("__")]
+        attrs = []
+        for attr in all_attrs:
+            try:
+                cloudpickle.dumps(getattr(obj, attr))
+            except (TypeError, RuntimeError):
+                continue
+            else:
+                attrs.append(attr)
+        print(attrs)
+
+    partial_obj = Partial()
+    for attr in attrs:
+        setattr(partial_obj, attr, getattr(obj, attr))
+    return partial_obj
+
+    # class Constructor:
+    #     """
+    #     Methaclasse qui fabrique de nouvelle instances sur mesure.
+    #     """
+    #     def __new__(cls, obj, attrs):
+    #         name = f"Partial{type(obj).__name__}"
+            
+    #         # Separation des attributs et des methodes.
+    #         meth_name = {attr for attr in attrs if type(getattr(obj, attr)).__name__ == "method"}
+    #         attrs = set(attrs) - meth_name
+            
+    #         # Creation d'un objet ayant que les methodes.
+    #         empty_obj = NoAttrs()
+    #         # for attr in attrs:
+    #         #     setattr(emty_obj, attr, getattr(obj, attr))
+    #         methodes = {name: getattr(empty_obj, name) for name in meth_name}
+
+    #         # Ajout des attributs.
+    #         partial_obj = type(name, (), methodes)
+    #         for attr in attrs:
+    #             setattr(partial_obj, attr, getattr(obj, attr))
+    #         return partial_obj
+
+    # return Constructor(obj, attrs)
 
 class RecallingIterator:
     """
