@@ -495,7 +495,7 @@ class Transformer(Compilator):
             f"Or les clefs sont {set(parameters)}.")
         assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             "La valeurs des parametres doivent toutes etre des nombres."
-        assert dtype in {np.float16, np.float32, np.float64, np.float128}, \
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
             f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
 
         if isinstance(pxl_x, np.ndarray):
@@ -588,7 +588,7 @@ class Transformer(Compilator):
             f"'y_vect' has to be of type np.ndarray, not {type(y_vect).__name__}."
         assert x_vect.shape == y_vect.shape, \
             f"Les 2 coordonnees des points doivent avoir la meme shape: {x_vect.shape} vs {y_vect.shape}."
-        assert dtype in {np.float16, np.float32, np.float64, np.float128}, \
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
             f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
 
         theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
@@ -677,7 +677,7 @@ class Transformer(Compilator):
             f"Or les clefs sont {set(parameters)}.")
         assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             "La valeurs des parametres doivent toutes etre des nombres."
-        assert dtype in {np.float16, np.float32, np.float64, np.float128}, \
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
             f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
 
         if isinstance(gnom_x, np.ndarray):
@@ -758,7 +758,7 @@ class Transformer(Compilator):
             f"'y_vect' has to be of type np.ndarray, not {type(y_vect).__name__}."
         assert x_vect.shape == y_vect.shape, \
             f"Les 2 entrees doivent avoir la meme taille: {x_vect.shape} vs {y_vect.shape}."
-        assert dtype in {np.float16, np.float32, np.float64, np.float128}, \
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
             f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
 
         n = x_vect.shape[-1]
@@ -933,7 +933,7 @@ class Transformer(Compilator):
             La representation machine des nombres. Par defaut
             ``np.float32`` permet des calculs rapide
             mais peu precis. Pour la presision il faut utiliser
-            ``np.float64`` ou ``np.float128``.
+            ``np.float64`` ou ``(getattr(np, "float128") if hasattr(np, "float128") else np.float64)``.
 
         Returns
         -------
@@ -973,7 +973,7 @@ class Transformer(Compilator):
         assert theta_vect.ndim >= 1, "La matrice ne doit pas etre vide."
         assert theta_vect.shape[-1] >= 2, \
             f"Il doit y avoir au moins 2 droites par famille, pas {theta_vect.shape[-1]}."
-        assert dtype in {np.float16, np.float32, np.float64, np.float128}, \
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
             f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
 
         theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)

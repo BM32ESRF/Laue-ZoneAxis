@@ -10,6 +10,7 @@ legerement amoindrie.
 """
 
 import math
+import numbers
 
 import numpy as np
 
@@ -80,7 +81,7 @@ def distance(spot1, spot2, *, space="camera"):
         assert all(len(spot) == 2 for spot in spot1 if hasattr(spot, "__iter__"))
     if isinstance(spot1, tuple):
         assert len(spot1) == 2, f"Il ne doit y avoir que 2 coordonnees, pas {len(spot1)}."
-        assert all(isinstance(c, (float, int)) for c in spot1)
+        assert all(isinstance(c, numbers.Number) for c in spot1)
     assert isinstance(spot2, (Spot, np.ndarray, list, tuple)), \
         f"'spot2' has to be a Spot or list, not a {type(spot2).__name__}."
     if isinstance(spot2, (np.ndarray, list)):
@@ -89,7 +90,7 @@ def distance(spot1, spot2, *, space="camera"):
         assert all(len(spot) == 2 for spot in spot2 if hasattr(spot, "__iter__"))
     if isinstance(spot2, tuple):
         assert len(spot2) == 2, f"Il ne doit y avoir que 2 coordonnees, pas {len(spot2)}."
-        assert all(isinstance(c, (float, int)) for c in spot2)
+        assert all(isinstance(c, numbers.Number) for c in spot2)
     assert space in {"camera", "gnomonic", "angle"}, f"'space' can not be {repr(space)}."
 
     # Simplification du probleme.

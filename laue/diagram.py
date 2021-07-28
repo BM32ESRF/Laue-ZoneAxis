@@ -10,6 +10,7 @@ Si le module ``psutil`` est installe, la memoire sera mieux geree.
 """
 
 import math
+import numbers
 import os
 
 import cv2
@@ -375,7 +376,7 @@ class LaueDiagram(Splitable):
         d_list = distance(spot, self.select_spots(), space=space)
         nbr = len(self)
         if d_max is not None:
-            if not isinstance(d_max, (float, int)):
+            if not isinstance(d_max, numbers.Number):
                 raise TypeError(f"'d_max' has to be a number, not a {type(d_max).__name__}.")
             if d_max <= 0:
                 raise ValueError(f"'d_max' doit etre strictement positif. Or il vaut {d_max}.")
@@ -657,9 +658,13 @@ class LaueDiagram(Splitable):
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>>
+
+        Sans preciser l'axe.
         >>> diag.plot_gnomonic(display=False)
         <AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'>
         >>>
+
+        En precisant l'axe.
         >>> import matplotlib.pyplot as plt
         >>> fig = plt.figure()
         >>> axe = fig.add_subplot()
@@ -670,10 +675,13 @@ class LaueDiagram(Splitable):
         if axe_pyplot is None:
             import matplotlib.pyplot as plt
             axe_pyplot = plt.figure().add_subplot()
+            axe_pyplot.set_xlim(-.6, .6)
+            axe_pyplot.set_ylim(-.6, .6)
 
         axe_pyplot.set_title("plan gnomonic")
         axe_pyplot.set_xlabel("x.Gi (mm)")
         axe_pyplot.set_ylabel("y.Gj (mm)")
+
 
         # Affichage image de fond.
         try:

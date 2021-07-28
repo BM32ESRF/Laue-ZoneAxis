@@ -10,6 +10,7 @@ Notes
 * Le module ``regex`` peut permetre d'accroitre legerement les performances.
 """
 
+import numbers
 import os
 try:
 	import regex as re
@@ -91,13 +92,13 @@ def extract_parameters(ignore_missing=False, **detector_parameters):
             f"{repr(detector_parameters['config_file'])} n'est pas un fichier qui existe."
     for dist in ("dd", "detect", "distance"):
         if dist in detector_parameters:
-            assert isinstance(detector_parameters[dist], (float, int)), \
+            assert isinstance(detector_parameters[dist], numbers.Number), \
                 f"'{dist}' doit etre un nombre, pas un {type(detector_parameters[dist]).__name__}."
             assert detector_parameters[dist] > 0, \
                 f"Toute distance doit etre positive, or elle vaut {detector_parameters[dist]}."
     for pos in ("xcen", "x0", "ycen", "y0"):
         if pos in detector_parameters:
-            assert isinstance(detector_parameters[pos], (float, int)), \
+            assert isinstance(detector_parameters[pos], numbers.Number), \
                 f"'{pos}' doit etre un nombre, pas un {type(detector_parameters[pos]).__name__}."
     for angle in ("xbet", "bet", "beta", "angle1", "xgam", "gam", "gamma", "angle2"):
         if angle in detector_parameters:

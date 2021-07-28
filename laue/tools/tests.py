@@ -33,21 +33,21 @@ def test_geometry_dtype():
     trans = Transformer()
 
     _print("cam_to_gnomonic:")
-    for dtype in [np.float16, np.float32, np.float64, np.float128]:
+    for dtype in [np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)]:
         for boucle in range(3):
             rtype = trans.cam_to_gnomonic(np.zeros(1), np.zeros(1), parameters, dtype=dtype).dtype.type
             _print(f"\tboucle {boucle}: {dtype.__name__}->{rtype.__name__}")
             assert rtype == dtype
 
     _print("gnomonic_to_cam:")
-    for dtype in [np.float16, np.float32, np.float64, np.float128]:
+    for dtype in [np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)]:
         for boucle in range(3):
             rtype = trans.gnomonic_to_cam(np.zeros(1), np.zeros(1), parameters, dtype=dtype).dtype.type
             _print(f"\tboucle {boucle}: {dtype.__name__}->{rtype.__name__}")
             assert rtype == dtype
 
     _print("dist_line:")
-    for dtype in [np.float16, np.float32, np.float64, np.float128]:
+    for dtype in [np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)]:
         rtype = trans.dist_line(
             np.array([0, np.pi/2]), np.array([1, 1]),
             np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]),
@@ -56,7 +56,7 @@ def test_geometry_dtype():
         assert rtype == dtype
 
     _print("hough:")
-    for dtype in [np.float16, np.float32, np.float64, np.float128]:
+    for dtype in [np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)]:
         rtype = trans.hough(
             np.array([-1, 0, 1]), np.array([-1, 0, 1]),
             dtype=dtype).dtype.type
@@ -76,7 +76,7 @@ def test_geometry_dtype():
         assert rtype == dtype
 
     _print("inter_lines:")
-    for dtype in [np.float16, np.float32, np.float64, np.float128]:
+    for dtype in [np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)]:
         rtype = trans.inter_lines(
             np.array([0, np.pi/2]), np.array([1, 1]),
             dtype=dtype).dtype.type

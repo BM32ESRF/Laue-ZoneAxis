@@ -12,6 +12,7 @@ alignes dans un plan gnomonic et qui s'inscrit dans un diagramme.
 
 import collections
 import math
+import numbers
 
 import numpy as np
 try:
@@ -107,7 +108,7 @@ def distance(axis1, axis2, *, weight=.5):
         assert all(len(axis) == 2 for axis in axis1 if not isinstance(axis, ZoneAxis))
     if isinstance(axis1, tuple):
         assert len(axis1) == 2, f"Il ne doit y avoir que 2 coordonnees, pas {len(axis1)}."
-        assert all(isinstance(c, (float, int)) for c in axis1)
+        assert all(isinstance(c, numbers.Number) for c in axis1)
     assert isinstance(axis2, (ZoneAxis, np.ndarray, list, tuple)), \
         f"'axis2' has to be a ZoneAxis or axis container, not a {type(axis2).__name__}."
     if isinstance(axis2, (np.ndarray, list)):
@@ -116,8 +117,8 @@ def distance(axis1, axis2, *, weight=.5):
         assert all(len(axis) == 2 for axis in axis2 if not isinstance(axis, ZoneAxis))
     if isinstance(axis2, tuple):
         assert len(axis2) == 2, f"Il ne doit y avoir que 2 coordonnees, pas {len(axis2)}."
-        assert all(isinstance(c, (float, int)) for c in axis2)
-    assert isinstance(weight, (float, int)), \
+        assert all(isinstance(c, numbers.Number) for c in axis2)
+    assert isinstance(weight, numbers.Number), \
         f"'weight' has to be a number not a {type(weight).__name__}."
     assert 0 <= weight <= 1, f"'weight' must be in [0, 1], not {weight}."
 
