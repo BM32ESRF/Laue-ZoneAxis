@@ -228,7 +228,7 @@ class Experiment:
         -------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(image)
+        &gt;&gt;&gt; experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
         &gt;&gt;&gt; parameters = experiment.set_calibration()
         &gt;&gt;&gt; sorted(parameters.keys())
         [&#39;dd&#39;, &#39;pixelsize&#39;, &#39;xbet&#39;, &#39;xcen&#39;, &#39;xgam&#39;, &#39;ycen&#39;]
@@ -333,7 +333,10 @@ class Experiment:
                 print(f&#34;\t\t{dia.get_id()}&#34;)
 
         # Vectorisation des donnees pour de bonnes perfs.
-        min_size = min(len(dia) for dia in best_diagrams) # Le plus petit nombre de points.
+        min_size = min(
+            200,
+            min(len(dia) for dia in best_diagrams)
+            ) # Le plus petit nombre de points.
         spots_position = np.array(
             [dia.get_positions(n=min_size, sort=&#34;quality&#34;)
              for dia in best_diagrams],
@@ -341,7 +344,7 @@ class Experiment:
         spots_position = np.swapaxes(spots_position, 0, 1) # shape: (2, n_diagrams, nbr_spots)
 
         # Perparations des parametres pour la suite.
-        vect_labels = tuple(unknown_parameters) # On recupere les nom des parametre inconus seulement.
+        vect_labels = tuple(unknown_parameters) # On recupere les nom des parametres inconus seulement.
         bounds = [(parameters_min[name], parameters_max[name]) for name in vect_labels] # Les limites des variables.
         args = (given_parameters, vect_labels, spots_position) # Les arguments en plus de la fonction de cout.
         if self.verbose &gt;= 2:
@@ -1569,7 +1572,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         -------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(image)
+        &gt;&gt;&gt; experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
         &gt;&gt;&gt; parameters = experiment.set_calibration()
         &gt;&gt;&gt; sorted(parameters.keys())
         [&#39;dd&#39;, &#39;pixelsize&#39;, &#39;xbet&#39;, &#39;xcen&#39;, &#39;xgam&#39;, &#39;ycen&#39;]
@@ -1674,7 +1677,10 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                 print(f&#34;\t\t{dia.get_id()}&#34;)
 
         # Vectorisation des donnees pour de bonnes perfs.
-        min_size = min(len(dia) for dia in best_diagrams) # Le plus petit nombre de points.
+        min_size = min(
+            200,
+            min(len(dia) for dia in best_diagrams)
+            ) # Le plus petit nombre de points.
         spots_position = np.array(
             [dia.get_positions(n=min_size, sort=&#34;quality&#34;)
              for dia in best_diagrams],
@@ -1682,7 +1688,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         spots_position = np.swapaxes(spots_position, 0, 1) # shape: (2, n_diagrams, nbr_spots)
 
         # Perparations des parametres pour la suite.
-        vect_labels = tuple(unknown_parameters) # On recupere les nom des parametre inconus seulement.
+        vect_labels = tuple(unknown_parameters) # On recupere les nom des parametres inconus seulement.
         bounds = [(parameters_min[name], parameters_max[name]) for name in vect_labels] # Les limites des variables.
         args = (given_parameters, vect_labels, spots_position) # Les arguments en plus de la fonction de cout.
         if self.verbose &gt;= 2:
@@ -3758,7 +3764,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
 <h2 id="example">Example</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; experiment = laue.Experiment(image)
+&gt;&gt;&gt; experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
 &gt;&gt;&gt; parameters = experiment.set_calibration()
 &gt;&gt;&gt; sorted(parameters.keys())
 ['dd', 'pixelsize', 'xbet', 'xcen', 'xgam', 'ycen']
@@ -3806,7 +3812,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     -------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; experiment = laue.Experiment(image)
+    &gt;&gt;&gt; experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
     &gt;&gt;&gt; parameters = experiment.set_calibration()
     &gt;&gt;&gt; sorted(parameters.keys())
     [&#39;dd&#39;, &#39;pixelsize&#39;, &#39;xbet&#39;, &#39;xcen&#39;, &#39;xgam&#39;, &#39;ycen&#39;]
@@ -3911,7 +3917,10 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
             print(f&#34;\t\t{dia.get_id()}&#34;)
 
     # Vectorisation des donnees pour de bonnes perfs.
-    min_size = min(len(dia) for dia in best_diagrams) # Le plus petit nombre de points.
+    min_size = min(
+        200,
+        min(len(dia) for dia in best_diagrams)
+        ) # Le plus petit nombre de points.
     spots_position = np.array(
         [dia.get_positions(n=min_size, sort=&#34;quality&#34;)
          for dia in best_diagrams],
@@ -3919,7 +3928,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     spots_position = np.swapaxes(spots_position, 0, 1) # shape: (2, n_diagrams, nbr_spots)
 
     # Perparations des parametres pour la suite.
-    vect_labels = tuple(unknown_parameters) # On recupere les nom des parametre inconus seulement.
+    vect_labels = tuple(unknown_parameters) # On recupere les nom des parametres inconus seulement.
     bounds = [(parameters_min[name], parameters_max[name]) for name in vect_labels] # Les limites des variables.
     args = (given_parameters, vect_labels, spots_position) # Les arguments en plus de la fonction de cout.
     if self.verbose &gt;= 2:

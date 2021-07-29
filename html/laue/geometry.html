@@ -119,19 +119,29 @@ class Compilator:
 
             hash_param = self._hash_parameters(parameters)
             constants = {self.dd: parameters[&#34;dd&#34;], # C&#39;est qu&#39;il est tant de faire de l&#39;optimisation.
-                        self.xcen: parameters[&#34;xcen&#34;],
-                        self.ycen: parameters[&#34;ycen&#34;],
-                        self.xbet: parameters[&#34;xbet&#34;],
-                        self.xgam: parameters[&#34;xgam&#34;],
-                        self.pixelsize: parameters[&#34;pixelsize&#34;]}
+                         self.xcen: parameters[&#34;xcen&#34;],
+                         self.ycen: parameters[&#34;ycen&#34;],
+                         self.xbet: parameters[&#34;xbet&#34;],
+                         self.xgam: parameters[&#34;xgam&#34;],
+                         self.pixelsize: parameters[&#34;pixelsize&#34;]}
             # Dans le cas ou l&#39;expression est deserialise, les pointeurs ne sont plus les memes.
             constants = {str(var): value for var, value in constants.items()}
+
+            expr_c2g = self.get_expr_cam_to_gnomonic()()
+            subs_c2g = {symbol: constants[str(symbol)]
+                    for symbol in (expr_c2g[0].free_symbols | expr_c2g[1].free_symbols)
+                    if str(symbol) in constants}
             self._fcts_cam_to_gnomonic[hash_param] = lambdify.Lambdify(
                     args=[self.x_cam, self.y_cam],
-                    expr=lambdify.subs(self.get_expr_cam_to_gnomonic()(), constants))
+                    expr=lambdify.subs(expr_c2g, subs_c2g))
+            
+            expr_g2c = self.get_expr_gnomonic_to_cam()()
+            subs_g2c = {symbol: constants[str(symbol)]
+                    for symbol in (expr_g2c[0].free_symbols | expr_g2c[1].free_symbols)
+                    if str(symbol) in constants}
             self._fcts_gnomonic_to_cam[hash_param] = lambdify.Lambdify(
                     args=[self.x_gnom, self.y_gnom],
-                    expr=lambdify.subs(self.get_expr_gnomonic_to_cam()(), constants))
+                    expr=lambdify.subs(expr_g2c, subs_g2c))
 
     def get_expr_cam_to_gnomonic(self):
         &#34;&#34;&#34;
@@ -412,7 +422,7 @@ class Transformer(Compilator):
         self.dd = sympy.Symbol(&#34;dd&#34;, real=True, positive=True) # Distance entre l&#39;origine et le plan de la camera en mm.
         self.xcen, self.ycen = sympy.symbols(&#34;xcen ycen&#34;, real=True) # Position du point d&#39;incidence normale en pxl par rapport au repere de la camera.
         self.xbet, self.xgam = sympy.symbols(&#34;beta gamma&#34;, real=True) # Rotation autour x camera, Rotation autour axe incidence normale.
-        self.pixelsize = sympy.Symbol(&#34;alpha&#34;, real=True, positive=True) # Taille des pixels en mm/pxl.
+        self.pixelsize = sympy.Symbol(&#34;pixelsize&#34;, real=True, positive=True) # Taille des pixels en mm/pxl.
 
         # Les variables.
         self.x_cam, self.y_cam = sympy.symbols(&#34;x_cam y_cam&#34;, real=True, positive=True) # Position du pxl dans le repere du plan de la camera.
@@ -518,8 +528,8 @@ class Transformer(Compilator):
             f&#34;Or les clefs sont {set(parameters)}.&#34;)
         assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
-        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
-            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
         if isinstance(pxl_x, np.ndarray):
             pxl_x, pxl_y = pxl_x.astype(dtype, copy=False), pxl_y.astype(dtype, copy=False)
@@ -542,7 +552,7 @@ class Transformer(Compilator):
 
         return np.stack(self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y))
 
-    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float32):
+    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float64):
         &#34;&#34;&#34;
         ** Calcul les distances projetees des points sur une droite. **
 
@@ -565,9 +575,10 @@ class Transformer(Compilator):
             L&#39;ensemble des coordonnees y des points.
             shape = ``(*nbr_points)``
         dtype : type, optional
-            Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
-            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
-            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
+            La representation machine des nombres.
+            Attention pour les calcul en float32 et moins
+            risque d&#39;y avoir des arrondis qui engendrent:
+            ``RuntimeWarning: invalid value encountered in sqrt``.
 
         Returns
         -------
@@ -587,7 +598,7 @@ class Transformer(Compilator):
         &gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1])) # Le points (0, 1), ...
         &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points))
         array([[1., 0., 2., 1.],
-               [1., 0., 2., 0.]], dtype=float32)
+               [1., 0., 2., 0.]])
         &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points, dtype=np.float128))
         array([[1., 0., 2., 1.],
                [1., 0., 2., 0.]], dtype=float128)
@@ -610,8 +621,8 @@ class Transformer(Compilator):
             f&#34;&#39;y_vect&#39; has to be of type np.ndarray, not {type(y_vect).__name__}.&#34;
         assert x_vect.shape == y_vect.shape, \
             f&#34;Les 2 coordonnees des points doivent avoir la meme shape: {x_vect.shape} vs {y_vect.shape}.&#34;
-        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
-            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
         theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
         x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
@@ -699,8 +710,8 @@ class Transformer(Compilator):
             f&#34;Or les clefs sont {set(parameters)}.&#34;)
         assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
-        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
-            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
         if isinstance(gnom_x, np.ndarray):
             gnom_x, gnom_y = gnom_x.astype(dtype, copy=False), gnom_y.astype(dtype, copy=False)
@@ -723,7 +734,7 @@ class Transformer(Compilator):
 
         return np.stack(self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y))
 
-    def hough(self, x_vect, y_vect):
+    def hough(self, x_vect, y_vect, *, dtype=np.float64):
         r&#34;&#34;&#34;
         ** Transformee de hough avec des droites. **
 
@@ -738,6 +749,11 @@ class Transformer(Compilator):
             L&#39;ensemble des coordonnees x des points de shape: (*over_dims, nbr_points)
         y_vect : np.ndarray
             L&#39;ensemble des coordonnees y des points de shape: (*over_dims, nbr_points)
+        dtype : type, optional
+            La representation machine des nombres.
+            Attention pour les calcul en float32 et moins
+            risque d&#39;y avoir des arrondis qui engendrent:
+            ``RuntimeWarning: invalid value encountered in sqrt``.
 
         Returns
         -------
@@ -775,9 +791,11 @@ class Transformer(Compilator):
             f&#34;&#39;y_vect&#39; has to be of type np.ndarray, not {type(y_vect).__name__}.&#34;
         assert x_vect.shape == y_vect.shape, \
             f&#34;Les 2 entrees doivent avoir la meme taille: {x_vect.shape} vs {y_vect.shape}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
         n = x_vect.shape[-1]
-        x_vect, y_vect = x_vect.astype(np.float32, copy=False), y_vect.astype(np.float32, copy=False)
+        x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
 
         xa = np.concatenate([np.repeat(x_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
         ya = np.concatenate([np.repeat(y_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
@@ -789,7 +807,7 @@ class Transformer(Compilator):
             copy=False,
             nan=0.0)
 
-    def hough_reduce(self, theta_vect, dist_vect, *, nbr=4, tol=0.018):
+    def hough_reduce(self, theta_vect, dist_vect, *, nbr=4, tol=0.018, dtype=np.float32):
         &#34;&#34;&#34;
         ** Regroupe des droites ressemblantes. **
 
@@ -816,10 +834,14 @@ class Transformer(Compilator):
             C&#39;est le nombre minimum de points presque alignes pour que
             l&#39;on puisse considerer la droite qui passe par ces points.
             Par defaut, les droites qui ne passent que par 4 points et plus sont retenues.
+        dtype : type, optional
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64``.
+            ``np.float128`` est interdit car c&#39;est un peu over-kill pour cette methode!
 
         Returns
         -------
-        np.ndarray(dtype=float32), np.ndarray(dtype=object)
+        np.ndarray(dtype=float), np.ndarray(dtype=object)
             * Ce sont les centres des clusters pour chaque &#39;nuages de points&#39;. Cela correspond
             aux angles et aux distances qui caracterisent chaque droites.
             * Si les parametres d&#39;entres sont des vecteurs 1d, le resultat sera une array
@@ -835,7 +857,7 @@ class Transformer(Compilator):
         &gt;&gt;&gt; from laue import geometry
         &gt;&gt;&gt; transformer = geometry.Transformer()
 
-        Type de retour ``np.float32`` vs ``object``.
+        Type de retour ``float`` vs ``object``.
         &gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
         ...         np.array([ 0.,  1.,  1., -1.,  1.]))
         &gt;&gt;&gt; theta, dist = transformer.hough(x, y)
@@ -872,9 +894,11 @@ class Transformer(Compilator):
             f&#34;]0, 1/2], or tol vaut {tol}, ce qui sort de cet intervalle.&#34;)
         assert isinstance(nbr, int), f&#34;&#39;nbr&#39; has to be an integer, not a {type(nbr).__name__}.&#34;
         assert 2 &lt; nbr, f&#34;2 points sont toujours alignes! Vous ne pouvez pas choisir nbr={nbr}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64. Pas {dtype}.&#34;
 
         # On fait la conversion des le debut pour un gain de temps.
-        theta_vect, dist_vect = theta_vect.astype(np.float32, copy=False), dist_vect.astype(np.float32, copy=False)
+        theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
 
         *over_dims, nbr_inter = theta_vect.shape # Recuperation des dimensions.
         nbr = (nbr*(nbr-1))/2 # On converti le nombre de points alignes en nbr de segments.
@@ -920,7 +944,7 @@ class Transformer(Compilator):
 
         return clusters
 
-    def inter_lines(self, theta_vect, dist_vect):
+    def inter_lines(self, theta_vect, dist_vect, *, dtype=np.float32):
         r&#34;&#34;&#34;
         ** Calcul les points d&#39;intersection entre les droites. **
 
@@ -938,10 +962,15 @@ class Transformer(Compilator):
         dist_vect : np.ndarray
             * Vecteur des distances des droites a l&#39;origine comprises [0, +oo].
             * shape = (*over_dims, nbr_droites)
+        dtype : type, optional
+            La representation machine des nombres. Par defaut
+            ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser
+            ``np.float64`` ou ``(getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)``.
 
         Returns
         -------
-        np.ndarray(dtype=float32)
+        np.ndarray
             * Dans le dommaine spatial et non pas le domaine de hough, cherche
             les intersections des droites. Il y a ``n*(n-1)/2`` intersections, n etant
             le nombre de droites. donc la complexite de cette methode est en ``o(n**2)``.
@@ -977,8 +1006,10 @@ class Transformer(Compilator):
         assert theta_vect.ndim &gt;= 1, &#34;La matrice ne doit pas etre vide.&#34;
         assert theta_vect.shape[-1] &gt;= 2, \
             f&#34;Il doit y avoir au moins 2 droites par famille, pas {theta_vect.shape[-1]}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
-        theta_vect, dist_vect = theta_vect.astype(np.float32, copy=False), dist_vect.astype(np.float32, copy=False)
+        theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
         n = theta_vect.shape[-1]
 
         theta_1 = np.concatenate([np.repeat(theta_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
@@ -997,13 +1028,14 @@ class Transformer(Compilator):
         &#34;&#34;&#34;
         from sklearn.cluster import DBSCAN
 
-        THETA_STD = np.float32(math.pi / math.sqrt(3))
+        dtype_catser = theta_vect_1d.dtype.type
+        THETA_STD = dtype_catser(math.pi / math.sqrt(3))
         WEIGHT = 0.65 # 0 =&gt; tres souple sur les angles, 1=&gt; tres souple sur les distances.
 
         # On retire les droites aberantes.
         mask_to_keep = np.isfinite(theta_vect_1d) &amp; np.isfinite(dist_vect_1d)
         if not mask_to_keep.any(): # Si il ne reste plus rien.
-            return np.array([], dtype=np.float32)
+            return np.array([], dtype=dtype_catser)
         theta_vect_1d, dist_vect_1d = theta_vect_1d[mask_to_keep], dist_vect_1d[mask_to_keep]
 
         # On passe dans un autre repere de facon a ce que -pi et pi se retrouvent a cote.
@@ -1027,11 +1059,11 @@ class Transformer(Compilator):
 
         theta = np.array([np.arccos(cluster[:, 0].mean()/(2*WEIGHT))*np.sign(cluster[:, 1].sum())
                     for cluster in map(np.array, clusters_dict.values())],
-                    dtype=np.float32)
+                    dtype=dtype_catser)
         dist = np.array([cluster[:, 2].mean()
                         for cluster in map(np.array, clusters_dict.values())],
-                    dtype=np.float32) * std / THETA_STD
-        return np.array([theta, dist], dtype=np.float32)
+                    dtype=dtype_catser) * std / THETA_STD
+        return np.array([theta, dist], dtype=dtype_catser)
 
     def _hash_parameters(self, parameters):
         &#34;&#34;&#34;
@@ -1106,12 +1138,14 @@ def comb2ind(ind1, ind2, n):
         f&#34;&#39;ind2&#39; can not being of type {type(ind2).__name__}.&#34;
     assert isinstance(n, int), f&#34;&#39;n&#39; has to ba an integer, not a {type(n).__name__}.&#34;
     if isinstance(ind1, np.ndarray):
-        assert ind1.dtype == int, f&#34;&#39;ind1&#39; must be integer, not {str(ind1.dtype)}.&#34;
+        assert ind1.dtype == int or issubclass(ind2.dtype.type, np.integer), \
+            f&#34;&#39;ind1&#39; must be integer, not {str(ind1.dtype)}.&#34;
         assert (ind1 &gt;= 0).all(), &#34;Tous les indices doivent etres positifs.&#34;
     else:
         assert ind1 &gt;= 0, &#34;Les indices doivent etre positifs.&#34;
     if isinstance(ind2, np.ndarray):
-        assert ind2.dtype == int, f&#34;&#39;ind2&#39; must be integer, not {str(ind2.dtype)}.&#34;
+        assert ind2.dtype == int or issubclass(ind2.dtype.type, np.integer), \
+            f&#34;&#39;ind2&#39; must be integer, not {str(ind2.dtype)}.&#34;
         assert ind1.shape == ind2.shape, (&#34;Si les indices sont des arrays, elles doivent &#34;
             f&#34;toutes 2 avoir les memes dimensions. {ind1.shape} vs {ind2.shape}.&#34;)
         assert (ind2 &gt; ind1).all(), (&#34;Les 2ieme indices doivent &#34;
@@ -1285,12 +1319,14 @@ en base n).</dd>
         f&#34;&#39;ind2&#39; can not being of type {type(ind2).__name__}.&#34;
     assert isinstance(n, int), f&#34;&#39;n&#39; has to ba an integer, not a {type(n).__name__}.&#34;
     if isinstance(ind1, np.ndarray):
-        assert ind1.dtype == int, f&#34;&#39;ind1&#39; must be integer, not {str(ind1.dtype)}.&#34;
+        assert ind1.dtype == int or issubclass(ind2.dtype.type, np.integer), \
+            f&#34;&#39;ind1&#39; must be integer, not {str(ind1.dtype)}.&#34;
         assert (ind1 &gt;= 0).all(), &#34;Tous les indices doivent etres positifs.&#34;
     else:
         assert ind1 &gt;= 0, &#34;Les indices doivent etre positifs.&#34;
     if isinstance(ind2, np.ndarray):
-        assert ind2.dtype == int, f&#34;&#39;ind2&#39; must be integer, not {str(ind2.dtype)}.&#34;
+        assert ind2.dtype == int or issubclass(ind2.dtype.type, np.integer), \
+            f&#34;&#39;ind2&#39; must be integer, not {str(ind2.dtype)}.&#34;
         assert ind1.shape == ind2.shape, (&#34;Si les indices sont des arrays, elles doivent &#34;
             f&#34;toutes 2 avoir les memes dimensions. {ind1.shape} vs {ind2.shape}.&#34;)
         assert (ind2 &gt; ind1).all(), (&#34;Les 2ieme indices doivent &#34;
@@ -1437,7 +1473,7 @@ s'ammuser avec la transformee de Hough.</p>
         self.dd = sympy.Symbol(&#34;dd&#34;, real=True, positive=True) # Distance entre l&#39;origine et le plan de la camera en mm.
         self.xcen, self.ycen = sympy.symbols(&#34;xcen ycen&#34;, real=True) # Position du point d&#39;incidence normale en pxl par rapport au repere de la camera.
         self.xbet, self.xgam = sympy.symbols(&#34;beta gamma&#34;, real=True) # Rotation autour x camera, Rotation autour axe incidence normale.
-        self.pixelsize = sympy.Symbol(&#34;alpha&#34;, real=True, positive=True) # Taille des pixels en mm/pxl.
+        self.pixelsize = sympy.Symbol(&#34;pixelsize&#34;, real=True, positive=True) # Taille des pixels en mm/pxl.
 
         # Les variables.
         self.x_cam, self.y_cam = sympy.symbols(&#34;x_cam y_cam&#34;, real=True, positive=True) # Position du pxl dans le repere du plan de la camera.
@@ -1543,8 +1579,8 @@ s'ammuser avec la transformee de Hough.</p>
             f&#34;Or les clefs sont {set(parameters)}.&#34;)
         assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
-        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
-            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
         if isinstance(pxl_x, np.ndarray):
             pxl_x, pxl_y = pxl_x.astype(dtype, copy=False), pxl_y.astype(dtype, copy=False)
@@ -1567,7 +1603,7 @@ s'ammuser avec la transformee de Hough.</p>
 
         return np.stack(self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y))
 
-    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float32):
+    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float64):
         &#34;&#34;&#34;
         ** Calcul les distances projetees des points sur une droite. **
 
@@ -1590,9 +1626,10 @@ s'ammuser avec la transformee de Hough.</p>
             L&#39;ensemble des coordonnees y des points.
             shape = ``(*nbr_points)``
         dtype : type, optional
-            Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
-            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
-            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
+            La representation machine des nombres.
+            Attention pour les calcul en float32 et moins
+            risque d&#39;y avoir des arrondis qui engendrent:
+            ``RuntimeWarning: invalid value encountered in sqrt``.
 
         Returns
         -------
@@ -1612,7 +1649,7 @@ s'ammuser avec la transformee de Hough.</p>
         &gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1])) # Le points (0, 1), ...
         &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points))
         array([[1., 0., 2., 1.],
-               [1., 0., 2., 0.]], dtype=float32)
+               [1., 0., 2., 0.]])
         &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points, dtype=np.float128))
         array([[1., 0., 2., 1.],
                [1., 0., 2., 0.]], dtype=float128)
@@ -1635,8 +1672,8 @@ s'ammuser avec la transformee de Hough.</p>
             f&#34;&#39;y_vect&#39; has to be of type np.ndarray, not {type(y_vect).__name__}.&#34;
         assert x_vect.shape == y_vect.shape, \
             f&#34;Les 2 coordonnees des points doivent avoir la meme shape: {x_vect.shape} vs {y_vect.shape}.&#34;
-        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
-            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
         theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
         x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
@@ -1724,8 +1761,8 @@ s'ammuser avec la transformee de Hough.</p>
             f&#34;Or les clefs sont {set(parameters)}.&#34;)
         assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
             &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
-        assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
-            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
         if isinstance(gnom_x, np.ndarray):
             gnom_x, gnom_y = gnom_x.astype(dtype, copy=False), gnom_y.astype(dtype, copy=False)
@@ -1748,7 +1785,7 @@ s'ammuser avec la transformee de Hough.</p>
 
         return np.stack(self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y))
 
-    def hough(self, x_vect, y_vect):
+    def hough(self, x_vect, y_vect, *, dtype=np.float64):
         r&#34;&#34;&#34;
         ** Transformee de hough avec des droites. **
 
@@ -1763,6 +1800,11 @@ s'ammuser avec la transformee de Hough.</p>
             L&#39;ensemble des coordonnees x des points de shape: (*over_dims, nbr_points)
         y_vect : np.ndarray
             L&#39;ensemble des coordonnees y des points de shape: (*over_dims, nbr_points)
+        dtype : type, optional
+            La representation machine des nombres.
+            Attention pour les calcul en float32 et moins
+            risque d&#39;y avoir des arrondis qui engendrent:
+            ``RuntimeWarning: invalid value encountered in sqrt``.
 
         Returns
         -------
@@ -1800,9 +1842,11 @@ s'ammuser avec la transformee de Hough.</p>
             f&#34;&#39;y_vect&#39; has to be of type np.ndarray, not {type(y_vect).__name__}.&#34;
         assert x_vect.shape == y_vect.shape, \
             f&#34;Les 2 entrees doivent avoir la meme taille: {x_vect.shape} vs {y_vect.shape}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
         n = x_vect.shape[-1]
-        x_vect, y_vect = x_vect.astype(np.float32, copy=False), y_vect.astype(np.float32, copy=False)
+        x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
 
         xa = np.concatenate([np.repeat(x_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
         ya = np.concatenate([np.repeat(y_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
@@ -1814,7 +1858,7 @@ s'ammuser avec la transformee de Hough.</p>
             copy=False,
             nan=0.0)
 
-    def hough_reduce(self, theta_vect, dist_vect, *, nbr=4, tol=0.018):
+    def hough_reduce(self, theta_vect, dist_vect, *, nbr=4, tol=0.018, dtype=np.float32):
         &#34;&#34;&#34;
         ** Regroupe des droites ressemblantes. **
 
@@ -1841,10 +1885,14 @@ s'ammuser avec la transformee de Hough.</p>
             C&#39;est le nombre minimum de points presque alignes pour que
             l&#39;on puisse considerer la droite qui passe par ces points.
             Par defaut, les droites qui ne passent que par 4 points et plus sont retenues.
+        dtype : type, optional
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64``.
+            ``np.float128`` est interdit car c&#39;est un peu over-kill pour cette methode!
 
         Returns
         -------
-        np.ndarray(dtype=float32), np.ndarray(dtype=object)
+        np.ndarray(dtype=float), np.ndarray(dtype=object)
             * Ce sont les centres des clusters pour chaque &#39;nuages de points&#39;. Cela correspond
             aux angles et aux distances qui caracterisent chaque droites.
             * Si les parametres d&#39;entres sont des vecteurs 1d, le resultat sera une array
@@ -1860,7 +1908,7 @@ s'ammuser avec la transformee de Hough.</p>
         &gt;&gt;&gt; from laue import geometry
         &gt;&gt;&gt; transformer = geometry.Transformer()
 
-        Type de retour ``np.float32`` vs ``object``.
+        Type de retour ``float`` vs ``object``.
         &gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
         ...         np.array([ 0.,  1.,  1., -1.,  1.]))
         &gt;&gt;&gt; theta, dist = transformer.hough(x, y)
@@ -1897,9 +1945,11 @@ s'ammuser avec la transformee de Hough.</p>
             f&#34;]0, 1/2], or tol vaut {tol}, ce qui sort de cet intervalle.&#34;)
         assert isinstance(nbr, int), f&#34;&#39;nbr&#39; has to be an integer, not a {type(nbr).__name__}.&#34;
         assert 2 &lt; nbr, f&#34;2 points sont toujours alignes! Vous ne pouvez pas choisir nbr={nbr}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64. Pas {dtype}.&#34;
 
         # On fait la conversion des le debut pour un gain de temps.
-        theta_vect, dist_vect = theta_vect.astype(np.float32, copy=False), dist_vect.astype(np.float32, copy=False)
+        theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
 
         *over_dims, nbr_inter = theta_vect.shape # Recuperation des dimensions.
         nbr = (nbr*(nbr-1))/2 # On converti le nombre de points alignes en nbr de segments.
@@ -1945,7 +1995,7 @@ s'ammuser avec la transformee de Hough.</p>
 
         return clusters
 
-    def inter_lines(self, theta_vect, dist_vect):
+    def inter_lines(self, theta_vect, dist_vect, *, dtype=np.float32):
         r&#34;&#34;&#34;
         ** Calcul les points d&#39;intersection entre les droites. **
 
@@ -1963,10 +2013,15 @@ s'ammuser avec la transformee de Hough.</p>
         dist_vect : np.ndarray
             * Vecteur des distances des droites a l&#39;origine comprises [0, +oo].
             * shape = (*over_dims, nbr_droites)
+        dtype : type, optional
+            La representation machine des nombres. Par defaut
+            ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser
+            ``np.float64`` ou ``(getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)``.
 
         Returns
         -------
-        np.ndarray(dtype=float32)
+        np.ndarray
             * Dans le dommaine spatial et non pas le domaine de hough, cherche
             les intersections des droites. Il y a ``n*(n-1)/2`` intersections, n etant
             le nombre de droites. donc la complexite de cette methode est en ``o(n**2)``.
@@ -2002,8 +2057,10 @@ s'ammuser avec la transformee de Hough.</p>
         assert theta_vect.ndim &gt;= 1, &#34;La matrice ne doit pas etre vide.&#34;
         assert theta_vect.shape[-1] &gt;= 2, \
             f&#34;Il doit y avoir au moins 2 droites par famille, pas {theta_vect.shape[-1]}.&#34;
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+            f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
-        theta_vect, dist_vect = theta_vect.astype(np.float32, copy=False), dist_vect.astype(np.float32, copy=False)
+        theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
         n = theta_vect.shape[-1]
 
         theta_1 = np.concatenate([np.repeat(theta_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
@@ -2022,13 +2079,14 @@ s'ammuser avec la transformee de Hough.</p>
         &#34;&#34;&#34;
         from sklearn.cluster import DBSCAN
 
-        THETA_STD = np.float32(math.pi / math.sqrt(3))
+        dtype_catser = theta_vect_1d.dtype.type
+        THETA_STD = dtype_catser(math.pi / math.sqrt(3))
         WEIGHT = 0.65 # 0 =&gt; tres souple sur les angles, 1=&gt; tres souple sur les distances.
 
         # On retire les droites aberantes.
         mask_to_keep = np.isfinite(theta_vect_1d) &amp; np.isfinite(dist_vect_1d)
         if not mask_to_keep.any(): # Si il ne reste plus rien.
-            return np.array([], dtype=np.float32)
+            return np.array([], dtype=dtype_catser)
         theta_vect_1d, dist_vect_1d = theta_vect_1d[mask_to_keep], dist_vect_1d[mask_to_keep]
 
         # On passe dans un autre repere de facon a ce que -pi et pi se retrouvent a cote.
@@ -2052,11 +2110,11 @@ s'ammuser avec la transformee de Hough.</p>
 
         theta = np.array([np.arccos(cluster[:, 0].mean()/(2*WEIGHT))*np.sign(cluster[:, 1].sum())
                     for cluster in map(np.array, clusters_dict.values())],
-                    dtype=np.float32)
+                    dtype=dtype_catser)
         dist = np.array([cluster[:, 2].mean()
                         for cluster in map(np.array, clusters_dict.values())],
-                    dtype=np.float32) * std / THETA_STD
-        return np.array([theta, dist], dtype=np.float32)
+                    dtype=dtype_catser) * std / THETA_STD
+        return np.array([theta, dist], dtype=dtype_catser)
 
     def _hash_parameters(self, parameters):
         &#34;&#34;&#34;
@@ -2226,8 +2284,8 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
         f&#34;Or les clefs sont {set(parameters)}.&#34;)
     assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
         &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
-    assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
-        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
+    assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
     if isinstance(pxl_x, np.ndarray):
         pxl_x, pxl_y = pxl_x.astype(dtype, copy=False), pxl_y.astype(dtype, copy=False)
@@ -2252,7 +2310,7 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
 </details>
 </dd>
 <dt id="laue.geometry.Transformer.dist_line"><code class="name flex">
-<span>def <span class="ident">dist_line</span></span>(<span>self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=numpy.float32)</span>
+<span>def <span class="ident">dist_line</span></span>(<span>self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=numpy.float64)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Calcul les distances projetees des points sur une droite. </strong></p>
@@ -2273,9 +2331,10 @@ shape = <code>(*nbr_points)</code></dd>
 <dd>L'ensemble des coordonnees y des points.
 shape = <code>(*nbr_points)</code></dd>
 <dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
-<dd>Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en <code>float</code>.
-La representation machine des nombres. Par defaut <code>np.float32</code> permet des calculs rapide
-mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <code>np.float128</code>.</dd>
+<dd>La representation machine des nombres.
+Attention pour les calcul en float32 et moins
+risque d'y avoir des arrondis qui engendrent:
+<code>RuntimeWarning: invalid value encountered in sqrt</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2294,7 +2353,7 @@ shape = <code>(*nbr_droites, *nbr_points)</code></dd>
 &gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1])) # Le points (0, 1), ...
 &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points))
 array([[1., 0., 2., 1.],
-       [1., 0., 2., 0.]], dtype=float32)
+       [1., 0., 2., 0.]])
 &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points, dtype=np.float128))
 array([[1., 0., 2., 1.],
        [1., 0., 2., 0.]], dtype=float128)
@@ -2309,7 +2368,7 @@ array([[1., 0., 2., 1.],
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float32):
+<pre><code class="python">def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float64):
     &#34;&#34;&#34;
     ** Calcul les distances projetees des points sur une droite. **
 
@@ -2332,9 +2391,10 @@ array([[1., 0., 2., 1.],
         L&#39;ensemble des coordonnees y des points.
         shape = ``(*nbr_points)``
     dtype : type, optional
-        Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
-        La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
-        mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
+        La representation machine des nombres.
+        Attention pour les calcul en float32 et moins
+        risque d&#39;y avoir des arrondis qui engendrent:
+        ``RuntimeWarning: invalid value encountered in sqrt``.
 
     Returns
     -------
@@ -2354,7 +2414,7 @@ array([[1., 0., 2., 1.],
     &gt;&gt;&gt; points = (np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1])) # Le points (0, 1), ...
     &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points))
     array([[1., 0., 2., 1.],
-           [1., 0., 2., 0.]], dtype=float32)
+           [1., 0., 2., 0.]])
     &gt;&gt;&gt; np.round(transformer.dist_line(*lines, *points, dtype=np.float128))
     array([[1., 0., 2., 1.],
            [1., 0., 2., 0.]], dtype=float128)
@@ -2377,8 +2437,8 @@ array([[1., 0., 2., 1.],
         f&#34;&#39;y_vect&#39; has to be of type np.ndarray, not {type(y_vect).__name__}.&#34;
     assert x_vect.shape == y_vect.shape, \
         f&#34;Les 2 coordonnees des points doivent avoir la meme shape: {x_vect.shape} vs {y_vect.shape}.&#34;
-    assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
-        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
+    assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
     theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
     x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
@@ -2531,8 +2591,8 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
         f&#34;Or les clefs sont {set(parameters)}.&#34;)
     assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
         &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
-    assert dtype in {np.float16, np.float32, np.float64, np.float64, np.float128}, \
-        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float64, np.float128. Pas {dtype}.&#34;
+    assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
     if isinstance(gnom_x, np.ndarray):
         gnom_x, gnom_y = gnom_x.astype(dtype, copy=False), gnom_y.astype(dtype, copy=False)
@@ -2557,7 +2617,7 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
 </details>
 </dd>
 <dt id="laue.geometry.Transformer.hough"><code class="name flex">
-<span>def <span class="ident">hough</span></span>(<span>self, x_vect, y_vect)</span>
+<span>def <span class="ident">hough</span></span>(<span>self, x_vect, y_vect, *, dtype=numpy.float64)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Transformee de hough avec des droites. </strong></p>
@@ -2572,6 +2632,11 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
 <dd>L'ensemble des coordonnees x des points de shape: (*over_dims, nbr_points)</dd>
 <dt><strong><code>y_vect</code></strong> :&ensp;<code>np.ndarray</code></dt>
 <dd>L'ensemble des coordonnees y des points de shape: (*over_dims, nbr_points)</dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
+<dd>La representation machine des nombres.
+Attention pour les calcul en float32 et moins
+risque d'y avoir des arrondis qui engendrent:
+<code>RuntimeWarning: invalid value encountered in sqrt</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2614,7 +2679,7 @@ soit la plus petite possible.</li>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def hough(self, x_vect, y_vect):
+<pre><code class="python">def hough(self, x_vect, y_vect, *, dtype=np.float64):
     r&#34;&#34;&#34;
     ** Transformee de hough avec des droites. **
 
@@ -2629,6 +2694,11 @@ soit la plus petite possible.</li>
         L&#39;ensemble des coordonnees x des points de shape: (*over_dims, nbr_points)
     y_vect : np.ndarray
         L&#39;ensemble des coordonnees y des points de shape: (*over_dims, nbr_points)
+    dtype : type, optional
+        La representation machine des nombres.
+        Attention pour les calcul en float32 et moins
+        risque d&#39;y avoir des arrondis qui engendrent:
+        ``RuntimeWarning: invalid value encountered in sqrt``.
 
     Returns
     -------
@@ -2666,9 +2736,11 @@ soit la plus petite possible.</li>
         f&#34;&#39;y_vect&#39; has to be of type np.ndarray, not {type(y_vect).__name__}.&#34;
     assert x_vect.shape == y_vect.shape, \
         f&#34;Les 2 entrees doivent avoir la meme taille: {x_vect.shape} vs {y_vect.shape}.&#34;
+    assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
     n = x_vect.shape[-1]
-    x_vect, y_vect = x_vect.astype(np.float32, copy=False), y_vect.astype(np.float32, copy=False)
+    x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
 
     xa = np.concatenate([np.repeat(x_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
     ya = np.concatenate([np.repeat(y_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
@@ -2682,7 +2754,7 @@ soit la plus petite possible.</li>
 </details>
 </dd>
 <dt id="laue.geometry.Transformer.hough_reduce"><code class="name flex">
-<span>def <span class="ident">hough_reduce</span></span>(<span>self, theta_vect, dist_vect, *, nbr=4, tol=0.018)</span>
+<span>def <span class="ident">hough_reduce</span></span>(<span>self, theta_vect, dist_vect, *, nbr=4, tol=0.018, dtype=numpy.float32)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Regroupe des droites ressemblantes. </strong></p>
@@ -2717,10 +2789,14 @@ doivent etre bien alignes. C'est une sorte de tolerance sur l'alignement.</dd>
 <dd>C'est le nombre minimum de points presque alignes pour que
 l'on puisse considerer la droite qui passe par ces points.
 Par defaut, les droites qui ne passent que par 4 points et plus sont retenues.</dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
+<dd>La representation machine des nombres. Par defaut <code>np.float32</code> permet des calculs rapide
+mais peu precis. Pour la presision il faut utiliser <code>np.float64</code>.
+<code>np.float128</code> est interdit car c'est un peu over-kill pour cette methode!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>np.ndarray(dtype=float32), np.ndarray(dtype=object)</code></dt>
+<dt><code>np.ndarray(dtype=float), np.ndarray(dtype=object)</code></dt>
 <dd>
 <ul>
 <li>Ce sont les centres des clusters pour chaque 'nuages de points'. Cela correspond
@@ -2739,7 +2815,7 @@ de l'appel de cette fonction sur le nuage de points unique correspondant.</li>
 &gt;&gt;&gt; from laue import geometry
 &gt;&gt;&gt; transformer = geometry.Transformer()
 </code></pre>
-<p>Type de retour <code>np.float32</code> vs <code>object</code>.</p>
+<p>Type de retour <code>float</code> vs <code>object</code>.</p>
 <pre><code class="language-python-repl">&gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
 ...         np.array([ 0.,  1.,  1., -1.,  1.]))
 &gt;&gt;&gt; theta, dist = transformer.hough(x, y)
@@ -2768,7 +2844,7 @@ array([[-0.79,  1.57],
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def hough_reduce(self, theta_vect, dist_vect, *, nbr=4, tol=0.018):
+<pre><code class="python">def hough_reduce(self, theta_vect, dist_vect, *, nbr=4, tol=0.018, dtype=np.float32):
     &#34;&#34;&#34;
     ** Regroupe des droites ressemblantes. **
 
@@ -2795,10 +2871,14 @@ array([[-0.79,  1.57],
         C&#39;est le nombre minimum de points presque alignes pour que
         l&#39;on puisse considerer la droite qui passe par ces points.
         Par defaut, les droites qui ne passent que par 4 points et plus sont retenues.
+    dtype : type, optional
+        La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+        mais peu precis. Pour la presision il faut utiliser ``np.float64``.
+        ``np.float128`` est interdit car c&#39;est un peu over-kill pour cette methode!
 
     Returns
     -------
-    np.ndarray(dtype=float32), np.ndarray(dtype=object)
+    np.ndarray(dtype=float), np.ndarray(dtype=object)
         * Ce sont les centres des clusters pour chaque &#39;nuages de points&#39;. Cela correspond
         aux angles et aux distances qui caracterisent chaque droites.
         * Si les parametres d&#39;entres sont des vecteurs 1d, le resultat sera une array
@@ -2814,7 +2894,7 @@ array([[-0.79,  1.57],
     &gt;&gt;&gt; from laue import geometry
     &gt;&gt;&gt; transformer = geometry.Transformer()
 
-    Type de retour ``np.float32`` vs ``object``.
+    Type de retour ``float`` vs ``object``.
     &gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
     ...         np.array([ 0.,  1.,  1., -1.,  1.]))
     &gt;&gt;&gt; theta, dist = transformer.hough(x, y)
@@ -2851,9 +2931,11 @@ array([[-0.79,  1.57],
         f&#34;]0, 1/2], or tol vaut {tol}, ce qui sort de cet intervalle.&#34;)
     assert isinstance(nbr, int), f&#34;&#39;nbr&#39; has to be an integer, not a {type(nbr).__name__}.&#34;
     assert 2 &lt; nbr, f&#34;2 points sont toujours alignes! Vous ne pouvez pas choisir nbr={nbr}.&#34;
+    assert dtype in {np.float16, np.float32, np.float64}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64. Pas {dtype}.&#34;
 
     # On fait la conversion des le debut pour un gain de temps.
-    theta_vect, dist_vect = theta_vect.astype(np.float32, copy=False), dist_vect.astype(np.float32, copy=False)
+    theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
 
     *over_dims, nbr_inter = theta_vect.shape # Recuperation des dimensions.
     nbr = (nbr*(nbr-1))/2 # On converti le nombre de points alignes en nbr de segments.
@@ -2901,7 +2983,7 @@ array([[-0.79,  1.57],
 </details>
 </dd>
 <dt id="laue.geometry.Transformer.inter_lines"><code class="name flex">
-<span>def <span class="ident">inter_lines</span></span>(<span>self, theta_vect, dist_vect)</span>
+<span>def <span class="ident">inter_lines</span></span>(<span>self, theta_vect, dist_vect, *, dtype=numpy.float32)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Calcul les points d'intersection entre les droites. </strong></p>
@@ -2927,10 +3009,15 @@ array([[-0.79,  1.57],
 <li>shape = (*over_dims, nbr_droites)</li>
 </ul>
 </dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
+<dd>La representation machine des nombres. Par defaut
+<code>np.float32</code> permet des calculs rapide
+mais peu precis. Pour la presision il faut utiliser
+<code>np.float64</code> ou <code>(getattr(np, "float128") if hasattr(np, "float128") else np.float64)</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>np.ndarray(dtype=float32)</code></dt>
+<dt><code>np.ndarray</code></dt>
 <dd>
 <ul>
 <li>Dans le dommaine spatial et non pas le domaine de hough, cherche
@@ -2964,7 +3051,7 @@ La shape du tenseur final est donc: <strong> shape = <code>(2, *over_dims, n*(n-
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def inter_lines(self, theta_vect, dist_vect):
+<pre><code class="python">def inter_lines(self, theta_vect, dist_vect, *, dtype=np.float32):
     r&#34;&#34;&#34;
     ** Calcul les points d&#39;intersection entre les droites. **
 
@@ -2982,10 +3069,15 @@ La shape du tenseur final est donc: <strong> shape = <code>(2, *over_dims, n*(n-
     dist_vect : np.ndarray
         * Vecteur des distances des droites a l&#39;origine comprises [0, +oo].
         * shape = (*over_dims, nbr_droites)
+    dtype : type, optional
+        La representation machine des nombres. Par defaut
+        ``np.float32`` permet des calculs rapide
+        mais peu precis. Pour la presision il faut utiliser
+        ``np.float64`` ou ``(getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)``.
 
     Returns
     -------
-    np.ndarray(dtype=float32)
+    np.ndarray
         * Dans le dommaine spatial et non pas le domaine de hough, cherche
         les intersections des droites. Il y a ``n*(n-1)/2`` intersections, n etant
         le nombre de droites. donc la complexite de cette methode est en ``o(n**2)``.
@@ -3021,8 +3113,10 @@ La shape du tenseur final est donc: <strong> shape = <code>(2, *over_dims, n*(n-
     assert theta_vect.ndim &gt;= 1, &#34;La matrice ne doit pas etre vide.&#34;
     assert theta_vect.shape[-1] &gt;= 2, \
         f&#34;Il doit y avoir au moins 2 droites par famille, pas {theta_vect.shape[-1]}.&#34;
+    assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
-    theta_vect, dist_vect = theta_vect.astype(np.float32, copy=False), dist_vect.astype(np.float32, copy=False)
+    theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
     n = theta_vect.shape[-1]
 
     theta_1 = np.concatenate([np.repeat(theta_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)

@@ -43,6 +43,7 @@ Si le module ``psutil`` est installe, la memoire sera mieux geree.
 &#34;&#34;&#34;
 
 import math
+import numbers
 import os
 
 import cv2
@@ -408,7 +409,7 @@ class LaueDiagram(Splitable):
         d_list = distance(spot, self.select_spots(), space=space)
         nbr = len(self)
         if d_max is not None:
-            if not isinstance(d_max, (float, int)):
+            if not isinstance(d_max, numbers.Number):
                 raise TypeError(f&#34;&#39;d_max&#39; has to be a number, not a {type(d_max).__name__}.&#34;)
             if d_max &lt;= 0:
                 raise ValueError(f&#34;&#39;d_max&#39; doit etre strictement positif. Or il vaut {d_max}.&#34;)
@@ -690,9 +691,13 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt;
+
+        Sans preciser l&#39;axe.
         &gt;&gt;&gt; diag.plot_gnomonic(display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
         &gt;&gt;&gt;
+
+        En precisant l&#39;axe.
         &gt;&gt;&gt; import matplotlib.pyplot as plt
         &gt;&gt;&gt; fig = plt.figure()
         &gt;&gt;&gt; axe = fig.add_subplot()
@@ -703,10 +708,13 @@ class LaueDiagram(Splitable):
         if axe_pyplot is None:
             import matplotlib.pyplot as plt
             axe_pyplot = plt.figure().add_subplot()
+            axe_pyplot.set_xlim(-.6, .6)
+            axe_pyplot.set_ylim(-.6, .6)
 
         axe_pyplot.set_title(&#34;plan gnomonic&#34;)
         axe_pyplot.set_xlabel(&#34;x.Gi (mm)&#34;)
         axe_pyplot.set_ylabel(&#34;y.Gj (mm)&#34;)
+
 
         # Affichage image de fond.
         try:
@@ -1424,7 +1432,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         d_list = distance(spot, self.select_spots(), space=space)
         nbr = len(self)
         if d_max is not None:
-            if not isinstance(d_max, (float, int)):
+            if not isinstance(d_max, numbers.Number):
                 raise TypeError(f&#34;&#39;d_max&#39; has to be a number, not a {type(d_max).__name__}.&#34;)
             if d_max &lt;= 0:
                 raise ValueError(f&#34;&#39;d_max&#39; doit etre strictement positif. Or il vaut {d_max}.&#34;)
@@ -1706,9 +1714,13 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt;
+
+        Sans preciser l&#39;axe.
         &gt;&gt;&gt; diag.plot_gnomonic(display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
         &gt;&gt;&gt;
+
+        En precisant l&#39;axe.
         &gt;&gt;&gt; import matplotlib.pyplot as plt
         &gt;&gt;&gt; fig = plt.figure()
         &gt;&gt;&gt; axe = fig.add_subplot()
@@ -1719,10 +1731,13 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         if axe_pyplot is None:
             import matplotlib.pyplot as plt
             axe_pyplot = plt.figure().add_subplot()
+            axe_pyplot.set_xlim(-.6, .6)
+            axe_pyplot.set_ylim(-.6, .6)
 
         axe_pyplot.set_title(&#34;plan gnomonic&#34;)
         axe_pyplot.set_xlabel(&#34;x.Gi (mm)&#34;)
         axe_pyplot.set_ylabel(&#34;y.Gj (mm)&#34;)
+
 
         # Affichage image de fond.
         try:
@@ -3015,7 +3030,7 @@ True
     d_list = distance(spot, self.select_spots(), space=space)
     nbr = len(self)
     if d_max is not None:
-        if not isinstance(d_max, (float, int)):
+        if not isinstance(d_max, numbers.Number):
             raise TypeError(f&#34;&#39;d_max&#39; has to be a number, not a {type(d_max).__name__}.&#34;)
         if d_max &lt;= 0:
             raise ValueError(f&#34;&#39;d_max&#39; doit etre strictement positif. Or il vaut {d_max}.&#34;)
@@ -3274,10 +3289,14 @@ quality: 0.8344
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt;
-&gt;&gt;&gt; diag.plot_gnomonic(display=False)
+</code></pre>
+<p>Sans preciser l'axe.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; diag.plot_gnomonic(display=False)
 &lt;AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'&gt;
 &gt;&gt;&gt;
-&gt;&gt;&gt; import matplotlib.pyplot as plt
+</code></pre>
+<p>En precisant l'axe.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
 &gt;&gt;&gt; fig = plt.figure()
 &gt;&gt;&gt; axe = fig.add_subplot()
 &gt;&gt;&gt; diag.plot_gnomonic(axe, display=False)
@@ -3305,9 +3324,13 @@ quality: 0.8344
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt;
+
+    Sans preciser l&#39;axe.
     &gt;&gt;&gt; diag.plot_gnomonic(display=False)
     &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan gnomonic&#39;}, xlabel=&#39;x.Gi (mm)&#39;, ylabel=&#39;y.Gj (mm)&#39;&gt;
     &gt;&gt;&gt;
+
+    En precisant l&#39;axe.
     &gt;&gt;&gt; import matplotlib.pyplot as plt
     &gt;&gt;&gt; fig = plt.figure()
     &gt;&gt;&gt; axe = fig.add_subplot()
@@ -3318,10 +3341,13 @@ quality: 0.8344
     if axe_pyplot is None:
         import matplotlib.pyplot as plt
         axe_pyplot = plt.figure().add_subplot()
+        axe_pyplot.set_xlim(-.6, .6)
+        axe_pyplot.set_ylim(-.6, .6)
 
     axe_pyplot.set_title(&#34;plan gnomonic&#34;)
     axe_pyplot.set_xlabel(&#34;x.Gi (mm)&#34;)
     axe_pyplot.set_ylabel(&#34;y.Gj (mm)&#34;)
+
 
     # Affichage image de fond.
     try:

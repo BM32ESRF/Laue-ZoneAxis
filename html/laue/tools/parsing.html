@@ -46,6 +46,7 @@ Notes
 * Le module ``regex`` peut permetre d&#39;accroitre legerement les performances.
 &#34;&#34;&#34;
 
+import numbers
 import os
 try:
         import regex as re
@@ -127,13 +128,13 @@ def extract_parameters(ignore_missing=False, **detector_parameters):
             f&#34;{repr(detector_parameters[&#39;config_file&#39;])} n&#39;est pas un fichier qui existe.&#34;
     for dist in (&#34;dd&#34;, &#34;detect&#34;, &#34;distance&#34;):
         if dist in detector_parameters:
-            assert isinstance(detector_parameters[dist], (float, int)), \
+            assert isinstance(detector_parameters[dist], numbers.Number), \
                 f&#34;&#39;{dist}&#39; doit etre un nombre, pas un {type(detector_parameters[dist]).__name__}.&#34;
             assert detector_parameters[dist] &gt; 0, \
                 f&#34;Toute distance doit etre positive, or elle vaut {detector_parameters[dist]}.&#34;
     for pos in (&#34;xcen&#34;, &#34;x0&#34;, &#34;ycen&#34;, &#34;y0&#34;):
         if pos in detector_parameters:
-            assert isinstance(detector_parameters[pos], (float, int)), \
+            assert isinstance(detector_parameters[pos], numbers.Number), \
                 f&#34;&#39;{pos}&#39; doit etre un nombre, pas un {type(detector_parameters[pos]).__name__}.&#34;
     for angle in (&#34;xbet&#34;, &#34;bet&#34;, &#34;beta&#34;, &#34;angle1&#34;, &#34;xgam&#34;, &#34;gam&#34;, &#34;gamma&#34;, &#34;angle2&#34;):
         if angle in detector_parameters:
@@ -401,13 +402,13 @@ Les clefs et les valeurs typique sont par example:
             f&#34;{repr(detector_parameters[&#39;config_file&#39;])} n&#39;est pas un fichier qui existe.&#34;
     for dist in (&#34;dd&#34;, &#34;detect&#34;, &#34;distance&#34;):
         if dist in detector_parameters:
-            assert isinstance(detector_parameters[dist], (float, int)), \
+            assert isinstance(detector_parameters[dist], numbers.Number), \
                 f&#34;&#39;{dist}&#39; doit etre un nombre, pas un {type(detector_parameters[dist]).__name__}.&#34;
             assert detector_parameters[dist] &gt; 0, \
                 f&#34;Toute distance doit etre positive, or elle vaut {detector_parameters[dist]}.&#34;
     for pos in (&#34;xcen&#34;, &#34;x0&#34;, &#34;ycen&#34;, &#34;y0&#34;):
         if pos in detector_parameters:
-            assert isinstance(detector_parameters[pos], (float, int)), \
+            assert isinstance(detector_parameters[pos], numbers.Number), \
                 f&#34;&#39;{pos}&#39; doit etre un nombre, pas un {type(detector_parameters[pos]).__name__}.&#34;
     for angle in (&#34;xbet&#34;, &#34;bet&#34;, &#34;beta&#34;, &#34;angle1&#34;, &#34;xgam&#34;, &#34;gam&#34;, &#34;gamma&#34;, &#34;angle2&#34;):
         if angle in detector_parameters:

@@ -47,8 +47,6 @@ Notes
 Si le module ``numexpr`` est installe, certaines optimisations pourront etre faites.
 &#34;&#34;&#34;
 
-from typing import Iterable
-
 import cloudpickle
 import numpy as np
 import sympy
@@ -210,10 +208,7 @@ def evalf(x, n=15, **options):
     except AttributeError:
         if isinstance(x, (tuple, list, set)):
             return type(x)([evalf(e) for e in x])
-        try:
-            return type(x)(*(evalf(e) for e in x.args))
-        except AttributeError:
-            return x
+        return type(x)(*(evalf(e) for e in x.args))
 
 def simplify(x, **kwargs):
     &#34;&#34;&#34;
@@ -227,26 +222,20 @@ def simplify(x, **kwargs):
     except AttributeError:
         if isinstance(x, (tuple, list, set)):
             return type(x)([simplify(e, **kwargs) for e in x])
-        try:
-            return type(x)(*(simplify(e, **kwargs) for e in x.args))
-        except AttributeError:
-            return x
+        return type(x)(*(simplify(e, **kwargs) for e in x.args))
 
-def subs(x, *args, **kwargs):
+def subs(x, replacements):
     &#34;&#34;&#34;
     ** Alias vers ``sympy.subs``. **
 
     Gere recursivement les objets qui n&#39;ont pas de methode ``.subs``.
     &#34;&#34;&#34;
     try:
-        return x.subs(*args, **kwargs)
+        return x.subs(replacements)
     except AttributeError:
         if isinstance(x, (tuple, list, set)):
-            return type(x)([subs(e, *args, **kwargs) for e in x])
-        try:
-            return type(x)(*(subs(e, *args, **kwargs) for e in x.args))
-        except AttributeError:
-            return x
+            return type(x)([subs(e, replacements) for e in x])
+        return type(x)(*(subs(e, replacements) for e in x.args))
 
 def time_cost(x):
     &#34;&#34;&#34;
@@ -267,7 +256,7 @@ class Lambdify:
     &#34;&#34;&#34;
     ** Permet de manipuler plus simplement une fonction. **
     &#34;&#34;&#34;
-    def __init__(self, args: Iterable, expr, *, _simplify=True):
+    def __init__(self, args, expr, *, _simplify=True):
         &#34;&#34;&#34;
         ** Prepare la fonction. **
 
@@ -486,7 +475,7 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
 <dl>
 <dt id="laue.tools.lambdify.Lambdify"><code class="flex name class">
 <span>class <span class="ident">Lambdify</span></span>
-<span>(</span><span>args: Iterable, expr)</span>
+<span>(</span><span>args, expr)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Permet de manipuler plus simplement une fonction. </strong></p>
@@ -506,7 +495,7 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
     &#34;&#34;&#34;
     ** Permet de manipuler plus simplement une fonction. **
     &#34;&#34;&#34;
-    def __init__(self, args: Iterable, expr, *, _simplify=True):
+    def __init__(self, args, expr, *, _simplify=True):
         &#34;&#34;&#34;
         ** Prepare la fonction. **
 

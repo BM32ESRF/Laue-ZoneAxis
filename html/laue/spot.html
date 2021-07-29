@@ -44,6 +44,7 @@ legerement amoindrie.
 &#34;&#34;&#34;
 
 import math
+import numbers
 
 import numpy as np
 
@@ -114,7 +115,7 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
         assert all(len(spot) == 2 for spot in spot1 if hasattr(spot, &#34;__iter__&#34;))
     if isinstance(spot1, tuple):
         assert len(spot1) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(spot1)}.&#34;
-        assert all(isinstance(c, (float, int)) for c in spot1)
+        assert all(isinstance(c, numbers.Number) for c in spot1)
     assert isinstance(spot2, (Spot, np.ndarray, list, tuple)), \
         f&#34;&#39;spot2&#39; has to be a Spot or list, not a {type(spot2).__name__}.&#34;
     if isinstance(spot2, (np.ndarray, list)):
@@ -123,7 +124,7 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
         assert all(len(spot) == 2 for spot in spot2 if hasattr(spot, &#34;__iter__&#34;))
     if isinstance(spot2, tuple):
         assert len(spot2) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(spot2)}.&#34;
-        assert all(isinstance(c, (float, int)) for c in spot2)
+        assert all(isinstance(c, numbers.Number) for c in spot2)
     assert space in {&#34;camera&#34;, &#34;gnomonic&#34;, &#34;angle&#34;}, f&#34;&#39;space&#39; can not be {repr(space)}.&#34;
 
     # Simplification du probleme.
@@ -758,7 +759,7 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
         assert all(len(spot) == 2 for spot in spot1 if hasattr(spot, &#34;__iter__&#34;))
     if isinstance(spot1, tuple):
         assert len(spot1) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(spot1)}.&#34;
-        assert all(isinstance(c, (float, int)) for c in spot1)
+        assert all(isinstance(c, numbers.Number) for c in spot1)
     assert isinstance(spot2, (Spot, np.ndarray, list, tuple)), \
         f&#34;&#39;spot2&#39; has to be a Spot or list, not a {type(spot2).__name__}.&#34;
     if isinstance(spot2, (np.ndarray, list)):
@@ -767,7 +768,7 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
         assert all(len(spot) == 2 for spot in spot2 if hasattr(spot, &#34;__iter__&#34;))
     if isinstance(spot2, tuple):
         assert len(spot2) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(spot2)}.&#34;
-        assert all(isinstance(c, (float, int)) for c in spot2)
+        assert all(isinstance(c, numbers.Number) for c in spot2)
     assert space in {&#34;camera&#34;, &#34;gnomonic&#34;, &#34;angle&#34;}, f&#34;&#39;space&#39; can not be {repr(space)}.&#34;
 
     # Simplification du probleme.

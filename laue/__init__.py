@@ -43,10 +43,12 @@ recuperation des diagrammes
 # Pour faire passer les tests, il faut taper:
 # $ python3 -m pytest --doctest-modules laue && python3 -m pytest laue/tools/tests.py
 
-__all__ = ["Experiment"]
+__all__ = ["Experiment",
+           "atomic_find_zone_axes"]
 __pdoc__ = {"Experiment.__getitem__": True,
             "Experiment.__iter__": True,
             "Experiment.__len__": True,
             "tools.fork_lambdify": False}
 
 from laue.experiment.base_experiment import Experiment
+from laue.zone_axis import atomic_find_zone_axes
