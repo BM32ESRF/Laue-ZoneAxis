@@ -9,6 +9,7 @@ Les resultats des tests pousses sont ecrit dans le fichier 'tests_results.txt'
 
 # https://docs.pytest.org/en/6.2.x/reference.html
 
+import itertools
 import os
 import sys
 import time
@@ -130,6 +131,14 @@ def test_geometry_bij():
     import sympy
     with CWDasRoot():
         from laue.geometry import Transformer
+
+    def test(expr, vmin, vmax):
+        symbols = list(expr.free_symbols)
+        x_vect = np.linspace(vmin, vmax, 10)
+        for subs_val in itertools.product(*((x_vect,)*len(symbols))):
+            subs = {s: v for s, v in zip(symbols, subs_val)}
+            yield subs, expr.evalf(subs=subs)
+
     transformer = Transformer()
     xg, yg = sympy.symbols("x_g y_g", real=True)
     xc, yc = sympy.symbols("x_c y_c", real=True)
@@ -143,6 +152,9 @@ def test_geometry_bij():
     _print(f"(cam_to_gnom o gnom_to_cam)(xg, yg): {camgnom_rond_gnomcam}")
     gnomcam_rond_camgnom = gnom_to_cam(*cam_to_gnom(xc, yc))
     _print(f"(gnom_to_cam o cam_to_gnom)(xc, yc): {gnomcam_rond_camgnom}")
+
+    for subs, val in test(camgnom_rond_gnomcam[0]-xg, -.6, .6):
+        print(subs, val)
 
     assert camgnom_rond_gnomcam[0].simplify() == xg
     assert camgnom_rond_gnomcam[1].simplify() == yg

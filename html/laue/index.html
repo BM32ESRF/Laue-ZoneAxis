@@ -109,14 +109,15 @@ recuperation des diagrammes
 # $ python3 -m pytest --doctest-modules laue &amp;&amp; python3 -m pytest laue/tools/tests.py
 
 __all__ = [&#34;Experiment&#34;,
-           &#34;atomic_find_zone_axes&#34;]
+           &#34;atomic_find_zone_axes&#34;, &#34;atomic_find_subsets&#34;]
 __pdoc__ = {&#34;Experiment.__getitem__&#34;: True,
             &#34;Experiment.__iter__&#34;: True,
             &#34;Experiment.__len__&#34;: True,
             &#34;tools.fork_lambdify&#34;: False}
 
 from laue.experiment.base_experiment import Experiment
-from laue.zone_axis import atomic_find_zone_axes</code></pre>
+from laue.zone_axis import atomic_find_zone_axes
+from laue.subsets import atomic_find_subsets</code></pre>
 </details>
 </section>
 <section>
@@ -141,6 +142,11 @@ from laue.zone_axis import atomic_find_zone_axes</code></pre>
 <div class="desc"><p><strong> Represente un spot dans un diagramme de Laue. </strong>
 …</p></div>
 </dd>
+<dt><code class="name"><a title="laue.subsets" href="subsets.html">laue.subsets</a></code></dt>
+<dd>
+<div class="desc"><p><strong> Permet de separer les differents grains d'un diagramme. </strong>
+…</p></div>
+</dd>
 <dt><code class="name"><a title="laue.tools" href="tools/index.html">laue.tools</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -157,6 +163,355 @@ from laue.zone_axis import atomic_find_zone_axes</code></pre>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="laue.atomic_find_subsets"><code class="name flex">
+<span>def <span class="ident">atomic_find_subsets</span></span>(<span>spots_dict, axes_dict, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Fonction 'bas niveau' de separation de grains. </strong></p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Cette fonction n'est pas faite pour etre utilisee directement,
+il vaut mieux s'en servir a travers <code><a title="laue.Experiment.find_subsets" href="#laue.Experiment.find_subsets">Experiment.find_subsets()</a></code>
+ou encore via <code><a title="laue.diagram.LaueDiagram.find_subsets" href="subsets.html#laue.subsets.Splitable.find_subsets">Splitable.find_subsets()</a></code> car le context
+est mieu gere, les entrees sont plus simples et les sorties aussi.</li>
+<li>Il n'y a pas de verifications sur les entrees car elles sont faite
+dans les methodes de plus haut niveau.</li>
+<li>Cette fonction n'est pas parallelisee. Par contre la methode
+<code><a title="laue.Experiment.find_subsets" href="#laue.Experiment.find_subsets">Experiment.find_subsets()</a></code> gere nativement le parallelisme.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>spots_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Une representation des spots et des information minimales
+qui y sont raccrochees. Il doit prendre la forme suivante:
+<code>{spot_ind: {"gnom": (x_gnom, y_gnom), "axes": {1, 3, ...}}, ...}</code></dd>
+<dt><strong><code>axes_dict</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Une representations des axes de zone. Doit etre de la forme:
+<code>{axe_ind: {"polar": (theta, dist), "quality": .7, "spots": {1, 4, 5, 6}}, ...}</code></dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Doit au moins contenir les 3 champs <code>angle_max</code>, <code>spots_max</code> et <code>distance_max</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>Chaque element est un ensemble d'indice de spot appartenant au meme grain.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; spots_dict = {0: {'gnom': (0.3136510725564478, -0.44091934214920697), 'axes': set()},
+...               1: {'gnom': (0.3092269223801162, -0.3703963974694111), 'axes': {0}},
+...               2: {'gnom': (0.29464954430652696, 0.39670741889986955), 'axes': {1}},
+...               3: {'gnom': (0.30191318963902786, 0.011759364157261544), 'axes': {2}},
+...               4: {'gnom': (0.2656586060012433, -0.29892567761860783), 'axes': {0}},
+...               5: {'gnom': (0.2537441830952802, 0.32256757073867776), 'axes': {1}},
+...               6: {'gnom': (0.259687191990358, 0.011094867051531301), 'axes': {2}},
+...               7: {'gnom': (0.21447480004378858, -0.2150686716681864), 'axes': {0}},
+...               8: {'gnom': (0.2057015738443993, 0.2356420984106664), 'axes': {1}},
+...               9: {'gnom': (0.09095514707222462, -0.5356714822419564), 'axes': {3, 4}},
+...               10: {'gnom': (0.06846289051965272, 0.5548594993575858), 'axes': {3, 5}},
+...               11: {'gnom': (0.16685972592987006, -0.1362785647833782), 'axes': {0}},
+...               12: {'gnom': (0.16092652407854113, 0.15424696872260854), 'axes': {1}},
+...               13: {'gnom': (0.0880179013812851, -0.40043047804756454), 'axes': {3}},
+...               14: {'gnom': (0.07130573600458438, 0.4174843621463065), 'axes': {3}},
+...               15: {'gnom': (0.08639048300887514, -0.31911672107326594), 'axes': {3}},
+...               16: {'gnom': (0.07308383568548608, 0.3351760458933546), 'axes': {3}},
+...               17: {'gnom': (-0.016567440130016563, -0.5541568143935384), 'axes': {6}},
+...               18: {'gnom': (-0.04084781468303007, 0.5689448068249144), 'axes': {7}},
+...               19: {'gnom': (0.0011982188252073992, -0.45016007120047424), 'axes': set()},
+...               20: {'gnom': (-0.018154025485441625, 0.46402526754308027), 'axes': set()},
+...               21: {'gnom': (-0.07286049562681773, -0.5640133440412382), 'axes': set()},
+...               22: {'gnom': (0.0798366324753105, 0.007023938379407561), 'axes': {0, 1, 2, 3}},
+...               23: {'gnom': (-0.0026903259324252246, 0.3921879524265071), 'axes': {5}},
+...               24: {'gnom': (-0.09784778756977644, 0.5766271192972883), 'axes': set()},
+...               25: {'gnom': (0.008002458469782677, -0.12293574282766238), 'axes': {1}},
+...               26: {'gnom': (0.0027460490484708115, 0.13394781189060836), 'axes': {0}},
+...               27: {'gnom': (-0.00523750349077013, -0.1470394198008183), 'axes': {1}},
+...               28: {'gnom': (-0.011614516626281228, 0.15777148638160254), 'axes': {0}},
+...               29: {'gnom': (-0.02477598980567221, -0.1823836791494654), 'axes': {1}},
+...               30: {'gnom': (-0.03264505249777272, 0.19229497060446735), 'axes': {0}},
+...               31: {'gnom': (-0.05554717740227801, -0.23832176191125093), 'axes': {1, 4}},
+...               32: {'gnom': (-0.06606796372263056, 0.24757266647939288), 'axes': {0, 5}},
+...               33: {'gnom': (-0.07907768658950604, -0.28096918114364355), 'axes': {1}},
+...               34: {'gnom': (-0.09156428823859053, 0.2893970244445073), 'axes': {0}},
+...               35: {'gnom': (-0.1126289846318788, -0.3416241560303849), 'axes': {1, 6}},
+...               36: {'gnom': (-0.060637577826655534, 0.0040391083212410655), 'axes': {2}},
+...               37: {'gnom': (-0.12787900102974828, 0.3491863530719953), 'axes': {0, 7}},
+...               38: {'gnom': (-0.1638208798822865, -0.4347286698438957), 'axes': {1}},
+...               39: {'gnom': (-0.18763951100210385, -0.4776573606384503), 'axes': {1}},
+...               40: {'gnom': (-0.1835787305562983, 0.4411739247300923), 'axes': {0}},
+...               41: {'gnom': (-0.08524649743749545, 0.003436523504335945), 'axes': {2}},
+...               42: {'gnom': (-0.2523542667003644, -0.5949096601292776), 'axes': {8, 1}},
+...               43: {'gnom': (-0.20958039716029048, 0.4837711867805186), 'axes': {0}},
+...               44: {'gnom': (-0.11758167206566646, -0.1123768702642382), 'axes': {4}},
+...               45: {'gnom': (-0.12266805447587614, 0.11817207059217111), 'axes': {5}},
+...               46: {'gnom': (-0.17376685735949005, 0.0016472083664571353), 'axes': {2, 4, 5}},
+...               47: {'gnom': (-0.20724297206742168, -0.25150647771157364), 'axes': set()},
+...               48: {'gnom': (-0.19501092265693473, -0.15910834995174863), 'axes': {6}},
+...               49: {'gnom': (-0.21870028043714163, 0.25404867230414246), 'axes': set()},
+...               50: {'gnom': (-0.2022799134764107, 0.16163477331619278), 'axes': {7}},
+...               51: {'gnom': (-0.2581018757728966, -0.3579924435989167), 'axes': {8}},
+...               52: {'gnom': (-0.2748170617964089, 0.3596407013965223), 'axes': {8}},
+...               53: {'gnom': (-0.21290266125204668, 0.0008346770568725252), 'axes': {2}},
+...               54: {'gnom': (-0.21986841578944072, -0.10369811043407293), 'axes': {5, 6}},
+...               55: {'gnom': (-0.224622744015843, 0.10503684334781563), 'axes': {4, 7}},
+...               56: {'gnom': (-0.25955409478645797, -0.29848728294016463), 'axes': {8}},
+...               57: {'gnom': (-0.27338619051240226, 0.299389601118816), 'axes': {8}},
+...               58: {'gnom': (-0.3156632165624574, -0.4202358686963255), 'axes': set()},
+...               59: {'gnom': (-0.2618304221414466, -0.19929059589121062), 'axes': {8, 5}},
+...               60: {'gnom': (-0.2711073666720387, 0.1994839074523256), 'axes': {8, 4}},
+...               61: {'gnom': (-0.2637120677768278, -0.11984479170021081), 'axes': {8}},
+...               62: {'gnom': (-0.26934469418071083, 0.11943958616023759), 'axes': {8}},
+...               63: {'gnom': (-0.26653796331705015, -0.00040349411462381246), 'axes': {8, 2, 6, 7}},
+...               64: {'gnom': (-0.3351088299984176, -0.36661822106768144), 'axes': {5}},
+...               65: {'gnom': (-0.30919293226499917, -0.22782988778598667), 'axes': set()},
+...               66: {'gnom': (-0.3524825023650732, 0.3647641920521141), 'axes': {4}},
+...               67: {'gnom': (-0.31990969642322137, 0.22611752961083748), 'axes': set()},
+...               68: {'gnom': (-0.3144023520521512, -0.0013698968940222644), 'axes': {2}},
+...               69: {'gnom': (-0.3223772542169661, -0.14153279317889217), 'axes': {7}},
+...               70: {'gnom': (-0.3290872223583307, 0.13867490378055763), 'axes': {6}},
+...               71: {'gnom': (-0.34380505280556134, -0.0019232844125064402), 'axes': {2}},
+...               72: {'gnom': (-0.3716527272451695, -0.2655541496297943), 'axes': {7}},
+...               73: {'gnom': (-0.384382394518522, 0.26137948985364423), 'axes': {6}},
+...               74: {'gnom': (-0.4150393355485816, -0.37556396956837046), 'axes': {7}},
+...               75: {'gnom': (-0.4213116259525938, -0.1277995546595711), 'axes': set()},
+...               76: {'gnom': (-0.42743697409652126, 0.12091462467337603), 'axes': set()},
+...               77: {'gnom': (-0.4305672928685682, -0.10207732996277492), 'axes': set()}}
+&gt;&gt;&gt; axes_dict = {0: {'polar': (0.5456325, 0.07189146), 'quality': 0.7786729549943984, 'spots': {32, 1, 34, 4, 37, 7, 40, 11, 43, 22, 26, 28, 30}},
+...              1: {'polar': (-0.50404394, 0.066435024), 'quality': 0.8495679649229442, 'spots': {33, 2, 35, 5, 38, 39, 8, 42, 12, 22, 25, 27, 29, 31}},
+...              2: {'polar': (1.5920126, 0.0053436677), 'quality': 0.5048333500772214, 'spots': {3, 36, 68, 6, 71, 41, 46, 53, 22, 63}},
+...              3: {'polar': (0.020630987, 0.07989738), 'quality': 0.32446216058045907, 'spots': {9, 10, 13, 14, 15, 16, 22}},
+...              4: {'polar': (-2.6840417, 0.15513226), 'quality': 0.32470155528405464, 'spots': {66, 9, 44, 46, 55, 60, 31}},
+...              5: {'polar': (2.7287471, 0.15980783), 'quality': 0.36693478788694234, 'spots': {32, 64, 10, 45, 46, 54, 23, 59}},
+...              6: {'polar': (-2.7180853, 0.24310948), 'quality': 0.324204821510315, 'spots': {35, 70, 73, 48, 17, 54, 63}},
+...              7: {'polar': (2.7643242, 0.24759501), 'quality': 0.3668147624332471, 'spots': {69, 37, 72, 74, 18, 50, 55, 63}},
+...              8: {'polar': (-3.118213, 0.26645306), 'quality': 0.5046664108258551, 'spots': {42, 51, 52, 56, 57, 59, 60, 61, 62, 63}}}
+&gt;&gt;&gt; kwargs = {'angle_max': 0.1308996938995747, 'spots_max': 20, 'distance_max': 0.08}
+&gt;&gt;&gt; laue.atomic_find_subsets(spots_dict, axes_dict, **kwargs)
+[{9, 10, 22}]
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def atomic_find_subsets(spots_dict, axes_dict, **kwargs):
+    &#34;&#34;&#34;
+    ** Fonction &#39;bas niveau&#39; de separation de grains. **
+
+    Notes
+    -----
+    * Cette fonction n&#39;est pas faite pour etre utilisee directement,
+    il vaut mieux s&#39;en servir a travers ``laue.Experiment.find_subsets``
+    ou encore via ``laue.diagram.LaueDiagram.find_subsets`` car le context
+    est mieu gere, les entrees sont plus simples et les sorties aussi.
+    * Il n&#39;y a pas de verifications sur les entrees car elles sont faite
+    dans les methodes de plus haut niveau.
+    * Cette fonction n&#39;est pas parallelisee. Par contre la methode
+    ``laue.Experiment.find_subsets`` gere nativement le parallelisme.
+
+    Parameters
+    ----------
+    spots_dict : dict
+        Une representation des spots et des information minimales
+        qui y sont raccrochees. Il doit prendre la forme suivante:
+        ``{spot_ind: {&#34;gnom&#34;: (x_gnom, y_gnom), &#34;axes&#34;: {1, 3, ...}}, ...}``
+    axes_dict : dict
+        Une representations des axes de zone. Doit etre de la forme:
+        ``{axe_ind: {&#34;polar&#34;: (theta, dist), &#34;quality&#34;: .7, &#34;spots&#34;: {1, 4, 5, 6}}, ...}``
+    **kwargs
+        Doit au moins contenir les 3 champs ``angle_max``, ``spots_max`` et ``distance_max``.
+
+    Returns
+    -------
+    list
+        Chaque element est un ensemble d&#39;indice de spot appartenant au meme grain.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; spots_dict = {0: {&#39;gnom&#39;: (0.3136510725564478, -0.44091934214920697), &#39;axes&#39;: set()},
+    ...               1: {&#39;gnom&#39;: (0.3092269223801162, -0.3703963974694111), &#39;axes&#39;: {0}},
+    ...               2: {&#39;gnom&#39;: (0.29464954430652696, 0.39670741889986955), &#39;axes&#39;: {1}},
+    ...               3: {&#39;gnom&#39;: (0.30191318963902786, 0.011759364157261544), &#39;axes&#39;: {2}},
+    ...               4: {&#39;gnom&#39;: (0.2656586060012433, -0.29892567761860783), &#39;axes&#39;: {0}},
+    ...               5: {&#39;gnom&#39;: (0.2537441830952802, 0.32256757073867776), &#39;axes&#39;: {1}},
+    ...               6: {&#39;gnom&#39;: (0.259687191990358, 0.011094867051531301), &#39;axes&#39;: {2}},
+    ...               7: {&#39;gnom&#39;: (0.21447480004378858, -0.2150686716681864), &#39;axes&#39;: {0}},
+    ...               8: {&#39;gnom&#39;: (0.2057015738443993, 0.2356420984106664), &#39;axes&#39;: {1}},
+    ...               9: {&#39;gnom&#39;: (0.09095514707222462, -0.5356714822419564), &#39;axes&#39;: {3, 4}},
+    ...               10: {&#39;gnom&#39;: (0.06846289051965272, 0.5548594993575858), &#39;axes&#39;: {3, 5}},
+    ...               11: {&#39;gnom&#39;: (0.16685972592987006, -0.1362785647833782), &#39;axes&#39;: {0}},
+    ...               12: {&#39;gnom&#39;: (0.16092652407854113, 0.15424696872260854), &#39;axes&#39;: {1}},
+    ...               13: {&#39;gnom&#39;: (0.0880179013812851, -0.40043047804756454), &#39;axes&#39;: {3}},
+    ...               14: {&#39;gnom&#39;: (0.07130573600458438, 0.4174843621463065), &#39;axes&#39;: {3}},
+    ...               15: {&#39;gnom&#39;: (0.08639048300887514, -0.31911672107326594), &#39;axes&#39;: {3}},
+    ...               16: {&#39;gnom&#39;: (0.07308383568548608, 0.3351760458933546), &#39;axes&#39;: {3}},
+    ...               17: {&#39;gnom&#39;: (-0.016567440130016563, -0.5541568143935384), &#39;axes&#39;: {6}},
+    ...               18: {&#39;gnom&#39;: (-0.04084781468303007, 0.5689448068249144), &#39;axes&#39;: {7}},
+    ...               19: {&#39;gnom&#39;: (0.0011982188252073992, -0.45016007120047424), &#39;axes&#39;: set()},
+    ...               20: {&#39;gnom&#39;: (-0.018154025485441625, 0.46402526754308027), &#39;axes&#39;: set()},
+    ...               21: {&#39;gnom&#39;: (-0.07286049562681773, -0.5640133440412382), &#39;axes&#39;: set()},
+    ...               22: {&#39;gnom&#39;: (0.0798366324753105, 0.007023938379407561), &#39;axes&#39;: {0, 1, 2, 3}},
+    ...               23: {&#39;gnom&#39;: (-0.0026903259324252246, 0.3921879524265071), &#39;axes&#39;: {5}},
+    ...               24: {&#39;gnom&#39;: (-0.09784778756977644, 0.5766271192972883), &#39;axes&#39;: set()},
+    ...               25: {&#39;gnom&#39;: (0.008002458469782677, -0.12293574282766238), &#39;axes&#39;: {1}},
+    ...               26: {&#39;gnom&#39;: (0.0027460490484708115, 0.13394781189060836), &#39;axes&#39;: {0}},
+    ...               27: {&#39;gnom&#39;: (-0.00523750349077013, -0.1470394198008183), &#39;axes&#39;: {1}},
+    ...               28: {&#39;gnom&#39;: (-0.011614516626281228, 0.15777148638160254), &#39;axes&#39;: {0}},
+    ...               29: {&#39;gnom&#39;: (-0.02477598980567221, -0.1823836791494654), &#39;axes&#39;: {1}},
+    ...               30: {&#39;gnom&#39;: (-0.03264505249777272, 0.19229497060446735), &#39;axes&#39;: {0}},
+    ...               31: {&#39;gnom&#39;: (-0.05554717740227801, -0.23832176191125093), &#39;axes&#39;: {1, 4}},
+    ...               32: {&#39;gnom&#39;: (-0.06606796372263056, 0.24757266647939288), &#39;axes&#39;: {0, 5}},
+    ...               33: {&#39;gnom&#39;: (-0.07907768658950604, -0.28096918114364355), &#39;axes&#39;: {1}},
+    ...               34: {&#39;gnom&#39;: (-0.09156428823859053, 0.2893970244445073), &#39;axes&#39;: {0}},
+    ...               35: {&#39;gnom&#39;: (-0.1126289846318788, -0.3416241560303849), &#39;axes&#39;: {1, 6}},
+    ...               36: {&#39;gnom&#39;: (-0.060637577826655534, 0.0040391083212410655), &#39;axes&#39;: {2}},
+    ...               37: {&#39;gnom&#39;: (-0.12787900102974828, 0.3491863530719953), &#39;axes&#39;: {0, 7}},
+    ...               38: {&#39;gnom&#39;: (-0.1638208798822865, -0.4347286698438957), &#39;axes&#39;: {1}},
+    ...               39: {&#39;gnom&#39;: (-0.18763951100210385, -0.4776573606384503), &#39;axes&#39;: {1}},
+    ...               40: {&#39;gnom&#39;: (-0.1835787305562983, 0.4411739247300923), &#39;axes&#39;: {0}},
+    ...               41: {&#39;gnom&#39;: (-0.08524649743749545, 0.003436523504335945), &#39;axes&#39;: {2}},
+    ...               42: {&#39;gnom&#39;: (-0.2523542667003644, -0.5949096601292776), &#39;axes&#39;: {8, 1}},
+    ...               43: {&#39;gnom&#39;: (-0.20958039716029048, 0.4837711867805186), &#39;axes&#39;: {0}},
+    ...               44: {&#39;gnom&#39;: (-0.11758167206566646, -0.1123768702642382), &#39;axes&#39;: {4}},
+    ...               45: {&#39;gnom&#39;: (-0.12266805447587614, 0.11817207059217111), &#39;axes&#39;: {5}},
+    ...               46: {&#39;gnom&#39;: (-0.17376685735949005, 0.0016472083664571353), &#39;axes&#39;: {2, 4, 5}},
+    ...               47: {&#39;gnom&#39;: (-0.20724297206742168, -0.25150647771157364), &#39;axes&#39;: set()},
+    ...               48: {&#39;gnom&#39;: (-0.19501092265693473, -0.15910834995174863), &#39;axes&#39;: {6}},
+    ...               49: {&#39;gnom&#39;: (-0.21870028043714163, 0.25404867230414246), &#39;axes&#39;: set()},
+    ...               50: {&#39;gnom&#39;: (-0.2022799134764107, 0.16163477331619278), &#39;axes&#39;: {7}},
+    ...               51: {&#39;gnom&#39;: (-0.2581018757728966, -0.3579924435989167), &#39;axes&#39;: {8}},
+    ...               52: {&#39;gnom&#39;: (-0.2748170617964089, 0.3596407013965223), &#39;axes&#39;: {8}},
+    ...               53: {&#39;gnom&#39;: (-0.21290266125204668, 0.0008346770568725252), &#39;axes&#39;: {2}},
+    ...               54: {&#39;gnom&#39;: (-0.21986841578944072, -0.10369811043407293), &#39;axes&#39;: {5, 6}},
+    ...               55: {&#39;gnom&#39;: (-0.224622744015843, 0.10503684334781563), &#39;axes&#39;: {4, 7}},
+    ...               56: {&#39;gnom&#39;: (-0.25955409478645797, -0.29848728294016463), &#39;axes&#39;: {8}},
+    ...               57: {&#39;gnom&#39;: (-0.27338619051240226, 0.299389601118816), &#39;axes&#39;: {8}},
+    ...               58: {&#39;gnom&#39;: (-0.3156632165624574, -0.4202358686963255), &#39;axes&#39;: set()},
+    ...               59: {&#39;gnom&#39;: (-0.2618304221414466, -0.19929059589121062), &#39;axes&#39;: {8, 5}},
+    ...               60: {&#39;gnom&#39;: (-0.2711073666720387, 0.1994839074523256), &#39;axes&#39;: {8, 4}},
+    ...               61: {&#39;gnom&#39;: (-0.2637120677768278, -0.11984479170021081), &#39;axes&#39;: {8}},
+    ...               62: {&#39;gnom&#39;: (-0.26934469418071083, 0.11943958616023759), &#39;axes&#39;: {8}},
+    ...               63: {&#39;gnom&#39;: (-0.26653796331705015, -0.00040349411462381246), &#39;axes&#39;: {8, 2, 6, 7}},
+    ...               64: {&#39;gnom&#39;: (-0.3351088299984176, -0.36661822106768144), &#39;axes&#39;: {5}},
+    ...               65: {&#39;gnom&#39;: (-0.30919293226499917, -0.22782988778598667), &#39;axes&#39;: set()},
+    ...               66: {&#39;gnom&#39;: (-0.3524825023650732, 0.3647641920521141), &#39;axes&#39;: {4}},
+    ...               67: {&#39;gnom&#39;: (-0.31990969642322137, 0.22611752961083748), &#39;axes&#39;: set()},
+    ...               68: {&#39;gnom&#39;: (-0.3144023520521512, -0.0013698968940222644), &#39;axes&#39;: {2}},
+    ...               69: {&#39;gnom&#39;: (-0.3223772542169661, -0.14153279317889217), &#39;axes&#39;: {7}},
+    ...               70: {&#39;gnom&#39;: (-0.3290872223583307, 0.13867490378055763), &#39;axes&#39;: {6}},
+    ...               71: {&#39;gnom&#39;: (-0.34380505280556134, -0.0019232844125064402), &#39;axes&#39;: {2}},
+    ...               72: {&#39;gnom&#39;: (-0.3716527272451695, -0.2655541496297943), &#39;axes&#39;: {7}},
+    ...               73: {&#39;gnom&#39;: (-0.384382394518522, 0.26137948985364423), &#39;axes&#39;: {6}},
+    ...               74: {&#39;gnom&#39;: (-0.4150393355485816, -0.37556396956837046), &#39;axes&#39;: {7}},
+    ...               75: {&#39;gnom&#39;: (-0.4213116259525938, -0.1277995546595711), &#39;axes&#39;: set()},
+    ...               76: {&#39;gnom&#39;: (-0.42743697409652126, 0.12091462467337603), &#39;axes&#39;: set()},
+    ...               77: {&#39;gnom&#39;: (-0.4305672928685682, -0.10207732996277492), &#39;axes&#39;: set()}}
+    &gt;&gt;&gt; axes_dict = {0: {&#39;polar&#39;: (0.5456325, 0.07189146), &#39;quality&#39;: 0.7786729549943984, &#39;spots&#39;: {32, 1, 34, 4, 37, 7, 40, 11, 43, 22, 26, 28, 30}},
+    ...              1: {&#39;polar&#39;: (-0.50404394, 0.066435024), &#39;quality&#39;: 0.8495679649229442, &#39;spots&#39;: {33, 2, 35, 5, 38, 39, 8, 42, 12, 22, 25, 27, 29, 31}},
+    ...              2: {&#39;polar&#39;: (1.5920126, 0.0053436677), &#39;quality&#39;: 0.5048333500772214, &#39;spots&#39;: {3, 36, 68, 6, 71, 41, 46, 53, 22, 63}},
+    ...              3: {&#39;polar&#39;: (0.020630987, 0.07989738), &#39;quality&#39;: 0.32446216058045907, &#39;spots&#39;: {9, 10, 13, 14, 15, 16, 22}},
+    ...              4: {&#39;polar&#39;: (-2.6840417, 0.15513226), &#39;quality&#39;: 0.32470155528405464, &#39;spots&#39;: {66, 9, 44, 46, 55, 60, 31}},
+    ...              5: {&#39;polar&#39;: (2.7287471, 0.15980783), &#39;quality&#39;: 0.36693478788694234, &#39;spots&#39;: {32, 64, 10, 45, 46, 54, 23, 59}},
+    ...              6: {&#39;polar&#39;: (-2.7180853, 0.24310948), &#39;quality&#39;: 0.324204821510315, &#39;spots&#39;: {35, 70, 73, 48, 17, 54, 63}},
+    ...              7: {&#39;polar&#39;: (2.7643242, 0.24759501), &#39;quality&#39;: 0.3668147624332471, &#39;spots&#39;: {69, 37, 72, 74, 18, 50, 55, 63}},
+    ...              8: {&#39;polar&#39;: (-3.118213, 0.26645306), &#39;quality&#39;: 0.5046664108258551, &#39;spots&#39;: {42, 51, 52, 56, 57, 59, 60, 61, 62, 63}}}
+    &gt;&gt;&gt; kwargs = {&#39;angle_max&#39;: 0.1308996938995747, &#39;spots_max&#39;: 20, &#39;distance_max&#39;: 0.08}
+    &gt;&gt;&gt; laue.atomic_find_subsets(spots_dict, axes_dict, **kwargs)
+    [{9, 10, 22}]
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    from laue.zone_axis import distance as distance_axis
+    from laue.spot import distance as distance_pic
+    import networkx
+
+    def count_variant_axis(spot_id):
+        &#34;&#34;&#34;
+        Compte le nombre d&#39;axes de zone qui different beaucoup.
+        (ie considere 2 axes proche comme un seul axe)
+        &#34;&#34;&#34;
+        axes_id = spots_dict[spot_id][&#34;axes&#34;]
+        if len(axes_id) &lt;= 1:
+            return len(axes_id)
+        axes = [axes_dict[axis_id][&#34;polar&#34;] for axis_id in axes_id]
+        nbr_near = (distance_axis(axes, axes, weight=1) &lt; kwargs[&#34;angle_max&#34;]).sum()
+        nbr = len(axes) - (nbr_near-len(axes))//2
+        return nbr
+
+    def simul_remove_axis(graph, axis, excluded):
+        &#34;&#34;&#34;
+        Retire les aretes liees a cet axe, puis regarde ce que ca donne.
+        &#34;&#34;&#34;
+        graph_bis = graph.copy()
+        for spot1, spot2, axis_found in graph.edges.data(&#34;axis&#34;):
+            if axis_found is axis:
+                graph_bis.remove_edge(spot1, spot2)
+        excluded_bis = [edge for edge in excluded if networkx.algorithms.has_path(graph_bis, *edge)]
+        return excluded_bis, graph_bis
+
+    # Extraction des spots.
+    spots_at_cross = sorted(spots_dict, key=count_variant_axis, reverse=True)[:kwargs[&#34;spots_max&#34;]]
+    max_cross = count_variant_axis(spots_at_cross[0])
+    limit = math.sqrt(max(2**2, max_cross)) # Permet d&#39;eviter &#39;ValueError: math domain error&#39;
+    spots_at_cross = [spot_id for spot_id in spots_at_cross if count_variant_axis(spot_id) &gt;= limit]
+
+    # Creation des noeuds du graphe.
+    graph = networkx.Graph()
+    graph.add_nodes_from(spots_at_cross)
+
+    # Ajout grossier de certaine aretes.
+    excluded = [] # La liste des noeuds appartenant a des grains differents.
+    candidate_axes = set() # L&#39;ensemble des axes de zone consideres.
+    for i, spot1 in enumerate(spots_at_cross[:-1]): # On faite toutes les combinaisons
+        for spot2 in spots_at_cross[i+1:]: # de 2 sommets possibles.
+
+            ## Exclusion des spots trop proches.
+            if distance_pic(
+                    spots_dict[spot1][&#34;gnom&#34;],
+                    spots_dict[spot2][&#34;gnom&#34;],
+                    space=&#34;gnomonic&#34;
+                    ) &lt; kwargs[&#34;distance_max&#34;]:
+                excluded.append((spot1, spot2))
+                continue
+
+            ## On ne relie pas les spots qui n&#39;ont pas d&#39;axe commun.
+            common_axes = spots_dict[spot1][&#34;axes&#34;] &amp; spots_dict[spot2][&#34;axes&#34;]
+            if not common_axes:
+                continue
+
+            ## Exclusion des spots ayant 2 axes de zone paralleles.
+            axes1, axes2 = spots_dict[spot1][&#34;axes&#34;]-common_axes, spots_dict[spot2][&#34;axes&#34;]-common_axes
+            if axes1 and axes2 and distance_axis(
+                    [axes_dict[axis_id][&#34;polar&#34;] for axis_id in axes1],
+                    [axes_dict[axis_id][&#34;polar&#34;] for axis_id in axes2],
+                    weight=1).min() &lt; kwargs[&#34;angle_max&#34;]: # tolerance angulaire de pi/32
+                excluded.append((spot1, spot2))
+                continue
+
+            ## Ajout dans le graphe.
+            best_axis = sorted(common_axes, key=lambda axis_id: axes_dict[axis_id][&#34;quality&#34;])[-1]
+            candidate_axes.add(best_axis)
+            graph.add_edge(spot1, spot2, quality=axes_dict[best_axis][&#34;quality&#34;], axis=best_axis)
+
+    # Suppression des aretes en trop afin de discosier les grains.
+    excluded = [edge for edge in excluded if networkx.algorithms.has_path(graph, *edge)]
+    while excluded:
+        predictions = [(*simul_remove_axis(graph, axis_id, excluded), axis_id) for axis_id in candidate_axes]
+        best_len = min(len(excluded_bis) for excluded_bis, _, _ in predictions)
+        predictions = [p for p in predictions if len(p[0]) == best_len]
+        costs = [axes_dict[axis_id][&#34;quality&#34;] for _, _, axis_id in predictions]
+        min_quality = min(costs)
+        predictions = [p for p in predictions if axes_dict[p[2]][&#34;quality&#34;] == min_quality]
+        excluded, graph, axis_id = predictions.pop()
+        candidate_axes.remove(axis_id)
+
+    # Creation des clusters.
+    subsets = list(networkx.algorithms.connected_components(graph))
+    subsets = sorted(subsets, key=lambda con: len(con), reverse=True)
+    subsets = [con for con in subsets if len(con) &gt;= 2]
+    return subsets</code></pre>
+</details>
+</dd>
 <dt id="laue.atomic_find_zone_axes"><code class="name flex">
 <span>def <span class="ident">atomic_find_zone_axes</span></span>(<span>transformer, gnomonics, dmax, nbr, tol)</span>
 </code></dt>
@@ -1257,7 +1612,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         @show_iterator_state
         def _subsets_extractor(self):
             if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-                from laue.tools.splitable import _pickelable as atomic_find_subsets
+                from laue.subsets import _pickelable as atomic_find_subsets
                 from laue.tools.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (
@@ -2078,7 +2433,7 @@ Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.</dd>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Estime les grains dans chaque diagrame. </strong></p>
-<p>Sorte d'alias parallelise vers <code><a title="laue.diagram.LaueDiagram.find_subsets" href="tools/splitable.html#laue.tools.splitable.Splitable.find_subsets">Splitable.find_subsets()</a></code>.
+<p>Sorte d'alias parallelise vers <code><a title="laue.diagram.LaueDiagram.find_subsets" href="subsets.html#laue.subsets.Splitable.find_subsets">Splitable.find_subsets()</a></code>.
 Le resultat est le meme que: <code>[diag.find_subsets(**kwds) for diag in self]</code></p>
 <h2 id="notes">Notes</h2>
 <ul>
@@ -2107,7 +2462,7 @@ recommence a partir du debut et l'ordre reste inchange.</li>
 </ul>
 </dd>
 <dt><strong><code>**kwds</code></strong> :&ensp;<code>number</code></dt>
-<dd>Se sont les parametres de la fonction <code><a title="laue.diagram.LaueDiagram.find_subsets" href="tools/splitable.html#laue.tools.splitable.Splitable.find_subsets">Splitable.find_subsets()</a></code>.</dd>
+<dd>Se sont les parametres de la fonction <code><a title="laue.diagram.LaueDiagram.find_subsets" href="subsets.html#laue.subsets.Splitable.find_subsets">Splitable.find_subsets()</a></code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2199,7 +2554,7 @@ recommence a partir du debut et l'ordre reste inchange.</li>
     @show_iterator_state
     def _subsets_extractor(self):
         if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            from laue.tools.splitable import _pickelable as atomic_find_subsets
+            from laue.subsets import _pickelable as atomic_find_subsets
             from laue.tools.multi_core import limited_imap
             with multiprocessing.Pool() as pool:
                 yield from (
@@ -3200,12 +3555,14 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
 <li><code><a title="laue.experiment" href="experiment/index.html">laue.experiment</a></code></li>
 <li><code><a title="laue.geometry" href="geometry.html">laue.geometry</a></code></li>
 <li><code><a title="laue.spot" href="spot.html">laue.spot</a></code></li>
+<li><code><a title="laue.subsets" href="subsets.html">laue.subsets</a></code></li>
 <li><code><a title="laue.tools" href="tools/index.html">laue.tools</a></code></li>
 <li><code><a title="laue.zone_axis" href="zone_axis.html">laue.zone_axis</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="laue.atomic_find_subsets" href="#laue.atomic_find_subsets">atomic_find_subsets</a></code></li>
 <li><code><a title="laue.atomic_find_zone_axes" href="#laue.atomic_find_zone_axes">atomic_find_zone_axes</a></code></li>
 </ul>
 </li>

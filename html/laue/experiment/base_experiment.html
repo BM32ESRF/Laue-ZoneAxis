@@ -711,7 +711,7 @@ class Experiment:
         @show_iterator_state
         def _subsets_extractor(self):
             if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-                from laue.tools.splitable import _pickelable as atomic_find_subsets
+                from laue.subsets import _pickelable as atomic_find_subsets
                 from laue.tools.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (
@@ -2055,7 +2055,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         @show_iterator_state
         def _subsets_extractor(self):
             if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-                from laue.tools.splitable import _pickelable as atomic_find_subsets
+                from laue.subsets import _pickelable as atomic_find_subsets
                 from laue.tools.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (
@@ -2876,7 +2876,7 @@ Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.</dd>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Estime les grains dans chaque diagrame. </strong></p>
-<p>Sorte d'alias parallelise vers <code><a title="laue.diagram.LaueDiagram.find_subsets" href="../tools/splitable.html#laue.tools.splitable.Splitable.find_subsets">Splitable.find_subsets()</a></code>.
+<p>Sorte d'alias parallelise vers <code><a title="laue.diagram.LaueDiagram.find_subsets" href="../subsets.html#laue.subsets.Splitable.find_subsets">Splitable.find_subsets()</a></code>.
 Le resultat est le meme que: <code>[diag.find_subsets(**kwds) for diag in self]</code></p>
 <h2 id="notes">Notes</h2>
 <ul>
@@ -2905,7 +2905,7 @@ recommence a partir du debut et l'ordre reste inchange.</li>
 </ul>
 </dd>
 <dt><strong><code>**kwds</code></strong> :&ensp;<code>number</code></dt>
-<dd>Se sont les parametres de la fonction <code><a title="laue.diagram.LaueDiagram.find_subsets" href="../tools/splitable.html#laue.tools.splitable.Splitable.find_subsets">Splitable.find_subsets()</a></code>.</dd>
+<dd>Se sont les parametres de la fonction <code><a title="laue.diagram.LaueDiagram.find_subsets" href="../subsets.html#laue.subsets.Splitable.find_subsets">Splitable.find_subsets()</a></code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2997,7 +2997,7 @@ recommence a partir du debut et l'ordre reste inchange.</li>
     @show_iterator_state
     def _subsets_extractor(self):
         if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            from laue.tools.splitable import _pickelable as atomic_find_subsets
+            from laue.subsets import _pickelable as atomic_find_subsets
             from laue.tools.multi_core import limited_imap
             with multiprocessing.Pool() as pool:
                 yield from (

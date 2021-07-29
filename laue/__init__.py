@@ -44,7 +44,7 @@ recuperation des diagrammes
 # $ python3 -m pytest --doctest-modules laue && python3 -m pytest laue/tools/tests.py
 
 __all__ = ["Experiment",
-           "atomic_find_zone_axes"]
+           "atomic_find_zone_axes", "atomic_find_subsets"]
 __pdoc__ = {"Experiment.__getitem__": True,
             "Experiment.__iter__": True,
             "Experiment.__len__": True,
@@ -52,3 +52,4 @@ __pdoc__ = {"Experiment.__getitem__": True,
 
 from laue.experiment.base_experiment import Experiment
 from laue.zone_axis import atomic_find_zone_axes
+from laue.subsets import atomic_find_subsets

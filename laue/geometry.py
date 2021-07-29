@@ -465,9 +465,9 @@ class Transformer(Compilator):
         >>> np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
         array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
                [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float32)
-        >>> np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters, dtype=np.float128), 2)
+        >>> np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters, dtype=np.float64), 2)
         array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
-               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float128)
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]])
         >>>
         
         Output shape
@@ -566,9 +566,9 @@ class Transformer(Compilator):
         >>> np.round(transformer.dist_line(*lines, *points))
         array([[1., 0., 2., 1.],
                [1., 0., 2., 0.]])
-        >>> np.round(transformer.dist_line(*lines, *points, dtype=np.float128))
+        >>> np.round(transformer.dist_line(*lines, *points, dtype=np.float32))
         array([[1., 0., 2., 1.],
-               [1., 0., 2., 0.]], dtype=float128)
+               [1., 0., 2., 0.]], dtype=float32)
         >>>
         >>> theta_vect, dist_vect = np.random.normal(size=(1, 2)), np.random.normal(size=(1, 2))
         >>> x_vect, y_vect = np.random.normal(size=(3, 4, 5)), np.random.normal(size=(3, 4, 5))
@@ -647,9 +647,9 @@ class Transformer(Compilator):
         >>> np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
         array([[   3.,  412.,  821., 1230., 1639., 2048.],
                [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float32)
-        >>> np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters, dtype=np.float128))
+        >>> np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters, dtype=np.float64))
         array([[   3.,  412.,  821., 1230., 1639., 2048.],
-               [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float128)
+               [   3.,  412.,  821., 1230., 1639., 2048.]])
         >>>
         
         Output shape
@@ -718,7 +718,7 @@ class Transformer(Compilator):
             L'ensemble des coordonnees y des points de shape: (*over_dims, nbr_points)
         dtype : type, optional
             La representation machine des nombres.
-            Attention pour les calcul en float32 et moins
+            Attention pour les calculs en float32 et moins
             risque d'y avoir des arrondis qui engendrent:
             ``RuntimeWarning: invalid value encountered in sqrt``.
 
@@ -762,6 +762,13 @@ class Transformer(Compilator):
             f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
 
         n = x_vect.shape[-1]
+        if n == 1:
+            over_dims = x_vect.shape[:-1]
+            clusters = np.empty(np.prod(over_dims, dtype=int), dtype=object)
+            clusters[:] = [[] for _ in range(clusters.size)]
+            clusters = clusters.reshape(over_dims)
+            return clusters
+        
         x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
 
         xa = np.concatenate([np.repeat(x_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
@@ -1170,7 +1177,7 @@ def ind2comb(comb, n):
         f"'comb' can not being of type {type(comb).__name__}."
     assert isinstance(n, int), f"'n' has to ba an integer, not a {type(n).__name__}."
     if isinstance(comb, np.ndarray):
-        assert comb.dtype == int, f"'comb' must be integer, not {str(comb.dtype)}."
+        assert comb.dtype == int or issubclass(comb.dtype.type, np.integer), f"'comb' must be integer, not {str(comb.dtype)}."
         assert (comb >= 0).all(), "Tous les indices doivent etres positifs."
         assert (comb < n*(n-1)/2).all(), (f"Dans un alphabet a {n} symboles, il ne peut y a voir "
             f"que {n*(n-1)/2} mots. Le mot d'indice {comb.max()} n'existe donc pas!")

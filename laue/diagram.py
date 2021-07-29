@@ -21,7 +21,7 @@ except ImportError:
     psutil = None
 
 from laue.spot import Spot
-from laue.tools.splitable import Splitable
+from laue.subsets import Splitable
 
 
 __pdoc__ = {"LaueDiagram.__contains__": True,

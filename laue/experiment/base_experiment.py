@@ -676,7 +676,7 @@ class Experiment:
         @show_iterator_state
         def _subsets_extractor(self):
             if multiprocessing.current_process().name == "MainProcess":
-                from laue.tools.splitable import _pickelable as atomic_find_subsets
+                from laue.subsets import _pickelable as atomic_find_subsets
                 from laue.tools.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (

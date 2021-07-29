@@ -1,5 +1,5 @@
-DATE: Thu Jul 29 09:07:42 2021
-NCPU: 2
+DATE: Thu Jul 29 14:43:18 2021
+NCPU: 8
 ============ TEST GEOMETRY DTYPE =============
 cam_to_gnomonic:
 	boucle 0: float16->float16
@@ -47,16 +47,16 @@ inter_lines:
 	float64->float64
 	float128->float128
 ============ TEST GEOMETRY SHAPE =============
-shape: (6, 7, 9, 6)
-boucle 0, <bound method Transformer.cam_to_gnomonic of <laue.geometry.Transformer object at 0x7f1e308cdcd0>>(...).shape -> (2, 6, 7, 9, 6)
-boucle 0, <bound method Transformer.gnomonic_to_cam of <laue.geometry.Transformer object at 0x7f1e308cdcd0>>(...).shape -> (2, 6, 7, 9, 6)
-boucle 1, <bound method Transformer.cam_to_gnomonic of <laue.geometry.Transformer object at 0x7f1e308cdcd0>>(...).shape -> (2, 6, 7, 9, 6)
-boucle 1, <bound method Transformer.gnomonic_to_cam of <laue.geometry.Transformer object at 0x7f1e308cdcd0>>(...).shape -> (2, 6, 7, 9, 6)
-boucle 2, <bound method Transformer.cam_to_gnomonic of <laue.geometry.Transformer object at 0x7f1e308cdcd0>>(...).shape -> (2, 6, 7, 9, 6)
-boucle 2, <bound method Transformer.gnomonic_to_cam of <laue.geometry.Transformer object at 0x7f1e308cdcd0>>(...).shape -> (2, 6, 7, 9, 6)
-dist_line(...).shape -> (6, 7, 9, 6, 6, 7, 9, 6)
-hough(...).shape -> (2, 6, 7, 9, 15)
-inter_lines(...).shape -> (2, 6, 7, 9, 15)
+shape: (2, 6, 2)
+boucle 0, <bound method Transformer.cam_to_gnomonic of <laue.geometry.Transformer object at 0x7f93581b0940>>(...).shape -> (2, 2, 6, 2)
+boucle 0, <bound method Transformer.gnomonic_to_cam of <laue.geometry.Transformer object at 0x7f93581b0940>>(...).shape -> (2, 2, 6, 2)
+boucle 1, <bound method Transformer.cam_to_gnomonic of <laue.geometry.Transformer object at 0x7f93581b0940>>(...).shape -> (2, 2, 6, 2)
+boucle 1, <bound method Transformer.gnomonic_to_cam of <laue.geometry.Transformer object at 0x7f93581b0940>>(...).shape -> (2, 2, 6, 2)
+boucle 2, <bound method Transformer.cam_to_gnomonic of <laue.geometry.Transformer object at 0x7f93581b0940>>(...).shape -> (2, 2, 6, 2)
+boucle 2, <bound method Transformer.gnomonic_to_cam of <laue.geometry.Transformer object at 0x7f93581b0940>>(...).shape -> (2, 2, 6, 2)
+dist_line(...).shape -> (2, 6, 2, 2, 6, 2)
+hough(...).shape -> (2, 2, 6, 1)
+inter_lines(...).shape -> (2, 2, 6, 1)
 =============== TEST BIJECTION ===============
 cam_to_gnom(xc, yc): [(sqrt(2)*dd*sin(beta + pi/4) - sqrt(2)*pixelsize*x_c*sin(gamma)*cos(beta + pi/4) + sqrt(2)*pixelsize*xcen*sin(gamma)*cos(beta + pi/4) + sqrt(2)*pixelsize*y_c*cos(gamma)*cos(beta + pi/4) - sqrt(2)*pixelsize*ycen*cos(gamma)*cos(beta + pi/4) - sqrt(dd**2 + pixelsize**2*x_c**2 - 2*pixelsize**2*x_c*xcen + pixelsize**2*xcen**2 + pixelsize**2*y_c**2 - 2*pixelsize**2*y_c*ycen + pixelsize**2*ycen**2))/(sqrt(2)*dd*cos(beta + pi/4) + sqrt(2)*pixelsize*x_c*sin(gamma)*sin(beta + pi/4) - sqrt(2)*pixelsize*xcen*sin(gamma)*sin(beta + pi/4) - sqrt(2)*pixelsize*y_c*sin(beta + pi/4)*cos(gamma) + sqrt(2)*pixelsize*ycen*sin(beta + pi/4)*cos(gamma) + sqrt(dd**2 + pixelsize**2*x_c**2 - 2*pixelsize**2*x_c*xcen + pixelsize**2*xcen**2 + pixelsize**2*y_c**2 - 2*pixelsize**2*y_c*ycen + pixelsize**2*ycen**2)), sqrt(2)*pixelsize*(-x_c*cos(gamma) + xcen*cos(gamma) - y_c*sin(gamma) + ycen*sin(gamma))/(sqrt(2)*dd*cos(beta + pi/4) + sqrt(2)*pixelsize*x_c*sin(gamma)*sin(beta + pi/4) - sqrt(2)*pixelsize*xcen*sin(gamma)*sin(beta + pi/4) - sqrt(2)*pixelsize*y_c*sin(beta + pi/4)*cos(gamma) + sqrt(2)*pixelsize*ycen*sin(beta + pi/4)*cos(gamma) + sqrt(dd**2 + pixelsize**2*x_c**2 - 2*pixelsize**2*x_c*xcen + pixelsize**2*xcen**2 + pixelsize**2*y_c**2 - 2*pixelsize**2*y_c*ycen + pixelsize**2*ycen**2))]
 gnom_to_cam(xg, yg): [(dd*x_g**2*sin(beta)*sin(gamma) - sqrt(2)*dd*x_g*y_g*cos(gamma) + 2*dd*x_g*sin(gamma)*cos(beta) + dd*y_g**2*sin(gamma)*cos(beta) + sqrt(2)*dd*y_g*cos(gamma) - dd*sin(beta)*sin(gamma) + pixelsize*x_g**2*xcen*cos(beta) - 2*pixelsize*x_g*xcen*sin(beta) - pixelsize*xcen*y_g**2*sin(beta) - pixelsize*xcen*cos(beta))/(pixelsize*(x_g**2*cos(beta) - 2*x_g*sin(beta) - y_g**2*sin(beta) - cos(beta))), (-dd*x_g**2*sin(beta)*cos(gamma) - sqrt(2)*dd*x_g*y_g*sin(gamma) - 2*dd*x_g*cos(beta)*cos(gamma) - dd*y_g**2*cos(beta)*cos(gamma) + sqrt(2)*dd*y_g*sin(gamma) + dd*sin(beta)*cos(gamma) + pixelsize*x_g**2*ycen*cos(beta) - 2*pixelsize*x_g*ycen*sin(beta) - pixelsize*y_g**2*ycen*sin(beta) - pixelsize*ycen*cos(beta))/(pixelsize*(x_g**2*cos(beta) - 2*x_g*sin(beta) - y_g**2*sin(beta) - cos(beta)))]
