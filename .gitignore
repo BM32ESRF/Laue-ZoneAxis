@@ -1,1 +1,4 @@
 resultats/
+laue/geometry.data
+laue/__pycache__
+laue/tools/__pycache__
