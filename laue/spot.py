@@ -249,7 +249,7 @@ class Spot:
         >>> type(spot.get_gnomonic())
         <class 'tuple'>
         >>> np.round(spot.get_gnomonic(), 4)
-        array([ 0.3137, -0.4409])
+        array([ 0.314 , -0.4397])
         >>>
         """
         if self.gnomonic is not None:

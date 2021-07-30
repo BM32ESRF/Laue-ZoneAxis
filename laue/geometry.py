@@ -61,10 +61,10 @@ class Compilator:
             plus optimisee.
         """
         names = [
-            "expr_cam_to_gnomonic",
-            "expr_gnomonic_to_cam",
-            "expr_thetachi_to_gnomonic",
-            "expr_gnomonic_to_thetachi",
+            "fct_cam_to_gnomonic",
+            "fct_gnomonic_to_cam",
+            # "fct_thetachi_to_gnomonic",
+            # "fct_gnomonic_to_thetachi",
             "fct_dist_line",
             "fct_hough",
             "fct_inter_line"]
@@ -94,7 +94,7 @@ class Compilator:
             # Dans le cas ou l'expression est deserialise, les pointeurs ne sont plus les memes.
             constants = {str(var): value for var, value in constants.items()}
 
-            expr_c2g = self.get_expr_cam_to_gnomonic()()
+            expr_c2g = self.get_fct_cam_to_gnomonic()()
             subs_c2g = {symbol: constants[str(symbol)]
                     for symbol in (expr_c2g[0].free_symbols | expr_c2g[1].free_symbols)
                     if str(symbol) in constants}
@@ -102,7 +102,7 @@ class Compilator:
                     args=[self.x_cam, self.y_cam],
                     expr=lambdify.subs(expr_c2g, subs_c2g))
             
-            expr_g2c = self.get_expr_gnomonic_to_cam()()
+            expr_g2c = self.get_fct_gnomonic_to_cam()()
             subs_g2c = {symbol: constants[str(symbol)]
                     for symbol in (expr_g2c[0].free_symbols | expr_g2c[1].free_symbols)
                     if str(symbol) in constants}
@@ -110,55 +110,79 @@ class Compilator:
                     args=[self.x_gnom, self.y_gnom],
                     expr=lambdify.subs(expr_g2c, subs_g2c))
 
-    def get_expr_cam_to_gnomonic(self):
+    def get_expr_cam_to_uf(self, x_cam, y_cam):
         """
-        ** Equation permetant de passer de la camera au plan gnomonic. **
-        """
-        if "expr_cam_to_gnomonic" in globals()["compiled_expressions"]:
-            return globals()["compiled_expressions"]["expr_cam_to_gnomonic"]
+        ** Equation permetant de passer de la camera a uf. **
 
-        # Expresion du vecteur OP.
+        Notes
+        -----
+        Le vecteur de sortie (uf) n'est pas normalise.
+
+        Parameters
+        ----------
+        x_cam
+            La position x de la camera.
+        y_cam
+            La position y de la camera.
+
+        Returns
+        -------
+        sympy.Matrix
+            La matrice sympy de taille 3 representant
+            le vecteur uf dans le repere principal.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue.geometry import Transformer
+        >>> transformer = Transformer()
+        >>> x_cam, y_cam = symbols("x y")
+        >>> transformer.get_expr_cam_to_uf(x_cam, y_cam)
+        Matrix([
+        [dd*sin(beta) - pixelsize*((x - xcen)*sin(gamma)*cos(beta) - (y - ycen)*cos(beta)*cos(gamma))],
+        [                                  -pixelsize*((x - xcen)*cos(gamma) + (y - ycen)*sin(gamma))],
+        [dd*cos(beta) + pixelsize*((x - xcen)*sin(beta)*sin(gamma) - (y - ycen)*sin(beta)*cos(gamma))]])
+        >>>
+        """
+        x_cam_atomic, y_cam_atomic = sympy.symbols("x_cam y_cam", real=True)
         o_op = self.dd * self.ck # Vecteur OO'.
-        op_p = self.pixelsize * ((self.x_cam-self.xcen)*self.ci + (self.y_cam-self.ycen)*self.cj) # Vecteur O'P
+        op_p = self.pixelsize * ((x_cam_atomic-self.xcen)*self.ci + (y_cam_atomic-self.ycen)*self.cj) # Vecteur O'P
         o_p = o_op + op_p # Relation de Chasles.
+        o_p = sympy.signsimp(o_p)
+        return  o_p.subs({x_cam_atomic: x_cam, y_cam_atomic: y_cam})
 
-        # Recherche des droites normales au plan christalin.
-        u_f = o_p.normalized() # Vecteur norme du rayon diffracte u_f.
-        u_q = u_f - self.u_i # Relation de reflexion.
-
-        # Recherche du vecteur O'''P'.
-        oppp_pp = u_q / u_q.dot(self.gk) # Point d'intersection avec le plan gnomonic. (Normalisation de l'axe gk.)
-
-        # Projection dans le plan gnomonic pour remonter a x_g, y_g
-        x_g = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
-        y_g = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
-
-        # Optimisation
-        x_g, y_g = (
-            sympy.together(sympy.cancel(sympy.trigsimp(x_g))),
-            sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
-            ) # Permet un gain de 7.48
-
-        globals()["compiled_expressions"]["expr_cam_to_gnomonic"] = lambdify.Lambdify(
-            args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[x_g, y_g]) # On l'enregistre une bonne fois pour toutes.
-        return globals()["compiled_expressions"]["expr_cam_to_gnomonic"]
-
-    def get_expr_gnomonic_to_cam(self):
+    def get_expr_uf_to_cam(self, uf_x, uf_y, uf_z):
         """
-        ** Equation permetant de passer de l'espace gnomonic a celui de la camera. **
+        ** Equation permettant de passer de uf a la camera. **
+
+        Parameters
+        ----------
+        uf_x, uf_y, uf_z
+            Les 3 coordonnees du vecteur uf exprimees dans le repere principale.
+
+        Returns
+        -------
+        x_camera : sympy.Basic
+            Expression sympy de la position de la tache dans le repere
+            de la camera. (selon l'axe x ou Ci)
+        y_camera : sympy.Basic
+            Comme ``x_camera`` selon l'axe y ou Cj.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue.geometry import Transformer
+        >>> transformer = Transformer()
+        >>> uf_x, uf_y, uf_z = symbols("uf_x, uf_y, uf_z")
+        >>> x_cam, y_cam = transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z)
+        >>> x_cam
+        (-dd*uf_x*sin(gamma)*cos(beta) - dd*uf_y*cos(gamma) + dd*uf_z*sin(beta)*sin(gamma) + pixelsize*uf_x*xcen*sin(beta) + pixelsize*uf_z*xcen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+        >>> y_cam
+        (dd*uf_x*cos(beta)*cos(gamma) - dd*uf_y*sin(gamma) - dd*uf_z*sin(beta)*cos(gamma) + pixelsize*uf_x*ycen*sin(beta) + pixelsize*uf_z*ycen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+        >>>
         """
-        if "expr_gnomonic_to_cam" in globals()["compiled_expressions"]:
-            return globals()["compiled_expressions"]["expr_gnomonic_to_cam"]
-
-        # Recherche du vecteur u_q.
-        o_oppp = self.gk # Vecteur OO''' == gk car le plan gnomonic est tangent a la shere unitaire.
-        u_q = o_oppp + (self.x_gnom*self.gi + self.y_gnom*self.gj) # Vecteur non normalise de la normale au plan christalin.
-        u_q = u_q.normalized() # Normale unitaire au plan christalin.
-
-        # Lois de la reflexion.
-        u_f = self.u_i - 2*u_q.dot(self.u_i)*u_q # Vecteur unitaire reflechi.
-        # u_f = sympy.simplify(u_f) # Permet d'accelerer les calculs par la suite.
+        uf_x_atomic, uf_y_atomic, uf_z_atomic = sympy.symbols("uf_x uf_y uf_z", real=True)
+        u_f = sympy.Matrix([uf_x_atomic, uf_y_atomic, uf_z_atomic])
 
         # Expression du vecteur O''P.
         opp_op = self.pixelsize * (self.xcen*self.ci + self.ycen*self.cj) # Vecteur O''O'.
@@ -170,80 +194,256 @@ class Compilator:
         opp_p = opp_op + op_o + o_p # Relation de Chasles.
 
         # Projection dans le plan de la camera pour remonter a x_c, y_c
-        x_c = opp_p.dot(self.ci) / self.pixelsize # Coordonnees en pxl axe x de la camera.
-        y_c = opp_p.dot(self.cj) / self.pixelsize # Coordonnees en pxl axe y de la camera.
+        x_cam = opp_p.dot(self.ci) / self.pixelsize # Coordonnees en pxl axe x de la camera.
+        y_cam = opp_p.dot(self.cj) / self.pixelsize # Coordonnees en pxl axe y de la camera.
+        x_cam, y_cam = sympy.trigsimp(x_cam), sympy.trigsimp(y_cam) # Longueur reduite par 2.2 .
 
-        # Optimisation.
-        x_c, y_c = (
-            sympy.together(sympy.cancel(sympy.trigsimp(x_c))),
-            sympy.together(sympy.cancel(sympy.trigsimp(y_c)))
-            ) # Permet un gain de 1.44
+        return (x_cam.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}),
+                y_cam.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}))
 
-        globals()["compiled_expressions"]["expr_gnomonic_to_cam"] = lambdify.Lambdify(
+    def get_expr_uf_to_uq(self, uf_x, uf_y, uf_z):
+        """
+        ** Equation permettant de passer de uf a uq. **
+
+        Parameters
+        ----------
+        uf_x, uf_y, uf_z
+            Les 3 coordonnees du vecteur uf exprimees dans le repere principale.
+
+        Returns
+        -------
+        sympy.Matrix
+            La matrice sympy de taille 3 representant
+            le vecteur uq dans le repere principal.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue.geometry import Transformer
+        >>> transformer = Transformer()
+        >>> uf_x, uf_y, uf_z = symbols("uf_x, uf_y, uf_z")
+        >>> transformer.get_expr_uf_to_uq(uf_x, uf_y, uf_z)
+        Matrix([
+        [uf_x - sqrt(uf_x**2 + uf_y**2 + uf_z**2)],
+        [                                    uf_y],
+        [                                    uf_z]])
+        >>>
+        """
+        uf_x_atomic, uf_y_atomic, uf_z_atomic = sympy.symbols("uf_x uf_y uf_z", real=True)
+        u_f = sympy.Matrix([uf_x_atomic, uf_y_atomic, uf_z_atomic])
+        u_q = u_f - self.u_i*u_f.norm() # Relation de reflexion.
+        return u_q.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z})
+
+    def get_expr_uq_to_uf(self, uq_x, uq_y, uq_z):
+        """
+        ** Equation permettant de passer de uq a uf. **
+
+        Parameters
+        ----------
+        uq_x, uq_y, uq_z
+            Les 3 coordonnees du vecteur uq exprimees dans le repere principal.
+
+        Returns
+        -------
+        sympy.Matrix
+            La matrice sympy de taille 3 representant
+            le vecteur uf dans le repere principal.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue.geometry import Transformer
+        >>> transformer = Transformer()
+        >>> uq_x, uq_y, uq_z = symbols("uq_x, uq_y, uq_z")
+        >>> transformer.get_expr_uq_to_uf(uq_x, uq_y, uq_z)
+        Matrix([
+        [-uq_x**2 + uq_y**2 + uq_z**2],
+        [                -2*uq_x*uq_y],
+        [                -2*uq_x*uq_z]])
+        >>>
+        """
+        uq_x_atomic, uq_y_atomic, uq_z_atomic = sympy.symbols("uq_x uq_y uq_z", real=True)
+        u_q = sympy.Matrix([uq_x_atomic, uq_y_atomic, uq_z_atomic])
+        u_f = self.u_i*u_q.norm()**2 - 2*u_q.dot(self.u_i)*u_q # Vecteur unitaire reflechi.
+        return u_f.subs({uq_x_atomic: uq_x, uq_y_atomic: uq_y, uq_z_atomic: uq_z})
+
+    def get_expr_uq_to_gnomonic(self, uq_x, uq_y, uq_z):
+        """
+        ** Equation permettant de passer de uq a gnomonic. **
+
+        Parameters
+        ----------
+        uq_x, uq_y, uq_z
+            Les 3 coordonnees du vecteur uq exprimees dans le repere principal.
+
+        Returns
+        -------
+        x_gnomonic : sympy.Basic
+            Expression sympy de la position de la tache dans le repere
+            du plan gnomonic. (selon l'axe x ou Gi)
+        y_gnomonic : sympy.Basic
+            Comme ``x_gnomonic`` selon l'axe y ou Gj.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue.geometry import Transformer
+        >>> transformer = Transformer()
+        >>> uq_x, uq_y, uq_z = symbols("uq_x, uq_y, uq_z")
+        >>> x_gnom, y_gnom = transformer.get_expr_uq_to_gnomonic(uq_x, uq_y, uq_z)
+        >>> x_gnom
+        -(uq_x + uq_z)/(uq_x - uq_z)
+        >>> y_gnom
+        -sqrt(2)*uq_y/(uq_x - uq_z)
+        >>>
+        """
+        uq_x_atomic, uq_y_atomic, uq_z_atomic = sympy.symbols("uq_x uq_y uq_z", real=True)
+        u_q = sympy.Matrix([uq_x_atomic, uq_y_atomic, uq_z_atomic])
+        o_oppp = 1*self.gk # Car sphere unitaire de rayon 1.
+
+        gnom_plane = sympy.Plane(o_oppp, normal_vector=self.gk) # Plan gnomonic.
+        normal_ray = sympy.Line([0, 0, 0], u_q) # Droite portee par la normal au plan christalin.
+        o_pp = sympy.Matrix(gnom_plane.intersection(normal_ray).pop())
+        oppp_pp = -o_oppp + o_pp
+
+        # Projection dans le plan gnomonic pour remonter a x_g, y_g.
+        x_gnom = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
+        y_gnom = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
+
+        x_gnom = sympy.signsimp(sympy.cancel(x_gnom))
+
+        return (x_gnom.subs({uq_x_atomic: uq_x, uq_y_atomic: uq_y, uq_z_atomic: uq_z}),
+                y_gnom.subs({uq_x_atomic: uq_x, uq_y_atomic: uq_y, uq_z_atomic: uq_z}))
+
+    def get_expr_gnomonic_to_uq(self, x_gnom, y_gnom):
+        """
+        ** Equation permettant de passer du plan gnomonique a uq. **
+
+        Parameters
+        ----------
+        x_gnom
+            La position x du plan gnomonic.
+        y_gnom
+            La position y du plan gnomonic.
+
+        Returns
+        -------
+        sympy.Matrix
+            La matrice sympy de taille 3 representant
+            le vecteur uq dans le repere principal.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue.geometry import Transformer
+        >>> transformer = Transformer()
+        >>> x_gnom, y_gnom = symbols("x y")
+        >>> transformer.get_expr_gnomonic_to_uq(x_gnom, y_gnom)
+        Matrix([
+        [sqrt(2)*x/2 - sqrt(2)/2],
+        [                      y],
+        [sqrt(2)*x/2 + sqrt(2)/2]])
+        >>>
+        """
+        x_gnom_atomic, y_gnom_atomic = sympy.symbols("x_gnom y_gnom", real=True)
+
+        o_oppp = 1*self.gk # Vecteur OO''' == gk car le plan gnomonic est tangent a la shere unitaire.
+        u_q = o_oppp + (x_gnom_atomic*self.gi + y_gnom_atomic*self.gj) # Relation de chasle.
+
+        return u_q.subs({x_gnom_atomic: x_gnom, y_gnom_atomic: y_gnom})
+
+    def get_fct_cam_to_gnomonic(self):
+        """
+        ** Equation permetant de passer de la camera au plan gnomonic. **
+        """
+        if "fct_cam_to_gnomonic" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_cam_to_gnomonic"]
+
+        u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
+        u_q = self.get_expr_uf_to_uq(*u_f)
+        x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
+
+        globals()["compiled_expressions"]["fct_cam_to_gnomonic"] = lambdify.Lambdify(
+            args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
+            expr=[x_gnom, y_gnom]) # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["fct_cam_to_gnomonic"]
+
+    def get_fct_gnomonic_to_cam(self):
+        """
+        ** Equation permetant de passer de l'espace gnomonic a celui de la camera. **
+        """
+        if "fct_gnomonic_to_cam" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_gnomonic_to_cam"]
+
+        u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
+        u_f = self.get_expr_uq_to_uf(*u_q)
+        x_c, y_c = self.get_expr_uf_to_cam(*u_f)
+
+        globals()["compiled_expressions"]["fct_gnomonic_to_cam"] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
-        return globals()["compiled_expressions"]["expr_gnomonic_to_cam"]
+        return globals()["compiled_expressions"]["fct_gnomonic_to_cam"]
 
-    def get_expr_thetachi_to_gnomonic(self):
-        """
-        ** Equation permetant de passer de theta chi au plan gnomonic. **
-        """
-        if "expr_thetachi_to_gnomonic" in globals()["compiled_expressions"]:
-            return globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"]
+    # def get_expr_thetachi_to_gnomonic(self):
+    #     """
+    #     ** Equation permetant de passer de theta chi au plan gnomonic. **
+    #     """
+    #     if "expr_thetachi_to_gnomonic" in globals()["compiled_expressions"]:
+    #         return globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"]
 
-        # Expresion du rayon reflechit en fonction des angles.
-        rot_refl = sympy.rot_axis1(self.chi) @ sympy.rot_axis2(2*self.theta)
+    #     # Expresion du rayon reflechit en fonction des angles.
+    #     rot_refl = sympy.rot_axis1(self.chi) @ sympy.rot_axis2(2*self.theta)
 
-        # Recherche des droites normales au plan christalin.
-        u_f = rot_refl @ self.u_i # Vecteur norme du rayon diffracte u_f.
-        u_q = u_f - self.u_i # Relation de reflexion.
+    #     # Recherche des droites normales au plan christalin.
+    #     u_f = rot_refl @ self.u_i # Vecteur norme du rayon diffracte u_f.
+    #     u_q = u_f - self.u_i # Relation de reflexion.
 
-        # Recherche du vecteur O'''P'.
-        oppp_pp = u_q / u_q.dot(self.gk) # Point d'intersection avec le plan gnomonic. (Normalisation de l'axe gk.)
+    #     # Recherche du vecteur O'''P'.
+    #     oppp_pp = u_q / u_q.dot(self.gk) # Point d'intersection avec le plan gnomonic. (Normalisation de l'axe gk.)
 
-        # Projection dans le plan gnomonic pour remonter a x_g, y_g
-        x_g = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
-        y_g = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
+    #     # Projection dans le plan gnomonic pour remonter a x_g, y_g
+    #     x_g = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
+    #     y_g = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
 
-        # Optimisation.
-        x_g, y_g = (
-            sympy.together(sympy.cancel(sympy.trigsimp(x_g))),
-            sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
-            ) # Permet un gain de 2.16
+    #     # Optimisation.
+    #     x_g, y_g = (
+    #         sympy.together(sympy.cancel(sympy.trigsimp(x_g))),
+    #         sympy.together(sympy.cancel(sympy.trigsimp(y_g)))
+    #         ) # Permet un gain de 2.16
 
-        globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"] = lambdify.Lambdify(
-            args=[self.theta, self.chi],
-            expr=[x_g, y_g]) # On l'enregistre une bonne fois pour toutes.
-        return globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"]
+    #     globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"] = lambdify.Lambdify(
+    #         args=[self.theta, self.chi],
+    #         expr=[x_g, y_g]) # On l'enregistre une bonne fois pour toutes.
+    #     return globals()["compiled_expressions"]["expr_thetachi_to_gnomonic"]
 
-    def get_expr_gnomonic_to_thetachi(self):
-        """
-        ** Equation permetant de passer du plan gnomonic a la representation theta chi. **
-        """
-        if "expr_gnomonic_to_thetachi" in globals()["compiled_expressions"]:
-            return globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"]
+    # def get_expr_gnomonic_to_thetachi(self):
+    #     """
+    #     ** Equation permetant de passer du plan gnomonic a la representation theta chi. **
+    #     """
+    #     if "expr_gnomonic_to_thetachi" in globals()["compiled_expressions"]:
+    #         return globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"]
 
-        # Recherche du vecteur u_q.
-        o_oppp = self.gk # Vecteur OO''' == gk car le plan gnomonic est tangent a la shere unitaire.
-        u_q = o_oppp + (self.x_gnom*self.gi + self.y_gnom*self.gj) # Vecteur non normalise de la normale au plan christalin.
-        u_q = u_q.normalized() # Normale unitaire au plan christalin.
+    #     # Recherche du vecteur u_q.
+    #     o_oppp = self.gk # Vecteur OO''' == gk car le plan gnomonic est tangent a la shere unitaire.
+    #     u_q = o_oppp + (self.x_gnom*self.gi + self.y_gnom*self.gj) # Vecteur non normalise de la normale au plan christalin.
+    #     u_q = u_q.normalized() # Normale unitaire au plan christalin.
 
-        # Lois de la reflexion.
-        u_f = self.u_i - 2*u_q.dot(self.u_i)*u_q # Vecteur unitaire reflechi.
+    #     # Lois de la reflexion.
+    #     u_f = self.u_i - 2*u_q.dot(self.u_i)*u_q # Vecteur unitaire reflechi.
 
-        # Projection et normalisation dans le plan normal a x pour acceder a chi.
-        # Projection et normalisation dans le plan normal a y pour acceder a theta.
-        chi = sympy.asin(u_f.dot(self.ry) / (u_f.dot(self.rz)**2 + u_f.dot(self.ry)**2))
-        theta = sympy.acos(u_f.dot(self.rx) / (u_f.dot(self.rx)**2 + u_f.dot(self.rz)**2)) / 2
+    #     # Projection et normalisation dans le plan normal a x pour acceder a chi.
+    #     # Projection et normalisation dans le plan normal a y pour acceder a theta.
+    #     chi = sympy.asin(u_f.dot(self.ry) / (u_f.dot(self.rz)**2 + u_f.dot(self.ry)**2))
+    #     theta = sympy.acos(u_f.dot(self.rx) / (u_f.dot(self.rx)**2 + u_f.dot(self.rz)**2)) / 2
 
-        # Optimisation.
-        chi = sympy.simplify(chi)
-        theta = sympy.simplify(theta) # gain de 2.15
+    #     # Optimisation.
+    #     chi = sympy.simplify(chi)
+    #     theta = sympy.simplify(theta) # gain de 2.15
 
-        globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"] = lambdify.Lambdify(
-            args=[self.x_gnom, self.y_gnom],
-            expr=[theta, chi]) # On l'enregistre une bonne fois pour toutes.
-        return globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"]
+    #     globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"] = lambdify.Lambdify(
+    #         args=[self.x_gnom, self.y_gnom],
+    #         expr=[theta, chi]) # On l'enregistre une bonne fois pour toutes.
+    #     return globals()["compiled_expressions"]["expr_gnomonic_to_thetachi"]
 
     def get_fct_dist_line(self):
         """
@@ -513,7 +713,7 @@ class Transformer(Compilator):
             if nbr_access + 1 == 4: # Si c'est la 4 eme fois qu'on accede a la fonction.
                 self.compile(parameters) # On optimise la fonction.
             else: # Si ce n'est pas encore le moment de perdre du temps a optimiser.
-                return np.stack(self.get_expr_cam_to_gnomonic()(pxl_x, pxl_y,
+                return np.stack(self.get_fct_cam_to_gnomonic()(pxl_x, pxl_y,
                     parameters["dd"], parameters["xcen"], parameters["ycen"],
                     parameters["xbet"], parameters["xgam"], parameters["pixelsize"]))
 
@@ -695,7 +895,7 @@ class Transformer(Compilator):
             if nbr_access + 1 == 4: # Si c'est la 4 eme fois qu'on accede a la fonction.
                 self.compile(parameters) # On optimise la fonction.
             else: # Si ce n'est pas encore le moment de perdre du temps a optimiser.
-                return np.stack(self.get_expr_gnomonic_to_cam()(gnom_x, gnom_y,
+                return np.stack(self.get_fct_gnomonic_to_cam()(gnom_x, gnom_y,
                     parameters["dd"], parameters["xcen"], parameters["ycen"],
                     parameters["xbet"], parameters["xgam"], parameters["pixelsize"]))
 

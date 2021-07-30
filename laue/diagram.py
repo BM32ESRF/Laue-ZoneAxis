@@ -534,7 +534,7 @@ class LaueDiagram(Splitable):
         ...     2)
         ...
         array([[-0.1 , -0.21, -0.04, -0.35],
-               [ 0.58,  0.48,  0.57,  0.36]], dtype=float32)
+               [ 0.58,  0.48,  0.57,  0.37]], dtype=float32)
         >>>
         """
         # On calcul les projections pour tous les points a la fois.
