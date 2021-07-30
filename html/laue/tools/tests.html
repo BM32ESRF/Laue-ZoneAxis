@@ -41,6 +41,7 @@ Les resultats des tests pousses sont ecrit dans le fichier &#39;tests_results.tx
 
 # https://docs.pytest.org/en/6.2.x/reference.html
 
+import itertools
 import os
 import sys
 import time
@@ -132,7 +133,7 @@ def test_geometry_shape():
     for boucle in range(3): # On fait 2 boucle car ca recompile en cours de route.
         for func in [transformer.cam_to_gnomonic, transformer.gnomonic_to_cam]:
             res = func(np.zeros(shape=shape), np.zeros(shape=shape), parameters)
-            _print(f&#34;boucle {boucle}, {func}(...).shape -&gt; {res.shape}&#34;)
+            _print(f&#34;boucle {boucle}, {func.__name__}(...).shape -&gt; {res.shape}&#34;)
             assert res.shape == (2,) + shape
 
     res = transformer.dist_line(
@@ -160,26 +161,99 @@ def test_geometry_bij():
     &#34;&#34;&#34;
     _print(&#34;=============== TEST BIJECTION ===============&#34;)
     import sympy
+    from sympy.vector import CoordSys3D
     with CWDasRoot():
         from laue.geometry import Transformer
+
+    # Declaration des variables.
+    N = CoordSys3D(&#39;N&#39;)
     transformer = Transformer()
-    xg, yg = sympy.symbols(&#34;x_g y_g&#34;, real=True)
-    xc, yc = sympy.symbols(&#34;x_c y_c&#34;, real=True)
+    xg, yg = sympy.symbols(&#34;xg yg&#34;, real=True)
+    xc, yc = sympy.symbols(&#34;xc yc&#34;, real=True)
+    uf_x, uf_y, uf_z = sympy.symbols(&#34;uf_x uf_y uf_z&#34;, real=True)
+    u_f = uf_x*N.i + uf_y*N.j + uf_z*N.k
+    uq_x, uq_y, uq_z = sympy.symbols(&#34;uq_x uq_y uq_z&#34;, real=True)
+    u_q = uq_x*N.i + uq_y*N.j + uq_z*N.k
 
-    cam_to_gnom = transformer.get_expr_cam_to_gnomonic()
-    _print(f&#34;cam_to_gnom(xc, yc): {cam_to_gnom(xc, yc)}&#34;)
-    gnom_to_cam = transformer.get_expr_gnomonic_to_cam()
-    _print(f&#34;gnom_to_cam(xg, yg): {gnom_to_cam(xg, yg)}&#34;)
+    def is_zero(expr):
+        &#34;&#34;&#34;
+        S&#39;assure que l&#39;expression vaille 0.
+        &#34;&#34;&#34;
+        expr = sympy.simplify(expr)
+        if expr == 0:
+            _print(&#34;ok formel&#34;)
+            return True
+        _print(&#34;fail formel, &#34;, end=&#34;&#34;)
 
+        symbols = list(expr.free_symbols)
+        x_vect = np.linspace(-1, 1, 21)
+        fct = sympy.lambdify(symbols, expr, modules=&#34;numpy&#34;)
+        args = np.meshgrid(*((x_vect,)*len(symbols)), copy=False)
+        res = fct(*args)
+        is_ok = np.nanmax(np.abs(res)) &lt; 1e-8
+        if not is_ok:
+            _print(&#34;failed numerical&#34;)
+            _print(f&#34;\texpr = {expr}&#34;)
+            _print(f&#34;\tmax(abs(val)) = {np.nanmax(np.abs(res))}&#34;)
+            return False
+        _print(&#34;ok numerical&#34;)
+        return True
+
+
+    # Test des bijections des courtes etapes.
+
+    ## uf &lt;=&gt; camera
+    _print(&#34;uf2cam o cam2uf: &#34;, end=&#34;&#34;)
+    xc_bis, yc_bis = transformer.get_expr_uf_to_cam(
+        *transformer.get_expr_cam_to_uf(xc, yc))
+    assert is_zero((xc_bis - xc)**2 + (yc_bis - yc)**2)
+
+    _print(&#34;cam2uf o uf2cam: &#34;, end=&#34;&#34;)
+    uf_x_bis, uf_y_bis, uf_z_bis = transformer.get_expr_cam_to_uf(
+        *transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z))
+    u_f_bis = uf_x_bis*N.i + uf_y_bis*N.j + uf_z_bis*N.k
+    assert is_zero((u_f ^ u_f_bis).magnitude())
+
+    ## uq &lt;=&gt; uf
+
+    _print(&#34;uq2uf o uf2uq: &#34;, end=&#34;&#34;)
+    uf_x_bis, uf_y_bis, uf_z_bis = transformer.get_expr_uq_to_uf(
+        *transformer.get_expr_uf_to_uq(uf_x, uf_y, uf_z))
+    u_f_bis = uf_x_bis*N.i + uf_y_bis*N.j + uf_z_bis*N.k
+    assert is_zero((u_f ^ u_f_bis).magnitude())
+
+    _print(&#34;uf2uq o uq2uf: &#34;, end=&#34;&#34;)
+    uq_x_bis, uq_y_bis, uq_z_bis = transformer.get_expr_uf_to_uq(
+        *transformer.get_expr_uq_to_uf(uq_x, uq_y, uq_z))
+    u_q_bis = uq_x_bis*N.i + uq_y_bis*N.j + uq_z_bis*N.k
+    assert is_zero((u_q ^ u_q_bis).magnitude())
+
+    ## uq &lt;=&gt; gnomonic
+
+    _print(&#34;uq2gnom o gnom2uq: &#34;, end=&#34;&#34;)
+    xg_bis, yg_bis = transformer.get_expr_uq_to_gnomonic(
+        *transformer.get_expr_gnomonic_to_uq(xg, yg))
+    assert is_zero((xg_bis - xg)**2 + (yg_bis - yg)**2)
+
+    _print(&#34;gnom2uq o uq2gnom: &#34;, end=&#34;&#34;)
+    uq_x_bis, uq_y_bis, uq_z_bis = transformer.get_expr_gnomonic_to_uq(
+        *transformer.get_expr_uq_to_gnomonic(uq_x, uq_y, uq_z))
+    u_q_bis = uq_x_bis*N.i + uq_y_bis*N.j + uq_z_bis*N.k
+    assert is_zero((u_q ^ u_q_bis).magnitude())
+
+    # Test des grandes etapes.
+
+    ## camera &lt;=&gt; gnomonic
+
+    cam_to_gnom = transformer.get_fct_cam_to_gnomonic()
+    gnom_to_cam = transformer.get_fct_gnomonic_to_cam()
     camgnom_rond_gnomcam = cam_to_gnom(*gnom_to_cam(xg, yg))
-    _print(f&#34;(cam_to_gnom o gnom_to_cam)(xg, yg): {camgnom_rond_gnomcam}&#34;)
     gnomcam_rond_camgnom = gnom_to_cam(*cam_to_gnom(xc, yc))
-    _print(f&#34;(gnom_to_cam o cam_to_gnom)(xc, yc): {gnomcam_rond_camgnom}&#34;)
 
-    assert camgnom_rond_gnomcam[0].simplify() == xg
-    assert camgnom_rond_gnomcam[1].simplify() == yg
-    assert gnomcam_rond_camgnom[0].simplify() == xc
-    assert gnomcam_rond_camgnom[1].simplify() == yc
+    _print(&#34;cam2gnom o gnom2cam: &#34;, end=&#34;&#34;)
+    assert is_zero((camgnom_rond_gnomcam[0] - xg)**2 + (camgnom_rond_gnomcam[1] - yg)**2)
+    _print(&#34;gnom2cam o cam2gnom: &#34;, end=&#34;&#34;)
+    assert is_zero((gnomcam_rond_camgnom[0] - xg)**2 + (gnomcam_rond_camgnom[1] - yc)**2)
 
 
 # Tests sur les donnes reelles.
@@ -462,26 +536,99 @@ a celui de la camera et inversement.</p></div>
     &#34;&#34;&#34;
     _print(&#34;=============== TEST BIJECTION ===============&#34;)
     import sympy
+    from sympy.vector import CoordSys3D
     with CWDasRoot():
         from laue.geometry import Transformer
+
+    # Declaration des variables.
+    N = CoordSys3D(&#39;N&#39;)
     transformer = Transformer()
-    xg, yg = sympy.symbols(&#34;x_g y_g&#34;, real=True)
-    xc, yc = sympy.symbols(&#34;x_c y_c&#34;, real=True)
+    xg, yg = sympy.symbols(&#34;xg yg&#34;, real=True)
+    xc, yc = sympy.symbols(&#34;xc yc&#34;, real=True)
+    uf_x, uf_y, uf_z = sympy.symbols(&#34;uf_x uf_y uf_z&#34;, real=True)
+    u_f = uf_x*N.i + uf_y*N.j + uf_z*N.k
+    uq_x, uq_y, uq_z = sympy.symbols(&#34;uq_x uq_y uq_z&#34;, real=True)
+    u_q = uq_x*N.i + uq_y*N.j + uq_z*N.k
 
-    cam_to_gnom = transformer.get_expr_cam_to_gnomonic()
-    _print(f&#34;cam_to_gnom(xc, yc): {cam_to_gnom(xc, yc)}&#34;)
-    gnom_to_cam = transformer.get_expr_gnomonic_to_cam()
-    _print(f&#34;gnom_to_cam(xg, yg): {gnom_to_cam(xg, yg)}&#34;)
+    def is_zero(expr):
+        &#34;&#34;&#34;
+        S&#39;assure que l&#39;expression vaille 0.
+        &#34;&#34;&#34;
+        expr = sympy.simplify(expr)
+        if expr == 0:
+            _print(&#34;ok formel&#34;)
+            return True
+        _print(&#34;fail formel, &#34;, end=&#34;&#34;)
 
+        symbols = list(expr.free_symbols)
+        x_vect = np.linspace(-1, 1, 21)
+        fct = sympy.lambdify(symbols, expr, modules=&#34;numpy&#34;)
+        args = np.meshgrid(*((x_vect,)*len(symbols)), copy=False)
+        res = fct(*args)
+        is_ok = np.nanmax(np.abs(res)) &lt; 1e-8
+        if not is_ok:
+            _print(&#34;failed numerical&#34;)
+            _print(f&#34;\texpr = {expr}&#34;)
+            _print(f&#34;\tmax(abs(val)) = {np.nanmax(np.abs(res))}&#34;)
+            return False
+        _print(&#34;ok numerical&#34;)
+        return True
+
+
+    # Test des bijections des courtes etapes.
+
+    ## uf &lt;=&gt; camera
+    _print(&#34;uf2cam o cam2uf: &#34;, end=&#34;&#34;)
+    xc_bis, yc_bis = transformer.get_expr_uf_to_cam(
+        *transformer.get_expr_cam_to_uf(xc, yc))
+    assert is_zero((xc_bis - xc)**2 + (yc_bis - yc)**2)
+
+    _print(&#34;cam2uf o uf2cam: &#34;, end=&#34;&#34;)
+    uf_x_bis, uf_y_bis, uf_z_bis = transformer.get_expr_cam_to_uf(
+        *transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z))
+    u_f_bis = uf_x_bis*N.i + uf_y_bis*N.j + uf_z_bis*N.k
+    assert is_zero((u_f ^ u_f_bis).magnitude())
+
+    ## uq &lt;=&gt; uf
+
+    _print(&#34;uq2uf o uf2uq: &#34;, end=&#34;&#34;)
+    uf_x_bis, uf_y_bis, uf_z_bis = transformer.get_expr_uq_to_uf(
+        *transformer.get_expr_uf_to_uq(uf_x, uf_y, uf_z))
+    u_f_bis = uf_x_bis*N.i + uf_y_bis*N.j + uf_z_bis*N.k
+    assert is_zero((u_f ^ u_f_bis).magnitude())
+
+    _print(&#34;uf2uq o uq2uf: &#34;, end=&#34;&#34;)
+    uq_x_bis, uq_y_bis, uq_z_bis = transformer.get_expr_uf_to_uq(
+        *transformer.get_expr_uq_to_uf(uq_x, uq_y, uq_z))
+    u_q_bis = uq_x_bis*N.i + uq_y_bis*N.j + uq_z_bis*N.k
+    assert is_zero((u_q ^ u_q_bis).magnitude())
+
+    ## uq &lt;=&gt; gnomonic
+
+    _print(&#34;uq2gnom o gnom2uq: &#34;, end=&#34;&#34;)
+    xg_bis, yg_bis = transformer.get_expr_uq_to_gnomonic(
+        *transformer.get_expr_gnomonic_to_uq(xg, yg))
+    assert is_zero((xg_bis - xg)**2 + (yg_bis - yg)**2)
+
+    _print(&#34;gnom2uq o uq2gnom: &#34;, end=&#34;&#34;)
+    uq_x_bis, uq_y_bis, uq_z_bis = transformer.get_expr_gnomonic_to_uq(
+        *transformer.get_expr_uq_to_gnomonic(uq_x, uq_y, uq_z))
+    u_q_bis = uq_x_bis*N.i + uq_y_bis*N.j + uq_z_bis*N.k
+    assert is_zero((u_q ^ u_q_bis).magnitude())
+
+    # Test des grandes etapes.
+
+    ## camera &lt;=&gt; gnomonic
+
+    cam_to_gnom = transformer.get_fct_cam_to_gnomonic()
+    gnom_to_cam = transformer.get_fct_gnomonic_to_cam()
     camgnom_rond_gnomcam = cam_to_gnom(*gnom_to_cam(xg, yg))
-    _print(f&#34;(cam_to_gnom o gnom_to_cam)(xg, yg): {camgnom_rond_gnomcam}&#34;)
     gnomcam_rond_camgnom = gnom_to_cam(*cam_to_gnom(xc, yc))
-    _print(f&#34;(gnom_to_cam o cam_to_gnom)(xc, yc): {gnomcam_rond_camgnom}&#34;)
 
-    assert camgnom_rond_gnomcam[0].simplify() == xg
-    assert camgnom_rond_gnomcam[1].simplify() == yg
-    assert gnomcam_rond_camgnom[0].simplify() == xc
-    assert gnomcam_rond_camgnom[1].simplify() == yc</code></pre>
+    _print(&#34;cam2gnom o gnom2cam: &#34;, end=&#34;&#34;)
+    assert is_zero((camgnom_rond_gnomcam[0] - xg)**2 + (camgnom_rond_gnomcam[1] - yg)**2)
+    _print(&#34;gnom2cam o cam2gnom: &#34;, end=&#34;&#34;)
+    assert is_zero((gnomcam_rond_camgnom[0] - xg)**2 + (gnomcam_rond_camgnom[1] - yc)**2)</code></pre>
 </details>
 </dd>
 <dt id="laue.tools.tests.test_geometry_dtype"><code class="name flex">
@@ -584,7 +731,7 @@ des operations de transformation geometriques.</p></div>
     for boucle in range(3): # On fait 2 boucle car ca recompile en cours de route.
         for func in [transformer.cam_to_gnomonic, transformer.gnomonic_to_cam]:
             res = func(np.zeros(shape=shape), np.zeros(shape=shape), parameters)
-            _print(f&#34;boucle {boucle}, {func}(...).shape -&gt; {res.shape}&#34;)
+            _print(f&#34;boucle {boucle}, {func.__name__}(...).shape -&gt; {res.shape}&#34;)
             assert res.shape == (2,) + shape
 
     res = transformer.dist_line(

@@ -111,7 +111,7 @@ def extract_parameters(ignore_missing=False, **detector_parameters):
     &gt;&gt;&gt; output = lambda pars: &#34;, &#34;.join(f&#34;{repr(k)}: {round(pars[k], 2)}&#34; for k in sorted(pars))
     &gt;&gt;&gt;
     &gt;&gt;&gt; output(extract_parameters(config_file=&#34;laue/examples/ge_blanc.det&#34;))
-    &#34;&#39;dd&#39;: 71.47, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.01, &#39;xcen&#39;: 938.51, &#39;xgam&#39;: -0.01, &#39;ycen&#39;: 1078.08&#34;
+    &#34;&#39;dd&#39;: 71.51, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.01, &#39;xcen&#39;: 939.83, &#39;xgam&#39;: -0.01, &#39;ycen&#39;: 1076.42&#34;
     &gt;&gt;&gt; output(extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024))
     &#34;&#39;dd&#39;: 70, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.0, &#39;xcen&#39;: 1024, &#39;xgam&#39;: 0.0, &#39;ycen&#39;: 1024&#34;
     &gt;&gt;&gt; output(extract_parameters(distance=70, angle2=.0, angle1=.0, size=.08, x0=1024, y0=1024))
@@ -317,7 +317,7 @@ Les clefs et les valeurs typique sont par example:
 &gt;&gt;&gt; output = lambda pars: &quot;, &quot;.join(f&quot;{repr(k)}: {round(pars[k], 2)}&quot; for k in sorted(pars))
 &gt;&gt;&gt;
 &gt;&gt;&gt; output(extract_parameters(config_file=&quot;laue/examples/ge_blanc.det&quot;))
-&quot;'dd': 71.47, 'pixelsize': 0.08, 'xbet': 0.01, 'xcen': 938.51, 'xgam': -0.01, 'ycen': 1078.08&quot;
+&quot;'dd': 71.51, 'pixelsize': 0.08, 'xbet': 0.01, 'xcen': 939.83, 'xgam': -0.01, 'ycen': 1076.42&quot;
 &gt;&gt;&gt; output(extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024))
 &quot;'dd': 70, 'pixelsize': 0.08, 'xbet': 0.0, 'xcen': 1024, 'xgam': 0.0, 'ycen': 1024&quot;
 &gt;&gt;&gt; output(extract_parameters(distance=70, angle2=.0, angle1=.0, size=.08, x0=1024, y0=1024))
@@ -385,7 +385,7 @@ Les clefs et les valeurs typique sont par example:
     &gt;&gt;&gt; output = lambda pars: &#34;, &#34;.join(f&#34;{repr(k)}: {round(pars[k], 2)}&#34; for k in sorted(pars))
     &gt;&gt;&gt;
     &gt;&gt;&gt; output(extract_parameters(config_file=&#34;laue/examples/ge_blanc.det&#34;))
-    &#34;&#39;dd&#39;: 71.47, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.01, &#39;xcen&#39;: 938.51, &#39;xgam&#39;: -0.01, &#39;ycen&#39;: 1078.08&#34;
+    &#34;&#39;dd&#39;: 71.51, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.01, &#39;xcen&#39;: 939.83, &#39;xgam&#39;: -0.01, &#39;ycen&#39;: 1076.42&#34;
     &gt;&gt;&gt; output(extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024))
     &#34;&#39;dd&#39;: 70, &#39;pixelsize&#39;: 0.08, &#39;xbet&#39;: 0.0, &#39;xcen&#39;: 1024, &#39;xgam&#39;: 0.0, &#39;ycen&#39;: 1024&#34;
     &gt;&gt;&gt; output(extract_parameters(distance=70, angle2=.0, angle1=.0, size=.08, x0=1024, y0=1024))

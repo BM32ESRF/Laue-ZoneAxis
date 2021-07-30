@@ -1,5 +1,5 @@
-DATE: Fri Jul 30 14:34:08 2021
-NCPU: 2
+DATE: Fri Jul 30 14:58:59 2021
+NCPU: 8
 ============ TEST GEOMETRY DTYPE =============
 cam_to_gnomonic:
 	boucle 0: float16->float16
@@ -47,16 +47,16 @@ inter_lines:
 	float64->float64
 	float128->float128
 ============ TEST GEOMETRY SHAPE =============
-shape: (9, 9, 4, 6)
-boucle 0, cam_to_gnomonic(...).shape -> (2, 9, 9, 4, 6)
-boucle 0, gnomonic_to_cam(...).shape -> (2, 9, 9, 4, 6)
-boucle 1, cam_to_gnomonic(...).shape -> (2, 9, 9, 4, 6)
-boucle 1, gnomonic_to_cam(...).shape -> (2, 9, 9, 4, 6)
-boucle 2, cam_to_gnomonic(...).shape -> (2, 9, 9, 4, 6)
-boucle 2, gnomonic_to_cam(...).shape -> (2, 9, 9, 4, 6)
-dist_line(...).shape -> (9, 9, 4, 6, 9, 9, 4, 6)
-hough(...).shape -> (2, 9, 9, 4, 15)
-inter_lines(...).shape -> (2, 9, 9, 4, 15)
+shape: (8, 2, 9, 2)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 8, 2, 9, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 8, 2, 9, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 8, 2, 9, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 8, 2, 9, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 8, 2, 9, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 8, 2, 9, 2)
+dist_line(...).shape -> (8, 2, 9, 2, 8, 2, 9, 2)
+hough(...).shape -> (2, 8, 2, 9, 1)
+inter_lines(...).shape -> (2, 8, 2, 9, 1)
 =============== TEST BIJECTION ===============
 uf2cam o cam2uf: ok formel
 cam2uf o uf2cam: ok formel
@@ -64,3 +64,4 @@ uq2uf o uf2uq: ok formel
 uf2uq o uq2uf: fail formel, ok numerical
 uq2gnom o gnom2uq: ok formel
 gnom2uq o uq2gnom: ok formel
+cam2gnom o gnom2cam: 
