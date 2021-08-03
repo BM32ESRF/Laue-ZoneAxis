@@ -3590,20 +3590,21 @@ s'ammuser avec la transformee de Hough.</p>
                          self.pixelsize: parameters[&#34;pixelsize&#34;]}
             # Dans le cas ou l&#39;expression est deserialise, les pointeurs ne sont plus les memes.
             constants = {str(var): value for var, value in constants.items()}
-
             for transform, args in {
                     &#34;cam_to_gnomonic&#34;: (self.x_cam, self.y_cam),
                     &#34;gnomonic_to_cam&#34;: (self.x_gnom, self.y_gnom),
                     &#34;cam_to_thetachi&#34;: (self.x_cam, self.y_cam),
                     &#34;thetachi_to_cam&#34;: (self.theta, self.chi)
                     }.items():
-                formal_expr = getattr(self, f&#34;fet_fct_{transform}&#34;)()
+                formal_expr = getattr(self, f&#34;get_fct_{transform}&#34;)()()
                 subs = {symbol: constants[str(symbol)]
                     for symbol in set.union(*(e.free_symbols for e in formal_expr))
                     if str(symbol) in constants}
                 getattr(self, f&#34;_fcts_{transform}&#34;)[hash_param] = lambdify.Lambdify(
                     args=args,
                     expr=lambdify.subs(formal_expr, subs))
+
+        self.save() # On enregistre pour gagner du temps les prochaines fois.
 
     def cam_to_gnomonic(self, pxl_x, pxl_y, parameters, *, dtype=np.float32):
         &#34;&#34;&#34;
@@ -3625,9 +3626,8 @@ s'ammuser avec la transformee de Hough.</p>
         Returns
         -------
         float ou np.ndarray
-            Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
-            Les dimenssions du tableau de sortie sont les memes que celle du tableau d&#39;entree.
-            shape de sortie = (2, *shape_d_entree)
+            * Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
+            * shape = (2, *shape_d_entree)
 
         Examples
         -------
@@ -3682,9 +3682,8 @@ s'ammuser avec la transformee de Hough.</p>
         Returns
         -------
         float ou np.ndarray
-            Le.s coordonnee.s theta puis chi du.des point.s exprimees en radian.
-            Les dimenssions du tableau de sortie sont les memes que celle du tableau d&#39;entree.
-            shape de sortie = (2, *shape_d_entree)
+            * Le.s coordonnee.s theta puis chi du.des point.s. (en deg)
+            * shape = (2, *shape_d_entree)
 
         Examples
         -------
@@ -3699,10 +3698,10 @@ s'ammuser avec la transformee de Hough.</p>
         Output type
         &gt;&gt;&gt; type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
         &lt;class &#39;numpy.ndarray&#39;&gt;
-        &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters), 2)
+        &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
         array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
                [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]], dtype=float32)
-        &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters, dtype=np.float64), 2)
+        &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters, dtype=np.float64))
         array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
                [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]])
         &gt;&gt;&gt;
@@ -3826,7 +3825,7 @@ s'ammuser avec la transformee de Hough.</p>
         -------
         coords : np.ndarray
             * Le.s coordonnee.s x puis y du.des point.s dans le plan de la camera. (en pxl)
-            * shape = (2, ...)
+            * shape = (2, *shape_d_entree)
 
         Examples
         -------
@@ -3863,6 +3862,61 @@ s'ammuser avec la transformee de Hough.</p>
         &#34;&#34;&#34;
         return self._generic_transformation(&#34;gnomonic_to_cam&#34;, gnom_x, gnom_y,
             parameters=parameters, dtype=dtype)
+
+    def gnomonic_to_thetachi(self, gnom_x, gnom_y, *, dtype=np.float32):
+        &#34;&#34;&#34;
+        ** Passe des points du plan gnomonic vers theta et chi. **
+
+        Parameters
+        ----------
+        gnom_x : float ou np.ndarray
+            Coordonnee.s du.des point.s selon l&#39;axe x du repere du plan gnomonic. (en mm)
+        gnom_y : float ou np.ndarray
+            Coordonnee.s du.des point.s selon l&#39;axe y du repere du plan gnomonic. (en mm)
+        dtype : type, optional
+            Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
+
+        Returns
+        -------
+        float ou np.ndarray
+            * Le.s coordonnee.s theta puis chi du.des point.s. (en deg)
+            * shape = (2, *shape_d_entree)
+
+        Examples
+        -------
+        &gt;&gt;&gt; import numpy as np
+        &gt;&gt;&gt; from laue import Transformer
+        &gt;&gt;&gt; transformer = Transformer()
+        &gt;&gt;&gt; x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
+        ...                              0.09978235,  0.17156848,  0.13417314 ],
+        ...                            [ 0.40283853,  0.31846303,  0.14362221, 
+        ...                             -0.18308422, -0.58226374, -0.93854752 ]])
+        &gt;&gt;&gt;
+
+        Output type
+        &gt;&gt;&gt; type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+        &lt;class &#39;numpy.ndarray&#39;&gt;
+        &gt;&gt;&gt; np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+        array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
+               [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]], dtype=float32)
+        &gt;&gt;&gt; np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom, dtype=np.float64))
+        array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
+               [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]])
+        &gt;&gt;&gt;
+        
+        Output shape
+        &gt;&gt;&gt; transformer.gnomonic_to_thetachi(0.0, 0.0).shape
+        (2,)
+        &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
+        ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
+        &gt;&gt;&gt; transformer.gnomonic_to_thetachi(x_cam, y_cam).shape
+        (2, 1, 2, 3)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self._generic_transformation(&#34;gnomonic_to_thetachi&#34;, gnom_x, gnom_y,
+            parameters=None, dtype=dtype)
 
     def hough(self, x_vect, y_vect, *, dtype=np.float64):
         r&#34;&#34;&#34;
@@ -4163,9 +4217,9 @@ s'ammuser avec la transformee de Hough.</p>
         Parameters
         ----------
         theta : float ou np.ndarray
-            Coordonnee.s du.des angle.s de rotation autour de y. (en rad)
+            Coordonnee.s du.des angle.s de rotation autour de y. (en deg)
         chi : float ou np.ndarray
-            Coordonnee.s du.des angle.s de rotation autour de x. (en rad)
+            Coordonnee.s du.des angle.s de rotation autour de x. (en deg)
         parameters : dict
             Le dictionaire issue de la fonction ``laue.utilities.parsing.extract_parameters``.
         dtype : type, optional
@@ -4177,7 +4231,7 @@ s'ammuser avec la transformee de Hough.</p>
         -------
         coords : np.ndarray
             * Le.s coordonnee.s x puis y du.des point.s dans le plan de la camera. (en pxl)
-            * shape = (2, ...)
+            * shape = (2, *shape_d_entree)
 
         Examples
         -------
@@ -4214,6 +4268,61 @@ s'ammuser avec la transformee de Hough.</p>
         &#34;&#34;&#34;
         return self._generic_transformation(&#34;thetachi_to_cam&#34;, theta, chi,
             parameters=parameters, dtype=dtype)
+
+    def thetachi_to_gnomonic(self, theta, chi, *, dtype=np.float32):
+        &#34;&#34;&#34;
+        ** Passe de la representation theta et chi vers une projection gnomonique. **
+
+        Parameters
+        ----------
+        theta : float ou np.ndarray
+            Coordonnee.s du.des angle.s de rotation autour de y. (en deg)
+        chi : float ou np.ndarray
+            Coordonnee.s du.des angle.s de rotation autour de x. (en deg)
+        dtype : type, optional
+            Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
+
+        Returns
+        -------
+        float ou np.ndarray
+            * Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
+            * shape = (2, *shape_d_entree)
+
+        Examples
+        -------
+        &gt;&gt;&gt; import numpy as np
+        &gt;&gt;&gt; from laue import Transformer
+        &gt;&gt;&gt; transformer = Transformer()
+        &gt;&gt;&gt; theta, chi = np.array([[ 1.1101143, 1.0456189, 0.8965300,
+        ...                          0.6727613, 0.5244697, 0.4603832],
+        ...                        [ 0.8622506, 0.6103422, 0.2279670,
+        ...                         -0.2312180,-0.6126410,-0.8636999]])
+        &gt;&gt;&gt;
+
+        Output type
+        &gt;&gt;&gt; type(transformer.thetachi_to_gnomonic(theta, chi))
+        &lt;class &#39;numpy.ndarray&#39;&gt;
+        &gt;&gt;&gt; np.round(transformer.thetachi_to_gnomonic(theta, chi), 2)
+        array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float32)
+        &gt;&gt;&gt; np.round(transformer.thetachi_to_gnomonic(theta, chi, dtype=np.float64), 2)
+        array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]])
+        &gt;&gt;&gt;
+        
+        Output shape
+        &gt;&gt;&gt; transformer.thetachi_to_gnomonic(np.pi/4, 0.0).shape
+        (2,)
+        &gt;&gt;&gt; theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
+        ...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
+        &gt;&gt;&gt; transformer.thetachi_to_gnomonic(theta, chi).shape
+        (2, 1, 2, 3)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self._generic_transformation(&#34;thetachi_to_gnomonic&#34;, theta, chi,
+            parameters=None, dtype=dtype)
 
     def _clustering_1d(self, theta_vect_1d, dist_vect_1d, std, tol, nbr):
         &#34;&#34;&#34;
@@ -4286,8 +4395,8 @@ s'ammuser avec la transformee de Hough.</p>
             assert set(parameters) == {&#34;dd&#34;, &#34;xbet&#34;, &#34;xgam&#34;, &#34;xcen&#34;, &#34;ycen&#34;, &#34;pixelsize&#34;}, \
                 (&#34;Les clefs doivent etres &#39;dd&#39;, &#39;xbet&#39;, &#39;xgam&#39;, &#39;xcen&#39;, &#39;ycen&#39; et &#39;pixelsize&#39;. &#34;
                 f&#34;Or les clefs sont {set(parameters)}.&#34;)
-        assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
-            &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
+            assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
+                &#34;La valeurs des parametres doivent toutes etre des nombres.&#34;
         assert dtype in {np.float16, np.float32, np.float64, (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
             f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
@@ -4314,7 +4423,7 @@ s'ammuser avec la transformee de Hough.</p>
 
             return np.stack(getattr(self, f&#34;_fcts_{transform}&#34;)[hash_param](data1, data2))
 
-        return np.stack(getattr(self, f&#34;get_fct_{transform}&#34;)(data1, data2))
+        return np.stack(getattr(self, f&#34;get_fct_{transform}&#34;)()(data1, data2))
 
     def _hash_parameters(self, parameters):
         &#34;&#34;&#34;
@@ -4368,9 +4477,12 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>float ou np.ndarray</code></dt>
-<dd>Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
-Les dimenssions du tableau de sortie sont les memes que celle du tableau d'entree.
-shape de sortie = (2, *shape_d_entree)</dd>
+<dd>
+<ul>
+<li>Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.</li>
+<li>shape = (2, *shape_d_entree)</li>
+</ul>
+</dd>
 </dl>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
@@ -4425,9 +4537,8 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
     Returns
     -------
     float ou np.ndarray
-        Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
-        Les dimenssions du tableau de sortie sont les memes que celle du tableau d&#39;entree.
-        shape de sortie = (2, *shape_d_entree)
+        * Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
+        * shape = (2, *shape_d_entree)
 
     Examples
     -------
@@ -4484,9 +4595,12 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>float ou np.ndarray</code></dt>
-<dd>Le.s coordonnee.s theta puis chi du.des point.s exprimees en radian.
-Les dimenssions du tableau de sortie sont les memes que celle du tableau d'entree.
-shape de sortie = (2, *shape_d_entree)</dd>
+<dd>
+<ul>
+<li>Le.s coordonnee.s theta puis chi du.des point.s. (en deg)</li>
+<li>shape = (2, *shape_d_entree)</li>
+</ul>
+</dd>
 </dl>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
@@ -4500,10 +4614,10 @@ shape de sortie = (2, *shape_d_entree)</dd>
 <p>Output type</p>
 <pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
 &lt;class 'numpy.ndarray'&gt;
-&gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters), 2)
+&gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
 array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
        [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]], dtype=float32)
-&gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters, dtype=np.float64), 2)
+&gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters, dtype=np.float64))
 array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
        [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]])
 &gt;&gt;&gt;
@@ -4541,9 +4655,8 @@ array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
     Returns
     -------
     float ou np.ndarray
-        Le.s coordonnee.s theta puis chi du.des point.s exprimees en radian.
-        Les dimenssions du tableau de sortie sont les memes que celle du tableau d&#39;entree.
-        shape de sortie = (2, *shape_d_entree)
+        * Le.s coordonnee.s theta puis chi du.des point.s. (en deg)
+        * shape = (2, *shape_d_entree)
 
     Examples
     -------
@@ -4558,10 +4671,10 @@ array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
     Output type
     &gt;&gt;&gt; type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
     &lt;class &#39;numpy.ndarray&#39;&gt;
-    &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters), 2)
+    &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
     array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
            [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]], dtype=float32)
-    &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters, dtype=np.float64), 2)
+    &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters, dtype=np.float64))
     array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
            [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]])
     &gt;&gt;&gt;
@@ -4626,20 +4739,21 @@ plus optimisee.</dd>
                      self.pixelsize: parameters[&#34;pixelsize&#34;]}
         # Dans le cas ou l&#39;expression est deserialise, les pointeurs ne sont plus les memes.
         constants = {str(var): value for var, value in constants.items()}
-
         for transform, args in {
                 &#34;cam_to_gnomonic&#34;: (self.x_cam, self.y_cam),
                 &#34;gnomonic_to_cam&#34;: (self.x_gnom, self.y_gnom),
                 &#34;cam_to_thetachi&#34;: (self.x_cam, self.y_cam),
                 &#34;thetachi_to_cam&#34;: (self.theta, self.chi)
                 }.items():
-            formal_expr = getattr(self, f&#34;fet_fct_{transform}&#34;)()
+            formal_expr = getattr(self, f&#34;get_fct_{transform}&#34;)()()
             subs = {symbol: constants[str(symbol)]
                 for symbol in set.union(*(e.free_symbols for e in formal_expr))
                 if str(symbol) in constants}
             getattr(self, f&#34;_fcts_{transform}&#34;)[hash_param] = lambdify.Lambdify(
                 args=args,
-                expr=lambdify.subs(formal_expr, subs))</code></pre>
+                expr=lambdify.subs(formal_expr, subs))
+
+    self.save() # On enregistre pour gagner du temps les prochaines fois.</code></pre>
 </details>
 </dd>
 <dt id="laue.Transformer.dist_line"><code class="name flex">
@@ -4812,7 +4926,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 <dd>
 <ul>
 <li>Le.s coordonnee.s x puis y du.des point.s dans le plan de la camera. (en pxl)</li>
-<li>shape = (2, &hellip;)</li>
+<li>shape = (2, *shape_d_entree)</li>
 </ul>
 </dd>
 </dl>
@@ -4873,7 +4987,7 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
     -------
     coords : np.ndarray
         * Le.s coordonnee.s x puis y du.des point.s dans le plan de la camera. (en pxl)
-        * shape = (2, ...)
+        * shape = (2, *shape_d_entree)
 
     Examples
     -------
@@ -4910,6 +5024,122 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
     &#34;&#34;&#34;
     return self._generic_transformation(&#34;gnomonic_to_cam&#34;, gnom_x, gnom_y,
         parameters=parameters, dtype=dtype)</code></pre>
+</details>
+</dd>
+<dt id="laue.Transformer.gnomonic_to_thetachi"><code class="name flex">
+<span>def <span class="ident">gnomonic_to_thetachi</span></span>(<span>self, gnom_x, gnom_y, *, dtype=numpy.float32)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Passe des points du plan gnomonic vers theta et chi. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>gnom_x</code></strong> :&ensp;<code>float ou np.ndarray</code></dt>
+<dd>Coordonnee.s du.des point.s selon l'axe x du repere du plan gnomonic. (en mm)</dd>
+<dt><strong><code>gnom_y</code></strong> :&ensp;<code>float ou np.ndarray</code></dt>
+<dd>Coordonnee.s du.des point.s selon l'axe y du repere du plan gnomonic. (en mm)</dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
+<dd>Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en <code>float</code>.
+La representation machine des nombres. Par defaut <code>np.float32</code> permet des calculs rapide
+mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <code>np.float128</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float ou np.ndarray</code></dt>
+<dd>
+<ul>
+<li>Le.s coordonnee.s theta puis chi du.des point.s. (en deg)</li>
+<li>shape = (2, *shape_d_entree)</li>
+</ul>
+</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from laue import Transformer
+&gt;&gt;&gt; transformer = Transformer()
+&gt;&gt;&gt; x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
+...                              0.09978235,  0.17156848,  0.13417314 ],
+...                            [ 0.40283853,  0.31846303,  0.14362221, 
+...                             -0.18308422, -0.58226374, -0.93854752 ]])
+&gt;&gt;&gt;
+</code></pre>
+<p>Output type</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+&lt;class 'numpy.ndarray'&gt;
+&gt;&gt;&gt; np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
+       [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]], dtype=float32)
+&gt;&gt;&gt; np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom, dtype=np.float64))
+array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
+       [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]])
+&gt;&gt;&gt;
+</code></pre>
+<p>Output shape</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.gnomonic_to_thetachi(0.0, 0.0).shape
+(2,)
+&gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
+...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
+&gt;&gt;&gt; transformer.gnomonic_to_thetachi(x_cam, y_cam).shape
+(2, 1, 2, 3)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def gnomonic_to_thetachi(self, gnom_x, gnom_y, *, dtype=np.float32):
+    &#34;&#34;&#34;
+    ** Passe des points du plan gnomonic vers theta et chi. **
+
+    Parameters
+    ----------
+    gnom_x : float ou np.ndarray
+        Coordonnee.s du.des point.s selon l&#39;axe x du repere du plan gnomonic. (en mm)
+    gnom_y : float ou np.ndarray
+        Coordonnee.s du.des point.s selon l&#39;axe y du repere du plan gnomonic. (en mm)
+    dtype : type, optional
+        Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+        La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+        mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
+
+    Returns
+    -------
+    float ou np.ndarray
+        * Le.s coordonnee.s theta puis chi du.des point.s. (en deg)
+        * shape = (2, *shape_d_entree)
+
+    Examples
+    -------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from laue import Transformer
+    &gt;&gt;&gt; transformer = Transformer()
+    &gt;&gt;&gt; x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
+    ...                              0.09978235,  0.17156848,  0.13417314 ],
+    ...                            [ 0.40283853,  0.31846303,  0.14362221, 
+    ...                             -0.18308422, -0.58226374, -0.93854752 ]])
+    &gt;&gt;&gt;
+
+    Output type
+    &gt;&gt;&gt; type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+    &lt;class &#39;numpy.ndarray&#39;&gt;
+    &gt;&gt;&gt; np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+    array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
+           [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]], dtype=float32)
+    &gt;&gt;&gt; np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom, dtype=np.float64))
+    array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
+           [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]])
+    &gt;&gt;&gt;
+    
+    Output shape
+    &gt;&gt;&gt; transformer.gnomonic_to_thetachi(0.0, 0.0).shape
+    (2,)
+    &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
+    ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
+    &gt;&gt;&gt; transformer.gnomonic_to_thetachi(x_cam, y_cam).shape
+    (2, 1, 2, 3)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return self._generic_transformation(&#34;gnomonic_to_thetachi&#34;, gnom_x, gnom_y,
+        parameters=None, dtype=dtype)</code></pre>
 </details>
 </dd>
 <dt id="laue.Transformer.hough"><code class="name flex">
@@ -5438,9 +5668,9 @@ La shape du tenseur final est donc: <strong> shape = <code>(2, *over_dims, n*(n-
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>theta</code></strong> :&ensp;<code>float ou np.ndarray</code></dt>
-<dd>Coordonnee.s du.des angle.s de rotation autour de y. (en rad)</dd>
+<dd>Coordonnee.s du.des angle.s de rotation autour de y. (en deg)</dd>
 <dt><strong><code>chi</code></strong> :&ensp;<code>float ou np.ndarray</code></dt>
-<dd>Coordonnee.s du.des angle.s de rotation autour de x. (en rad)</dd>
+<dd>Coordonnee.s du.des angle.s de rotation autour de x. (en deg)</dd>
 <dt><strong><code>parameters</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Le dictionaire issue de la fonction <code><a title="laue.utilities.parsing.extract_parameters" href="utilities/parsing.html#laue.utilities.parsing.extract_parameters">extract_parameters()</a></code>.</dd>
 <dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
@@ -5454,7 +5684,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 <dd>
 <ul>
 <li>Le.s coordonnee.s x puis y du.des point.s dans le plan de la camera. (en pxl)</li>
-<li>shape = (2, &hellip;)</li>
+<li>shape = (2, *shape_d_entree)</li>
 </ul>
 </dd>
 </dl>
@@ -5501,9 +5731,9 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
     Parameters
     ----------
     theta : float ou np.ndarray
-        Coordonnee.s du.des angle.s de rotation autour de y. (en rad)
+        Coordonnee.s du.des angle.s de rotation autour de y. (en deg)
     chi : float ou np.ndarray
-        Coordonnee.s du.des angle.s de rotation autour de x. (en rad)
+        Coordonnee.s du.des angle.s de rotation autour de x. (en deg)
     parameters : dict
         Le dictionaire issue de la fonction ``laue.utilities.parsing.extract_parameters``.
     dtype : type, optional
@@ -5515,7 +5745,7 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
     -------
     coords : np.ndarray
         * Le.s coordonnee.s x puis y du.des point.s dans le plan de la camera. (en pxl)
-        * shape = (2, ...)
+        * shape = (2, *shape_d_entree)
 
     Examples
     -------
@@ -5552,6 +5782,122 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
     &#34;&#34;&#34;
     return self._generic_transformation(&#34;thetachi_to_cam&#34;, theta, chi,
         parameters=parameters, dtype=dtype)</code></pre>
+</details>
+</dd>
+<dt id="laue.Transformer.thetachi_to_gnomonic"><code class="name flex">
+<span>def <span class="ident">thetachi_to_gnomonic</span></span>(<span>self, theta, chi, *, dtype=numpy.float32)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Passe de la representation theta et chi vers une projection gnomonique. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>theta</code></strong> :&ensp;<code>float ou np.ndarray</code></dt>
+<dd>Coordonnee.s du.des angle.s de rotation autour de y. (en deg)</dd>
+<dt><strong><code>chi</code></strong> :&ensp;<code>float ou np.ndarray</code></dt>
+<dd>Coordonnee.s du.des angle.s de rotation autour de x. (en deg)</dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
+<dd>Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en <code>float</code>.
+La representation machine des nombres. Par defaut <code>np.float32</code> permet des calculs rapide
+mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <code>np.float128</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float ou np.ndarray</code></dt>
+<dd>
+<ul>
+<li>Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.</li>
+<li>shape = (2, *shape_d_entree)</li>
+</ul>
+</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from laue import Transformer
+&gt;&gt;&gt; transformer = Transformer()
+&gt;&gt;&gt; theta, chi = np.array([[ 1.1101143, 1.0456189, 0.8965300,
+...                          0.6727613, 0.5244697, 0.4603832],
+...                        [ 0.8622506, 0.6103422, 0.2279670,
+...                         -0.2312180,-0.6126410,-0.8636999]])
+&gt;&gt;&gt;
+</code></pre>
+<p>Output type</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_gnomonic(theta, chi))
+&lt;class 'numpy.ndarray'&gt;
+&gt;&gt;&gt; np.round(transformer.thetachi_to_gnomonic(theta, chi), 2)
+array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+       [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float32)
+&gt;&gt;&gt; np.round(transformer.thetachi_to_gnomonic(theta, chi, dtype=np.float64), 2)
+array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+       [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]])
+&gt;&gt;&gt;
+</code></pre>
+<p>Output shape</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.thetachi_to_gnomonic(np.pi/4, 0.0).shape
+(2,)
+&gt;&gt;&gt; theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
+...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
+&gt;&gt;&gt; transformer.thetachi_to_gnomonic(theta, chi).shape
+(2, 1, 2, 3)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def thetachi_to_gnomonic(self, theta, chi, *, dtype=np.float32):
+    &#34;&#34;&#34;
+    ** Passe de la representation theta et chi vers une projection gnomonique. **
+
+    Parameters
+    ----------
+    theta : float ou np.ndarray
+        Coordonnee.s du.des angle.s de rotation autour de y. (en deg)
+    chi : float ou np.ndarray
+        Coordonnee.s du.des angle.s de rotation autour de x. (en deg)
+    dtype : type, optional
+        Si l&#39;entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+        La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+        mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
+
+    Returns
+    -------
+    float ou np.ndarray
+        * Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
+        * shape = (2, *shape_d_entree)
+
+    Examples
+    -------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from laue import Transformer
+    &gt;&gt;&gt; transformer = Transformer()
+    &gt;&gt;&gt; theta, chi = np.array([[ 1.1101143, 1.0456189, 0.8965300,
+    ...                          0.6727613, 0.5244697, 0.4603832],
+    ...                        [ 0.8622506, 0.6103422, 0.2279670,
+    ...                         -0.2312180,-0.6126410,-0.8636999]])
+    &gt;&gt;&gt;
+
+    Output type
+    &gt;&gt;&gt; type(transformer.thetachi_to_gnomonic(theta, chi))
+    &lt;class &#39;numpy.ndarray&#39;&gt;
+    &gt;&gt;&gt; np.round(transformer.thetachi_to_gnomonic(theta, chi), 2)
+    array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+           [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float32)
+    &gt;&gt;&gt; np.round(transformer.thetachi_to_gnomonic(theta, chi, dtype=np.float64), 2)
+    array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+           [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]])
+    &gt;&gt;&gt;
+    
+    Output shape
+    &gt;&gt;&gt; transformer.thetachi_to_gnomonic(np.pi/4, 0.0).shape
+    (2,)
+    &gt;&gt;&gt; theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
+    ...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
+    &gt;&gt;&gt; transformer.thetachi_to_gnomonic(theta, chi).shape
+    (2, 1, 2, 3)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return self._generic_transformation(&#34;thetachi_to_gnomonic&#34;, theta, chi,
+        parameters=None, dtype=dtype)</code></pre>
 </details>
 </dd>
 </dl>
@@ -5631,16 +5977,18 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
 </li>
 <li>
 <h4><code><a title="laue.Transformer" href="#laue.Transformer">Transformer</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="laue.Transformer.cam_to_gnomonic" href="#laue.Transformer.cam_to_gnomonic">cam_to_gnomonic</a></code></li>
 <li><code><a title="laue.Transformer.cam_to_thetachi" href="#laue.Transformer.cam_to_thetachi">cam_to_thetachi</a></code></li>
 <li><code><a title="laue.Transformer.compile" href="#laue.Transformer.compile">compile</a></code></li>
 <li><code><a title="laue.Transformer.dist_line" href="#laue.Transformer.dist_line">dist_line</a></code></li>
 <li><code><a title="laue.Transformer.gnomonic_to_cam" href="#laue.Transformer.gnomonic_to_cam">gnomonic_to_cam</a></code></li>
+<li><code><a title="laue.Transformer.gnomonic_to_thetachi" href="#laue.Transformer.gnomonic_to_thetachi">gnomonic_to_thetachi</a></code></li>
 <li><code><a title="laue.Transformer.hough" href="#laue.Transformer.hough">hough</a></code></li>
 <li><code><a title="laue.Transformer.hough_reduce" href="#laue.Transformer.hough_reduce">hough_reduce</a></code></li>
 <li><code><a title="laue.Transformer.inter_lines" href="#laue.Transformer.inter_lines">inter_lines</a></code></li>
 <li><code><a title="laue.Transformer.thetachi_to_cam" href="#laue.Transformer.thetachi_to_cam">thetachi_to_cam</a></code></li>
+<li><code><a title="laue.Transformer.thetachi_to_gnomonic" href="#laue.Transformer.thetachi_to_gnomonic">thetachi_to_gnomonic</a></code></li>
 </ul>
 </li>
 </ul>

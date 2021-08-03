@@ -234,7 +234,7 @@ def test_geometry_bij():
     assert is_zero((theta_bis - theta)**2 + (chi_bis - chi)**2)
 
 
-# Tests sur les donnes reelles.
+# Tests sur les donnees reelles.
 
 def test_read_images():
     _print("============== TEST READ IMAGES ==============")

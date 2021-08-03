@@ -30,6 +30,8 @@ class Equations:
         self.xcen, self.ycen = sympy.symbols("xcen ycen", real=True) # Position du point d'incidence normale en pxl par rapport au repere de la camera.
         self.xbet, self.xgam = sympy.symbols("beta gamma", real=True) # Rotation autour x camera, Rotation autour axe incidence normale.
         self.pixelsize = sympy.Symbol("pixelsize", real=True, positive=True) # Taille des pixels en mm/pxl.
+        self.to_rad = lambda x: x*sympy.pi/180 # deg -> rad
+        self.from_rad = lambda x: 180*x/sympy.pi # rad -> deg
 
         # Les variables.
         self.x_cam, self.y_cam = sympy.symbols("x_cam y_cam", real=True, positive=True) # Position du pxl dans le repere du plan de la camera.
@@ -43,7 +45,7 @@ class Equations:
 
         self.u_i = self.rx # Le rayon de lumiere incident norme parallele a l'axe X dans le repere du cristal.
 
-        self.rot_camera = sympy.rot_axis2(-self.xbet) @ sympy.rot_axis3(self.xgam) # Rotation globale de la camera par rapport au cristal.
+        self.rot_camera = sympy.rot_axis2(self.to_rad(-self.xbet)) @ sympy.rot_axis3(self.to_rad(self.xgam)) # Rotation globale de la camera par rapport au cristal.
         self.ci = self.rot_camera @ -self.ry # Vecteur Xcamera.
         self.cj = self.rot_camera @ self.rx # Vecteur Ycamera.
         self.ck = self.rot_camera @ self.rz # Vecteur Zcamera normal au plan de la camera.
@@ -82,9 +84,9 @@ class Equations:
         >>> x_cam, y_cam = symbols("x y")
         >>> transformer.get_expr_cam_to_uf(x_cam, y_cam)
         Matrix([
-        [dd*sin(beta) - pixelsize*((x - xcen)*sin(gamma)*cos(beta) - (y - ycen)*cos(beta)*cos(gamma))],
-        [                                  -pixelsize*((x - xcen)*cos(gamma) + (y - ycen)*sin(gamma))],
-        [dd*cos(beta) + pixelsize*((x - xcen)*sin(beta)*sin(gamma) - (y - ycen)*sin(beta)*cos(gamma))]])
+        [dd*sin(pi*beta/180) - pixelsize*((x - xcen)*sin(pi*gamma/180)*cos(pi*beta/180) - (y - ycen)*cos(pi*beta/180)*cos(pi*gamma/180))],
+        [                                                       -pixelsize*((x - xcen)*cos(pi*gamma/180) + (y - ycen)*sin(pi*gamma/180))],
+        [dd*cos(pi*beta/180) + pixelsize*((x - xcen)*sin(pi*beta/180)*sin(pi*gamma/180) - (y - ycen)*sin(pi*beta/180)*cos(pi*gamma/180))]])
         >>>
         """
         x_cam_atomic, y_cam_atomic = sympy.symbols("x_cam y_cam", real=True)
@@ -119,9 +121,9 @@ class Equations:
         >>> uf_x, uf_y, uf_z = symbols("uf_x, uf_y, uf_z")
         >>> x_cam, y_cam = transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z)
         >>> x_cam
-        (-dd*uf_x*sin(gamma)*cos(beta) - dd*uf_y*cos(gamma) + dd*uf_z*sin(beta)*sin(gamma) + pixelsize*uf_x*xcen*sin(beta) + pixelsize*uf_z*xcen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+        (-dd*uf_x*sin(pi*gamma/180)*cos(pi*beta/180) - dd*uf_y*cos(pi*gamma/180) + dd*uf_z*sin(pi*beta/180)*sin(pi*gamma/180) + pixelsize*uf_x*xcen*sin(pi*beta/180) + pixelsize*uf_z*xcen*cos(pi*beta/180))/(pixelsize*(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180)))
         >>> y_cam
-        (dd*uf_x*cos(beta)*cos(gamma) - dd*uf_y*sin(gamma) - dd*uf_z*sin(beta)*cos(gamma) + pixelsize*uf_x*ycen*sin(beta) + pixelsize*uf_z*ycen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+        (dd*uf_x*cos(pi*beta/180)*cos(pi*gamma/180) - dd*uf_y*sin(pi*gamma/180) - dd*uf_z*sin(pi*beta/180)*cos(pi*gamma/180) + pixelsize*uf_x*ycen*sin(pi*beta/180) + pixelsize*uf_z*ycen*cos(pi*beta/180))/(pixelsize*(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180)))
         >>>
         """
         uf_x_atomic, uf_y_atomic, uf_z_atomic = sympy.symbols("uf_x uf_y uf_z", real=True)
@@ -317,15 +319,16 @@ class Equations:
         >>> uf_x, uf_y, uf_z = symbols("uf_x, uf_y, uf_z", real=True)
         >>> theta, chi = transformer.get_expr_uf_to_thetachi(uf_x, uf_y, uf_z)
         >>> theta
-        acos(uf_x/sqrt(uf_x**2 + uf_y**2 + uf_z**2))/2
+        90*acos(uf_x/sqrt(uf_x**2 + uf_y**2 + uf_z**2))/pi
         >>> chi
-        asin(uf_y/sqrt(uf_y**2 + uf_z**2))
+        180*asin(uf_y/sqrt(uf_y**2 + uf_z**2))/pi
         >>>
         """
         uf_x_atomic, uf_y_atomic, uf_z_atomic = sympy.symbols("uf_x uf_y uf_z", real=True)
 
-        theta = sympy.acos(uf_x_atomic/sympy.sqrt(uf_x_atomic**2 + uf_y_atomic**2 + uf_z_atomic**2))/2
-        chi = sympy.asin(uf_y_atomic/sympy.sqrt(uf_y_atomic**2 + uf_z_atomic**2))
+        theta_rad = sympy.acos(uf_x_atomic/sympy.sqrt(uf_x_atomic**2 + uf_y_atomic**2 + uf_z_atomic**2))/2
+        chi_rad = sympy.asin(uf_y_atomic/sympy.sqrt(uf_y_atomic**2 + uf_z_atomic**2))
+        theta, chi = self.from_rad(theta_rad), self.from_rad(chi_rad)
 
         return (theta.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}),
                 chi.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}))
@@ -355,15 +358,15 @@ class Equations:
         >>> theta, chi = symbols("theta chi")
         >>> transformer.get_expr_thetachi_to_uf(theta, chi)
         Matrix([
-        [         cos(2*theta)],
-        [sin(chi)*sin(2*theta)],
-        [sin(2*theta)*cos(chi)]])
+        [                cos(pi*theta/90)],
+        [sin(pi*chi/180)*sin(pi*theta/90)],
+        [sin(pi*theta/90)*cos(pi*chi/180)]])
         >>>
         """
         theta_atomic, chi_atomic = sympy.symbols("theta chi", real=True)
 
         # Expresion du rayon reflechit en fonction des angles.
-        rot_refl = sympy.rot_axis1(chi_atomic) @ sympy.rot_axis2(2*theta_atomic)
+        rot_refl = sympy.rot_axis1(self.to_rad(chi_atomic)) @ sympy.rot_axis2(self.to_rad(2*theta_atomic))
         u_f = rot_refl @ self.u_i
 
         return u_f.subs({theta_atomic: theta, chi_atomic: chi})
@@ -392,8 +395,6 @@ class Compilator(Equations):
     def compile(self):
         """
         ** Precalcule toutes les equations. **
-
-        N'enregistre pas les resultats.
         """
         names = [
             "cam_to_gnomonic",
@@ -408,6 +409,9 @@ class Compilator(Equations):
         names = [n for n in names if n not in globals()["compiled_expressions"]]
         for name in names:
             getattr(self, f"get_fct_{name}")()
+
+        if names:
+            self.save() # On enregistre pour gagner du temps les prochaines fois.
 
     def get_fct_cam_to_gnomonic(self):
         """

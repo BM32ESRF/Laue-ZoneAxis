@@ -75,7 +75,7 @@ def extract_parameters(ignore_missing=False, **detector_parameters):
     >>> output = lambda pars: ", ".join(f"{repr(k)}: {round(pars[k], 2)}" for k in sorted(pars))
     >>>
     >>> output(extract_parameters(config_file="laue/examples/ge_blanc.det"))
-    "'dd': 71.51, 'pixelsize': 0.08, 'xbet': 0.01, 'xcen': 939.83, 'xgam': -0.01, 'ycen': 1076.42"
+    "'dd': 71.51, 'pixelsize': 0.08, 'xbet': 0.43, 'xcen': 939.83, 'xgam': -0.7, 'ycen': 1076.42"
     >>> output(extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024))
     "'dd': 70, 'pixelsize': 0.08, 'xbet': 0.0, 'xcen': 1024, 'xgam': 0.0, 'ycen': 1024"
     >>> output(extract_parameters(distance=70, angle2=.0, angle1=.0, size=.08, x0=1024, y0=1024))

@@ -45,7 +45,7 @@ class Transformer(Compilator):
         self._fcts_thetachi_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(theta, chi), les paremetres sont deja remplaces.
         self._parameters_memory = {} # Permet d'eviter de relire le dictionaire des parametres a chaque fois.
 
-    def compile(self, parameters=None):
+    def compile(self, parameters=None, *, transform=None):
         """
         ** Precalcul toutes les equations. **
 
@@ -55,6 +55,11 @@ class Transformer(Compilator):
             Les parametres donnes par la fonction ``laue.utilities.parsing.extract_parameters``.
             Si ils sont fourni, l'expression est encore un peu
             plus optimisee.
+        transform : str
+            La fonction qu'il faut particulierement optimiser. Si ce parametre n'est
+            pas fournis, toutes les fonctions sont optimisees.
+            Peut prendre les valeurs: ``"cam_to_gnomonic"``, ``"gnomonic_to_cam"``,
+            ``"cam_to_thetachi"`` ou ``"thetachi_to_cam"``.
         """
         super().compile()
 
@@ -67,6 +72,11 @@ class Transformer(Compilator):
             assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
                 "La valeurs des parametres doivent toutes etre des nombres."
 
+            if transform is not None:
+                assert isinstance(transform, str), f"Doit etre str, pas {type(transform).__name__}."
+                assert transform in {"cam_to_gnomonic", "gnomonic_to_cam",
+                    "cam_to_thetachi", "thetachi_to_cam"}, f"Ne doit pas etre {transform}."
+
             hash_param = self._hash_parameters(parameters)
             constants = {self.dd: parameters["dd"], # C'est qu'il est tant de faire de l'optimisation.
                          self.xcen: parameters["xcen"],
@@ -76,21 +86,21 @@ class Transformer(Compilator):
                          self.pixelsize: parameters["pixelsize"]}
             # Dans le cas ou l'expression est deserialise, les pointeurs ne sont plus les memes.
             constants = {str(var): value for var, value in constants.items()}
-            for transform, args in {
+            for trans, args in {
                     "cam_to_gnomonic": (self.x_cam, self.y_cam),
                     "gnomonic_to_cam": (self.x_gnom, self.y_gnom),
                     "cam_to_thetachi": (self.x_cam, self.y_cam),
                     "thetachi_to_cam": (self.theta, self.chi)
                     }.items():
-                formal_expr = getattr(self, f"get_fct_{transform}")()()
+                if transform is not None and trans != transform:
+                    continue
+                formal_expr = getattr(self, f"get_fct_{trans}")()()
                 subs = {symbol: constants[str(symbol)]
                     for symbol in set.union(*(e.free_symbols for e in formal_expr))
                     if str(symbol) in constants}
-                getattr(self, f"_fcts_{transform}")[hash_param] = lambdify.Lambdify(
+                getattr(self, f"_fcts_{trans}")[hash_param] = lambdify.Lambdify(
                     args=args,
                     expr=lambdify.subs(formal_expr, subs))
-
-        self.save() # On enregistre pour gagner du temps les prochaines fois.
 
     def cam_to_gnomonic(self, pxl_x, pxl_y, parameters, *, dtype=np.float32):
         """
@@ -168,7 +178,7 @@ class Transformer(Compilator):
         Returns
         -------
         float ou np.ndarray
-            * Le.s coordonnee.s theta puis chi du.des point.s. (en rad)
+            * Le.s coordonnee.s theta puis chi du.des point.s. (en deg)
             * shape = (2, *shape_d_entree)
 
         Examples
@@ -184,12 +194,12 @@ class Transformer(Compilator):
         Output type
         >>> type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
         <class 'numpy.ndarray'>
-        >>> np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters), 2)
-        array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
-               [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]], dtype=float32)
-        >>> np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters, dtype=np.float64), 2)
-        array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
-               [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]])
+        >>> np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
+        array([[ 64.,  60.,  51.,  39.,  30.,  26.],
+               [ 49.,  35.,  13., -13., -35., -49.]], dtype=float32)
+        >>> np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters, dtype=np.float64))
+        array([[ 64.,  60.,  51.,  39.,  30.,  26.],
+               [ 49.,  35.,  13., -13., -35., -49.]])
         >>>
         
         Output shape
@@ -367,7 +377,7 @@ class Transformer(Compilator):
         Returns
         -------
         float ou np.ndarray
-            * Le.s coordonnee.s theta puis chi du.des point.s. (en rad)
+            * Le.s coordonnee.s theta puis chi du.des point.s. (en deg)
             * shape = (2, *shape_d_entree)
 
         Examples
@@ -384,12 +394,12 @@ class Transformer(Compilator):
         Output type
         >>> type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
         <class 'numpy.ndarray'>
-        >>> np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom), 2)
-        array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
-               [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]], dtype=float32)
-        >>> np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom, dtype=np.float64), 2)
-        array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
-               [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]])
+        >>> np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+        array([[ 64.,  60.,  51.,  39.,  30.,  26.],
+               [ 49.,  35.,  13., -13., -35., -49.]], dtype=float32)
+        >>> np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom, dtype=np.float64))
+        array([[ 64.,  60.,  51.,  39.,  30.,  26.],
+               [ 49.,  35.,  13., -13., -35., -49.]])
         >>>
         
         Output shape
@@ -703,9 +713,9 @@ class Transformer(Compilator):
         Parameters
         ----------
         theta : float ou np.ndarray
-            Coordonnee.s du.des angle.s de rotation autour de y. (en rad)
+            Coordonnee.s du.des angle.s de rotation autour de y. (en deg)
         chi : float ou np.ndarray
-            Coordonnee.s du.des angle.s de rotation autour de x. (en rad)
+            Coordonnee.s du.des angle.s de rotation autour de x. (en deg)
         parameters : dict
             Le dictionaire issue de la fonction ``laue.utilities.parsing.extract_parameters``.
         dtype : type, optional
@@ -726,10 +736,8 @@ class Transformer(Compilator):
         >>> from laue.utilities.parsing import extract_parameters
         >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
-        >>> theta, chi = np.array([[ 1.1101143, 1.0456189, 0.8965300,
-        ...                          0.6727613, 0.5244697, 0.4603832],
-        ...                        [ 0.8622506, 0.6103422, 0.2279670,
-        ...                         -0.2312180,-0.6126410,-0.8636999]])
+        >>> theta, chi = np.array([[ 63.605,  59.91 ,  51.367,  38.546,  30.05 ,  26.378],
+        ...                        [ 49.403,  34.97 ,  13.062, -13.248, -35.102, -49.486]])
         >>>
 
         Output type
@@ -762,9 +770,9 @@ class Transformer(Compilator):
         Parameters
         ----------
         theta : float ou np.ndarray
-            Coordonnee.s du.des angle.s de rotation autour de y. (en rad)
+            Coordonnee.s du.des angle.s de rotation autour de y. (en deg)
         chi : float ou np.ndarray
-            Coordonnee.s du.des angle.s de rotation autour de x. (en rad)
+            Coordonnee.s du.des angle.s de rotation autour de x. (en deg)
         dtype : type, optional
             Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
             La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
@@ -781,10 +789,8 @@ class Transformer(Compilator):
         >>> import numpy as np
         >>> from laue import Transformer
         >>> transformer = Transformer()
-        >>> theta, chi = np.array([[ 1.1101143, 1.0456189, 0.8965300,
-        ...                          0.6727613, 0.5244697, 0.4603832],
-        ...                        [ 0.8622506, 0.6103422, 0.2279670,
-        ...                         -0.2312180,-0.6126410,-0.8636999]])
+        >>> theta, chi = np.array([[ 63.605,  59.91 ,  51.367,  38.546,  30.05 ,  26.378],
+        ...                        [ 49.403,  34.97 ,  13.062, -13.248, -35.102, -49.486]])
         >>>
 
         Output type
@@ -900,7 +906,7 @@ class Transformer(Compilator):
                 nbr_access = optimized_func # Ce qui est enregistre et le nombre de fois que l'on a chercher a y acceder.
                 getattr(self, f"_fcts_{transform}")[hash_param] += 1 # Comme on cherche a y acceder actuelement, on peut incrementer le compteur.
                 if nbr_access + 1 == 4: # Si c'est la 4 eme fois qu'on accede a la fonction.
-                    self.compile(parameters) # On optimise la fonction.
+                    self.compile(parameters, transform=transform) # On optimise la fonction.
                 else: # Si ce n'est pas encore le moment de perdre du temps a optimiser.
                     return np.stack(getattr(self, f"get_fct_{transform}")()(
                         data1, data2,
