@@ -322,34 +322,13 @@ class Equations:
         asin(uf_y/sqrt(uf_y**2 + uf_z**2))
         >>>
         """
-        def select(theta, chi):
-            """
-            Cherche si theta > 0 et -pi/2 < chi < pi/2
-            """
-            func = sympy.lambdify([x, y, z], [theta, chi], modules="numpy")
-            theta_vals, chi_vals = func(*np.meshgrid([-.5, .5], [-.5, .5], [.5]))
-            if (theta_vals < 0).any() or (chi_vals < -np.pi/2).any() or (chi_vals > np.pi/2).any():
-                return False
-            return True
+        uf_x_atomic, uf_y_atomic, uf_z_atomic = sympy.symbols("uf_x uf_y uf_z", real=True)
 
-        theta_atomic, chi_atomic = sympy.symbols("theta chi", real=True)
-        x, y, z = sympy.symbols("x, y, z", real=True)
-        u_f = sympy.Matrix([x, y, z])
-        
-        theta, chi = [
-            (sol[theta_atomic], sol[chi_atomic])
-            for sol in
-            sympy.solve(
-                self.get_expr_thetachi_to_uf(theta_atomic, chi_atomic)-u_f,
-                [theta_atomic, chi_atomic],
-                dict=True)
-            if select(sol[theta_atomic], sol[chi_atomic])
-            ].pop()
+        theta = sympy.acos(uf_x_atomic/sympy.sqrt(uf_x_atomic**2 + uf_y_atomic**2 + uf_z_atomic**2))/2
+        chi = sympy.asin(uf_y_atomic/sympy.sqrt(uf_y_atomic**2 + uf_z_atomic**2))
 
-        uf_x, uf_y, uf_z = sympy.Matrix([uf_x, uf_y, uf_z]).normalized()
-
-        return (theta.subs({x: uf_x, y: uf_y, z: uf_z}),
-                chi.subs({x: uf_x, y: uf_y, z: uf_z}).simplify())
+        return (theta.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}),
+                chi.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}))
 
     def get_expr_thetachi_to_uf(self, theta, chi):
         """
@@ -408,69 +387,27 @@ class Compilator(Equations):
 
         if "compiled_expressions" not in globals():
             globals()["compiled_expressions"] = {}
-
         self.load()
 
-    def compile(self, parameters=None):
+    def compile(self):
         """
-        ** Precalcul toutes les equations. **
+        ** Precalcule toutes les equations. **
 
-        Parameters
-        ----------
-        parameters : dict, optional
-            Les parametres donnes par la fonction ``laue.utilities.parsing.extract_parameters``.
-            Si ils sont fourni, l'expression est encore un peu
-            plus optimisee.
+        N'enregistre pas les resultats.
         """
         names = [
-            "fct_cam_to_gnomonic",
-            "fct_gnomonic_to_cam",
-            "fct_cam_to_thetachi",
-            "fct_thetachi_to_cam",
-            "fct_dist_line",
-            "fct_hough",
-            "fct_inter_line"]
+            "cam_to_gnomonic",
+            "gnomonic_to_cam",
+            "cam_to_thetachi",
+            "thetachi_to_cam",
+            "thetachi_to_gnomonic",
+            "gnomonic_to_thetachi",
+            "dist_line",
+            "hough",
+            "inter_line"]
         names = [n for n in names if n not in globals()["compiled_expressions"]]
-
         for name in names:
-            getattr(self, f"get_{name}")()
-
-        self.save() # On enregistre les grandes equations.
-
-        if parameters is not None:
-            assert isinstance(parameters, dict), ("Les parametres doivent founis "
-                f"dans un dictionaire, pas dans un {type(parameters).__name__}")
-            assert set(parameters) == {"dd", "xbet", "xgam", "xcen", "ycen", "pixelsize"}, \
-                ("Les clefs doivent etres 'dd', 'xbet', 'xgam', 'xcen', 'ycen' et 'pixelsize'. "
-                f"Or les clefs sont {set(parameters)}.")
-            assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
-                "La valeurs des parametres doivent toutes etre des nombres."
-
-            hash_param = self._hash_parameters(parameters)
-            constants = {self.dd: parameters["dd"], # C'est qu'il est tant de faire de l'optimisation.
-                         self.xcen: parameters["xcen"],
-                         self.ycen: parameters["ycen"],
-                         self.xbet: parameters["xbet"],
-                         self.xgam: parameters["xgam"],
-                         self.pixelsize: parameters["pixelsize"]}
-            # Dans le cas ou l'expression est deserialise, les pointeurs ne sont plus les memes.
-            constants = {str(var): value for var, value in constants.items()}
-
-            expr_c2g = self.get_fct_cam_to_gnomonic()()
-            subs_c2g = {symbol: constants[str(symbol)]
-                    for symbol in (expr_c2g[0].free_symbols | expr_c2g[1].free_symbols)
-                    if str(symbol) in constants}
-            self._fcts_cam_to_gnomonic[hash_param] = lambdify.Lambdify(
-                    args=[self.x_cam, self.y_cam],
-                    expr=lambdify.subs(expr_c2g, subs_c2g))
-            
-            expr_g2c = self.get_fct_gnomonic_to_cam()()
-            subs_g2c = {symbol: constants[str(symbol)]
-                    for symbol in (expr_g2c[0].free_symbols | expr_g2c[1].free_symbols)
-                    if str(symbol) in constants}
-            self._fcts_gnomonic_to_cam[hash_param] = lambdify.Lambdify(
-                    args=[self.x_gnom, self.y_gnom],
-                    expr=lambdify.subs(expr_g2c, subs_g2c))
+            getattr(self, f"get_fct_{name}")()
 
     def get_fct_cam_to_gnomonic(self):
         """
@@ -488,40 +425,9 @@ class Compilator(Equations):
             expr=[x_gnom, y_gnom]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["fct_cam_to_gnomonic"]
 
-    def get_fct_gnomonic_to_cam(self):
-        """
-        ** Equation permetant de passer de l'espace gnomonic a celui de la camera. **
-        """
-        if "fct_gnomonic_to_cam" in globals()["compiled_expressions"]:
-            return globals()["compiled_expressions"]["fct_gnomonic_to_cam"]
-
-        u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
-        u_f = self.get_expr_uq_to_uf(*u_q)
-        x_c, y_c = self.get_expr_uf_to_cam(*u_f)
-
-        globals()["compiled_expressions"]["fct_gnomonic_to_cam"] = lambdify.Lambdify(
-            args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
-        return globals()["compiled_expressions"]["fct_gnomonic_to_cam"]
-
-    def get_fct_thetachi_to_cam(self):
-        """
-        ** Equation permetant de passer de theta chi au plan gnomonic. **
-        """
-        if "fct_thetachi_to_cam" in globals()["compiled_expressions"]:
-            return globals()["compiled_expressions"]["fct_thetachi_to_cam"]
-
-        u_f = self.get_expr_thetachi_to_uf(self.theta, self.chi)
-        x_c, y_c = self.get_expr_uf_to_cam(*u_f)
-
-        globals()["compiled_expressions"]["fct_thetachi_to_cam"] = lambdify.Lambdify(
-            args=[self.theta, self.chi, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
-        return globals()["compiled_expressions"]["fct_thetachi_to_cam"]
-
     def get_fct_cam_to_thetachi(self):
         """
-        ** Equation permetant de passer du plan gnomonic a la representation theta chi. **
+        ** Equation permetant de passer de la camera a la representation theta chi. **
         """
         if "fct_cam_to_thetachi" in globals()["compiled_expressions"]:
             return globals()["compiled_expressions"]["fct_cam_to_thetachi"]
@@ -556,6 +462,38 @@ class Compilator(Equations):
         # Vectorisation de l'expression.
         globals()["compiled_expressions"]["fct_dist_line"] = lambdify.Lambdify([theta, dist, x, y], distance)
         return globals()["compiled_expressions"]["fct_dist_line"]
+
+    def get_fct_gnomonic_to_cam(self):
+        """
+        ** Equation permetant de passer de l'espace gnomonic a celui de la camera. **
+        """
+        if "fct_gnomonic_to_cam" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_gnomonic_to_cam"]
+
+        u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
+        u_f = self.get_expr_uq_to_uf(*u_q)
+        x_c, y_c = self.get_expr_uf_to_cam(*u_f)
+
+        globals()["compiled_expressions"]["fct_gnomonic_to_cam"] = lambdify.Lambdify(
+            args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
+            expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["fct_gnomonic_to_cam"]
+
+    def get_fct_gnomonic_to_thetachi(self):
+        """
+        ** Equation permetant de passer du plan gnomonic a la representation theta chi. **
+        """
+        if "fct_gnomonic_to_thetachi" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_gnomonic_to_thetachi"]
+
+        u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
+        u_f = self.get_expr_uq_to_uf(*u_q)
+        theta, chi = self.get_expr_uf_to_thetachi(*u_f)
+
+        globals()["compiled_expressions"]["fct_gnomonic_to_thetachi"] = lambdify.Lambdify(
+            args=[self.x_gnom, self.y_gnom],
+            expr=[theta, chi]) # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["fct_gnomonic_to_thetachi"]
 
     def get_fct_hough(self):
         """
@@ -617,6 +555,37 @@ class Compilator(Equations):
             [theta_1, dist_1, theta_2, dist_2], [inter_x, inter_y])
         return globals()["compiled_expressions"]["fct_inter_line"]
 
+    def get_fct_thetachi_to_gnomonic(self):
+        """
+        ** Equation permetant de passer de theta chi au plan gnomonic. **
+        """
+        if "fct_thetachi_to_gnomonic" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_thetachi_to_gnomonic"]
+
+        u_f = self.get_expr_thetachi_to_uf(self.theta, self.chi)
+        u_q = self.get_expr_uf_to_uq(*u_f)
+        x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
+
+        globals()["compiled_expressions"]["fct_thetachi_to_gnomonic"] = lambdify.Lambdify(
+            args=[self.theta, self.chi],
+            expr=[x_gnom, y_gnom]) # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["fct_thetachi_to_gnomonic"]
+
+    def get_fct_thetachi_to_cam(self):
+        """
+        ** Equation permetant de passer de theta chi a la camera. **
+        """
+        if "fct_thetachi_to_cam" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_thetachi_to_cam"]
+
+        u_f = self.get_expr_thetachi_to_uf(self.theta, self.chi)
+        x_c, y_c = self.get_expr_uf_to_cam(*u_f)
+
+        globals()["compiled_expressions"]["fct_thetachi_to_cam"] = lambdify.Lambdify(
+            args=[self.theta, self.chi, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
+            expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["fct_thetachi_to_cam"]
+
     def _hash(self):
         """
         ** Retourne le hash de ce code. **
@@ -626,25 +595,6 @@ class Compilator(Equations):
           + inspect.getsource(Equations).encode(encoding="utf-8")
           + inspect.getsource(lambdify).encode(encoding="utf-8")
             ).hexdigest()
-
-    def save(self):
-        """
-        ** Enregistre un fichier contenant les expressions. **
-
-        Enregistre seulement ce qui est present dans ``globals()["compiled_expressions"]``.
-        N'ecrase pas l'ancien contenu.
-        """
-        dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, "data", "geometry.data")
-        self.load() # Recuperation du contenu du fichier.
-        content = {
-            "hash": self._hash(),
-            "expr": {name: l.dumps()
-                for name, l in globals()["compiled_expressions"].items()
-                }
-            }
-        with open(file, "wb") as f:
-            cloudpickle.dump(content, f)
 
     def load(self):
         """
@@ -666,3 +616,22 @@ class Compilator(Equations):
             if content["hash"] == self._hash(): # Si les donnees sont a jour.
                 globals()["compiled_expressions"] = {**globals()["compiled_expressions"], **content["expr"]}
         return globals()["compiled_expressions"]
+
+    def save(self):
+        """
+        ** Enregistre un fichier contenant les expressions. **
+
+        Enregistre seulement ce qui est present dans ``globals()["compiled_expressions"]``.
+        N'ecrase pas l'ancien contenu.
+        """
+        dirname = os.path.dirname(os.path.abspath(laue.__file__))
+        file = os.path.join(dirname, "data", "geometry.data")
+        self.load() # Recuperation du contenu du fichier.
+        content = {
+            "hash": self._hash(),
+            "expr": {name: l.dumps()
+                for name, l in globals()["compiled_expressions"].items()
+                }
+            }
+        with open(file, "wb") as f:
+            cloudpickle.dump(content, f)

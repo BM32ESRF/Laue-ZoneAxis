@@ -285,7 +285,7 @@ class Lambdify:
         self.expr = expr
 
         # Preparation vectoriele.
-        self.n_expr = simplify(evalf(self.expr), measure=time_cost) if _simplify else self.expr
+        self.n_expr = simplify(evalf(self.expr), measure=time_cost, inverse=True) if _simplify else self.expr
         self.fct = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numpy&#34;)
         try:
             self.fct_numexpr = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numexpr&#34;)
@@ -524,7 +524,7 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
         self.expr = expr
 
         # Preparation vectoriele.
-        self.n_expr = simplify(evalf(self.expr), measure=time_cost) if _simplify else self.expr
+        self.n_expr = simplify(evalf(self.expr), measure=time_cost, inverse=True) if _simplify else self.expr
         self.fct = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numpy&#34;)
         try:
             self.fct_numexpr = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numexpr&#34;)

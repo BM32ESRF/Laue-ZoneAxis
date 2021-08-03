@@ -23,6 +23,7 @@ except ImportError:
     numexpr = None
 
 from laue.core.geometry.symbolic import Compilator
+import laue.utilities.lambdify as lambdify
 
 
 __all__ = ["Transformer", "comb2ind", "ind2comb"]
@@ -40,16 +41,60 @@ class Transformer(Compilator):
         # Les memoires tampon.
         self._fcts_cam_to_gnomonic = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_cam, y_cam), les parametres sont deja remplaces.
         self._fcts_gnomonic_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_gnom, y_gnom), les parametres sont deja remplaces.
+        self._fcts_cam_to_thetachi = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_cam, y_cam), les parametres sont deja remplaces.
+        self._fcts_thetachi_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(theta, chi), les paremetres sont deja remplaces.
         self._parameters_memory = {} # Permet d'eviter de relire le dictionaire des parametres a chaque fois.
+
+    def compile(self, parameters=None):
+        """
+        ** Precalcul toutes les equations. **
+
+        Parameters
+        ----------
+        parameters : dict, optional
+            Les parametres donnes par la fonction ``laue.utilities.parsing.extract_parameters``.
+            Si ils sont fourni, l'expression est encore un peu
+            plus optimisee.
+        """
+        super().compile()
+
+        if parameters is not None:
+            assert isinstance(parameters, dict), ("Les parametres doivent founis "
+                f"dans un dictionaire, pas dans un {type(parameters).__name__}")
+            assert set(parameters) == {"dd", "xbet", "xgam", "xcen", "ycen", "pixelsize"}, \
+                ("Les clefs doivent etres 'dd', 'xbet', 'xgam', 'xcen', 'ycen' et 'pixelsize'. "
+                f"Or les clefs sont {set(parameters)}.")
+            assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
+                "La valeurs des parametres doivent toutes etre des nombres."
+
+            hash_param = self._hash_parameters(parameters)
+            constants = {self.dd: parameters["dd"], # C'est qu'il est tant de faire de l'optimisation.
+                         self.xcen: parameters["xcen"],
+                         self.ycen: parameters["ycen"],
+                         self.xbet: parameters["xbet"],
+                         self.xgam: parameters["xgam"],
+                         self.pixelsize: parameters["pixelsize"]}
+            # Dans le cas ou l'expression est deserialise, les pointeurs ne sont plus les memes.
+            constants = {str(var): value for var, value in constants.items()}
+            for transform, args in {
+                    "cam_to_gnomonic": (self.x_cam, self.y_cam),
+                    "gnomonic_to_cam": (self.x_gnom, self.y_gnom),
+                    "cam_to_thetachi": (self.x_cam, self.y_cam),
+                    "thetachi_to_cam": (self.theta, self.chi)
+                    }.items():
+                formal_expr = getattr(self, f"get_fct_{transform}")()()
+                subs = {symbol: constants[str(symbol)]
+                    for symbol in set.union(*(e.free_symbols for e in formal_expr))
+                    if str(symbol) in constants}
+                getattr(self, f"_fcts_{transform}")[hash_param] = lambdify.Lambdify(
+                    args=args,
+                    expr=lambdify.subs(formal_expr, subs))
+
+        self.save() # On enregistre pour gagner du temps les prochaines fois.
 
     def cam_to_gnomonic(self, pxl_x, pxl_y, parameters, *, dtype=np.float32):
         """
         ** Passe des points de la camera dans un plan gnomonic. **
-
-        Notes
-        -----
-        * Cette methode va 1.8 a 3.3 fois plus vite que celle de LaueTools.
-        * Contrairement a LaueTools, cette methode prend en charge les vecteurs a n dimenssions.
 
         Parameters
         ----------
@@ -67,9 +112,8 @@ class Transformer(Compilator):
         Returns
         -------
         float ou np.ndarray
-            Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
-            Les dimenssions du tableau de sortie sont les memes que celle du tableau d'entree.
-            shape de sortie = (2, *shape_d_entree)
+            * Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
+            * shape = (2, *shape_d_entree)
 
         Examples
         -------
@@ -101,45 +145,64 @@ class Transformer(Compilator):
         (2, 1, 2, 3)
         >>>
         """
-        assert isinstance(pxl_x, (float, int, np.ndarray)), \
-            f"'pxl_x' can not be of type {type(pxl_x).__name__}."
-        assert isinstance(pxl_y, (float, int, np.ndarray)), \
-            f"'pxl_y' can not be of type {type(pxl_y).__name__}."
-        assert type(pxl_x) == type(pxl_y), \
-            f"Les 2 types sont differents: {type(pxl_x).__name__} vs {type(pxl_y).__name__}."
-        if isinstance(pxl_x, np.ndarray):
-            assert pxl_x.shape == pxl_y.shape, \
-                f"Ils n'ont pas le meme taille: {pxl_x.shape} vs {pxl_y.shape}."
-        assert isinstance(parameters, dict), ("Les parametres doivent founis "
-            f"dans un dictionaire, pas dans un {type(parameters).__name__}")
-        assert set(parameters) == {"dd", "xbet", "xgam", "xcen", "ycen", "pixelsize"}, \
-            ("Les clefs doivent etres 'dd', 'xbet', 'xgam', 'xcen', 'ycen' et 'pixelsize'. "
-            f"Or les clefs sont {set(parameters)}.")
-        assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
-            "La valeurs des parametres doivent toutes etre des nombres."
-        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
-            f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
+        return self._generic_transformation("cam_to_gnomonic", pxl_x, pxl_y,
+            parameters=parameters, dtype=dtype)
 
-        if isinstance(pxl_x, np.ndarray):
-            pxl_x, pxl_y = pxl_x.astype(dtype, copy=False), pxl_y.astype(dtype, copy=False)
-        else:
-            pxl_x, pxl_y = dtype(pxl_x), dtype(pxl_y)
-        parameters = {k: dtype(v) for k, v in parameters.items()}
+    def cam_to_thetachi(self, pxl_x, pxl_y, parameters, *, dtype=np.float32):
+        """
+        ** Passe des points de la camera vers la representation theta et chi. **
 
-        hash_param = self._hash_parameters(parameters) # Recuperation de la 'signature' des parametres.
-        optimized_func = self._fcts_cam_to_gnomonic[hash_param] # On regarde si il y a une fonction deja optimisee.
+        Parameters
+        ----------
+        pxl_x : float, int ou np.ndarray
+            Coordonnee.s du.des pxl.s selon l'axe x dans le repere de la camera. (en pxl)
+        pxl_y : float, int ou np.ndarray
+            Coordonnee.s du.des pxl.s selon l'axe y dans le repere de la camera. (en pxl)
+        parameters : dict
+            Le dictionaire issue de la fonction ``laue.utilities.parsing.extract_parameters``.
+        dtype : type, optional
+            Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
-        if isinstance(optimized_func, int): # Si il n'y a pas de fonction optimisee.
-            nbr_access = optimized_func # Ce qui est enregistre et le nombre de fois que l'on a chercher a y acceder.
-            self._fcts_cam_to_gnomonic[hash_param] += 1 # Comme on cherche a y acceder actuelement, on peut incrementer le compteur.
-            if nbr_access + 1 == 4: # Si c'est la 4 eme fois qu'on accede a la fonction.
-                self.compile(parameters) # On optimise la fonction.
-            else: # Si ce n'est pas encore le moment de perdre du temps a optimiser.
-                return np.stack(self.get_fct_cam_to_gnomonic()(pxl_x, pxl_y,
-                    parameters["dd"], parameters["xcen"], parameters["ycen"],
-                    parameters["xbet"], parameters["xgam"], parameters["pixelsize"]))
+        Returns
+        -------
+        float ou np.ndarray
+            * Le.s coordonnee.s theta puis chi du.des point.s. (en rad)
+            * shape = (2, *shape_d_entree)
 
-        return np.stack(self._fcts_cam_to_gnomonic[hash_param](pxl_x, pxl_y))
+        Examples
+        -------
+        >>> import numpy as np
+        >>> from laue import Transformer
+        >>> from laue.utilities.parsing import extract_parameters
+        >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
+        >>> transformer = Transformer()
+        >>> x_cam, y_cam = np.linspace(3, 2048, 6), np.linspace(3, 2048, 6)
+        >>>
+
+        Output type
+        >>> type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
+        <class 'numpy.ndarray'>
+        >>> np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters), 2)
+        array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
+               [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]], dtype=float32)
+        >>> np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters, dtype=np.float64), 2)
+        array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
+               [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]])
+        >>>
+        
+        Output shape
+        >>> transformer.cam_to_thetachi(0.0, 0.0, parameters).shape
+        (2,)
+        >>> x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
+        ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
+        >>> transformer.cam_to_thetachi(x_cam, y_cam, parameters).shape
+        (2, 1, 2, 3)
+        >>>
+        """
+        return self._generic_transformation("cam_to_thetachi", pxl_x, pxl_y,
+            parameters=parameters, dtype=dtype)
 
     def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float64):
         """
@@ -248,7 +311,7 @@ class Transformer(Compilator):
         -------
         coords : np.ndarray
             * Le.s coordonnee.s x puis y du.des point.s dans le plan de la camera. (en pxl)
-            * shape = (2, ...)
+            * shape = (2, *shape_d_entree)
 
         Examples
         -------
@@ -283,45 +346,63 @@ class Transformer(Compilator):
         (2, 1, 2, 3)
         >>>
         """
-        assert isinstance(gnom_x, (float, int, np.ndarray)), \
-            f"'gnom_x' can not be of type {type(gnom_x).__name__}."
-        assert isinstance(gnom_y, (float, int, np.ndarray)), \
-            f"'gnom_y' can not be of type {type(gnom_y).__name__}."
-        assert type(gnom_x) == type(gnom_y), \
-            f"Les 2 types sont differents: {type(gnom_x).__name__} vs {type(gnom_y).__name__}."
-        if isinstance(gnom_x, np.ndarray):
-            assert gnom_x.shape == gnom_y.shape, \
-                f"Ils n'ont pas la meme taille: {gnom_x.shape} vs {gnom_y.shape}."
-        assert isinstance(parameters, dict), ("Les parametres doivent founis "
-            f"dans un dictionaire, pas dans un {type(parameters).__name__}")
-        assert set(parameters) == {"dd", "xbet", "xgam", "xcen", "ycen", "pixelsize"}, \
-            ("Les clefs doivent etres 'dd', 'xbet', 'xgam', 'xcen', 'ycen' et 'pixelsize'. "
-            f"Or les clefs sont {set(parameters)}.")
-        assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
-            "La valeurs des parametres doivent toutes etre des nombres."
-        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
-            f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
+        return self._generic_transformation("gnomonic_to_cam", gnom_x, gnom_y,
+            parameters=parameters, dtype=dtype)
 
-        if isinstance(gnom_x, np.ndarray):
-            gnom_x, gnom_y = gnom_x.astype(dtype, copy=False), gnom_y.astype(dtype, copy=False)
-        else:
-            gnom_x, gnom_y = dtype(gnom_x), dtype(gnom_y)
-        parameters = {k: dtype(v) for k, v in parameters.items()}
+    def gnomonic_to_thetachi(self, gnom_x, gnom_y, *, dtype=np.float32):
+        """
+        ** Passe des points du plan gnomonic vers theta et chi. **
 
-        hash_param = self._hash_parameters(parameters) # Recuperation de la 'signature' des parametres.
-        optimized_func = self._fcts_gnomonic_to_cam[hash_param] # On regarde si il y a une fonction deja optimisee.
+        Parameters
+        ----------
+        gnom_x : float ou np.ndarray
+            Coordonnee.s du.des point.s selon l'axe x du repere du plan gnomonic. (en mm)
+        gnom_y : float ou np.ndarray
+            Coordonnee.s du.des point.s selon l'axe y du repere du plan gnomonic. (en mm)
+        dtype : type, optional
+            Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
 
-        if isinstance(optimized_func, int): # Si il n'y a pas de fonction optimisee.
-            nbr_access = optimized_func # Ce qui est enregistre et le nombre de fois que l'on a chercher a y acceder.
-            self._fcts_gnomonic_to_cam[hash_param] += 1 # Comme on cherche a y acceder actuelement, on peut incrementer le compteur.
-            if nbr_access + 1 == 4: # Si c'est la 4 eme fois qu'on accede a la fonction.
-                self.compile(parameters) # On optimise la fonction.
-            else: # Si ce n'est pas encore le moment de perdre du temps a optimiser.
-                return np.stack(self.get_fct_gnomonic_to_cam()(gnom_x, gnom_y,
-                    parameters["dd"], parameters["xcen"], parameters["ycen"],
-                    parameters["xbet"], parameters["xgam"], parameters["pixelsize"]))
+        Returns
+        -------
+        float ou np.ndarray
+            * Le.s coordonnee.s theta puis chi du.des point.s. (en rad)
+            * shape = (2, *shape_d_entree)
 
-        return np.stack(self._fcts_gnomonic_to_cam[hash_param](gnom_x, gnom_y))
+        Examples
+        -------
+        >>> import numpy as np
+        >>> from laue import Transformer
+        >>> transformer = Transformer()
+        >>> x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
+        ...                              0.09978235,  0.17156848,  0.13417314 ],
+        ...                            [ 0.40283853,  0.31846303,  0.14362221, 
+        ...                             -0.18308422, -0.58226374, -0.93854752 ]])
+        >>>
+
+        Output type
+        >>> type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+        <class 'numpy.ndarray'>
+        >>> np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom), 2)
+        array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
+               [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]], dtype=float32)
+        >>> np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom, dtype=np.float64), 2)
+        array([[ 1.11,  1.05,  0.9 ,  0.67,  0.52,  0.46],
+               [ 0.86,  0.61,  0.23, -0.23, -0.61, -0.86]])
+        >>>
+        
+        Output shape
+        >>> transformer.gnomonic_to_thetachi(0.0, 0.0).shape
+        (2,)
+        >>> x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
+        ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
+        >>> transformer.gnomonic_to_thetachi(x_cam, y_cam).shape
+        (2, 1, 2, 3)
+        >>>
+        """
+        return self._generic_transformation("gnomonic_to_thetachi", gnom_x, gnom_y,
+            parameters=None, dtype=dtype)
 
     def hough(self, x_vect, y_vect, *, dtype=np.float64):
         r"""
@@ -615,6 +696,120 @@ class Transformer(Compilator):
 
         return np.stack(self.get_fct_inter_line()(theta_1, dist_1, theta_2, dist_2))
 
+    def thetachi_to_cam(self, theta, chi, parameters, *, dtype=np.float32):
+        """
+        ** Passe de la representation theta et chi vers la camera. **
+
+        Parameters
+        ----------
+        theta : float ou np.ndarray
+            Coordonnee.s du.des angle.s de rotation autour de y. (en rad)
+        chi : float ou np.ndarray
+            Coordonnee.s du.des angle.s de rotation autour de x. (en rad)
+        parameters : dict
+            Le dictionaire issue de la fonction ``laue.utilities.parsing.extract_parameters``.
+        dtype : type, optional
+            Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
+
+        Returns
+        -------
+        coords : np.ndarray
+            * Le.s coordonnee.s x puis y du.des point.s dans le plan de la camera. (en pxl)
+            * shape = (2, *shape_d_entree)
+
+        Examples
+        -------
+        >>> import numpy as np
+        >>> from laue import Transformer
+        >>> from laue.utilities.parsing import extract_parameters
+        >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
+        >>> transformer = Transformer()
+        >>> theta, chi = np.array([[ 1.1101143, 1.0456189, 0.8965300,
+        ...                          0.6727613, 0.5244697, 0.4603832],
+        ...                        [ 0.8622506, 0.6103422, 0.2279670,
+        ...                         -0.2312180,-0.6126410,-0.8636999]])
+        >>>
+
+        Output type
+        >>> type(transformer.thetachi_to_cam(theta, chi, parameters))
+        <class 'numpy.ndarray'>
+        >>> np.round(transformer.thetachi_to_cam(theta, chi, parameters))
+        array([[   3.,  412.,  821., 1230., 1639., 2048.],
+               [   3.,  412.,  821., 1230., 1639., 2048.]], dtype=float32)
+        >>> np.round(transformer.thetachi_to_cam(theta, chi, parameters, dtype=np.float64))
+        array([[   3.,  412.,  821., 1230., 1639., 2048.],
+               [   3.,  412.,  821., 1230., 1639., 2048.]])
+        >>>
+        
+        Output shape
+        >>> transformer.thetachi_to_cam(np.pi/4, 0.0, parameters).shape
+        (2,)
+        >>> theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
+        ...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
+        >>> transformer.thetachi_to_cam(theta, chi, parameters).shape
+        (2, 1, 2, 3)
+        >>>
+        """
+        return self._generic_transformation("thetachi_to_cam", theta, chi,
+            parameters=parameters, dtype=dtype)
+
+    def thetachi_to_gnomonic(self, theta, chi, *, dtype=np.float32):
+        """
+        ** Passe de la representation theta et chi vers une projection gnomonique. **
+
+        Parameters
+        ----------
+        theta : float ou np.ndarray
+            Coordonnee.s du.des angle.s de rotation autour de y. (en rad)
+        chi : float ou np.ndarray
+            Coordonnee.s du.des angle.s de rotation autour de x. (en rad)
+        dtype : type, optional
+            Si l'entree est un nombre et non pas une array numpy. Les calculs sont fait en ``float``.
+            La representation machine des nombres. Par defaut ``np.float32`` permet des calculs rapide
+            mais peu precis. Pour la presision il faut utiliser ``np.float64`` ou ``np.float128``.
+
+        Returns
+        -------
+        float ou np.ndarray
+            * Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
+            * shape = (2, *shape_d_entree)
+
+        Examples
+        -------
+        >>> import numpy as np
+        >>> from laue import Transformer
+        >>> transformer = Transformer()
+        >>> theta, chi = np.array([[ 1.1101143, 1.0456189, 0.8965300,
+        ...                          0.6727613, 0.5244697, 0.4603832],
+        ...                        [ 0.8622506, 0.6103422, 0.2279670,
+        ...                         -0.2312180,-0.6126410,-0.8636999]])
+        >>>
+
+        Output type
+        >>> type(transformer.thetachi_to_gnomonic(theta, chi))
+        <class 'numpy.ndarray'>
+        >>> np.round(transformer.thetachi_to_gnomonic(theta, chi), 2)
+        array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]], dtype=float32)
+        >>> np.round(transformer.thetachi_to_gnomonic(theta, chi, dtype=np.float64), 2)
+        array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
+               [ 0.4 ,  0.32,  0.14, -0.18, -0.58, -0.94]])
+        >>>
+        
+        Output shape
+        >>> transformer.thetachi_to_gnomonic(np.pi/4, 0.0).shape
+        (2,)
+        >>> theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
+        ...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
+        >>> transformer.thetachi_to_gnomonic(theta, chi).shape
+        (2, 1, 2, 3)
+        >>>
+        """
+        return self._generic_transformation("thetachi_to_gnomonic", theta, chi,
+            parameters=None, dtype=dtype)
+
     def _clustering_1d(self, theta_vect_1d, dist_vect_1d, std, tol, nbr):
         """
         ** Help for hough_reduce. **
@@ -660,6 +855,61 @@ class Transformer(Compilator):
                         for cluster in map(np.array, clusters_dict.values())],
                     dtype=dtype_catser) * std / THETA_STD
         return np.array([theta, dist], dtype=dtype_catser)
+
+    def _generic_transformation(self, transform, data1, data2, *, parameters, dtype):
+        """
+        ** Passe d'un espace de representation a un autre. **
+
+        Help for ``Transformer.truc_to_machin``.
+
+        Notes
+        -----
+        Fait les verifications.
+        """
+        assert isinstance(data1, (float, int, np.ndarray)), \
+            f"'data1' can not be of type {type(data1).__name__}."
+        assert isinstance(data2, (float, int, np.ndarray)), \
+            f"'data2' can not be of type {type(data2).__name__}."
+        assert type(data1) == type(data2), \
+            f"Les 2 types sont differents: {type(data1).__name__} vs {type(data2).__name__}."
+        if isinstance(data1, np.ndarray):
+            assert data1.shape == data2.shape, \
+                f"Ils n'ont pas le meme taille: {data1.shape} vs {data2.shape}."
+        if parameters is not None:
+            assert isinstance(parameters, dict), ("Les parametres doivent founis "
+                f"dans un dictionaire, pas dans un {type(parameters).__name__}")
+            assert set(parameters) == {"dd", "xbet", "xgam", "xcen", "ycen", "pixelsize"}, \
+                ("Les clefs doivent etres 'dd', 'xbet', 'xgam', 'xcen', 'ycen' et 'pixelsize'. "
+                f"Or les clefs sont {set(parameters)}.")
+            assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
+                "La valeurs des parametres doivent toutes etre des nombres."
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
+            f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
+
+        if isinstance(data1, np.ndarray):
+            data1, data2 = data1.astype(dtype, copy=False), data2.astype(dtype, copy=False)
+        else:
+            data1, data2 = dtype(data1), dtype(data2)
+        
+        if parameters is not None:
+            parameters = {k: dtype(v) for k, v in parameters.items()} # Pour eviter par la suite de mauvais casts.
+            hash_param = self._hash_parameters(parameters) # Recuperation de la 'signature' des parametres.
+            optimized_func = getattr(self, f"_fcts_{transform}")[hash_param] # On regarde si il y a une fonction deja optimisee.
+
+            if isinstance(optimized_func, int): # Si il n'y a pas de fonction optimisee.
+                nbr_access = optimized_func # Ce qui est enregistre et le nombre de fois que l'on a chercher a y acceder.
+                getattr(self, f"_fcts_{transform}")[hash_param] += 1 # Comme on cherche a y acceder actuelement, on peut incrementer le compteur.
+                if nbr_access + 1 == 4: # Si c'est la 4 eme fois qu'on accede a la fonction.
+                    self.compile(parameters) # On optimise la fonction.
+                else: # Si ce n'est pas encore le moment de perdre du temps a optimiser.
+                    return np.stack(getattr(self, f"get_fct_{transform}")()(
+                        data1, data2,
+                        parameters["dd"], parameters["xcen"], parameters["ycen"],
+                        parameters["xbet"], parameters["xgam"], parameters["pixelsize"]))
+
+            return np.stack(getattr(self, f"_fcts_{transform}")[hash_param](data1, data2))
+
+        return np.stack(getattr(self, f"get_fct_{transform}")()(data1, data2))
 
     def _hash_parameters(self, parameters):
         """

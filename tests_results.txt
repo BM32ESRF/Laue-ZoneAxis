@@ -1,62 +1,68 @@
-DATE: Tue Aug  3 09:51:46 2021
-NCPU: 2
+DATE: Tue Aug  3 14:51:08 2021
+NCPU: 8
 ============ TEST GEOMETRY DTYPE =============
 cam_to_gnomonic:
-	boucle 0: float128->float128
-	boucle 1: float128->float128
-	boucle 2: float128->float128
-	boucle 0: float64->float64
-	boucle 1: float64->float64
-	boucle 2: float64->float64
 	boucle 0: float32->float32
 	boucle 1: float32->float32
 	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
+	boucle 0: float128->float128
+	boucle 1: float128->float128
+	boucle 2: float128->float128
+	boucle 0: float64->float64
+	boucle 1: float64->float64
+	boucle 2: float64->float64
 gnomonic_to_cam:
-	boucle 0: float128->float128
-	boucle 1: float128->float128
-	boucle 2: float128->float128
-	boucle 0: float64->float64
-	boucle 1: float64->float64
-	boucle 2: float64->float64
 	boucle 0: float32->float32
 	boucle 1: float32->float32
 	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
+	boucle 0: float128->float128
+	boucle 1: float128->float128
+	boucle 2: float128->float128
+	boucle 0: float64->float64
+	boucle 1: float64->float64
+	boucle 2: float64->float64
 dist_line:
-	float128->float128
-	float64->float64
 	float32->float32
 	float16->float16
+	float128->float128
+	float64->float64
 hough:
-	float128->float128
-	float64->float64
 	float32->float32
 	float16->float16
+	float128->float128
+	float64->float64
 hough_reduce:
-	float64->float64
 	float32->float32
 	float16->float16
+	float64->float64
 inter_lines:
+	float32->float32
+	float16->float16
 	float128->float128
 	float64->float64
-	float32->float32
-	float16->float16
 ============ TEST GEOMETRY SHAPE =============
-shape: (9,)
-boucle 0, cam_to_gnomonic(...).shape -> (2, 9)
-boucle 0, gnomonic_to_cam(...).shape -> (2, 9)
-boucle 1, cam_to_gnomonic(...).shape -> (2, 9)
-boucle 1, gnomonic_to_cam(...).shape -> (2, 9)
-boucle 2, cam_to_gnomonic(...).shape -> (2, 9)
-boucle 2, gnomonic_to_cam(...).shape -> (2, 9)
-dist_line(...).shape -> (9, 9)
-hough(...).shape -> (2, 36)
-inter_lines(...).shape -> (2, 36)
+shape: (7, 7, 5, 9)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 7, 7, 5, 9)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 7, 7, 5, 9)
+boucle 0, cam_to_thetachi(...).shape -> (2, 7, 7, 5, 9)
+boucle 0, thetachi_to_cam(...).shape -> (2, 7, 7, 5, 9)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 7, 7, 5, 9)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 7, 7, 5, 9)
+boucle 1, cam_to_thetachi(...).shape -> (2, 7, 7, 5, 9)
+boucle 1, thetachi_to_cam(...).shape -> (2, 7, 7, 5, 9)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 7, 7, 5, 9)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 7, 7, 5, 9)
+boucle 2, cam_to_thetachi(...).shape -> (2, 7, 7, 5, 9)
+boucle 2, thetachi_to_cam(...).shape -> (2, 7, 7, 5, 9)
+dist_line(...).shape -> (7, 7, 5, 9, 7, 7, 5, 9)
+hough(...).shape -> (2, 7, 7, 5, 36)
+inter_lines(...).shape -> (2, 7, 7, 5, 36)
 =============== TEST BIJECTION ===============
 uf2cam o cam2uf: ok formel
 cam2uf o uf2cam: ok formel
@@ -67,10 +73,4 @@ uq2gnom o gnom2uq: ok formel
 thetachi2uf o uf2thetachi: fail formel, ok numerical
 uf2thetachi o thetachi2uf: fail formel, ok numerical
 ============== TEST READ IMAGES ==============
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 images: 2.083 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 images: 5.460 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 images: 2.534 s
-/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 images: 5.786 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 images: 7.523 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 images: 4.087 s
 /home/robin/documents/stages/esrf/data/zbb1_roi1/*.mccd 

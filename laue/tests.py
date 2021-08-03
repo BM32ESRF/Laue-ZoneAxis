@@ -99,8 +99,17 @@ def test_geometry_shape():
     _print(f"shape: {shape}")
 
     for boucle in range(3): # On fait 2 boucle car ca recompile en cours de route.
-        for func in [transformer.cam_to_gnomonic, transformer.gnomonic_to_cam]:
-            res = func(np.zeros(shape=shape), np.zeros(shape=shape), parameters)
+        for func in [
+                transformer.cam_to_gnomonic,
+                transformer.gnomonic_to_cam,
+                transformer.cam_to_thetachi,
+                transformer.thetachi_to_cam,
+                transformer.thetachi_to_gnomonic,
+                transformer.gnomonic_to_thetachi]:
+            try:
+                res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape), parameters)
+            except TypeError:
+                res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape))
             _print(f"boucle {boucle}, {func.__name__}(...).shape -> {res.shape}")
             assert res.shape == (2,) + shape
 
@@ -156,7 +165,10 @@ def test_geometry_bij():
         _print("fail formel, ", end="")
 
         symbols = list(expr.free_symbols)
-        x_vect = np.linspace(0, 1, 21)
+        if expr.has(sympy.cos) or expr.has(sympy.sin) or expr.has(sympy.Abs):
+            x_vect = np.linspace(.1, np.pi/4-.1, 21)
+        else:
+            x_vect = np.linspace(-1, 1, 21)
         fct = sympy.lambdify(symbols, expr, modules="numpy")
         args = np.meshgrid(*((x_vect,)*len(symbols)), copy=False)
         res = fct(*args)
