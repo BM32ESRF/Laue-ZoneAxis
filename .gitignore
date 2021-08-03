@@ -2,3 +2,5 @@ resultats/
 laue/geometry.data
 laue/__pycache__
 laue/tools/__pycache__
+zoneaxis_nn_test/
+

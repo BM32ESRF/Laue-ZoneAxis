@@ -15,7 +15,7 @@ import numpy as np
 from laue.diagram import LaueDiagram
 from laue.spot import Spot
 from laue.experiment.base_experiment import Experiment
-from laue.tools.image import create_image
+from laue.utilities.image import create_image
 
 
 class TheoricalExperiment(Experiment):
@@ -72,7 +72,7 @@ class TheoricalExperiment(Experiment):
         Seulement les diagrammes ne sont pas crees a partir d'images
         mais a partir des donnees simulees.
         """
-        from laue.tools.multi_core import prevent_generator_size
+        from laue.utilities.multi_core import prevent_generator_size
 
         def update_len(func):
             """
@@ -151,7 +151,7 @@ class TheoricalExperiment(Experiment):
         if self._diagrams_iterator is None:
             self._diagrams_iterator = iter(_diagram_extractor(self))
 
-        from laue.tools.multi_core import RecallingIterator
+        from laue.utilities.multi_core import RecallingIterator
         return (
             (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
             if tense_flow else set(RecallingIterator(self._diagrams_iterator, mother=self)))

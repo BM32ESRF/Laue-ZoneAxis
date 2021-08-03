@@ -1,0 +1,668 @@
+#!/usr/bin/env python3
+
+"""
+Recherche les equations symboliques qui expriment
+les transformations geometriques.
+"""
+
+import hashlib
+import inspect
+import numbers
+import os
+
+import cloudpickle
+import numpy as np
+import sympy
+
+import laue
+import laue.utilities.lambdify as lambdify
+
+
+class Equations:
+    """
+    Exprime des petites transformations elementaires.
+
+    C'est une interface de la classe ``laue.core.geometry.transformer.Transformer``.
+    """
+    def __init__(self):
+        # Les constantes.
+        self.dd = sympy.Symbol("dd", real=True, positive=True) # Distance entre l'origine et le plan de la camera en mm.
+        self.xcen, self.ycen = sympy.symbols("xcen ycen", real=True) # Position du point d'incidence normale en pxl par rapport au repere de la camera.
+        self.xbet, self.xgam = sympy.symbols("beta gamma", real=True) # Rotation autour x camera, Rotation autour axe incidence normale.
+        self.pixelsize = sympy.Symbol("pixelsize", real=True, positive=True) # Taille des pixels en mm/pxl.
+
+        # Les variables.
+        self.x_cam, self.y_cam = sympy.symbols("x_cam y_cam", real=True, positive=True) # Position du pxl dans le repere du plan de la camera.
+        self.x_gnom, self.y_gnom = sympy.symbols("x_gnom y_gnom", real=True) # Position des points dans le plan gnomonic.
+        self.theta, self.chi = sympy.symbols("theta chi", real=True) # Les angles decrivant le rayon reflechit.
+
+        # Expression des elements du model.
+        self.rx = sympy.Matrix([1, 0, 0])
+        self.ry = sympy.Matrix([0, 1, 0])
+        self.rz = sympy.Matrix([0, 0, 1])
+
+        self.u_i = self.rx # Le rayon de lumiere incident norme parallele a l'axe X dans le repere du cristal.
+
+        self.rot_camera = sympy.rot_axis2(-self.xbet) @ sympy.rot_axis3(self.xgam) # Rotation globale de la camera par rapport au cristal.
+        self.ci = self.rot_camera @ -self.ry # Vecteur Xcamera.
+        self.cj = self.rot_camera @ self.rx # Vecteur Ycamera.
+        self.ck = self.rot_camera @ self.rz # Vecteur Zcamera normal au plan de la camera.
+
+        self.rot_gnom = sympy.rot_axis2(-sympy.pi/4) # Rotation du repere de plan gnomonic par rapport au repere du cristal.
+        self.gi = self.rot_gnom @ self.rz # Vecteur Xgnomonic.
+        self.gj = self.rot_gnom @ self.ry # Vecteur Ygnomonic.
+        self.gk = self.rot_gnom @ -self.rx # Vecteur Zgnomonic normal au plan gnomonic.
+
+    def get_expr_cam_to_uf(self, x_cam, y_cam):
+        """
+        ** Equation permetant de passer de la camera a uf. **
+
+        Notes
+        -----
+        Le vecteur de sortie (uf) n'est pas normalise.
+
+        Parameters
+        ----------
+        x_cam
+            La position x de la camera.
+        y_cam
+            La position y de la camera.
+
+        Returns
+        -------
+        sympy.Matrix
+            La matrice sympy de taille 3 representant
+            le vecteur uf dans le repere principal.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue import Transformer
+        >>> transformer = Transformer()
+        >>> x_cam, y_cam = symbols("x y")
+        >>> transformer.get_expr_cam_to_uf(x_cam, y_cam)
+        Matrix([
+        [dd*sin(beta) - pixelsize*((x - xcen)*sin(gamma)*cos(beta) - (y - ycen)*cos(beta)*cos(gamma))],
+        [                                  -pixelsize*((x - xcen)*cos(gamma) + (y - ycen)*sin(gamma))],
+        [dd*cos(beta) + pixelsize*((x - xcen)*sin(beta)*sin(gamma) - (y - ycen)*sin(beta)*cos(gamma))]])
+        >>>
+        """
+        x_cam_atomic, y_cam_atomic = sympy.symbols("x_cam y_cam", real=True)
+        o_op = self.dd * self.ck # Vecteur OO'.
+        op_p = self.pixelsize * ((x_cam_atomic-self.xcen)*self.ci + (y_cam_atomic-self.ycen)*self.cj) # Vecteur O'P
+        o_p = o_op + op_p # Relation de Chasles.
+        o_p = sympy.signsimp(o_p)
+        return o_p.subs({x_cam_atomic: x_cam, y_cam_atomic: y_cam})
+
+    def get_expr_uf_to_cam(self, uf_x, uf_y, uf_z):
+        """
+        ** Equation permettant de passer de uf a la camera. **
+
+        Parameters
+        ----------
+        uf_x, uf_y, uf_z
+            Les 3 coordonnees du vecteur uf exprimees dans le repere principale.
+
+        Returns
+        -------
+        x_camera : sympy.Basic
+            Expression sympy de la position de la tache dans le repere
+            de la camera. (selon l'axe x ou Ci)
+        y_camera : sympy.Basic
+            Comme ``x_camera`` selon l'axe y ou Cj.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue import Transformer
+        >>> transformer = Transformer()
+        >>> uf_x, uf_y, uf_z = symbols("uf_x, uf_y, uf_z")
+        >>> x_cam, y_cam = transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z)
+        >>> x_cam
+        (-dd*uf_x*sin(gamma)*cos(beta) - dd*uf_y*cos(gamma) + dd*uf_z*sin(beta)*sin(gamma) + pixelsize*uf_x*xcen*sin(beta) + pixelsize*uf_z*xcen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+        >>> y_cam
+        (dd*uf_x*cos(beta)*cos(gamma) - dd*uf_y*sin(gamma) - dd*uf_z*sin(beta)*cos(gamma) + pixelsize*uf_x*ycen*sin(beta) + pixelsize*uf_z*ycen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+        >>>
+        """
+        uf_x_atomic, uf_y_atomic, uf_z_atomic = sympy.symbols("uf_x uf_y uf_z", real=True)
+        u_f = sympy.Matrix([uf_x_atomic, uf_y_atomic, uf_z_atomic])
+
+        # Expression du vecteur O''P.
+        opp_op = self.pixelsize * (self.xcen*self.ci + self.ycen*self.cj) # Vecteur O''O'.
+        o_op = self.dd * self.ck # Vecteur OO'.
+        op_o = -o_op # Vecteur O'O.
+        camera_plane = sympy.Plane(o_op, normal_vector=self.ck) # Plan de la camera.
+        refl_ray = sympy.Line([0, 0, 0], u_f) # Rayon reflechi.
+        o_p = sympy.Matrix(camera_plane.intersection(refl_ray).pop())
+        opp_p = opp_op + op_o + o_p # Relation de Chasles.
+
+        # Projection dans le plan de la camera pour remonter a x_c, y_c
+        x_cam = opp_p.dot(self.ci) / self.pixelsize # Coordonnees en pxl axe x de la camera.
+        y_cam = opp_p.dot(self.cj) / self.pixelsize # Coordonnees en pxl axe y de la camera.
+        x_cam, y_cam = sympy.trigsimp(x_cam), sympy.trigsimp(y_cam) # Longueur reduite par 2.2 .
+
+        return (x_cam.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}),
+                y_cam.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}))
+
+    def get_expr_uf_to_uq(self, uf_x, uf_y, uf_z):
+        """
+        ** Equation permettant de passer de uf a uq. **
+
+        Parameters
+        ----------
+        uf_x, uf_y, uf_z
+            Les 3 coordonnees du vecteur uf exprimees dans le repere principal.
+
+        Returns
+        -------
+        sympy.Matrix
+            La matrice sympy de taille 3 representant
+            le vecteur uq dans le repere principal.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue import Transformer
+        >>> transformer = Transformer()
+        >>> uf_x, uf_y, uf_z = symbols("uf_x, uf_y, uf_z")
+        >>> transformer.get_expr_uf_to_uq(uf_x, uf_y, uf_z)
+        Matrix([
+        [uf_x - sqrt(uf_x**2 + uf_y**2 + uf_z**2)],
+        [                                    uf_y],
+        [                                    uf_z]])
+        >>>
+        """
+        uf_x_atomic, uf_y_atomic, uf_z_atomic = sympy.symbols("uf_x uf_y uf_z", real=True)
+        u_f = sympy.Matrix([uf_x_atomic, uf_y_atomic, uf_z_atomic])
+        u_q = u_f - self.u_i*u_f.norm() # Relation de reflexion.
+        return u_q.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z})
+
+    def get_expr_uq_to_uf(self, uq_x, uq_y, uq_z):
+        """
+        ** Equation permettant de passer de uq a uf. **
+
+        Parameters
+        ----------
+        uq_x, uq_y, uq_z
+            Les 3 coordonnees du vecteur uq exprimees dans le repere principal.
+
+        Returns
+        -------
+        sympy.Matrix
+            La matrice sympy de taille 3 representant
+            le vecteur uf dans le repere principal.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue import Transformer
+        >>> transformer = Transformer()
+        >>> uq_x, uq_y, uq_z = symbols("uq_x, uq_y, uq_z")
+        >>> transformer.get_expr_uq_to_uf(uq_x, uq_y, uq_z)
+        Matrix([
+        [-uq_x**2 + uq_y**2 + uq_z**2],
+        [                -2*uq_x*uq_y],
+        [                -2*uq_x*uq_z]])
+        >>>
+        """
+        uq_x_atomic, uq_y_atomic, uq_z_atomic = sympy.symbols("uq_x uq_y uq_z", real=True)
+        u_q = sympy.Matrix([uq_x_atomic, uq_y_atomic, uq_z_atomic])
+        u_f = self.u_i*u_q.norm()**2 - 2*u_q.dot(self.u_i)*u_q # Vecteur unitaire reflechi.
+        return u_f.subs({uq_x_atomic: uq_x, uq_y_atomic: uq_y, uq_z_atomic: uq_z})
+
+    def get_expr_uq_to_gnomonic(self, uq_x, uq_y, uq_z):
+        """
+        ** Equation permettant de passer de uq a gnomonic. **
+
+        Parameters
+        ----------
+        uq_x, uq_y, uq_z
+            Les 3 coordonnees du vecteur uq exprimees dans le repere principal.
+
+        Returns
+        -------
+        x_gnomonic : sympy.Basic
+            Expression sympy de la position de la tache dans le repere
+            du plan gnomonic. (selon l'axe x ou Gi)
+        y_gnomonic : sympy.Basic
+            Comme ``x_gnomonic`` selon l'axe y ou Gj.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue import Transformer
+        >>> transformer = Transformer()
+        >>> uq_x, uq_y, uq_z = symbols("uq_x, uq_y, uq_z")
+        >>> x_gnom, y_gnom = transformer.get_expr_uq_to_gnomonic(uq_x, uq_y, uq_z)
+        >>> x_gnom
+        -(uq_x + uq_z)/(uq_x - uq_z)
+        >>> y_gnom
+        -sqrt(2)*uq_y/(uq_x - uq_z)
+        >>>
+        """
+        uq_x_atomic, uq_y_atomic, uq_z_atomic = sympy.symbols("uq_x uq_y uq_z", real=True)
+        u_q = sympy.Matrix([uq_x_atomic, uq_y_atomic, uq_z_atomic])
+        o_oppp = 1*self.gk # Car sphere unitaire de rayon 1.
+
+        gnom_plane = sympy.Plane(o_oppp, normal_vector=self.gk) # Plan gnomonic.
+        normal_ray = sympy.Line([0, 0, 0], u_q) # Droite portee par la normal au plan christalin.
+        o_pp = sympy.Matrix(gnom_plane.intersection(normal_ray).pop())
+        oppp_pp = -o_oppp + o_pp
+
+        # Projection dans le plan gnomonic pour remonter a x_g, y_g.
+        x_gnom = oppp_pp.dot(self.gi) # Coordonnees en mm axe x du plan gnomonic.
+        y_gnom = oppp_pp.dot(self.gj) # Coordonnees en mm axe y du plan gnomonic.
+
+        x_gnom = sympy.signsimp(sympy.cancel(x_gnom))
+
+        return (x_gnom.subs({uq_x_atomic: uq_x, uq_y_atomic: uq_y, uq_z_atomic: uq_z}),
+                y_gnom.subs({uq_x_atomic: uq_x, uq_y_atomic: uq_y, uq_z_atomic: uq_z}))
+
+    def get_expr_gnomonic_to_uq(self, x_gnom, y_gnom):
+        """
+        ** Equation permettant de passer du plan gnomonique a uq. **
+
+        Parameters
+        ----------
+        x_gnom
+            La position x du plan gnomonic.
+        y_gnom
+            La position y du plan gnomonic.
+
+        Returns
+        -------
+        sympy.Matrix
+            La matrice sympy de taille 3 representant
+            le vecteur uq dans le repere principal.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue import Transformer
+        >>> transformer = Transformer()
+        >>> x_gnom, y_gnom = symbols("x y")
+        >>> transformer.get_expr_gnomonic_to_uq(x_gnom, y_gnom)
+        Matrix([
+        [sqrt(2)*x/2 - sqrt(2)/2],
+        [                      y],
+        [sqrt(2)*x/2 + sqrt(2)/2]])
+        >>>
+        """
+        x_gnom_atomic, y_gnom_atomic = sympy.symbols("x_gnom y_gnom", real=True)
+
+        o_oppp = 1*self.gk # Vecteur OO''' == gk car le plan gnomonic est tangent a la shere unitaire.
+        u_q = o_oppp + (x_gnom_atomic*self.gi + y_gnom_atomic*self.gj) # Relation de chasle.
+
+        return u_q.subs({x_gnom_atomic: x_gnom, y_gnom_atomic: y_gnom})
+
+    def get_expr_uf_to_thetachi(self, uf_x, uf_y, uf_z):
+        """
+        ** Equation permetant de passer de uf a thetachi. **
+
+        Parameters
+        ----------
+        uf_x, uf_y, uf_z
+            Les 3 coordonnees du vecteur uf exprimees dans le repere principal.
+
+        Returns
+        -------
+        theta : sympy.Basic
+            Angle de rotation du plan christalin autour de -x.
+        chi : sympy.Basic
+            La moitier de l'angle de rotation du plan christalin autour de -y.
+
+        >>> from sympy import symbols
+        >>> from laue import Transformer
+        >>> transformer = Transformer()
+        >>> uf_x, uf_y, uf_z = symbols("uf_x, uf_y, uf_z", real=True)
+        >>> theta, chi = transformer.get_expr_uf_to_thetachi(uf_x, uf_y, uf_z)
+        >>> theta
+        acos(uf_x/sqrt(uf_x**2 + uf_y**2 + uf_z**2))/2
+        >>> chi
+        asin(uf_y/sqrt(uf_y**2 + uf_z**2))
+        >>>
+        """
+        def select(theta, chi):
+            """
+            Cherche si theta > 0 et -pi/2 < chi < pi/2
+            """
+            func = sympy.lambdify([x, y, z], [theta, chi], modules="numpy")
+            theta_vals, chi_vals = func(*np.meshgrid([-.5, .5], [-.5, .5], [.5]))
+            if (theta_vals < 0).any() or (chi_vals < -np.pi/2).any() or (chi_vals > np.pi/2).any():
+                return False
+            return True
+
+        theta_atomic, chi_atomic = sympy.symbols("theta chi", real=True)
+        x, y, z = sympy.symbols("x, y, z", real=True)
+        u_f = sympy.Matrix([x, y, z])
+        
+        theta, chi = [
+            (sol[theta_atomic], sol[chi_atomic])
+            for sol in
+            sympy.solve(
+                self.get_expr_thetachi_to_uf(theta_atomic, chi_atomic)-u_f,
+                [theta_atomic, chi_atomic],
+                dict=True)
+            if select(sol[theta_atomic], sol[chi_atomic])
+            ].pop()
+
+        uf_x, uf_y, uf_z = sympy.Matrix([uf_x, uf_y, uf_z]).normalized()
+
+        return (theta.subs({x: uf_x, y: uf_y, z: uf_z}),
+                chi.subs({x: uf_x, y: uf_y, z: uf_z}).simplify())
+
+    def get_expr_thetachi_to_uf(self, theta, chi):
+        """
+        ** Equation permetant de passer de thetachi a uf. **
+
+        Parameters
+        ----------
+        theta
+            Angle de rotation du plan christalin autour de -x.
+        chi
+            La moitier de l'angle de rotation du plan christalin autour de -y.
+
+        Returns
+        -------
+        sympy.Matrix
+            La matrice sympy de taille 3 representant
+            le vecteur uf dans le repere principal.
+
+        Examples
+        --------
+        >>> from sympy import symbols
+        >>> from laue import Transformer
+        >>> transformer = Transformer()
+        >>> theta, chi = symbols("theta chi")
+        >>> transformer.get_expr_thetachi_to_uf(theta, chi)
+        Matrix([
+        [         cos(2*theta)],
+        [sin(chi)*sin(2*theta)],
+        [sin(2*theta)*cos(chi)]])
+        >>>
+        """
+        theta_atomic, chi_atomic = sympy.symbols("theta chi", real=True)
+
+        # Expresion du rayon reflechit en fonction des angles.
+        rot_refl = sympy.rot_axis1(chi_atomic) @ sympy.rot_axis2(2*theta_atomic)
+        u_f = rot_refl @ self.u_i
+
+        return u_f.subs({theta_atomic: theta, chi_atomic: chi})
+
+class Compilator(Equations):
+    """
+    Extrait et enregistre les equations brutes.
+    Combine les blocs elementaire afin
+
+    Notes
+    -----
+    Les equations sont enregistrees de facon globale
+    de sorte a eviter la recompilation entre chaque objet,
+    et permet aussi d'alleger la serialisation de ``Transformer``.
+    """
+    def __init__(self):
+        """
+        Genere le dictionaire a protee globale.
+        """
+        Equations.__init__(self)
+
+        if "compiled_expressions" not in globals():
+            globals()["compiled_expressions"] = {}
+
+        self.load()
+
+    def compile(self, parameters=None):
+        """
+        ** Precalcul toutes les equations. **
+
+        Parameters
+        ----------
+        parameters : dict, optional
+            Les parametres donnes par la fonction ``laue.utilities.parsing.extract_parameters``.
+            Si ils sont fourni, l'expression est encore un peu
+            plus optimisee.
+        """
+        names = [
+            "fct_cam_to_gnomonic",
+            "fct_gnomonic_to_cam",
+            "fct_cam_to_thetachi",
+            "fct_thetachi_to_cam",
+            "fct_dist_line",
+            "fct_hough",
+            "fct_inter_line"]
+        names = [n for n in names if n not in globals()["compiled_expressions"]]
+
+        for name in names:
+            getattr(self, f"get_{name}")()
+
+        self.save() # On enregistre les grandes equations.
+
+        if parameters is not None:
+            assert isinstance(parameters, dict), ("Les parametres doivent founis "
+                f"dans un dictionaire, pas dans un {type(parameters).__name__}")
+            assert set(parameters) == {"dd", "xbet", "xgam", "xcen", "ycen", "pixelsize"}, \
+                ("Les clefs doivent etres 'dd', 'xbet', 'xgam', 'xcen', 'ycen' et 'pixelsize'. "
+                f"Or les clefs sont {set(parameters)}.")
+            assert all(isinstance(v, numbers.Number) for v in parameters.values()), \
+                "La valeurs des parametres doivent toutes etre des nombres."
+
+            hash_param = self._hash_parameters(parameters)
+            constants = {self.dd: parameters["dd"], # C'est qu'il est tant de faire de l'optimisation.
+                         self.xcen: parameters["xcen"],
+                         self.ycen: parameters["ycen"],
+                         self.xbet: parameters["xbet"],
+                         self.xgam: parameters["xgam"],
+                         self.pixelsize: parameters["pixelsize"]}
+            # Dans le cas ou l'expression est deserialise, les pointeurs ne sont plus les memes.
+            constants = {str(var): value for var, value in constants.items()}
+
+            expr_c2g = self.get_fct_cam_to_gnomonic()()
+            subs_c2g = {symbol: constants[str(symbol)]
+                    for symbol in (expr_c2g[0].free_symbols | expr_c2g[1].free_symbols)
+                    if str(symbol) in constants}
+            self._fcts_cam_to_gnomonic[hash_param] = lambdify.Lambdify(
+                    args=[self.x_cam, self.y_cam],
+                    expr=lambdify.subs(expr_c2g, subs_c2g))
+            
+            expr_g2c = self.get_fct_gnomonic_to_cam()()
+            subs_g2c = {symbol: constants[str(symbol)]
+                    for symbol in (expr_g2c[0].free_symbols | expr_g2c[1].free_symbols)
+                    if str(symbol) in constants}
+            self._fcts_gnomonic_to_cam[hash_param] = lambdify.Lambdify(
+                    args=[self.x_gnom, self.y_gnom],
+                    expr=lambdify.subs(expr_g2c, subs_g2c))
+
+    def get_fct_cam_to_gnomonic(self):
+        """
+        ** Equation permetant de passer de la camera au plan gnomonic. **
+        """
+        if "fct_cam_to_gnomonic" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_cam_to_gnomonic"]
+
+        u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
+        u_q = self.get_expr_uf_to_uq(*u_f)
+        x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
+
+        globals()["compiled_expressions"]["fct_cam_to_gnomonic"] = lambdify.Lambdify(
+            args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
+            expr=[x_gnom, y_gnom]) # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["fct_cam_to_gnomonic"]
+
+    def get_fct_gnomonic_to_cam(self):
+        """
+        ** Equation permetant de passer de l'espace gnomonic a celui de la camera. **
+        """
+        if "fct_gnomonic_to_cam" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_gnomonic_to_cam"]
+
+        u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
+        u_f = self.get_expr_uq_to_uf(*u_q)
+        x_c, y_c = self.get_expr_uf_to_cam(*u_f)
+
+        globals()["compiled_expressions"]["fct_gnomonic_to_cam"] = lambdify.Lambdify(
+            args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
+            expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["fct_gnomonic_to_cam"]
+
+    def get_fct_thetachi_to_cam(self):
+        """
+        ** Equation permetant de passer de theta chi au plan gnomonic. **
+        """
+        if "fct_thetachi_to_cam" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_thetachi_to_cam"]
+
+        u_f = self.get_expr_thetachi_to_uf(self.theta, self.chi)
+        x_c, y_c = self.get_expr_uf_to_cam(*u_f)
+
+        globals()["compiled_expressions"]["fct_thetachi_to_cam"] = lambdify.Lambdify(
+            args=[self.theta, self.chi, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
+            expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["fct_thetachi_to_cam"]
+
+    def get_fct_cam_to_thetachi(self):
+        """
+        ** Equation permetant de passer du plan gnomonic a la representation theta chi. **
+        """
+        if "fct_cam_to_thetachi" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_cam_to_thetachi"]
+
+        u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
+        theta, chi = self.get_expr_uf_to_thetachi(*u_f)
+
+        globals()["compiled_expressions"]["fct_cam_to_thetachi"] = lambdify.Lambdify(
+            args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
+            expr=[theta, chi]) # On l'enregistre une bonne fois pour toutes.
+        return globals()["compiled_expressions"]["fct_cam_to_thetachi"]
+
+    def get_fct_dist_line(self):
+        """
+        ** Equation de projection de points sur une droite. **
+        """
+        if "fct_dist_line" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_dist_line"]
+
+        # Creation de la droite.
+        theta, dist, x, y = sympy.symbols("theta alpha x y", real=True)
+        p = sympy.Point(dist*sympy.cos(theta), dist*sympy.sin(theta)) # Point appartenant a la droite.
+        op = sympy.Line(sympy.Point(0, 0), p) # Droite normale a la droite principale.
+        line = op.perpendicular_line(p) # C'est la droite principale.
+
+        # Projection des points.
+        distance = line.distance(sympy.Point(x, y)) # La distance entre la droite et un point.
+
+        # Optimisation.
+        distance = sympy.trigsimp(distance) # Permet un gain de 2.90
+
+        # Vectorisation de l'expression.
+        globals()["compiled_expressions"]["fct_dist_line"] = lambdify.Lambdify([theta, dist, x, y], distance)
+        return globals()["compiled_expressions"]["fct_dist_line"]
+
+    def get_fct_hough(self):
+        """
+        ** Equation pour la transformee de hough. **
+        """
+        if "fct_hough" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_hough"]
+
+        xa, ya, xb, yb = sympy.symbols("x_a y_a x_b y_b", real=True)
+        u = sympy.Matrix([xa-xb, ya-yb]).normalized()
+        x = sympy.Matrix([1, 0])
+
+        # Calcul de la distance entre la droite et l'origine.
+        d1 = sympy.Line(sympy.Point(xa, ya), sympy.Point(xb, yb)) # C'est la droite passant par les 2 points.
+        dist = d1.distance(sympy.Point(0, 0)) # La distance separant l'origine de la droite.
+
+        # Calcul de l'angle entre l'axe horizontal et la droite.
+        p = d1.projection(sympy.Point(0, 0)) # Le point ou la distance entre ce point de la droite et l'origine est minimale.
+        n = p / sympy.sqrt(p.x**2 + p.y**2) # On normalise le point.
+        theta_abs = sympy.acos(n.x) # La valeur absolue de theta.
+        theta_sign = sympy.sign(n.y) # Si il est negatif c'est que theta < 0, si il est positif alors theta > 0
+        theta = theta_abs * theta_sign # Compris entre -pi et +pi
+        # theta = sympy.simplify(theta)
+
+        # Optimisation.
+        theta = theta # Permet un gain de 1.00
+        dist = sympy.trigsimp(sympy.cancel(dist)) # Permet un gain de 1.40
+
+        # Vectorisation des expressions.
+        globals()["compiled_expressions"]["fct_hough"] = lambdify.Lambdify([xa, ya, xb, yb], [theta, dist])
+        return globals()["compiled_expressions"]["fct_hough"]
+
+    def get_fct_inter_line(self):
+        """
+        ** Equation d'intersection entre 2 droites. **
+        """
+        if "fct_inter_line" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_inter_line"]
+
+        # Creation des 2 droites.
+        theta_1, dist_1, theta_2, dist_2 = sympy.symbols("theta_1, dist_1, theta_2, dist_2", real=True)
+        p1 = sympy.Point(dist_1*sympy.cos(theta_1), dist_1*sympy.sin(theta_1)) # Point appartenant a la premiere droite.
+        p2 = sympy.Point(dist_2*sympy.cos(theta_2), dist_2*sympy.sin(theta_2)) # Point appartenant a la seconde droite.
+        op1 = sympy.Line(sympy.Point(0, 0), p1) # Droite normale a la premiere droite.
+        op2 = sympy.Line(sympy.Point(0, 0), p2) # Droite normale a la deuxieme droite.
+        line1 = op1.perpendicular_line(p1) # La premiere droite.
+        line2 = op2.perpendicular_line(p2) # La seconde droite.
+
+        # Calcul des coordonnes du point d'intersection.
+        point = line1.intersection(line2)[0]
+        inter_x = point.x
+        inter_y = point.y
+
+        # Optimisation.
+        # Il n'y en a pas car les expressions sont deja tres simples.
+
+        # Vectorisation des expressions.
+        globals()["compiled_expressions"]["fct_inter_line"] = lambdify.Lambdify(
+            [theta_1, dist_1, theta_2, dist_2], [inter_x, inter_y])
+        return globals()["compiled_expressions"]["fct_inter_line"]
+
+    def _hash(self):
+        """
+        ** Retourne le hash de ce code. **
+        """
+        return hashlib.md5(
+            inspect.getsource(Compilator).encode(encoding="utf-8")
+          + inspect.getsource(Equations).encode(encoding="utf-8")
+          + inspect.getsource(lambdify).encode(encoding="utf-8")
+            ).hexdigest()
+
+    def save(self):
+        """
+        ** Enregistre un fichier contenant les expressions. **
+
+        Enregistre seulement ce qui est present dans ``globals()["compiled_expressions"]``.
+        N'ecrase pas l'ancien contenu.
+        """
+        dirname = os.path.dirname(os.path.abspath(laue.__file__))
+        file = os.path.join(dirname, "data", "geometry.data")
+        self.load() # Recuperation du contenu du fichier.
+        content = {
+            "hash": self._hash(),
+            "expr": {name: l.dumps()
+                for name, l in globals()["compiled_expressions"].items()
+                }
+            }
+        with open(file, "wb") as f:
+            cloudpickle.dump(content, f)
+
+    def load(self):
+        """
+        ** Charge si il existe, le fichier contenant les expressions. **
+
+        Deverse les expressions dans le dictionaire: ``globals()["compiled_expressions"]``.
+        """
+        dirname = os.path.dirname(os.path.abspath(laue.__file__))
+        file = os.path.join(dirname, "data", "geometry.data")
+        
+        if os.path.exists(file):
+            with open(file, "rb") as f:
+                try:
+                    content = cloudpickle.load(f)
+                except ValueError: # Si c'est pas le bon protocol
+                    content = {"hash": None}
+                else:
+                    content["expr"] = {name: lambdify.Lambdify.loads(data) for name, data in content["expr"].items()}
+            if content["hash"] == self._hash(): # Si les donnees sont a jour.
+                globals()["compiled_expressions"] = {**globals()["compiled_expressions"], **content["expr"]}
+        return globals()["compiled_expressions"]

@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>laue.utilities.multi_core API documentation</title>
+<meta name="description" content="** Outils pour le paralelisme. **
+…" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>laue.utilities.multi_core</code></h1>
+</header>
+<section id="section-intro">
+<h2 id="outils-pour-le-paralelisme"><strong> Outils pour le paralelisme. </strong></h2>
+<ul>
+<li>Aide a la serialisation des fonctions (pickle).</li>
+<li>Permet de gerer plusieur instances asynchrones de generateurs en multi-threads.</li>
+</ul>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+
+&#34;&#34;&#34;
+** Outils pour le paralelisme. **
+---------------------------------
+
+* Aide a la serialisation des fonctions (pickle).
+* Permet de gerer plusieur instances asynchrones de generateurs en multi-threads.
+&#34;&#34;&#34;
+
+import hashlib
+import math
+import multiprocessing
+import os
+import time
+
+import cloudpickle
+
+
+def limited_imap(pool, func, iterable, **kwargs):
+    &#34;&#34;&#34;
+    ** Same as ``Pool.imap`` with limited buffer. **
+
+    La fonction ``Pool.imap`` du module multiprocessing epuise
+    tant qu&#39;elle peut l&#39;iterable d&#39;entree, et accumule les resultat
+    dans une memoir tampon. Seulement, elle ne se preocupe
+    pas de la memoire disponible ni des autres processus.
+    Ici, les calcul sont fait en economisant les ressources
+    disponible de facon a accroitre les peformances.
+
+    Parameters
+    ----------
+    pool : multiprocessing.pool.Pool
+        Pool de ``multiprocessing.Pool()``.
+    func : callable
+        La fonction serialisable avec pickle qui sera evaluee.
+    iterable : iterable
+        Cede sucessivement les argument a fournir a ``func``.
+    **kwargs
+        See ``multiprocessing.Pool().imap``.
+
+    Yields
+    ------
+    result
+        Cede peu a peu les resultats de la fonction ``func``.
+    &#34;&#34;&#34;
+    class Regulator:
+        &#34;&#34;&#34;
+        Permet de reguler le flot d&#39;un bloc.
+        &#34;&#34;&#34;
+        def __init__(self, pool, iterable):
+            self.pool = pool
+            self.iterable = iterable
+            self.nbr_yields = 0 # Le nombre de resultats cedes.
+            self.nbr_args = 0 # Le nombre d&#39;arguments pompes.
+            self.max_tasks = 2*os.cpu_count() # Nombre de taches maximales en cours de calcul.
+
+        def __iter__(self):
+            &#34;&#34;&#34;
+            Cede les arguments au compte gouttes.
+            &#34;&#34;&#34;
+            for args in self.iterable:
+                while True: # Permet d&#39;attendre en cas de besoin.
+                    buff_size = self.nbr_args - self.nbr_yields
+                    if buff_size &lt; self.max_tasks:
+                        break
+                    if buff_size &gt; 10*self.max_tasks: # Si il y a suffisement de resultats en avance.
+                        time.sleep(.1) # On fait une grande pause.
+                        continue # Et on attend que ca se decante.
+                    cpu = min(psutil.cpu_percent(interval=0.05, percpu=True))
+                    mem = psutil.virtual_memory().percent
+                    if cpu &lt; 50 and mem &lt; 75: # Si il y a suffisement de ressources.
+                        break
+
+                self.nbr_args += 1
+                yield args
+
+        def imap(self, func, **kwargs):
+            &#34;&#34;&#34;
+            Cede les resultats.
+            &#34;&#34;&#34;
+            for res in self.pool.imap(func, self, **kwargs):
+                self.nbr_yields += 1
+                yield res
+    
+    try:
+        import psutil
+    except ImportError:
+        import logging
+        logging.warn(&#34;&#39;psutil&#39; n&#39;est installer, il est impossible de &#34;
+            &#34;gerer poprement les ressources.&#34;)
+        psutil = None
+    
+    if psutil is None:
+        yield from pool.imap(func, iterable, **kwargs)
+    else:
+        regulator = Regulator(pool, iterable)
+        yield from regulator.imap(func, **kwargs)
+
+def pickleable_method(args, serialize=False):
+    &#34;&#34;&#34;
+    ** Permet de serialiser une methode. **
+
+    Notes
+    -----
+    Comme l&#39;utilisateur ne doit pas utiliser cette fonction, il n&#39;y
+    a pas de verifications sur les entree de facon a privilegier la performance.
+
+    Parameters
+    ----------
+    args : tuple
+        * args[0] =&gt; func, La fonction a executer. Si c&#39;est une methode, il est
+        possible de fournir ``ClasseName.methode`` au lieu de ``self.methode``.
+        * args[1] =&gt; self, Serialiser ou non, c&#39;est le premiers argument.
+        * args[2] (facultativ) =&gt; kwargs, Le dictionaire des parametres nomes.
+    serialize : bool
+        Serialize le resultat (si True), sinon laisse implicitement
+        pickle le faire (False). Si pickle est capable de le faire, il
+        faut lui laisser gerer ca car c&#39;est plus efficace.
+    &#34;&#34;&#34;
+    if len(args) == 2:
+        (func, self), kwargs = args, {}
+    else:
+        func, self, kwargs = args
+    if isinstance(self, bytes):
+        self = cloudpickle.loads(self)
+    return (
+                (lambda x: cloudpickle.dumps(x))
+                if serialize else
+                (lambda x: x)
+            )(func(self, **kwargs))
+
+def prevent_generator_size(min_size=1, max_size=math.inf):
+    &#34;&#34;&#34;
+    ** Controle que le generateur contient le bon nombre d&#39;elements. **
+
+    C&#39;est un decorateur qui decore une fonction (generateur).
+
+    Parameters
+    ----------
+    min_size : int
+        Le nombre minimum d&#39;elements que doit ceder le generateur avant qu&#39;il ne soit epuise.
+    max_size : int
+        Le nombre maximum d&#39;elements cedes avant de lever l&#39;exception.
+
+    Raises
+    ------
+    GeneratorExit
+        Si les conditions ne sont pas respectees.
+    &#34;&#34;&#34;
+    assert isinstance(min_size, int), f&#34;&#39;min_size&#39; has to be int, not {type(min_size).__name__}.&#34;
+    assert isinstance(max_size, int) or max_size == math.inf, \
+        f&#34;&#39;max_size&#39; has to be int, not {type(max_size).__name__}.&#34;
+    assert max_size &gt;= min_size, (&#34;&#39;max_size&#39; doit etre plus grand ou egal a &#39;min_size&#39;. &#34;
+        f&#34;Or ils valent respectivement {max_size} et {min_size}.&#34;)
+    assert min_size &gt;= 0, f&#34;&#39;min_size&#39; ne doit pas etre negatif ({min_size}).&#34;
+
+    def decorator(func):
+        def generator(*args, **kwargs):
+            i = -1
+            for i, element in enumerate(func(*args, **kwargs)):
+                yield element
+                if i &gt;= max_size:
+                    raise GeneratorExit(f&#34;Le generateur {func} ne doit pas ceder plus de &#34;
+                        f&#34;{max_size} elements. Or il tente d&#39;en ceder un {i+1}eme.&#34;)
+            if i+1 &lt; min_size:
+                raise GeneratorExit(f&#34;Le generateur {func} doit ceder au moins {min_size} &#34;
+                    f&#34;elements. Or il n&#39;en a cede que {i+1}.&#34;)
+
+        return generator
+    return decorator
+
+def reduce_object(obj, attrs=None):
+    &#34;&#34;&#34;
+    ** Reconstitue un objet partiel. **
+
+    Le but est de rendre un objet plus facilement serialisable et
+    aussi de l&#39;alleger pour perdre moins de temps avec la
+    serialisation puis la deserialisation.
+
+    Parameters
+    ----------
+    obj : objet
+        Instance de la classe que l&#39;on shouaite reduire.
+    attrs : iterable
+        Les noms des attributs qui resteront presents dans l&#39;objet final.
+        Si il ne sont pas precise, seul les attributs serialisables sont gardes.
+
+    Examples
+    --------
+    &gt;&gt;&gt; from laue.utilities.multi_core import reduce_object
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; class Foo:
+    ...     def __init__(self):
+    ...         self.attr1 = 1
+    ...         self.attr2 = 2
+    ...     def meth(self):
+    ...         pass
+    ...
+    &gt;&gt;&gt; obj = Foo()
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; little_obj = reduce_object(obj, [&#34;attr1&#34;])
+    &gt;&gt;&gt; hasattr(little_obj, &#34;attr1&#34;)
+    True
+    &gt;&gt;&gt; hasattr(little_obj, &#34;attr2&#34;)
+    False
+    &gt;&gt;&gt; hasattr(little_obj, &#34;meth&#34;)
+    True
+    &gt;&gt;&gt; little_obj.attr1
+    1
+    &gt;&gt;&gt; type(little_obj.meth)
+    &lt;class &#39;method&#39;&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    class Partial(type(obj)):
+        def __init__(self):
+            pass
+
+    if attrs is None:
+        all_attrs = [attr for attr in dir(obj)
+            if type(getattr(obj, attr)).__name__ != &#34;method&#34;
+            and not attr.startswith(&#34;__&#34;)]
+        attrs = []
+        for attr in all_attrs:
+            try:
+                cloudpickle.dumps(getattr(obj, attr))
+            except (TypeError, RuntimeError):
+                continue
+            else:
+                attrs.append(attr)
+        print(attrs)
+
+    partial_obj = Partial()
+    for attr in attrs:
+        setattr(partial_obj, attr, getattr(obj, attr))
+    return partial_obj
+
+    # class Constructor:
+    #     &#34;&#34;&#34;
+    #     Methaclasse qui fabrique de nouvelle instances sur mesure.
+    #     &#34;&#34;&#34;
+    #     def __new__(cls, obj, attrs):
+    #         name = f&#34;Partial{type(obj).__name__}&#34;
+            
+    #         # Separation des attributs et des methodes.
+    #         meth_name = {attr for attr in attrs if type(getattr(obj, attr)).__name__ == &#34;method&#34;}
+    #         attrs = set(attrs) - meth_name
+            
+    #         # Creation d&#39;un objet ayant que les methodes.
+    #         empty_obj = NoAttrs()
+    #         # for attr in attrs:
+    #         #     setattr(emty_obj, attr, getattr(obj, attr))
+    #         methodes = {name: getattr(empty_obj, name) for name in meth_name}
+
+    #         # Ajout des attributs.
+    #         partial_obj = type(name, (), methodes)
+    #         for attr in attrs:
+    #             setattr(partial_obj, attr, getattr(obj, attr))
+    #         return partial_obj
+
+    # return Constructor(obj, attrs)
+
+class RecallingIterator:
+    &#34;&#34;&#34;
+    ** Permet d&#39;iterer plusieurs instances d&#39;un unique generateur. **
+
+    Examples
+    --------
+    Example avec une classe.
+    &gt;&gt;&gt; from laue.utilities.multi_core import RecallingIterator
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; class Foo:
+    ...     def __init__(self):
+    ...         self.it = iter(range(5))
+    ...     def __iter__(self):
+    ...         yield from RecallingIterator(self.it, mother=self)
+    ...
+    &gt;&gt;&gt; foo = Foo()
+    &gt;&gt;&gt; for a, b in zip(foo, foo):
+    ...     a, b
+    ... 
+    (0, 0)
+    (1, 1)
+    (2, 2)
+    (3, 3)
+    (4, 4)
+    &gt;&gt;&gt; list(foo)
+    [0, 1, 2, 3, 4]
+    &gt;&gt;&gt;
+
+    Example sans classe
+    &gt;&gt;&gt; it = iter(range(5))
+    &gt;&gt;&gt; for a, b in zip(RecallingIterator(it), RecallingIterator(it)):
+    ...     a, b
+    ... 
+    (0, 0)
+    (1, 1)
+    (2, 2)
+    (3, 3)
+    (4, 4)
+    &gt;&gt;&gt; list(RecallingIterator(it))
+    [0, 1, 2, 3, 4]
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    def __init__(self, base_iterator, *, mother=None):
+        &#34;&#34;&#34;
+        Paremeters
+        ----------
+        mother : object
+            Instance de la classe dans laquelle on met cet iterateur.
+            Si il est omis, la memoire est globale et ne sera pas netoyee
+            par le ramasse-miette. Il est conseille si possible fournir &#39;mother&#39;.
+        base_iterator : iterator
+            L&#39;iterateur epuisable, qui ne doit en tout et pour tout
+            etre parcouru qu&#39;une seule fois.
+        &#34;&#34;&#34;
+        self.mother = mother
+        self.base_iterator = base_iterator
+        self.signature = hashlib.md5(id(base_iterator).to_bytes(16, &#34;big&#34;)).hexdigest()
+
+        self.stape = 0 # Le rang de l&#39;element suivant a ceder.
+
+        # Mise en place du verrou.
+        lock_name = f&#34;_lock_{self.signature}&#34;
+        if self.mother is not None:
+            if not hasattr(self.mother, lock_name):
+                setattr(self.mother, lock_name, multiprocessing.Lock())
+            self.lock = getattr(self.mother, lock_name)
+        else:
+            if lock_name not in globals():
+                globals()[lock_name] = multiprocessing.Lock()
+            self.lock = globals()[lock_name]
+
+        # Mise en place de la memoire pour reiterer.
+        buffer_name = f&#34;_buffer_{self.signature}&#34;
+        if self.mother is not None:
+            if not hasattr(self.mother, buffer_name):
+                setattr(self.mother, buffer_name, [])
+            self.buffer = getattr(self.mother, buffer_name)
+        else:
+            if buffer_name not in globals():
+                globals()[buffer_name] = []
+            self.buffer = globals()[buffer_name]
+
+    def __iter__(self):
+        &#34;&#34;&#34;
+        ** Permet d&#39;etre mis dans une boucle for. **
+        &#34;&#34;&#34;
+        return self
+
+    def __next__(self):
+        &#34;&#34;&#34;
+        ** Itere de facon intrementale. **
+
+        Raises
+        ------
+        StopIteration
+            Quand tous les paquets sont cedes.
+        &#34;&#34;&#34;
+        with self.lock:
+            # Si il ne faut pas iterer &#39;base_iterator&#39;
+            if self.stape &lt; len(self.buffer):
+                self.stape += 1
+                return self.buffer[self.stape-1]
+
+            # Si il faut iterer.
+            while True:
+                try:
+                    element = next(self.base_iterator)
+                except ValueError: # precisement: generator already executing
+                    time.sleep(.1) # On attend 100 ms avant de retenter.
+                else:
+                    self.buffer.append(element)
+                    self.stape += 1
+                    return element</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="laue.utilities.multi_core.limited_imap"><code class="name flex">
+<span>def <span class="ident">limited_imap</span></span>(<span>pool, func, iterable, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Same as <code>Pool.imap</code> with limited buffer. </strong></p>
+<p>La fonction <code>Pool.imap</code> du module multiprocessing epuise
+tant qu'elle peut l'iterable d'entree, et accumule les resultat
+dans une memoir tampon. Seulement, elle ne se preocupe
+pas de la memoire disponible ni des autres processus.
+Ici, les calcul sont fait en economisant les ressources
+disponible de facon a accroitre les peformances.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>pool</code></strong> :&ensp;<code>multiprocessing.pool.Pool</code></dt>
+<dd>Pool de <code>multiprocessing.Pool()</code>.</dd>
+<dt><strong><code>func</code></strong> :&ensp;<code>callable</code></dt>
+<dd>La fonction serialisable avec pickle qui sera evaluee.</dd>
+<dt><strong><code>iterable</code></strong> :&ensp;<code>iterable</code></dt>
+<dd>Cede sucessivement les argument a fournir a <code>func</code>.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>See <code>multiprocessing.Pool().imap</code>.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><code>result</code></dt>
+<dd>Cede peu a peu les resultats de la fonction <code>func</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def limited_imap(pool, func, iterable, **kwargs):
+    &#34;&#34;&#34;
+    ** Same as ``Pool.imap`` with limited buffer. **
+
+    La fonction ``Pool.imap`` du module multiprocessing epuise
+    tant qu&#39;elle peut l&#39;iterable d&#39;entree, et accumule les resultat
+    dans une memoir tampon. Seulement, elle ne se preocupe
+    pas de la memoire disponible ni des autres processus.
+    Ici, les calcul sont fait en economisant les ressources
+    disponible de facon a accroitre les peformances.
+
+    Parameters
+    ----------
+    pool : multiprocessing.pool.Pool
+        Pool de ``multiprocessing.Pool()``.
+    func : callable
+        La fonction serialisable avec pickle qui sera evaluee.
+    iterable : iterable
+        Cede sucessivement les argument a fournir a ``func``.
+    **kwargs
+        See ``multiprocessing.Pool().imap``.
+
+    Yields
+    ------
+    result
+        Cede peu a peu les resultats de la fonction ``func``.
+    &#34;&#34;&#34;
+    class Regulator:
+        &#34;&#34;&#34;
+        Permet de reguler le flot d&#39;un bloc.
+        &#34;&#34;&#34;
+        def __init__(self, pool, iterable):
+            self.pool = pool
+            self.iterable = iterable
+            self.nbr_yields = 0 # Le nombre de resultats cedes.
+            self.nbr_args = 0 # Le nombre d&#39;arguments pompes.
+            self.max_tasks = 2*os.cpu_count() # Nombre de taches maximales en cours de calcul.
+
+        def __iter__(self):
+            &#34;&#34;&#34;
+            Cede les arguments au compte gouttes.
+            &#34;&#34;&#34;
+            for args in self.iterable:
+                while True: # Permet d&#39;attendre en cas de besoin.
+                    buff_size = self.nbr_args - self.nbr_yields
+                    if buff_size &lt; self.max_tasks:
+                        break
+                    if buff_size &gt; 10*self.max_tasks: # Si il y a suffisement de resultats en avance.
+                        time.sleep(.1) # On fait une grande pause.
+                        continue # Et on attend que ca se decante.
+                    cpu = min(psutil.cpu_percent(interval=0.05, percpu=True))
+                    mem = psutil.virtual_memory().percent
+                    if cpu &lt; 50 and mem &lt; 75: # Si il y a suffisement de ressources.
+                        break
+
+                self.nbr_args += 1
+                yield args
+
+        def imap(self, func, **kwargs):
+            &#34;&#34;&#34;
+            Cede les resultats.
+            &#34;&#34;&#34;
+            for res in self.pool.imap(func, self, **kwargs):
+                self.nbr_yields += 1
+                yield res
+    
+    try:
+        import psutil
+    except ImportError:
+        import logging
+        logging.warn(&#34;&#39;psutil&#39; n&#39;est installer, il est impossible de &#34;
+            &#34;gerer poprement les ressources.&#34;)
+        psutil = None
+    
+    if psutil is None:
+        yield from pool.imap(func, iterable, **kwargs)
+    else:
+        regulator = Regulator(pool, iterable)
+        yield from regulator.imap(func, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.multi_core.pickleable_method"><code class="name flex">
+<span>def <span class="ident">pickleable_method</span></span>(<span>args, serialize=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Permet de serialiser une methode. </strong></p>
+<h2 id="notes">Notes</h2>
+<p>Comme l'utilisateur ne doit pas utiliser cette fonction, il n'y
+a pas de verifications sur les entree de facon a privilegier la performance.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>args</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>
+<ul>
+<li>args[0] =&gt; func, La fonction a executer. Si c'est une methode, il est
+possible de fournir <code>ClasseName.methode</code> au lieu de <code>self.methode</code>.</li>
+<li>args[1] =&gt; self, Serialiser ou non, c'est le premiers argument.</li>
+<li>args[2] (facultativ) =&gt; kwargs, Le dictionaire des parametres nomes.</li>
+</ul>
+</dd>
+<dt><strong><code>serialize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Serialize le resultat (si True), sinon laisse implicitement
+pickle le faire (False). Si pickle est capable de le faire, il
+faut lui laisser gerer ca car c'est plus efficace.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pickleable_method(args, serialize=False):
+    &#34;&#34;&#34;
+    ** Permet de serialiser une methode. **
+
+    Notes
+    -----
+    Comme l&#39;utilisateur ne doit pas utiliser cette fonction, il n&#39;y
+    a pas de verifications sur les entree de facon a privilegier la performance.
+
+    Parameters
+    ----------
+    args : tuple
+        * args[0] =&gt; func, La fonction a executer. Si c&#39;est une methode, il est
+        possible de fournir ``ClasseName.methode`` au lieu de ``self.methode``.
+        * args[1] =&gt; self, Serialiser ou non, c&#39;est le premiers argument.
+        * args[2] (facultativ) =&gt; kwargs, Le dictionaire des parametres nomes.
+    serialize : bool
+        Serialize le resultat (si True), sinon laisse implicitement
+        pickle le faire (False). Si pickle est capable de le faire, il
+        faut lui laisser gerer ca car c&#39;est plus efficace.
+    &#34;&#34;&#34;
+    if len(args) == 2:
+        (func, self), kwargs = args, {}
+    else:
+        func, self, kwargs = args
+    if isinstance(self, bytes):
+        self = cloudpickle.loads(self)
+    return (
+                (lambda x: cloudpickle.dumps(x))
+                if serialize else
+                (lambda x: x)
+            )(func(self, **kwargs))</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.multi_core.prevent_generator_size"><code class="name flex">
+<span>def <span class="ident">prevent_generator_size</span></span>(<span>min_size=1, max_size=inf)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Controle que le generateur contient le bon nombre d'elements. </strong></p>
+<p>C'est un decorateur qui decore une fonction (generateur).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>min_size</code></strong> :&ensp;<code>int</code></dt>
+<dd>Le nombre minimum d'elements que doit ceder le generateur avant qu'il ne soit epuise.</dd>
+<dt><strong><code>max_size</code></strong> :&ensp;<code>int</code></dt>
+<dd>Le nombre maximum d'elements cedes avant de lever l'exception.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>GeneratorExit</code></dt>
+<dd>Si les conditions ne sont pas respectees.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prevent_generator_size(min_size=1, max_size=math.inf):
+    &#34;&#34;&#34;
+    ** Controle que le generateur contient le bon nombre d&#39;elements. **
+
+    C&#39;est un decorateur qui decore une fonction (generateur).
+
+    Parameters
+    ----------
+    min_size : int
+        Le nombre minimum d&#39;elements que doit ceder le generateur avant qu&#39;il ne soit epuise.
+    max_size : int
+        Le nombre maximum d&#39;elements cedes avant de lever l&#39;exception.
+
+    Raises
+    ------
+    GeneratorExit
+        Si les conditions ne sont pas respectees.
+    &#34;&#34;&#34;
+    assert isinstance(min_size, int), f&#34;&#39;min_size&#39; has to be int, not {type(min_size).__name__}.&#34;
+    assert isinstance(max_size, int) or max_size == math.inf, \
+        f&#34;&#39;max_size&#39; has to be int, not {type(max_size).__name__}.&#34;
+    assert max_size &gt;= min_size, (&#34;&#39;max_size&#39; doit etre plus grand ou egal a &#39;min_size&#39;. &#34;
+        f&#34;Or ils valent respectivement {max_size} et {min_size}.&#34;)
+    assert min_size &gt;= 0, f&#34;&#39;min_size&#39; ne doit pas etre negatif ({min_size}).&#34;
+
+    def decorator(func):
+        def generator(*args, **kwargs):
+            i = -1
+            for i, element in enumerate(func(*args, **kwargs)):
+                yield element
+                if i &gt;= max_size:
+                    raise GeneratorExit(f&#34;Le generateur {func} ne doit pas ceder plus de &#34;
+                        f&#34;{max_size} elements. Or il tente d&#39;en ceder un {i+1}eme.&#34;)
+            if i+1 &lt; min_size:
+                raise GeneratorExit(f&#34;Le generateur {func} doit ceder au moins {min_size} &#34;
+                    f&#34;elements. Or il n&#39;en a cede que {i+1}.&#34;)
+
+        return generator
+    return decorator</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.multi_core.reduce_object"><code class="name flex">
+<span>def <span class="ident">reduce_object</span></span>(<span>obj, attrs=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Reconstitue un objet partiel. </strong></p>
+<p>Le but est de rendre un objet plus facilement serialisable et
+aussi de l'alleger pour perdre moins de temps avec la
+serialisation puis la deserialisation.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>obj</code></strong> :&ensp;<code>objet</code></dt>
+<dd>Instance de la classe que l'on shouaite reduire.</dd>
+<dt><strong><code>attrs</code></strong> :&ensp;<code>iterable</code></dt>
+<dd>Les noms des attributs qui resteront presents dans l'objet final.
+Si il ne sont pas precise, seul les attributs serialisables sont gardes.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from laue.utilities.multi_core import reduce_object
+&gt;&gt;&gt;
+&gt;&gt;&gt; class Foo:
+...     def __init__(self):
+...         self.attr1 = 1
+...         self.attr2 = 2
+...     def meth(self):
+...         pass
+...
+&gt;&gt;&gt; obj = Foo()
+&gt;&gt;&gt;
+&gt;&gt;&gt; little_obj = reduce_object(obj, [&quot;attr1&quot;])
+&gt;&gt;&gt; hasattr(little_obj, &quot;attr1&quot;)
+True
+&gt;&gt;&gt; hasattr(little_obj, &quot;attr2&quot;)
+False
+&gt;&gt;&gt; hasattr(little_obj, &quot;meth&quot;)
+True
+&gt;&gt;&gt; little_obj.attr1
+1
+&gt;&gt;&gt; type(little_obj.meth)
+&lt;class 'method'&gt;
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reduce_object(obj, attrs=None):
+    &#34;&#34;&#34;
+    ** Reconstitue un objet partiel. **
+
+    Le but est de rendre un objet plus facilement serialisable et
+    aussi de l&#39;alleger pour perdre moins de temps avec la
+    serialisation puis la deserialisation.
+
+    Parameters
+    ----------
+    obj : objet
+        Instance de la classe que l&#39;on shouaite reduire.
+    attrs : iterable
+        Les noms des attributs qui resteront presents dans l&#39;objet final.
+        Si il ne sont pas precise, seul les attributs serialisables sont gardes.
+
+    Examples
+    --------
+    &gt;&gt;&gt; from laue.utilities.multi_core import reduce_object
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; class Foo:
+    ...     def __init__(self):
+    ...         self.attr1 = 1
+    ...         self.attr2 = 2
+    ...     def meth(self):
+    ...         pass
+    ...
+    &gt;&gt;&gt; obj = Foo()
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; little_obj = reduce_object(obj, [&#34;attr1&#34;])
+    &gt;&gt;&gt; hasattr(little_obj, &#34;attr1&#34;)
+    True
+    &gt;&gt;&gt; hasattr(little_obj, &#34;attr2&#34;)
+    False
+    &gt;&gt;&gt; hasattr(little_obj, &#34;meth&#34;)
+    True
+    &gt;&gt;&gt; little_obj.attr1
+    1
+    &gt;&gt;&gt; type(little_obj.meth)
+    &lt;class &#39;method&#39;&gt;
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    class Partial(type(obj)):
+        def __init__(self):
+            pass
+
+    if attrs is None:
+        all_attrs = [attr for attr in dir(obj)
+            if type(getattr(obj, attr)).__name__ != &#34;method&#34;
+            and not attr.startswith(&#34;__&#34;)]
+        attrs = []
+        for attr in all_attrs:
+            try:
+                cloudpickle.dumps(getattr(obj, attr))
+            except (TypeError, RuntimeError):
+                continue
+            else:
+                attrs.append(attr)
+        print(attrs)
+
+    partial_obj = Partial()
+    for attr in attrs:
+        setattr(partial_obj, attr, getattr(obj, attr))
+    return partial_obj
+
+    # class Constructor:
+    #     &#34;&#34;&#34;
+    #     Methaclasse qui fabrique de nouvelle instances sur mesure.
+    #     &#34;&#34;&#34;
+    #     def __new__(cls, obj, attrs):
+    #         name = f&#34;Partial{type(obj).__name__}&#34;
+            
+    #         # Separation des attributs et des methodes.
+    #         meth_name = {attr for attr in attrs if type(getattr(obj, attr)).__name__ == &#34;method&#34;}
+    #         attrs = set(attrs) - meth_name
+            
+    #         # Creation d&#39;un objet ayant que les methodes.
+    #         empty_obj = NoAttrs()
+    #         # for attr in attrs:
+    #         #     setattr(emty_obj, attr, getattr(obj, attr))
+    #         methodes = {name: getattr(empty_obj, name) for name in meth_name}
+
+    #         # Ajout des attributs.
+    #         partial_obj = type(name, (), methodes)
+    #         for attr in attrs:
+    #             setattr(partial_obj, attr, getattr(obj, attr))
+    #         return partial_obj
+
+    # return Constructor(obj, attrs)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="laue.utilities.multi_core.RecallingIterator"><code class="flex name class">
+<span>class <span class="ident">RecallingIterator</span></span>
+<span>(</span><span>base_iterator, *, mother=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Permet d'iterer plusieurs instances d'un unique generateur. </strong></p>
+<h2 id="examples">Examples</h2>
+<p>Example avec une classe.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from laue.utilities.multi_core import RecallingIterator
+&gt;&gt;&gt;
+&gt;&gt;&gt; class Foo:
+...     def __init__(self):
+...         self.it = iter(range(5))
+...     def __iter__(self):
+...         yield from RecallingIterator(self.it, mother=self)
+...
+&gt;&gt;&gt; foo = Foo()
+&gt;&gt;&gt; for a, b in zip(foo, foo):
+...     a, b
+... 
+(0, 0)
+(1, 1)
+(2, 2)
+(3, 3)
+(4, 4)
+&gt;&gt;&gt; list(foo)
+[0, 1, 2, 3, 4]
+&gt;&gt;&gt;
+</code></pre>
+<p>Example sans classe</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; it = iter(range(5))
+&gt;&gt;&gt; for a, b in zip(RecallingIterator(it), RecallingIterator(it)):
+...     a, b
+... 
+(0, 0)
+(1, 1)
+(2, 2)
+(3, 3)
+(4, 4)
+&gt;&gt;&gt; list(RecallingIterator(it))
+[0, 1, 2, 3, 4]
+&gt;&gt;&gt;
+</code></pre>
+<h2 id="paremeters">Paremeters</h2>
+<p>mother : object
+Instance de la classe dans laquelle on met cet iterateur.
+Si il est omis, la memoire est globale et ne sera pas netoyee
+par le ramasse-miette. Il est conseille si possible fournir 'mother'.
+base_iterator : iterator
+L'iterateur epuisable, qui ne doit en tout et pour tout
+etre parcouru qu'une seule fois.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RecallingIterator:
+    &#34;&#34;&#34;
+    ** Permet d&#39;iterer plusieurs instances d&#39;un unique generateur. **
+
+    Examples
+    --------
+    Example avec une classe.
+    &gt;&gt;&gt; from laue.utilities.multi_core import RecallingIterator
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; class Foo:
+    ...     def __init__(self):
+    ...         self.it = iter(range(5))
+    ...     def __iter__(self):
+    ...         yield from RecallingIterator(self.it, mother=self)
+    ...
+    &gt;&gt;&gt; foo = Foo()
+    &gt;&gt;&gt; for a, b in zip(foo, foo):
+    ...     a, b
+    ... 
+    (0, 0)
+    (1, 1)
+    (2, 2)
+    (3, 3)
+    (4, 4)
+    &gt;&gt;&gt; list(foo)
+    [0, 1, 2, 3, 4]
+    &gt;&gt;&gt;
+
+    Example sans classe
+    &gt;&gt;&gt; it = iter(range(5))
+    &gt;&gt;&gt; for a, b in zip(RecallingIterator(it), RecallingIterator(it)):
+    ...     a, b
+    ... 
+    (0, 0)
+    (1, 1)
+    (2, 2)
+    (3, 3)
+    (4, 4)
+    &gt;&gt;&gt; list(RecallingIterator(it))
+    [0, 1, 2, 3, 4]
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    def __init__(self, base_iterator, *, mother=None):
+        &#34;&#34;&#34;
+        Paremeters
+        ----------
+        mother : object
+            Instance de la classe dans laquelle on met cet iterateur.
+            Si il est omis, la memoire est globale et ne sera pas netoyee
+            par le ramasse-miette. Il est conseille si possible fournir &#39;mother&#39;.
+        base_iterator : iterator
+            L&#39;iterateur epuisable, qui ne doit en tout et pour tout
+            etre parcouru qu&#39;une seule fois.
+        &#34;&#34;&#34;
+        self.mother = mother
+        self.base_iterator = base_iterator
+        self.signature = hashlib.md5(id(base_iterator).to_bytes(16, &#34;big&#34;)).hexdigest()
+
+        self.stape = 0 # Le rang de l&#39;element suivant a ceder.
+
+        # Mise en place du verrou.
+        lock_name = f&#34;_lock_{self.signature}&#34;
+        if self.mother is not None:
+            if not hasattr(self.mother, lock_name):
+                setattr(self.mother, lock_name, multiprocessing.Lock())
+            self.lock = getattr(self.mother, lock_name)
+        else:
+            if lock_name not in globals():
+                globals()[lock_name] = multiprocessing.Lock()
+            self.lock = globals()[lock_name]
+
+        # Mise en place de la memoire pour reiterer.
+        buffer_name = f&#34;_buffer_{self.signature}&#34;
+        if self.mother is not None:
+            if not hasattr(self.mother, buffer_name):
+                setattr(self.mother, buffer_name, [])
+            self.buffer = getattr(self.mother, buffer_name)
+        else:
+            if buffer_name not in globals():
+                globals()[buffer_name] = []
+            self.buffer = globals()[buffer_name]
+
+    def __iter__(self):
+        &#34;&#34;&#34;
+        ** Permet d&#39;etre mis dans une boucle for. **
+        &#34;&#34;&#34;
+        return self
+
+    def __next__(self):
+        &#34;&#34;&#34;
+        ** Itere de facon intrementale. **
+
+        Raises
+        ------
+        StopIteration
+            Quand tous les paquets sont cedes.
+        &#34;&#34;&#34;
+        with self.lock:
+            # Si il ne faut pas iterer &#39;base_iterator&#39;
+            if self.stape &lt; len(self.buffer):
+                self.stape += 1
+                return self.buffer[self.stape-1]
+
+            # Si il faut iterer.
+            while True:
+                try:
+                    element = next(self.base_iterator)
+                except ValueError: # precisement: generator already executing
+                    time.sleep(.1) # On attend 100 ms avant de retenter.
+                else:
+                    self.buffer.append(element)
+                    self.stape += 1
+                    return element</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#outils-pour-le-paralelisme">Outils pour le paralelisme.</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="laue.utilities" href="index.html">laue.utilities</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="laue.utilities.multi_core.limited_imap" href="#laue.utilities.multi_core.limited_imap">limited_imap</a></code></li>
+<li><code><a title="laue.utilities.multi_core.pickleable_method" href="#laue.utilities.multi_core.pickleable_method">pickleable_method</a></code></li>
+<li><code><a title="laue.utilities.multi_core.prevent_generator_size" href="#laue.utilities.multi_core.prevent_generator_size">prevent_generator_size</a></code></li>
+<li><code><a title="laue.utilities.multi_core.reduce_object" href="#laue.utilities.multi_core.reduce_object">reduce_object</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="laue.utilities.multi_core.RecallingIterator" href="#laue.utilities.multi_core.RecallingIterator">RecallingIterator</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

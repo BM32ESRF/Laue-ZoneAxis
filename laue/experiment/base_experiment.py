@@ -23,7 +23,7 @@ except ImportError:
     psutil = None
 
 from laue.diagram import LaueDiagram
-from laue import geometry
+from laue.core.geometry import transformer
 from laue.spot import Spot
 
 
@@ -85,7 +85,7 @@ class Experiment:
             Il servent dans la methode ``laue.experiment.base_experiment.Experiment.set_calibration``
             a accelerer la recherche ou a la rendre plus precise.
             Pour avoir le detail sur ces parametres, voir
-            ``laue.tools.parsing.extract_parameters``.
+            ``laue.utilities.parsing.extract_parameters``.
         **bbox : number
             Ce sont les limites min et max des parametres de set_calibration a ne pas depasser.
             Les bornes minimum doivent etre precedes de '_min' et les maximum de '_max'.
@@ -139,7 +139,7 @@ class Experiment:
         # Precalul des constantes.
         self.kernel_font = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.font_size, self.font_size))
         self.kernel_dilate = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.max_space, self.max_space))
-        self.transformer = geometry.Transformer() # Outil permetant de faire les transformations geometriques.
+        self.transformer = transformer.Transformer() # Outil permetant de faire les transformations geometriques.
 
         # Declaration des attributs interne de memoire.
         self._len = None # Nombre de diagrames lues.
@@ -227,7 +227,7 @@ class Experiment:
                      "ycen": self.get_images_shape()[1]/2 + 150}
 
         # Recuperation des parametres fournis et deductibles.
-        from laue.tools.parsing import extract_parameters
+        from laue.utilities.parsing import extract_parameters
         given_parameters = extract_parameters(ignore_missing=True, **self.kwargs)
         if ("pixelsize" not in given_parameters) and (self.get_images_shape() in PIXELSIZE_REF):
             given_parameters["pixelsize"] = PIXELSIZE_REF[self.get_images_shape()]
@@ -524,8 +524,8 @@ class Experiment:
                     ) # Strategie car 'pickle' ne sais pas faire ca.
                 ser_self = cloudpickle.dumps(mini_self)
 
-                from laue.tools.multi_core import pickleable_method
-                from laue.tools.multi_core import limited_imap
+                from laue.utilities.multi_core import pickleable_method
+                from laue.utilities.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (
                         self._help_get_diagrams(name, image, spot_args=spot_args)
@@ -548,7 +548,7 @@ class Experiment:
         if self._diagrams_iterator is None:
             self._diagrams_iterator = iter(_diagram_extractor(self))
 
-        from laue.tools.multi_core import RecallingIterator
+        from laue.utilities.multi_core import RecallingIterator
         return (
             (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
             if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self)))
@@ -633,7 +633,7 @@ class Experiment:
             * False. Sinon, attend que tous les diagrammes soient lues afin de tout renvoyer en meme temps.
                 * C'est equvalent a ``[diag.find_subsets(**kwds) for diag in self]``.
                 * Au lieu de retourner un generateur, retourne une liste.
-        **kwds : number
+        **kwds
             Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_subsets``.
 
         Returns
@@ -676,8 +676,8 @@ class Experiment:
         @show_iterator_state
         def _subsets_extractor(self):
             if multiprocessing.current_process().name == "MainProcess":
-                from laue.subsets import _pickelable as atomic_find_subsets
-                from laue.tools.multi_core import limited_imap
+                from laue.core.subsets import _pickelable as atomic_find_subsets
+                from laue.utilities.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (
                         diag.find_subsets(_atomic_subsets_res=args)
@@ -702,7 +702,7 @@ class Experiment:
         if self._subsets_iterator is None:
             self._subsets_iterator = iter(_subsets_extractor(self))
 
-        from laue.tools.multi_core import RecallingIterator
+        from laue.utilities.multi_core import RecallingIterator
         return (lambda x: (yield from x))(RecallingIterator(self._subsets_iterator, mother=self))
 
     def find_zone_axes(self, *, tense_flow=False, **kwds):
@@ -730,7 +730,7 @@ class Experiment:
             * False. Sinon, attend que tous les diagrammes soient lues afin de tout renvoyer en meme temps.
                 * C'est equvalent a ``[diag.find_zone_axes(**kwds) for diag in self]``.
                 * Au lieu de retourner un generateur, retourne une liste.
-        **kwds : number
+        **kwds
             Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
 
         Returns
@@ -786,8 +786,8 @@ class Experiment:
                 transformer_ser = cloudpickle.dumps(self.transformer)
 
                 # Parallelisation des fils.
-                from laue.zone_axis import _get_zone_axes_pickle
-                from laue.tools.multi_core import limited_imap
+                from laue.core.zone_axes import _get_zone_axes_pickle
+                from laue.utilities.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (
                         diag.find_zone_axes(_axes_args=args)
@@ -813,7 +813,7 @@ class Experiment:
         if self._axes_iterator is None:
             self._axes_iterator = iter(_axes_extractor(self))
 
-        from laue.tools.multi_core import RecallingIterator
+        from laue.utilities.multi_core import RecallingIterator
         return (lambda x: (yield from x))(RecallingIterator(self._axes_iterator, mother=self))
 
     def _get_gnomonic_matrix(self):
@@ -857,8 +857,8 @@ class Experiment:
         # Fonction inverse.
         map_x, map_y = self.transformer.gnomonic_to_cam(
             *np.meshgrid(x_side, y_side, copy=False),
-            self.set_calibration())
-        map_x, map_y = map_x.astype(np.float32, copy=False), map_y.astype(np.float32, copy=False) # cv2 en a besoin.
+            self.set_calibration(), dtype=np.float32)
+        # map_x, map_y = map_x.astype(np.float32, copy=False), map_y.astype(np.float32, copy=False) # cv2 en a besoin.
 
         if self.verbose:
             print("\tOK: La matrice gnomonic est calculee.")
@@ -962,7 +962,7 @@ class Experiment:
         ...
         >>>
         """
-        from laue.tools.multi_core import RecallingIterator, prevent_generator_size
+        from laue.utilities.multi_core import RecallingIterator, prevent_generator_size
 
         def read_and_check_any_image(image_info, image_num):
             """
@@ -973,7 +973,7 @@ class Experiment:
             # Mise en forme.
             if isinstance(image_info, str):
                 image_name = image_info
-                from laue.tools.image import read_image
+                from laue.utilities.image import read_image
                 image = read_image(image_info, ignore_errors=self.ignore_errors)
                 if image is None:
                     return None, None
@@ -1070,7 +1070,7 @@ class Experiment:
         >>> import os, tempfile
         >>> import laue
         >>>
-        >>> images = "laue/examples/*.mccd"
+        >>> images = ["laue/examples/ge_blanc.mccd"]
         >>> rep = tempfile.mkdtemp()
         >>> expe = laue.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
         >>> expe.save_file(os.path.join(rep, "fit.det"))
@@ -1102,7 +1102,7 @@ class Experiment:
         ** Tente de liberer de la memoire. **
 
         Supprime tous les attributs qui sont suceptibles
-        de prendre de la place ne memoire.
+        de prendre de la place en memoire.
         """
         if self.verbose:
             print("Suppression des attributs facultatifs...")
@@ -1147,8 +1147,8 @@ class Experiment:
         >>> type(laue.Experiment(images)[:])
         <class 'list'>
         >>> len(laue.Experiment(images)[:])
-        1
-        >>> laue.Experiment(images)[1:]
+        2
+        >>> laue.Experiment(images)[2:]
         []
         >>>
         """

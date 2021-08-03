@@ -2,14 +2,14 @@
 
 """
 ** Permet de manipuler un lot de diagrammes de laue. **
-------------------------------------------------------
+-------------------------------------------------------
 
 Notes
 -----
 * Pour effectuer les bancs de tests, il faut installer le module ``pip install pytest``.
     Il faut ensuite saisir la commande suivante:
-    * ``clear && pytest --disable-warnings --doctest-modules laue/
-        && pytest -v --exitfirst laue/tools/tests.py && cat tests_results.txt``
+    * ``clear && pytest --doctest-modules laue/
+        && pytest -vv --exitfirst laue/tests.py && cat tests_results.txt``
 * Pour generer la documentation, il faut installer le module ``pip install pdoc3``.
     Il faut ensuite saisir la commande suivante:
     * ``pdoc3 laue/ -c latex_math=True --force --html``
@@ -43,13 +43,14 @@ recuperation des diagrammes
 # Pour faire passer les tests, il faut taper:
 # $ python3 -m pytest --doctest-modules laue && python3 -m pytest laue/tools/tests.py
 
-__all__ = ["Experiment",
+__all__ = ["Experiment", "Transformer",
            "atomic_find_zone_axes", "atomic_find_subsets"]
-__pdoc__ = {"Experiment.__getitem__": True,
+__pdoc__ = {"tests": False,
+            "Experiment.__getitem__": True,
             "Experiment.__iter__": True,
-            "Experiment.__len__": True,
-            "tools.fork_lambdify": False}
+            "Experiment.__len__": True}
 
 from laue.experiment.base_experiment import Experiment
-from laue.zone_axis import atomic_find_zone_axes
-from laue.subsets import atomic_find_subsets
+from laue.core.geometry.transformer import Transformer
+from laue.core.zone_axes import atomic_find_zone_axes
+from laue.core.subsets import atomic_find_subsets

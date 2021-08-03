@@ -45,7 +45,7 @@ if __name__ == "__main__":
         ## Robin's peak search
         diagram = laue.Experiment(files, threshold=3.5, dd=detectorplaneparameters[0], \
                                                         xcen=detectorplaneparameters[1],\
-                                                        ycen= detectorplaneparameters[2], \
+                                                        ycen=detectorplaneparameters[2], \
                                                         bet=detectorplaneparameters[3], \
                                                         gam=detectorplaneparameters[4])[0]
             

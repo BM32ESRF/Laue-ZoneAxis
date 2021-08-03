@@ -54,7 +54,7 @@ except ImportError:
     psutil = None
 
 from laue.spot import Spot
-from laue.subsets import Splitable
+from laue.core.subsets import Splitable
 
 
 __pdoc__ = {&#34;LaueDiagram.__contains__&#34;: True,
@@ -122,7 +122,7 @@ class LaueDiagram(Splitable):
             les diagrammes contenants beaucoup de spots a 20 pxl pour les petits.
             avec ``n`` le nombre de spots dans le diagramme.
         tol : float, optional
-            Alignement des points. Voir ``laue.geometry.Transformer.hough_reduce``
+            Alignement des points. Voir ``laue.core.geometry.transformer.Transformer.hough_reduce``
             pour avoir les informations precises sur &#39;tol&#39;. Par defaut
             cette valeur evolue exponentiellement entre 0.018 pour les diagrammes
             de 50 spots et 0.005 pour ceux de 600 spots.
@@ -167,11 +167,15 @@ class LaueDiagram(Splitable):
             return self.axes[(dmax, nbr, tol)]
 
         if _axes_args is None: # Si le travail n&#39;est pas premache.
-            from laue.zone_axis import _get_zone_axes_pickle
+            if self.experiment.verbose:
+                print(f&#34;Recherche des axes de {self.get_id()}...&#34;)
+            from laue.core.zone_axes import _get_zone_axes_pickle
             angles, dists, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
                 (self.experiment.transformer,
                 self.get_gnomonic_positions(),
                 dmax, nbr, tol))
+            if self.experiment.verbose:
+                print(f&#34;t\tOK: {len(axis_spots_ind)} axes trouves.&#34;)
         else:
             angles, dists, axis_spots_ind, spots_axes_ind = _axes_args
 
@@ -229,6 +233,9 @@ class LaueDiagram(Splitable):
         if self.image_gnom is not None:
             return self.image_gnom
 
+        if self.experiment.verbose:
+            print(f&#34;Image gnomonic de {self.get_id()}...&#34;)
+
         # Interpolation inverse vers l&#39;image finale.
         map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
         image_xy = self.get_image_xy()
@@ -237,6 +244,9 @@ class LaueDiagram(Splitable):
 
         if psutil is not None and psutil.virtual_memory().percent &lt; 75:
             self.image_gnom = image_gnom
+
+        if self.experiment.verbose:
+            print(f&#34;\tOK: Image gnomonic caluculee.&#34;)
 
         return image_gnom
 
@@ -277,7 +287,7 @@ class LaueDiagram(Splitable):
         if not os.path.exists(self.get_id()):
             raise NameError(f&#34;Impossible de trouver le fichier {repr(self.get_id())}.&#34;)
 
-        from laue.tools.image import read_image
+        from laue.utilities.image import read_image
         image = read_image(self.get_id())
 
         if psutil is not None and psutil.virtual_memory().percent &lt; 75:
@@ -400,6 +410,9 @@ class LaueDiagram(Splitable):
             raise TypeError(&#34;Seul les types &#39;int&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportees. &#34;
                 f&#34;Or le type fourni est {type(spot).__name__}.&#34;)
         
+        if self.experiment.verbose:
+            print(f&#34;Recherche des voisins du spot {spot}...&#34;)
+
         if space is None:
             space = &#34;camera&#34;
 
@@ -421,7 +434,10 @@ class LaueDiagram(Splitable):
                 raise ValueError(f&#34;Il faut selectioner au moin 1 voisin. {n_max} c&#39;est pas suffisant.&#34;)
             nbr = min(nbr, n_max)
 
-        return [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+        neighbors = [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+        if self.experiment.verbose:
+            print(f&#34;\tOK: il y a {len(neighbors)} voisins.&#34;)
+        return neighbors
 
     def select_spots(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -506,6 +522,8 @@ class LaueDiagram(Splitable):
             Same as ``LaueDiagram.select_spots``.
         sort : str or callable, optional
             Same as ``LaueDiagram.select_spots``.
+        **kwds
+            Les parametres de ``laue.spot.Spot.get_position``.
 
         Returns
         -------
@@ -517,19 +535,20 @@ class LaueDiagram(Splitable):
 
         Examples
         --------
+        &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_positions().shape
         (2, 78)
-        &gt;&gt;&gt; diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0])
-        array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
-               [1204.656  ,  907.2095 , 1296.9255 ,  492.425  ]], dtype=float32)
+        &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0]))
+        array([[ 132.,  160.,  192.,  214.],
+               [1205.,  907., 1297.,  492.]])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return np.array(
             [spot.get_position() for spot in self.select_spots(n=n, sort=sort)],
-            dtype=np.float32).transpose()
+            ).transpose()
 
     def get_gnomonic_positions(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -581,7 +600,7 @@ class LaueDiagram(Splitable):
         else:
             coord_gnomonic = np.array(
                 [spot.get_gnomonic() for spot in self.select_spots(n=n, sort=sort)],
-                dtype=np.float32).transpose()
+                ).transpose()
 
         return coord_gnomonic
 
@@ -601,10 +620,13 @@ class LaueDiagram(Splitable):
         Examples
         --------
         &gt;&gt;&gt; import laue
-        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
-        &gt;&gt;&gt; print(f&#34;quality: {diag.get_quality():.4f}&#34;)
+        &gt;&gt;&gt; images = (&#34;laue/examples/ge_blanc.mccd&#34;, &#34;laue/examples/roi1_0001.mccd&#34;)
+        &gt;&gt;&gt; diag1, diag2 = laue.Experiment(images)[:2]
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; print(f&#34;quality: {diag1.get_quality():.4f}&#34;)
         quality: 0.8344
+        &gt;&gt;&gt; print(f&#34;quality: {diag2.get_quality():.4f}&#34;)
+        quality: 0.5153
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         def f_nbr(x, n_best_min, n_best_max):
@@ -1145,7 +1167,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             les diagrammes contenants beaucoup de spots a 20 pxl pour les petits.
             avec ``n`` le nombre de spots dans le diagramme.
         tol : float, optional
-            Alignement des points. Voir ``laue.geometry.Transformer.hough_reduce``
+            Alignement des points. Voir ``laue.core.geometry.transformer.Transformer.hough_reduce``
             pour avoir les informations precises sur &#39;tol&#39;. Par defaut
             cette valeur evolue exponentiellement entre 0.018 pour les diagrammes
             de 50 spots et 0.005 pour ceux de 600 spots.
@@ -1190,11 +1212,15 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             return self.axes[(dmax, nbr, tol)]
 
         if _axes_args is None: # Si le travail n&#39;est pas premache.
-            from laue.zone_axis import _get_zone_axes_pickle
+            if self.experiment.verbose:
+                print(f&#34;Recherche des axes de {self.get_id()}...&#34;)
+            from laue.core.zone_axes import _get_zone_axes_pickle
             angles, dists, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
                 (self.experiment.transformer,
                 self.get_gnomonic_positions(),
                 dmax, nbr, tol))
+            if self.experiment.verbose:
+                print(f&#34;t\tOK: {len(axis_spots_ind)} axes trouves.&#34;)
         else:
             angles, dists, axis_spots_ind, spots_axes_ind = _axes_args
 
@@ -1252,6 +1278,9 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         if self.image_gnom is not None:
             return self.image_gnom
 
+        if self.experiment.verbose:
+            print(f&#34;Image gnomonic de {self.get_id()}...&#34;)
+
         # Interpolation inverse vers l&#39;image finale.
         map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
         image_xy = self.get_image_xy()
@@ -1260,6 +1289,9 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
 
         if psutil is not None and psutil.virtual_memory().percent &lt; 75:
             self.image_gnom = image_gnom
+
+        if self.experiment.verbose:
+            print(f&#34;\tOK: Image gnomonic caluculee.&#34;)
 
         return image_gnom
 
@@ -1300,7 +1332,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         if not os.path.exists(self.get_id()):
             raise NameError(f&#34;Impossible de trouver le fichier {repr(self.get_id())}.&#34;)
 
-        from laue.tools.image import read_image
+        from laue.utilities.image import read_image
         image = read_image(self.get_id())
 
         if psutil is not None and psutil.virtual_memory().percent &lt; 75:
@@ -1423,6 +1455,9 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             raise TypeError(&#34;Seul les types &#39;int&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportees. &#34;
                 f&#34;Or le type fourni est {type(spot).__name__}.&#34;)
         
+        if self.experiment.verbose:
+            print(f&#34;Recherche des voisins du spot {spot}...&#34;)
+
         if space is None:
             space = &#34;camera&#34;
 
@@ -1444,7 +1479,10 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
                 raise ValueError(f&#34;Il faut selectioner au moin 1 voisin. {n_max} c&#39;est pas suffisant.&#34;)
             nbr = min(nbr, n_max)
 
-        return [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+        neighbors = [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+        if self.experiment.verbose:
+            print(f&#34;\tOK: il y a {len(neighbors)} voisins.&#34;)
+        return neighbors
 
     def select_spots(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -1529,6 +1567,8 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             Same as ``LaueDiagram.select_spots``.
         sort : str or callable, optional
             Same as ``LaueDiagram.select_spots``.
+        **kwds
+            Les parametres de ``laue.spot.Spot.get_position``.
 
         Returns
         -------
@@ -1540,19 +1580,20 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
 
         Examples
         --------
+        &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; diag = laue.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_positions().shape
         (2, 78)
-        &gt;&gt;&gt; diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0])
-        array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
-               [1204.656  ,  907.2095 , 1296.9255 ,  492.425  ]], dtype=float32)
+        &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0]))
+        array([[ 132.,  160.,  192.,  214.],
+               [1205.,  907., 1297.,  492.]])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return np.array(
             [spot.get_position() for spot in self.select_spots(n=n, sort=sort)],
-            dtype=np.float32).transpose()
+            ).transpose()
 
     def get_gnomonic_positions(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -1604,7 +1645,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         else:
             coord_gnomonic = np.array(
                 [spot.get_gnomonic() for spot in self.select_spots(n=n, sort=sort)],
-                dtype=np.float32).transpose()
+                ).transpose()
 
         return coord_gnomonic
 
@@ -1624,10 +1665,13 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         Examples
         --------
         &gt;&gt;&gt; import laue
-        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
-        &gt;&gt;&gt; print(f&#34;quality: {diag.get_quality():.4f}&#34;)
+        &gt;&gt;&gt; images = (&#34;laue/examples/ge_blanc.mccd&#34;, &#34;laue/examples/roi1_0001.mccd&#34;)
+        &gt;&gt;&gt; diag1, diag2 = laue.Experiment(images)[:2]
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; print(f&#34;quality: {diag1.get_quality():.4f}&#34;)
         quality: 0.8344
+        &gt;&gt;&gt; print(f&#34;quality: {diag2.get_quality():.4f}&#34;)
+        quality: 0.5153
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         def f_nbr(x, n_best_min, n_best_max):
@@ -2072,7 +2116,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="laue.subsets.Splitable" href="subsets.html#laue.subsets.Splitable">Splitable</a></li>
+<li><a title="laue.core.subsets.Splitable" href="core/subsets.html#laue.core.subsets.Splitable">Splitable</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -2419,7 +2463,7 @@ Par defaut cette valeur evolue lineairement entre 5 pxl pour
 les diagrammes contenants beaucoup de spots a 20 pxl pour les petits.
 avec <code>n</code> le nombre de spots dans le diagramme.</dd>
 <dt><strong><code>tol</code></strong> :&ensp;<code>float</code>, optional</dt>
-<dd>Alignement des points. Voir <code><a title="laue.geometry.Transformer.hough_reduce" href="geometry.html#laue.geometry.Transformer.hough_reduce">Transformer.hough_reduce()</a></code>
+<dd>Alignement des points. Voir <code><a title="laue.core.geometry.transformer.Transformer.hough_reduce" href="core/geometry/transformer.html#laue.core.geometry.transformer.Transformer.hough_reduce">Transformer.hough_reduce()</a></code>
 pour avoir les informations precises sur 'tol'. Par defaut
 cette valeur evolue exponentiellement entre 0.018 pour les diagrammes
 de 50 spots et 0.005 pour ceux de 600 spots.</dd>
@@ -2465,7 +2509,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
         les diagrammes contenants beaucoup de spots a 20 pxl pour les petits.
         avec ``n`` le nombre de spots dans le diagramme.
     tol : float, optional
-        Alignement des points. Voir ``laue.geometry.Transformer.hough_reduce``
+        Alignement des points. Voir ``laue.core.geometry.transformer.Transformer.hough_reduce``
         pour avoir les informations precises sur &#39;tol&#39;. Par defaut
         cette valeur evolue exponentiellement entre 0.018 pour les diagrammes
         de 50 spots et 0.005 pour ceux de 600 spots.
@@ -2510,11 +2554,15 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
         return self.axes[(dmax, nbr, tol)]
 
     if _axes_args is None: # Si le travail n&#39;est pas premache.
-        from laue.zone_axis import _get_zone_axes_pickle
+        if self.experiment.verbose:
+            print(f&#34;Recherche des axes de {self.get_id()}...&#34;)
+        from laue.core.zone_axes import _get_zone_axes_pickle
         angles, dists, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
             (self.experiment.transformer,
             self.get_gnomonic_positions(),
             dmax, nbr, tol))
+        if self.experiment.verbose:
+            print(f&#34;t\tOK: {len(axis_spots_ind)} axes trouves.&#34;)
     else:
         angles, dists, axis_spots_ind, spots_axes_ind = _axes_args
 
@@ -2631,7 +2679,7 @@ array([[-0.1 , -0.21, -0.04, -0.35],
     else:
         coord_gnomonic = np.array(
             [spot.get_gnomonic() for spot in self.select_spots(n=n, sort=sort)],
-            dtype=np.float32).transpose()
+            ).transpose()
 
     return coord_gnomonic</code></pre>
 </details>
@@ -2755,6 +2803,9 @@ array([[0, 0, 0, ..., 0, 0, 0],
     if self.image_gnom is not None:
         return self.image_gnom
 
+    if self.experiment.verbose:
+        print(f&#34;Image gnomonic de {self.get_id()}...&#34;)
+
     # Interpolation inverse vers l&#39;image finale.
     map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
     image_xy = self.get_image_xy()
@@ -2763,6 +2814,9 @@ array([[0, 0, 0, ..., 0, 0, 0],
 
     if psutil is not None and psutil.virtual_memory().percent &lt; 75:
         self.image_gnom = image_gnom
+
+    if self.experiment.verbose:
+        print(f&#34;\tOK: Image gnomonic caluculee.&#34;)
 
     return image_gnom</code></pre>
 </details>
@@ -2839,7 +2893,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
     if not os.path.exists(self.get_id()):
         raise NameError(f&#34;Impossible de trouver le fichier {repr(self.get_id())}.&#34;)
 
-    from laue.tools.image import read_image
+    from laue.utilities.image import read_image
     image = read_image(self.get_id())
 
     if psutil is not None and psutil.virtual_memory().percent &lt; 75:
@@ -3021,6 +3075,9 @@ True
         raise TypeError(&#34;Seul les types &#39;int&#39;, &#39;tuple&#39; et &#39;Spot&#39; sont supportees. &#34;
             f&#34;Or le type fourni est {type(spot).__name__}.&#34;)
     
+    if self.experiment.verbose:
+        print(f&#34;Recherche des voisins du spot {spot}...&#34;)
+
     if space is None:
         space = &#34;camera&#34;
 
@@ -3042,7 +3099,10 @@ True
             raise ValueError(f&#34;Il faut selectioner au moin 1 voisin. {n_max} c&#39;est pas suffisant.&#34;)
         nbr = min(nbr, n_max)
 
-    return [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]</code></pre>
+    neighbors = [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+    if self.experiment.verbose:
+        print(f&#34;\tOK: il y a {len(neighbors)} voisins.&#34;)
+    return neighbors</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.get_positions"><code class="name flex">
@@ -3056,6 +3116,8 @@ True
 <dd>Same as <code><a title="laue.diagram.LaueDiagram.select_spots" href="#laue.diagram.LaueDiagram.select_spots">LaueDiagram.select_spots()</a></code>.</dd>
 <dt><strong><code>sort</code></strong> :&ensp;<code>str</code> or <code>callable</code>, optional</dt>
 <dd>Same as <code><a title="laue.diagram.LaueDiagram.select_spots" href="#laue.diagram.LaueDiagram.select_spots">LaueDiagram.select_spots()</a></code>.</dd>
+<dt><strong><code>**kwds</code></strong></dt>
+<dd>Les parametres de <code><a title="laue.spot.Spot.get_position" href="spot.html#laue.spot.Spot.get_position">Spot.get_position()</a></code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3070,14 +3132,15 @@ True
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_positions().shape
 (2, 78)
-&gt;&gt;&gt; diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0])
-array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
-       [1204.656  ,  907.2095 , 1296.9255 ,  492.425  ]], dtype=float32)
+&gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0]))
+array([[ 132.,  160.,  192.,  214.],
+       [1205.,  907., 1297.,  492.]])
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -3094,6 +3157,8 @@ array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
         Same as ``LaueDiagram.select_spots``.
     sort : str or callable, optional
         Same as ``LaueDiagram.select_spots``.
+    **kwds
+        Les parametres de ``laue.spot.Spot.get_position``.
 
     Returns
     -------
@@ -3105,19 +3170,20 @@ array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
 
     Examples
     --------
+    &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image)[0]
     &gt;&gt;&gt; diag.get_positions().shape
     (2, 78)
-    &gt;&gt;&gt; diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0])
-    array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
-           [1204.656  ,  907.2095 , 1296.9255 ,  492.425  ]], dtype=float32)
+    &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0]))
+    array([[ 132.,  160.,  192.,  214.],
+           [1205.,  907., 1297.,  492.]])
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     return np.array(
         [spot.get_position() for spot in self.select_spots(n=n, sort=sort)],
-        dtype=np.float32).transpose()</code></pre>
+        ).transpose()</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.get_quality"><code class="name flex">
@@ -3140,10 +3206,13 @@ array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
 </dl>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
-&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
-&gt;&gt;&gt; print(f&quot;quality: {diag.get_quality():.4f}&quot;)
+&gt;&gt;&gt; images = (&quot;laue/examples/ge_blanc.mccd&quot;, &quot;laue/examples/roi1_0001.mccd&quot;)
+&gt;&gt;&gt; diag1, diag2 = laue.Experiment(images)[:2]
+&gt;&gt;&gt;
+&gt;&gt;&gt; print(f&quot;quality: {diag1.get_quality():.4f}&quot;)
 quality: 0.8344
+&gt;&gt;&gt; print(f&quot;quality: {diag2.get_quality():.4f}&quot;)
+quality: 0.5153
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -3166,10 +3235,13 @@ quality: 0.8344
     Examples
     --------
     &gt;&gt;&gt; import laue
-    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
-    &gt;&gt;&gt; print(f&#34;quality: {diag.get_quality():.4f}&#34;)
+    &gt;&gt;&gt; images = (&#34;laue/examples/ge_blanc.mccd&#34;, &#34;laue/examples/roi1_0001.mccd&#34;)
+    &gt;&gt;&gt; diag1, diag2 = laue.Experiment(images)[:2]
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; print(f&#34;quality: {diag1.get_quality():.4f}&#34;)
     quality: 0.8344
+    &gt;&gt;&gt; print(f&#34;quality: {diag2.get_quality():.4f}&#34;)
+    quality: 0.5153
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     def f_nbr(x, n_best_min, n_best_max):
@@ -3677,9 +3749,9 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="laue.subsets.Splitable" href="subsets.html#laue.subsets.Splitable">Splitable</a></b></code>:
+<li><code><b><a title="laue.core.subsets.Splitable" href="core/subsets.html#laue.core.subsets.Splitable">Splitable</a></b></code>:
 <ul class="hlist">
-<li><code><a title="laue.subsets.Splitable.find_subsets" href="subsets.html#laue.subsets.Splitable.find_subsets">find_subsets</a></code></li>
+<li><code><a title="laue.core.subsets.Splitable.find_subsets" href="core/subsets.html#laue.core.subsets.Splitable.find_subsets">find_subsets</a></code></li>
 </ul>
 </li>
 </ul>

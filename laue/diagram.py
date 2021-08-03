@@ -21,7 +21,7 @@ except ImportError:
     psutil = None
 
 from laue.spot import Spot
-from laue.subsets import Splitable
+from laue.core.subsets import Splitable
 
 
 __pdoc__ = {"LaueDiagram.__contains__": True,
@@ -89,7 +89,7 @@ class LaueDiagram(Splitable):
             les diagrammes contenants beaucoup de spots a 20 pxl pour les petits.
             avec ``n`` le nombre de spots dans le diagramme.
         tol : float, optional
-            Alignement des points. Voir ``laue.geometry.Transformer.hough_reduce``
+            Alignement des points. Voir ``laue.core.geometry.transformer.Transformer.hough_reduce``
             pour avoir les informations precises sur 'tol'. Par defaut
             cette valeur evolue exponentiellement entre 0.018 pour les diagrammes
             de 50 spots et 0.005 pour ceux de 600 spots.
@@ -134,11 +134,15 @@ class LaueDiagram(Splitable):
             return self.axes[(dmax, nbr, tol)]
 
         if _axes_args is None: # Si le travail n'est pas premache.
-            from laue.zone_axis import _get_zone_axes_pickle
+            if self.experiment.verbose:
+                print(f"Recherche des axes de {self.get_id()}...")
+            from laue.core.zone_axes import _get_zone_axes_pickle
             angles, dists, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
                 (self.experiment.transformer,
                 self.get_gnomonic_positions(),
                 dmax, nbr, tol))
+            if self.experiment.verbose:
+                print(f"t\tOK: {len(axis_spots_ind)} axes trouves.")
         else:
             angles, dists, axis_spots_ind, spots_axes_ind = _axes_args
 
@@ -196,6 +200,9 @@ class LaueDiagram(Splitable):
         if self.image_gnom is not None:
             return self.image_gnom
 
+        if self.experiment.verbose:
+            print(f"Image gnomonic de {self.get_id()}...")
+
         # Interpolation inverse vers l'image finale.
         map_x, map_y, _ = self.experiment._get_gnomonic_matrix()
         image_xy = self.get_image_xy()
@@ -204,6 +211,9 @@ class LaueDiagram(Splitable):
 
         if psutil is not None and psutil.virtual_memory().percent < 75:
             self.image_gnom = image_gnom
+
+        if self.experiment.verbose:
+            print(f"\tOK: Image gnomonic caluculee.")
 
         return image_gnom
 
@@ -244,7 +254,7 @@ class LaueDiagram(Splitable):
         if not os.path.exists(self.get_id()):
             raise NameError(f"Impossible de trouver le fichier {repr(self.get_id())}.")
 
-        from laue.tools.image import read_image
+        from laue.utilities.image import read_image
         image = read_image(self.get_id())
 
         if psutil is not None and psutil.virtual_memory().percent < 75:
@@ -367,6 +377,9 @@ class LaueDiagram(Splitable):
             raise TypeError("Seul les types 'int', 'tuple' et 'Spot' sont supportees. "
                 f"Or le type fourni est {type(spot).__name__}.")
         
+        if self.experiment.verbose:
+            print(f"Recherche des voisins du spot {spot}...")
+
         if space is None:
             space = "camera"
 
@@ -388,7 +401,10 @@ class LaueDiagram(Splitable):
                 raise ValueError(f"Il faut selectioner au moin 1 voisin. {n_max} c'est pas suffisant.")
             nbr = min(nbr, n_max)
 
-        return [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+        neighbors = [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+        if self.experiment.verbose:
+            print(f"\tOK: il y a {len(neighbors)} voisins.")
+        return neighbors
 
     def select_spots(self, *, n=None, sort=None):
         """
@@ -473,6 +489,8 @@ class LaueDiagram(Splitable):
             Same as ``LaueDiagram.select_spots``.
         sort : str or callable, optional
             Same as ``LaueDiagram.select_spots``.
+        **kwds
+            Les parametres de ``laue.spot.Spot.get_position``.
 
         Returns
         -------
@@ -484,19 +502,20 @@ class LaueDiagram(Splitable):
 
         Examples
         --------
+        >>> import numpy as np
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> diag = laue.Experiment(image)[0]
         >>> diag.get_positions().shape
         (2, 78)
-        >>> diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0])
-        array([[ 132.0286 ,  160.35379,  192.01744,  214.02731],
-               [1204.656  ,  907.2095 , 1296.9255 ,  492.425  ]], dtype=float32)
+        >>> np.round(diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0]))
+        array([[ 132.,  160.,  192.,  214.],
+               [1205.,  907., 1297.,  492.]])
         >>>
         """
         return np.array(
             [spot.get_position() for spot in self.select_spots(n=n, sort=sort)],
-            dtype=np.float32).transpose()
+            ).transpose()
 
     def get_gnomonic_positions(self, *, n=None, sort=None):
         """
@@ -548,7 +567,7 @@ class LaueDiagram(Splitable):
         else:
             coord_gnomonic = np.array(
                 [spot.get_gnomonic() for spot in self.select_spots(n=n, sort=sort)],
-                dtype=np.float32).transpose()
+                ).transpose()
 
         return coord_gnomonic
 
@@ -568,10 +587,13 @@ class LaueDiagram(Splitable):
         Examples
         --------
         >>> import laue
-        >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
-        >>> print(f"quality: {diag.get_quality():.4f}")
+        >>> images = ("laue/examples/ge_blanc.mccd", "laue/examples/roi1_0001.mccd")
+        >>> diag1, diag2 = laue.Experiment(images)[:2]
+        >>>
+        >>> print(f"quality: {diag1.get_quality():.4f}")
         quality: 0.8344
+        >>> print(f"quality: {diag2.get_quality():.4f}")
+        quality: 0.5153
         >>>
         """
         def f_nbr(x, n_best_min, n_best_max):
