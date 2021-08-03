@@ -1,6 +1,9 @@
 resultats/
-laue/geometry.data
-laue/__pycache__
-laue/tools/__pycache__
+laue/data/geometry.data
+laue/__pycache__/
+laue/experiment/__pycache__/
+laue/core/__pycache__/
+laue/core/geometry/__pycache__/
+laue/utilities/__pycache__/
 zoneaxis_nn_test/
 
