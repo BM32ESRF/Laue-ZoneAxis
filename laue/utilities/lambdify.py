@@ -12,10 +12,12 @@ Notes
 Si le module ``numexpr`` est installe, certaines optimisations pourront etre faites.
 """
 
+import numbers
+import time
+
 import cloudpickle
 import numpy as np
 import sympy
-import time
 
 from laue.utilities.fork_lambdify import lambdify
 
@@ -161,19 +163,30 @@ def cse_homogeneous(exprs, **kwargs):
     else:
         return replacements, reduced_exprs
 
-def evalf(x, n=15, **options):
+def evalf(x, n=15):
     """
     ** Alias vers ``sympy.N``. **
 
     Gere recursivement les objets qui n'ont pas
     de methodes ``evalf``.
     """
+    if isinstance(x, (sympy.Atom, numbers.Number)):
+        if str(x) == "pi":
+            return sympy.pi.evalf(n=n)
+        if str(x) == "E":
+            return sympy.E.evalf(n=n)
+        return x
     try:
-        return sympy.N(x, n=n, **options)
-    except AttributeError:
         if isinstance(x, (tuple, list, set)):
-            return type(x)([evalf(e) for e in x])
-        return type(x)(*(evalf(e) for e in x.args))
+            x = type(x)([evalf(e, n=n) for e in x])
+        else:
+            x = type(x)(*(evalf(e, n=n) for e in x.args))
+    except AttributeError:
+        pass
+    try:
+        return sympy.N(x, n=n)
+    except AttributeError:
+        return x
 
 def simplify(x, **kwargs):
     """
@@ -182,7 +195,7 @@ def simplify(x, **kwargs):
     Gere recursivement les objets qui n'ont pas
     de methodes pour etre directement simplifiables.
 
-    Ajoute une factorisation recursive affin de privilegier
+    Ajoute une factorisation recursive afin de privilegier
     les "*" plutot que les "+" de sorte a reduire les erreurs
     de calcul.
     """
@@ -221,11 +234,8 @@ def time_cost(x):
     l'argument ``measure``. Cette metrique permet de minimiser
     le temps de calcul plutot que l'elegence de l'expression.
     """
-    # if hasattr(x, "__iter__"):
-    #     return sum(time_cost(x_) for x_ in x)
-
     defs, rvs = cse_minimize_memory(*sympy.cse(x))
-    return sum(sympy.count_ops(expr) for var, expr in defs)
+    return sum(sympy.count_ops(expr) for var, expr in defs) + len(defs)
 
 
 class Lambdify:
@@ -250,10 +260,19 @@ class Lambdify:
         self.expr = expr
 
         # Preparation vectoriele.
-        self.n_expr = simplify(evalf(self.expr), measure=time_cost, inverse=True) if _simplify else self.expr
-        self.fct = lambdify(self.args, self.n_expr, cse=True, modules="numpy")
+        if _simplify:
+            self.expr = evalf(
+                simplify(
+                    self.expr,
+                    measure=time_cost,
+                    inverse=True,
+                    rational=False
+                ),
+                n=25
+            )
+        self.fct = lambdify(self.args, self.expr, cse=True, modules="numpy")
         try:
-            self.fct_numexpr = lambdify(self.args, self.n_expr, cse=True, modules="numexpr")
+            self.fct_numexpr = lambdify(self.args, self.expr, cse=True, modules="numexpr")
         except (TypeError, RuntimeError):
             self.fct_numexpr = None
 
@@ -270,7 +289,6 @@ class Lambdify:
         def _lambdifygenerated(x, y):
             x0 = x + y
             _0 = x0 + cos(x0)
-            del x0
             return _0
         >>>
         """
@@ -381,7 +399,6 @@ class Lambdify:
             {
                 "args": self.args,
                 "expr": self.expr,
-                "n_expr": self.n_expr
             }
         )
 
@@ -405,6 +422,4 @@ class Lambdify:
         >>>
         """
         attr = cloudpickle.loads(data)
-        l = Lambdify(attr["args"], attr["n_expr"], _simplify=False)
-        l.expr = attr["expr"]
-        return l
+        return Lambdify(attr["args"], attr["expr"], _simplify=False)

@@ -161,6 +161,76 @@ class LaueDiagram(Splitable):
             spot.axes = {self.axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
         return self.axes[(dmax, nbr, tol)]
 
+    def get_gnomonic_positions(self, *, n=None, sort=None):
+        """
+        ** Recupere la position des spots dans le plan gnomonic. **
+
+        Parameters
+        ----------
+        n : int, optional
+            Same as ``LaueDiagram.select_spots``.
+        sort : str or callable, optional
+            Same as ``LaueDiagram.select_spots``.
+
+        Returns
+        -------
+        coordonees : np.ndarray
+            * Le vecteur des coordonnees x puis le vecteur y. (en mm)
+            * La shape de retour est (2, nbr_spots)
+
+        Raises
+        ------
+        AttributError
+            Si il manque des infos pour satisfaire cette demande.
+            En general l'un des parametres de set_calibration.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag.get_gnomonic_positions().shape
+        (2, 78)
+        >>> np.round(diag.get_gnomonic_positions(n=4, sort="quality"), 2)
+        array([[ 0.25,  0.08,  0.27, -0.26],
+               [ 0.32,  0.01, -0.3 , -0.2 ]], dtype=float32)
+        >>>
+        """
+        # On calcul les projections pour tous les points a la fois.
+        if self.spots[0]._gnomonic is None:
+            coords_gnomonic = self.experiment.transformer.cam_to_gnomonic(
+                *self.get_positions(n=n, sort=sort),
+                self.experiment.set_calibration())
+            for spot, xg, yg in zip(self, *coords_gnomonic):
+                spot._gnomonic = (xg, yg)
+        # On extrait juste ce qu'il nous interresse.
+        else:
+            coords_gnomonic = np.array(
+                [spot.get_gnomonic() for spot in self.select_spots(n=n, sort=sort)],
+                ).transpose()
+
+        return coords_gnomonic
+
+    def get_id(self):
+        """
+        ** Retourne le nom du diagramme. **
+
+        * Dans la mesure du possible, le nom du diagramme est le chemin
+        d'acces au fichier image qui a permis de constituer le diagramme.
+        * Si le chemin d'acces est inconnu, un nom par defaut unique est genere.
+
+        Examples
+        --------
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image)[0]
+        >>> diag.get_id()
+        'laue/examples/ge_blanc.mccd'
+        >>>
+        """
+        return self.name
+
     def get_image_gnomonic(self):
         """
         ** Recupere le contenu de l'image d'un diagramme projete dans le plan gnomonic. **
@@ -261,25 +331,6 @@ class LaueDiagram(Splitable):
             self.image_xy = image
 
         return image
-
-    def get_id(self):
-        """
-        ** Retourne le nom du diagramme. **
-
-        * Dans la mesure du possible, le nom du diagramme est le chemin
-        d'acces au fichier image qui a permis de constituer le diagramme.
-        * Si le chemin d'acces est inconnu, un nom par defaut unique est genere.
-
-        Examples
-        --------
-        >>> import laue
-        >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
-        >>> diag.get_id()
-        'laue/examples/ge_blanc.mccd'
-        >>>
-        """
-        return self.name
 
     def get_neighbors(self, spot, *, space=None, n_max=None, d_max=None):
         """
@@ -406,80 +457,7 @@ class LaueDiagram(Splitable):
             print(f"\tOK: il y a {len(neighbors)} voisins.")
         return neighbors
 
-    def select_spots(self, *, n=None, sort=None):
-        """
-        ** Recupere une partie des spots. **
-
-        Notes
-        -----
-        Les pointeurs des spots renvoyes sont dupliques, c'est une copie superficielle.
-        Une suppression ou un ajout de spot dans la liste ne changera pas le diagramme
-        par contre une modification d'un attribut d'un des spots va etre effectif,
-        et modifira donc definitivement le spot considere.
-
-        Parameters
-        ----------
-        n : int, optional
-            Nombre de spots a considerer. La valeur ``None`` indique
-            que tous les spots sont renvoyes.
-        sort : str or callable, optional
-            - None => Les spots ne sont pas tries (le plus rapide). Ils sont cedes dans
-            un ordre quelquonque mais systematique. L'ordre reste inchange entre 2 appels.
-            - callable => Clef de tri, qui a chaque spot de type ``laue.spot.Spot``.
-            associe un flotant. Les spots ayant des petits flottant se retrouveront
-            au debut, ceux avec un gros seront en fin de chaine.
-            - str => La methode de tri. Il y en a plusieurs possibles:
-                - "intensity" => Les spots sont renvoyes des plus intenses aux plus faibles.
-                - "distortion" => Les spots sont renvoyes des plus rond aux plus biscornus.
-                - "quality" => Les spots sont renvoyes des plus beau aux plus moches.
-
-        Returns
-        -------
-        list
-            La liste des spots. Chaque element est de type ``laue.spot.Spot``.
-
-        Examples
-        --------
-        >>> import laue
-        >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
-        >>> diag.select_spots(n=2, sort="intensity")
-        [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
-        >>> diag.select_spots(n=2, sort="distortion")
-        [Spot(position=(932.05, 1214.49), quality=0.940), Spot(position=(622.09, 1656.72), quality=0.949)]
-        >>> diag.select_spots(n=2, sort=lambda spot: spot.get_position()[0])
-        [Spot(position=(132.03, 1204.66), quality=0.577), Spot(position=(160.35, 907.21), quality=0.621)]
-        >>>
-        """
-        assert n is None or isinstance(n, int), f"'n' can not be {type(n).__name__}."
-        assert n is None or n > 0, f"'n' can not be {n}."
-        assert (sort is None or hasattr(sort, "__call__")
-            or sort in {"intensity", "distortion", "quality"}), \
-            f"'sort' ne peut pas etre {sort}."
-
-        if sort is None: # Si il n'y a pas de tri a faire.
-            if n is None:
-                return self.spots.copy()
-            return self.spots[:n]
-
-        if hasattr(sort, "__call__"):
-            l_spots = sorted(self.spots, key=sort)
-        if sort in self.sorted_spots: # On enregistre la liste pour de melleur
-            l_spots = self.sorted_spots[sort] #  perfs aux apels suivants.
-        else:
-            if sort == "intensity":
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_intensity()))
-            elif sort == "distortion":
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_distortion()))
-            elif sort == "quality":
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_quality()))
-            self.sorted_spots[sort] = l_spots
-
-        if n is not None:
-            return l_spots[:n]
-        return l_spots
-
-    def get_positions(self, *, n=None, sort=None):
+    def get_positions(self, *, n=None, sort=None, **kwds):
         """
         ** Recupere la position des spots dans le plan de la camera. **
 
@@ -497,8 +475,6 @@ class LaueDiagram(Splitable):
         np.ndarray
             * Le vecteur des coordonnees x puis le vecteur des y. (en pxl)
             * La shape de retour est (2, nbr_spots).
-            * Les spots ne sont pas tries, l'ordre est le meme que
-            ``LaueDiagram.select_spots`` sans argument.
 
         Examples
         --------
@@ -508,68 +484,14 @@ class LaueDiagram(Splitable):
         >>> diag = laue.Experiment(image)[0]
         >>> diag.get_positions().shape
         (2, 78)
-        >>> np.round(diag.get_positions(n=4, sort=lambda spot: spot.get_position()[0]))
-        array([[ 132.,  160.,  192.,  214.],
-               [1205.,  907., 1297.,  492.]])
+        >>> np.round(diag.get_positions(n=4, sort="quality"))
+        array([[ 622.,  932., 1243., 1276.],
+               [1657., 1214., 1661.,  599.]])
         >>>
         """
         return np.array(
-            [spot.get_position() for spot in self.select_spots(n=n, sort=sort)],
+            [spot.get_position(**kwds) for spot in self.select_spots(n=n, sort=sort)],
             ).transpose()
-
-    def get_gnomonic_positions(self, *, n=None, sort=None):
-        """
-        ** Recupere la position des spots dans le plan gnomonic. **
-
-        Parameters
-        ----------
-        n : int, optional
-            Same as ``LaueDiagram.select_spots``.
-        sort : str or callable, optional
-            Same as ``LaueDiagram.select_spots``.
-
-        Returns
-        -------
-        coordonees : np.ndarray
-            * Le vecteur des coordonnees x puis le vecteur y. (en mm)
-            * La shape de retour est (2, nbr_spots)
-
-        Raises
-        ------
-        AttributError
-            Si il manque des infos pour satisfaire cette demande.
-            En general l'un des parametres de set_calibration.
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> import laue
-        >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
-        >>> diag.get_gnomonic_positions().shape
-        (2, 78)
-        >>> np.round(
-        ...     diag.get_gnomonic_positions(n=4, sort=lambda spot: spot.get_position()[0]),
-        ...     2)
-        ...
-        array([[-0.1 , -0.21, -0.04, -0.35],
-               [ 0.58,  0.48,  0.57,  0.37]], dtype=float32)
-        >>>
-        """
-        # On calcul les projections pour tous les points a la fois.
-        if self.spots[0].gnomonic is None:
-            coord_gnomonic = self.experiment.transformer.cam_to_gnomonic(
-                *self.get_positions(n=n, sort=sort),
-                self.experiment.set_calibration())
-            for spot, xg, yg in zip(self, *coord_gnomonic):
-                spot.gnomonic = (xg, yg)
-        # On extrait juste ce qu'il nous interresse.
-        else:
-            coord_gnomonic = np.array(
-                [spot.get_gnomonic() for spot in self.select_spots(n=n, sort=sort)],
-                ).transpose()
-
-        return coord_gnomonic
 
     def get_quality(self):
         r"""
@@ -617,6 +539,51 @@ class LaueDiagram(Splitable):
 
         self.quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
         return self.quality
+
+    def get_theta_chi(self, *, n=None, sort=None):
+        """
+        ** Recupere la representation angulaire des spots. **
+
+        Parameters
+        ----------
+        n : int, optional
+            Same as ``LaueDiagram.select_spots``.
+        sort : str or callable, optional
+            Same as ``LaueDiagram.select_spots``.
+
+        Returns
+        -------
+        np.ndarray
+            * Le vecteur des angles theta puis chi. (en deg)
+            * La shape de retour est (2, nbr_spots).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag.get_theta_chi().shape
+        (2, 78)
+        >>> np.round(diag.get_theta_chi(n=4, sort="quality"))
+        array([[ 29.,  40.,  29.,  58.],
+               [ 20.,   1., -18., -21.]], dtype=float32)
+        >>>
+        """
+        # On calcul les projections pour tous les points a la fois.
+        if self.spots[0]._thetachi is None:
+            angles_thetachi = self.experiment.transformer.cam_to_thetachi(
+                *self.get_positions(n=n, sort=sort),
+                self.experiment.set_calibration())
+            for spot, theta, chi in zip(self, *angles_thetachi):
+                spot._thetachi = (theta, chi)
+        # On extrait juste ce qu'il nous interresse.
+        else:
+            angles_thetachi = np.array(
+                [spot.get_theta_chi() for spot in self.select_spots(n=n, sort=sort)],
+                ).transpose()
+
+        return angles_thetachi
 
     def plot_all(self, *, display=True):
         """
@@ -839,6 +806,79 @@ class LaueDiagram(Splitable):
         elif ext in {"jpg", "jpeg", "svg", "png"}:
             plt = self.show(_return=True)
             plt.savefig(filename)
+
+    def select_spots(self, *, n=None, sort=None):
+        """
+        ** Recupere une partie des spots. **
+
+        Notes
+        -----
+        Les pointeurs des spots renvoyes sont dupliques, c'est une copie superficielle.
+        Une suppression ou un ajout de spot dans la liste ne changera pas le diagramme
+        par contre une modification d'un attribut d'un des spots va etre effectif,
+        et modifira donc definitivement le spot considere.
+
+        Parameters
+        ----------
+        n : int, optional
+            Nombre de spots a considerer. La valeur ``None`` indique
+            que tous les spots sont renvoyes.
+        sort : str or callable, optional
+            - None => Les spots ne sont pas tries (le plus rapide). Ils sont cedes dans
+            un ordre quelquonque mais systematique. L'ordre reste inchange entre 2 appels.
+            - callable => Clef de tri, qui a chaque spot de type ``laue.spot.Spot``.
+            associe un flotant. Les spots ayant des petits flottant se retrouveront
+            au debut, ceux avec un gros seront en fin de chaine.
+            - str => La methode de tri. Il y en a plusieurs possibles:
+                - "intensity" => Les spots sont renvoyes des plus intenses aux plus faibles.
+                - "distortion" => Les spots sont renvoyes des plus rond aux plus biscornus.
+                - "quality" => Les spots sont renvoyes des plus beau aux plus moches.
+
+        Returns
+        -------
+        list
+            La liste des spots. Chaque element est de type ``laue.spot.Spot``.
+
+        Examples
+        --------
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image)[0]
+        >>> diag.select_spots(n=2, sort="intensity")
+        [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
+        >>> diag.select_spots(n=2, sort="distortion")
+        [Spot(position=(932.05, 1214.49), quality=0.940), Spot(position=(622.09, 1656.72), quality=0.949)]
+        >>> diag.select_spots(n=2, sort=lambda spot: spot.get_position()[0])
+        [Spot(position=(132.03, 1204.66), quality=0.577), Spot(position=(160.35, 907.21), quality=0.621)]
+        >>>
+        """
+        assert n is None or isinstance(n, int), f"'n' can not be {type(n).__name__}."
+        assert n is None or n > 0, f"'n' can not be {n}."
+        assert (sort is None or hasattr(sort, "__call__")
+            or sort in {"intensity", "distortion", "quality"}), \
+            f"'sort' ne peut pas etre {sort}."
+
+        if sort is None: # Si il n'y a pas de tri a faire.
+            if n is None:
+                return self.spots.copy()
+            return self.spots[:n]
+
+        if hasattr(sort, "__call__"):
+            l_spots = sorted(self.spots, key=sort)
+        if sort in self.sorted_spots: # On enregistre la liste pour de melleur
+            l_spots = self.sorted_spots[sort] #  perfs aux apels suivants.
+        else:
+            if sort == "intensity":
+                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_intensity()))
+            elif sort == "distortion":
+                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_distortion()))
+            elif sort == "quality":
+                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_quality()))
+            self.sorted_spots[sort] = l_spots
+
+        if n is not None:
+            return l_spots[:n]
+        return l_spots
 
     def _clean(self):
         """

@@ -274,7 +274,7 @@ class Experiment:
         unknown_parameters = PARAM_SET - set(given_parameters)
         if not unknown_parameters: # Si Il n'y a rien a calculer.
             self._calibration_parameters = given_parameters
-            self.transformer.compile(self._calibration_parameters) # Juste pour l'optimisation.
+            # self.transformer.compile(self._calibration_parameters) # Juste pour l'optimisation.
             if self.verbose:
                 if self.verbose >= 2:
                     print("\t\tOK: Tout est fournis, il n'y a rien a faire.")
@@ -352,7 +352,7 @@ class Experiment:
         # Mise en forme du resultat.
         fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
         self._calibration_parameters = {**given_parameters, **fit_parameters}
-        self.transformer.compile(self._calibration_parameters) # Juste pour l'optimisation.
+        # self.transformer.compile(self._calibration_parameters) # Juste pour l'optimisation.
         if self.verbose:
             print(f"\tOK: set_calibration terminee: {self._calibration_parameters}")
         return self._calibration_parameters
@@ -635,6 +635,7 @@ class Experiment:
                 * Au lieu de retourner un generateur, retourne une liste.
         **kwds
             Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_subsets``.
+            Se sont aussi ceux de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
 
         Returns
         -------
@@ -688,7 +689,7 @@ class Experiment:
                                 atomic_find_subsets,
                                 (   # transformer, gnomonics, dmax, nbr, tol
                                     diag.find_subsets(**kwds, _get_args=True)
-                                    for diag in self
+                                    for _, diag in zip(self.find_zone_axes(tense_flow=True, **kwds), self)
                                 )
                             )
                         )
@@ -781,8 +782,7 @@ class Experiment:
             """
             if multiprocessing.current_process().name == "MainProcess":
                 # Compilation et serialisation des equations.
-                self.transformer.compile()
-                self.set_calibration()
+                self.transformer.compile(self.set_calibration(), transform="cam_to_gnomonic")
                 transformer_ser = cloudpickle.dumps(self.transformer)
 
                 # Parallelisation des fils.
@@ -1261,6 +1261,7 @@ class Experiment:
                 f"\tignore_errors: {self.ignore_errors}\n"
                 f"\tverbose: {self.verbose}"
                 f"{addi_print}")
+
 
 class _Picklable:
     def __init__(self, ser_mother_class, func, kwargs):

@@ -169,14 +169,14 @@ class Spot:
         self.spot_im = spot_im
         self.distortion = distortion # Facteur de diformite.
         self.diagram = diagram # Le contenaur.
-        self.identifier = identifier # Le rang.
+        self._identifier = identifier # Le rang.
 
         # Declaration des variables futur.
-        self.intensity = None # Intensite du spot.
-        self.position = None # Coordonnees x, y du baricentre dans le plan de la camera.
-        self.gnomonic = None # Coordonnees x, y du baricentre projete dans le plan gnomonic.
-        self.twicetheta_chi = None # Angles du rayon diffractes ayant engendre ce point.
-        self.quality = None # Beautee du point.
+        self._intensity = None # Intensite du spot.
+        self._position = None # Coordonnees x, y du baricentre dans le plan de la camera.
+        self._gnomonic = None # Coordonnees x, y du baricentre projete dans le plan gnomonic.
+        self._thetachi = None # Angles du rayon diffractes ayant engendre ce point.
+        self._quality = None # Beautee du point.
         self.hkl = None # Les 3 indices de Miller h, k et l.
         self.axes = None # Les axes de zone.
 
@@ -252,13 +252,13 @@ class Spot:
         array([ 0.314 , -0.4397])
         >>>
         """
-        if self.gnomonic is not None:
-            return self.gnomonic
+        if self._gnomonic is not None:
+            return self._gnomonic
         detector_parameters = self.diagram.experiment.set_calibration()
         xg, yg = self.diagram.experiment.transformer.cam_to_gnomonic(
             *self.get_position(), detector_parameters)
-        self.gnomonic = (xg, yg)
-        return self.gnomonic
+        self._gnomonic = (xg, yg)
+        return self._gnomonic
 
     def get_hkl(self):
         """
@@ -286,7 +286,7 @@ class Spot:
         True
         >>>
         """
-        return self.identifier
+        return self._identifier
 
     def get_intensity(self):
         r"""
@@ -311,10 +311,10 @@ class Spot:
         814
         >>>
         """
-        if self.intensity is not None:
-            return self.intensity
-        self.intensity = self.spot_im.sum()
-        return self.intensity
+        if self._intensity is not None:
+            return self._intensity
+        self._intensity = self.spot_im.sum()
+        return self._intensity
 
     def get_position(self):
         r"""
@@ -339,12 +339,12 @@ class Spot:
         array([1370.5172, 1874.7801])
         >>>
         """
-        if self.position is not None:
-            return self.position
+        if self._position is not None:
+            return self._position
         x, y = (self.spot_im/self.get_intensity() * np.array(np.meshgrid(
                 np.arange(self.x, self.x+self.w), np.arange(self.y, self.y+self.h)))
                 ).reshape((2, -1)).sum(axis=1)
-        self.position = (x, y)
+        self._position = (x, y)
         return x, y
 
     def get_quality(self):
@@ -369,16 +369,16 @@ class Spot:
         0.57
         >>>
         """
-        if self.quality is not None:
-            return self.quality
+        if self._quality is not None:
+            return self._quality
 
         cout_ref = 100_000
         val_cout_ref = 0.95
         distortion_weight = 0.667
 
         a = -math.log(1-val_cout_ref) / cout_ref
-        self.quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
-        return self.quality
+        self._quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
+        return self._quality
 
     def get_theta_chi(self):
         """
@@ -388,12 +388,32 @@ class Spot:
         -------
         twicetheta : float
             L'angle entre l'axe ``x`` (ie axe du rayon incident) et la
-            projection sur le plan ``(x, y)`` de l'axe du rayon reflechit.
+            projection sur le plan ``(x, y)`` de l'axe du rayon reflechit. (en deg)
         chi : float
             L'angle entre l'axe ``y`` et la projection sur le plan
-            ``(y, z)`` de l'axe du rayon reflechit.
+            ``(y, z)`` de l'axe du rayon reflechit. (en deg)
+
+        Examples
+        --------
+        >>> import laue
+        >>> import numpy as np
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> spot = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
+        >>> spot
+        Spot(position=(1370.52, 1874.78), quality=0.573)
+        >>> type(spot.get_theta_chi())
+        <class 'tuple'>
+        >>> np.round(spot.get_theta_chi())
+        array([ 25., -25.])
+        >>>
         """
-        raise NotImplementedError
+        if self._thetachi is not None:
+            return self._thetachi
+        detector_parameters = self.diagram.experiment.set_calibration()
+        theta, chi = self.diagram.experiment.transformer.cam_to_thetachi(
+            *self.get_position(), detector_parameters)
+        self._thetachi = (theta, chi)
+        return self._thetachi
 
     def find_zone_axes(self, **kwds):
         """
@@ -522,11 +542,11 @@ class Spot:
         d'une grandeur exterieur qui aurait changee. (Comme par example
         les parametres de set_calibration.)
         """
-        self.gnomonic = None # Si jamais la set_calibration change.
-        self.twicetheta_chi = None # Si jamais la set_calibration change.
-        self.intensity = None # Si jamais l'image change.
-        self.position = None # Si jamais l'image change.
-        self.quality = None # Car on vient de changer 'self.intensity'.
+        self._gnomonic = None # Si jamais la set_calibration change.
+        self._thetachi = None # Si jamais la set_calibration change.
+        self._intensity = None # Si jamais l'image change.
+        self._position = None # Si jamais l'image change.
+        self._quality = None # Car on vient de changer 'self._intensity'.
         self.axes = None # Car si la projection gnomonique change, tout change.
 
     def __hash__(self):

@@ -1,88 +1,76 @@
-DATE: Tue Aug  3 15:11:24 2021
-NCPU: 2
+DATE: Tue Aug  3 18:31:55 2021
+NCPU: 8
 ============ TEST GEOMETRY DTYPE =============
 cam_to_gnomonic:
-	boucle 0: float128->float128
-	boucle 1: float128->float128
-	boucle 2: float128->float128
-	boucle 0: float64->float64
-	boucle 1: float64->float64
-	boucle 2: float64->float64
 	boucle 0: float32->float32
 	boucle 1: float32->float32
 	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
+	boucle 0: float128->float128
+	boucle 1: float128->float128
+	boucle 2: float128->float128
+	boucle 0: float64->float64
+	boucle 1: float64->float64
+	boucle 2: float64->float64
 gnomonic_to_cam:
-	boucle 0: float128->float128
-	boucle 1: float128->float128
-	boucle 2: float128->float128
-	boucle 0: float64->float64
-	boucle 1: float64->float64
-	boucle 2: float64->float64
 	boucle 0: float32->float32
 	boucle 1: float32->float32
 	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
+	boucle 0: float128->float128
+	boucle 1: float128->float128
+	boucle 2: float128->float128
+	boucle 0: float64->float64
+	boucle 1: float64->float64
+	boucle 2: float64->float64
 dist_line:
-	float128->float128
-	float64->float64
 	float32->float32
 	float16->float16
+	float128->float128
+	float64->float64
 hough:
-	float128->float128
-	float64->float64
 	float32->float32
 	float16->float16
+	float128->float128
+	float64->float64
 hough_reduce:
-	float64->float64
 	float32->float32
 	float16->float16
+	float64->float64
 inter_lines:
+	float32->float32
+	float16->float16
 	float128->float128
 	float64->float64
-	float32->float32
-	float16->float16
 ============ TEST GEOMETRY SHAPE =============
-shape: (4, 2, 4)
-boucle 0, cam_to_gnomonic(...).shape -> (2, 4, 2, 4)
-boucle 0, gnomonic_to_cam(...).shape -> (2, 4, 2, 4)
-boucle 0, cam_to_thetachi(...).shape -> (2, 4, 2, 4)
-boucle 0, thetachi_to_cam(...).shape -> (2, 4, 2, 4)
-boucle 0, thetachi_to_gnomonic(...).shape -> (2, 4, 2, 4)
-boucle 0, gnomonic_to_thetachi(...).shape -> (2, 4, 2, 4)
-boucle 1, cam_to_gnomonic(...).shape -> (2, 4, 2, 4)
-boucle 1, gnomonic_to_cam(...).shape -> (2, 4, 2, 4)
-boucle 1, cam_to_thetachi(...).shape -> (2, 4, 2, 4)
-boucle 1, thetachi_to_cam(...).shape -> (2, 4, 2, 4)
-boucle 1, thetachi_to_gnomonic(...).shape -> (2, 4, 2, 4)
-boucle 1, gnomonic_to_thetachi(...).shape -> (2, 4, 2, 4)
-boucle 2, cam_to_gnomonic(...).shape -> (2, 4, 2, 4)
-boucle 2, gnomonic_to_cam(...).shape -> (2, 4, 2, 4)
-boucle 2, cam_to_thetachi(...).shape -> (2, 4, 2, 4)
-boucle 2, thetachi_to_cam(...).shape -> (2, 4, 2, 4)
-boucle 2, thetachi_to_gnomonic(...).shape -> (2, 4, 2, 4)
-boucle 2, gnomonic_to_thetachi(...).shape -> (2, 4, 2, 4)
-dist_line(...).shape -> (4, 2, 4, 4, 2, 4)
-hough(...).shape -> (2, 4, 2, 6)
-inter_lines(...).shape -> (2, 4, 2, 6)
+shape: (2,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 0, cam_to_thetachi(...).shape -> (2, 2)
+boucle 0, thetachi_to_cam(...).shape -> (2, 2)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 1, cam_to_thetachi(...).shape -> (2, 2)
+boucle 1, thetachi_to_cam(...).shape -> (2, 2)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 2, cam_to_thetachi(...).shape -> (2, 2)
+boucle 2, thetachi_to_cam(...).shape -> (2, 2)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
+dist_line(...).shape -> (2, 2)
+hough(...).shape -> (2, 1)
+inter_lines(...).shape -> (2, 1)
 =============== TEST BIJECTION ===============
-uf2cam o cam2uf: ok formel
-cam2uf o uf2cam: ok formel
-uq2uf o uf2uq: ok formel
-uf2uq o uq2uf: ok formel
-gnom2uq o uq2gnom: ok formel
-uq2gnom o gnom2uq: ok formel
-thetachi2uf o uf2thetachi: fail formel, ok numerical
-uf2thetachi o thetachi2uf: fail formel, ok numerical
-============== TEST READ IMAGES ==============
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 images: 8.501 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 images: 11.047 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 images: 1.883 s
-/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 images: 2.945 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 images: 4.358 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 images: 1.154 s
-/home/robin/documents/stages/esrf/data/zbb1_roi1/*.mccd 
+uf2cam o cam2uf: fail formel, ok numerical
+cam2uf o uf2cam: fail formel, failed numerical
+	expr = dd*sqrt((2*uf_x**4*(1 - cos(pi*beta/180)**2)**2*(1 - cos(pi*gamma/180)**2)**2 + 2*uf_x**4*(1 - cos(pi*beta/180)**2)**2*cos(pi*gamma/180)**2 + 2*uf_x**4*(1 - cos(pi*gamma/180)**2)**2*cos(pi*beta/180)**2 - 2*uf_x**4*(1 - cos(pi*gamma/180)**2)**2 + 2*uf_x**4*cos(pi*beta/180)**2*cos(pi*gamma/180)**2 - uf_x**4*cos(pi*beta/45)*cos(pi*gamma/90)**2/16 - 3*uf_x**4*cos(pi*beta/45)/16 - 2*uf_x**4*cos(pi*gamma/180)**2 + uf_x**4*cos(pi*gamma/90)**2/16 + 3*uf_x**4/16 + 4*uf_x**2*uf_y**2*(1 - cos(pi*beta/180)**2)**2*(1 - cos(pi*gamma/180)**2)**2 + 4*uf_x**2*uf_y**2*(1 - cos(pi*beta/180)**2)**2*cos(pi*gamma/180)**2 - 2*uf_x**2*uf_y**2*(1 - cos(pi*beta/180)**2)**2 + 6*uf_x**2*uf_y**2*(1 - cos(pi*gamma/180)**2)**2*cos(pi*beta/180)**2 - 2*uf_x**2*uf_y**2*(1 - cos(pi*gamma/180)**2)**2 + 6*uf_x**2*uf_y**2*cos(pi*beta/180)**2*cos(pi*gamma/180)**2 - 4*uf_x**2*uf_y**2*cos(pi*beta/180)**2 - uf_x**2*uf_y**2*cos(pi*beta/90)**2*cos(pi*gamma/45)/16 + uf_x**2*uf_y**2*cos(pi*beta/90)**2/16 - uf_x**2*uf_y**2*cos(pi*beta/90)*cos(pi*gamma/45)/8 + uf_x**2*uf_y**2*cos(pi*beta/90)/8 - uf_x**2*uf_y**2*cos(pi*beta/45)*cos(pi*gamma/90)**2/16 - 3*uf_x**2*uf_y**2*cos(pi*beta/45)/16 - 2*uf_x**2*uf_y**2*cos(pi*gamma/180)**2 + uf_x**2*uf_y**2*cos(pi*gamma/90)**2/16 - 5*uf_x**2*uf_y**2*cos(pi*gamma/45)/16 + uf_x**2*uf_y**2/2 - 4*uf_x**2*uf_z**2*(1 - cos(pi*beta/180)**2)**2*(1 - cos(pi*gamma/180)**2)**2 - 4*uf_x**2*uf_z**2*(1 - cos(pi*beta/180)**2)**2*cos(pi*gamma/180)**2 - 4*uf_x**2*uf_z**2*(1 - cos(pi*beta/180)**2)**2 - 4*uf_x**2*uf_z**2*(1 - cos(pi*gamma/180)**2)**2*cos(pi*beta/180)**2 + 6*uf_x**2*uf_z**2*(1 - cos(pi*gamma/180)**2)**2 - 4*uf_x**2*uf_z**2*cos(pi*beta/180)**2*cos(pi*gamma/180)**2 - 4*uf_x**2*uf_z**2*cos(pi*beta/180)**2 - uf_x**2*uf_z**2*cos(pi*beta/90)**2*cos(pi*gamma/45)/8 + uf_x**2*uf_z**2*cos(pi*beta/90)**2/8 + uf_x**2*uf_z**2*cos(pi*beta/45)*cos(pi*gamma/90)**2/4 + 3*uf_x**2*uf_z**2*cos(pi*beta/45)/4 + 6*uf_x**2*uf_z**2*cos(pi*gamma/180)**2 - uf_x**2*uf_z**2*cos(pi*gamma/90)**2/4 - uf_x**2*uf_z**2*cos(pi*gamma/45)/8 + 11*uf_x**2*uf_z**2/8 - 4*uf_x*uf_y**2*uf_z*sin(pi*beta/180)*cos(pi*beta/180) + uf_x*uf_y**2*uf_z*sin(pi*beta/90)*cos(pi*gamma/90)**2 - uf_x*uf_y**2*uf_z*sin(pi*beta/90)*cos(pi*gamma/45)/2 + 3*uf_x*uf_y**2*uf_z*sin(pi*beta/90)/2 + 4*uf_y**2*uf_z**2*(1 - cos(pi*beta/180)**2)**2*(1 - cos(pi*gamma/180)**2)**2 + 4*uf_y**2*uf_z**2*(1 - cos(pi*beta/180)**2)**2*cos(pi*gamma/180)**2 - 2*uf_y**2*uf_z**2*(1 - cos(pi*beta/180)**2)**2 + 2*uf_y**2*uf_z**2*(1 - cos(pi*gamma/180)**2)**2*cos(pi*beta/180)**2 + 2*uf_y**2*uf_z**2*cos(pi*beta/180)**2*cos(pi*gamma/180)**2 - uf_y**2*uf_z**2*cos(pi*beta/90)**2*cos(pi*gamma/45)/16 + uf_y**2*uf_z**2*cos(pi*beta/90)**2/16 + uf_y**2*uf_z**2*cos(pi*beta/90)*cos(pi*gamma/45)/8 - uf_y**2*uf_z**2*cos(pi*beta/90)/8 - uf_y**2*uf_z**2*cos(pi*beta/45)*cos(pi*gamma/90)**2/16 - 3*uf_y**2*uf_z**2*cos(pi*beta/45)/16 + uf_y**2*uf_z**2*cos(pi*gamma/90)**2/16 - 5*uf_y**2*uf_z**2*cos(pi*gamma/45)/16 - 3*uf_y**2*uf_z**2/2 + 2*uf_z**4*(1 - cos(pi*beta/180)**2)**2*(1 - cos(pi*gamma/180)**2)**2 + 2*uf_z**4*(1 - cos(pi*beta/180)**2)**2*cos(pi*gamma/180)**2 + 2*uf_z**4*(1 - cos(pi*gamma/180)**2)**2*cos(pi*beta/180)**2 - 2*uf_z**4*(1 - cos(pi*gamma/180)**2)**2 + 2*uf_z**4*cos(pi*beta/180)**2*cos(pi*gamma/180)**2 - uf_z**4*cos(pi*beta/45)*cos(pi*gamma/90)**2/16 - 3*uf_z**4*cos(pi*beta/45)/16 - 2*uf_z**4*cos(pi*gamma/180)**2 + uf_z**4*cos(pi*gamma/90)**2/16 + 3*uf_z**4/16)/(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180))**2)
+	max(abs(val)) = 1.5736031638421754e-07

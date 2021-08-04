@@ -531,13 +531,18 @@ class _EvaluatorPrinter:
 
         funcbody.extend(unpackings)
 
-        funcbody.extend([
-            &#39;{} = {}&#39;.format(s, self._exprrepr(e))
-            if e is not None else
-            &#39;del {}&#39;.format(s)
-            for s, e in cses])
+        # body of function
+        for i, (s, e) in enumerate(cses):
+            if e is not None:
+                funcbody.append(&#34;{} = {}&#34;.format(s, self._exprrepr(e)))
+            else:
+                if all(e_ is None for s_, e_ in cses[i+1:]):
+                    break
+                if funcbody[-1].startswith(&#34;del &#34;):
+                    funcbody[-1] += &#34;, {}&#34;.format(s)
+                else:
+                    funcbody.append(&#34;del {}&#34;.format(s))
 
-        # str_expr = self._exprrepr(expr)
         str_expr = &#39;{}&#39;.format(expr)
         if &#39;\n&#39; in str_expr:
             str_expr = &#39;({})&#39;.format(str_expr)

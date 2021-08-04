@@ -62,13 +62,11 @@ class Equations:
         self.xcen, self.ycen = sympy.symbols(&#34;xcen ycen&#34;, real=True) # Position du point d&#39;incidence normale en pxl par rapport au repere de la camera.
         self.xbet, self.xgam = sympy.symbols(&#34;beta gamma&#34;, real=True) # Rotation autour x camera, Rotation autour axe incidence normale.
         self.pixelsize = sympy.Symbol(&#34;pixelsize&#34;, real=True, positive=True) # Taille des pixels en mm/pxl.
-        self.to_rad = lambda x: x*sympy.pi/180 # deg -&gt; rad
-        self.from_rad = lambda x: 180*x/sympy.pi # rad -&gt; deg
 
         # Les variables.
         self.x_cam, self.y_cam = sympy.symbols(&#34;x_cam y_cam&#34;, real=True, positive=True) # Position du pxl dans le repere du plan de la camera.
         self.x_gnom, self.y_gnom = sympy.symbols(&#34;x_gnom y_gnom&#34;, real=True) # Position des points dans le plan gnomonic.
-        self.theta, self.chi = sympy.symbols(&#34;theta chi&#34;, real=True) # Les angles decrivant le rayon reflechit.
+        self.theta, self.chi = sympy.symbols(&#34;theta chi&#34;, real=True) # Les angles decrivant le rayon reflechi.
 
         # Expression des elements du model.
         self.rx = sympy.Matrix([1, 0, 0])
@@ -77,7 +75,7 @@ class Equations:
 
         self.u_i = self.rx # Le rayon de lumiere incident norme parallele a l&#39;axe X dans le repere du cristal.
 
-        self.rot_camera = sympy.rot_axis2(self.to_rad(-self.xbet)) @ sympy.rot_axis3(self.to_rad(self.xgam)) # Rotation globale de la camera par rapport au cristal.
+        self.rot_camera = sympy.rot_axis2(-self.xbet*sympy.pi/180) @ sympy.rot_axis3(self.xgam*sympy.pi/180) # Rotation globale de la camera par rapport au cristal.
         self.ci = self.rot_camera @ -self.ry # Vecteur Xcamera.
         self.cj = self.rot_camera @ self.rx # Vecteur Ycamera.
         self.ck = self.rot_camera @ self.rz # Vecteur Zcamera normal au plan de la camera.
@@ -116,9 +114,9 @@ class Equations:
         &gt;&gt;&gt; x_cam, y_cam = symbols(&#34;x y&#34;)
         &gt;&gt;&gt; transformer.get_expr_cam_to_uf(x_cam, y_cam)
         Matrix([
-        [dd*sin(beta) - pixelsize*((x - xcen)*sin(gamma)*cos(beta) - (y - ycen)*cos(beta)*cos(gamma))],
-        [                                  -pixelsize*((x - xcen)*cos(gamma) + (y - ycen)*sin(gamma))],
-        [dd*cos(beta) + pixelsize*((x - xcen)*sin(beta)*sin(gamma) - (y - ycen)*sin(beta)*cos(gamma))]])
+        [dd*sin(pi*beta/180) - pixelsize*((x - xcen)*sin(pi*gamma/180)*cos(pi*beta/180) - (y - ycen)*cos(pi*beta/180)*cos(pi*gamma/180))],
+        [                                                       -pixelsize*((x - xcen)*cos(pi*gamma/180) + (y - ycen)*sin(pi*gamma/180))],
+        [dd*cos(pi*beta/180) + pixelsize*((x - xcen)*sin(pi*beta/180)*sin(pi*gamma/180) - (y - ycen)*sin(pi*beta/180)*cos(pi*gamma/180))]])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         x_cam_atomic, y_cam_atomic = sympy.symbols(&#34;x_cam y_cam&#34;, real=True)
@@ -153,9 +151,9 @@ class Equations:
         &gt;&gt;&gt; uf_x, uf_y, uf_z = symbols(&#34;uf_x, uf_y, uf_z&#34;)
         &gt;&gt;&gt; x_cam, y_cam = transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z)
         &gt;&gt;&gt; x_cam
-        (-dd*uf_x*sin(gamma)*cos(beta) - dd*uf_y*cos(gamma) + dd*uf_z*sin(beta)*sin(gamma) + pixelsize*uf_x*xcen*sin(beta) + pixelsize*uf_z*xcen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+        (-dd*uf_x*sin(pi*gamma/180)*cos(pi*beta/180) - dd*uf_y*cos(pi*gamma/180) + dd*uf_z*sin(pi*beta/180)*sin(pi*gamma/180) + pixelsize*uf_x*xcen*sin(pi*beta/180) + pixelsize*uf_z*xcen*cos(pi*beta/180))/(pixelsize*(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180)))
         &gt;&gt;&gt; y_cam
-        (dd*uf_x*cos(beta)*cos(gamma) - dd*uf_y*sin(gamma) - dd*uf_z*sin(beta)*cos(gamma) + pixelsize*uf_x*ycen*sin(beta) + pixelsize*uf_z*ycen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+        (dd*uf_x*cos(pi*beta/180)*cos(pi*gamma/180) - dd*uf_y*sin(pi*gamma/180) - dd*uf_z*sin(pi*beta/180)*cos(pi*gamma/180) + pixelsize*uf_x*ycen*sin(pi*beta/180) + pixelsize*uf_z*ycen*cos(pi*beta/180))/(pixelsize*(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180)))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         uf_x_atomic, uf_y_atomic, uf_z_atomic = sympy.symbols(&#34;uf_x uf_y uf_z&#34;, real=True)
@@ -333,6 +331,11 @@ class Equations:
         &#34;&#34;&#34;
         ** Equation permetant de passer de uf a thetachi. **
 
+        Notes
+        -----
+        Les resultats sont en radian. Il ne sont pas converti
+        en degres a ce stade car ca gene la simplification.
+
         Parameters
         ----------
         uf_x, uf_y, uf_z
@@ -360,21 +363,25 @@ class Equations:
 
         theta_rad = sympy.acos(uf_x_atomic/sympy.sqrt(uf_x_atomic**2 + uf_y_atomic**2 + uf_z_atomic**2))/2
         chi_rad = sympy.asin(uf_y_atomic/sympy.sqrt(uf_y_atomic**2 + uf_z_atomic**2))
-        theta, chi = self.from_rad(theta_rad), self.from_rad(chi_rad)
 
-        return (theta.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}),
-                chi.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}))
+        return (theta_rad.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}),
+                chi_rad.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}))
 
     def get_expr_thetachi_to_uf(self, theta, chi):
         &#34;&#34;&#34;
         ** Equation permetant de passer de thetachi a uf. **
 
+        Notes
+        -----
+        A ce stade, les angles sont exprimes en radian pour des 
+        raisons de simplifications symbolique.
+
         Parameters
         ----------
         theta
-            Angle de rotation du plan christalin autour de -x.
+            Angle de rotation du plan christalin autour de -x. (en rad)
         chi
-            La moitier de l&#39;angle de rotation du plan christalin autour de -y.
+            La moitier de l&#39;angle de rotation du plan christalin autour de -y. (en rad)
 
         Returns
         -------
@@ -398,7 +405,7 @@ class Equations:
         theta_atomic, chi_atomic = sympy.symbols(&#34;theta chi&#34;, real=True)
 
         # Expresion du rayon reflechit en fonction des angles.
-        rot_refl = sympy.rot_axis1(self.to_rad(chi_atomic)) @ sympy.rot_axis2(self.to_rad(2*theta_atomic))
+        rot_refl = sympy.rot_axis1(chi_atomic) @ sympy.rot_axis2(2*theta_atomic)
         u_f = rot_refl @ self.u_i
 
         return u_f.subs({theta_atomic: theta, chi_atomic: chi})
@@ -427,8 +434,6 @@ class Compilator(Equations):
     def compile(self):
         &#34;&#34;&#34;
         ** Precalcule toutes les equations. **
-
-        N&#39;enregistre pas les resultats.
         &#34;&#34;&#34;
         names = [
             &#34;cam_to_gnomonic&#34;,
@@ -443,6 +448,9 @@ class Compilator(Equations):
         names = [n for n in names if n not in globals()[&#34;compiled_expressions&#34;]]
         for name in names:
             getattr(self, f&#34;get_fct_{name}&#34;)()
+
+        if names:
+            self.save() # On enregistre pour gagner du temps les prochaines fois.
 
     def get_fct_cam_to_gnomonic(self):
         &#34;&#34;&#34;
@@ -463,16 +471,19 @@ class Compilator(Equations):
     def get_fct_cam_to_thetachi(self):
         &#34;&#34;&#34;
         ** Equation permetant de passer de la camera a la representation theta chi. **
+
+        theta et chi sont exprimes en degres
         &#34;&#34;&#34;
         if &#34;fct_cam_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
             return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
 
         u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
-        theta, chi = self.get_expr_uf_to_thetachi(*u_f)
+        theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
+        theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
         globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;] = lambdify.Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[theta, chi]) # On l&#39;enregistre une bonne fois pour toutes.
+            expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
 
     def get_fct_dist_line(self):
@@ -517,17 +528,20 @@ class Compilator(Equations):
     def get_fct_gnomonic_to_thetachi(self):
         &#34;&#34;&#34;
         ** Equation permetant de passer du plan gnomonic a la representation theta chi. **
+
+        theta et chi sont exprimes en degres
         &#34;&#34;&#34;
         if &#34;fct_gnomonic_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
             return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]
 
         u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
         u_f = self.get_expr_uq_to_uf(*u_q)
-        theta, chi = self.get_expr_uf_to_thetachi(*u_f)
+        theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
+        theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
         globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom],
-            expr=[theta, chi]) # On l&#39;enregistre une bonne fois pour toutes.
+            expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]
 
     def get_fct_hough(self):
@@ -593,11 +607,13 @@ class Compilator(Equations):
     def get_fct_thetachi_to_gnomonic(self):
         &#34;&#34;&#34;
         ** Equation permetant de passer de theta chi au plan gnomonic. **
+
+        theta et chi doivent etre donnes en degres.
         &#34;&#34;&#34;
         if &#34;fct_thetachi_to_gnomonic&#34; in globals()[&#34;compiled_expressions&#34;]:
             return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;]
 
-        u_f = self.get_expr_thetachi_to_uf(self.theta, self.chi)
+        u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
         u_q = self.get_expr_uf_to_uq(*u_f)
         x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
 
@@ -609,11 +625,13 @@ class Compilator(Equations):
     def get_fct_thetachi_to_cam(self):
         &#34;&#34;&#34;
         ** Equation permetant de passer de theta chi a la camera. **
+
+        theta et chi doivent etre donnes en degres.
         &#34;&#34;&#34;
         if &#34;fct_thetachi_to_cam&#34; in globals()[&#34;compiled_expressions&#34;]:
             return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;]
 
-        u_f = self.get_expr_thetachi_to_uf(self.theta, self.chi)
+        u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
         x_c, y_c = self.get_expr_uf_to_cam(*u_f)
 
         globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;] = lambdify.Lambdify(
@@ -720,8 +738,6 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
     def compile(self):
         &#34;&#34;&#34;
         ** Precalcule toutes les equations. **
-
-        N&#39;enregistre pas les resultats.
         &#34;&#34;&#34;
         names = [
             &#34;cam_to_gnomonic&#34;,
@@ -736,6 +752,9 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         names = [n for n in names if n not in globals()[&#34;compiled_expressions&#34;]]
         for name in names:
             getattr(self, f&#34;get_fct_{name}&#34;)()
+
+        if names:
+            self.save() # On enregistre pour gagner du temps les prochaines fois.
 
     def get_fct_cam_to_gnomonic(self):
         &#34;&#34;&#34;
@@ -756,16 +775,19 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
     def get_fct_cam_to_thetachi(self):
         &#34;&#34;&#34;
         ** Equation permetant de passer de la camera a la representation theta chi. **
+
+        theta et chi sont exprimes en degres
         &#34;&#34;&#34;
         if &#34;fct_cam_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
             return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
 
         u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
-        theta, chi = self.get_expr_uf_to_thetachi(*u_f)
+        theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
+        theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
         globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;] = lambdify.Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[theta, chi]) # On l&#39;enregistre une bonne fois pour toutes.
+            expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
 
     def get_fct_dist_line(self):
@@ -810,17 +832,20 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
     def get_fct_gnomonic_to_thetachi(self):
         &#34;&#34;&#34;
         ** Equation permetant de passer du plan gnomonic a la representation theta chi. **
+
+        theta et chi sont exprimes en degres
         &#34;&#34;&#34;
         if &#34;fct_gnomonic_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
             return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]
 
         u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
         u_f = self.get_expr_uq_to_uf(*u_q)
-        theta, chi = self.get_expr_uf_to_thetachi(*u_f)
+        theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
+        theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
         globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom],
-            expr=[theta, chi]) # On l&#39;enregistre une bonne fois pour toutes.
+            expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]
 
     def get_fct_hough(self):
@@ -886,11 +911,13 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
     def get_fct_thetachi_to_gnomonic(self):
         &#34;&#34;&#34;
         ** Equation permetant de passer de theta chi au plan gnomonic. **
+
+        theta et chi doivent etre donnes en degres.
         &#34;&#34;&#34;
         if &#34;fct_thetachi_to_gnomonic&#34; in globals()[&#34;compiled_expressions&#34;]:
             return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;]
 
-        u_f = self.get_expr_thetachi_to_uf(self.theta, self.chi)
+        u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
         u_q = self.get_expr_uf_to_uq(*u_f)
         x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
 
@@ -902,11 +929,13 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
     def get_fct_thetachi_to_cam(self):
         &#34;&#34;&#34;
         ** Equation permetant de passer de theta chi a la camera. **
+
+        theta et chi doivent etre donnes en degres.
         &#34;&#34;&#34;
         if &#34;fct_thetachi_to_cam&#34; in globals()[&#34;compiled_expressions&#34;]:
             return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;]
 
-        u_f = self.get_expr_thetachi_to_uf(self.theta, self.chi)
+        u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
         x_c, y_c = self.get_expr_uf_to_cam(*u_f)
 
         globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;] = lambdify.Lambdify(
@@ -978,8 +1007,7 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <span>def <span class="ident">compile</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p><strong> Precalcule toutes les equations. </strong></p>
-<p>N'enregistre pas les resultats.</p></div>
+<div class="desc"><p><strong> Precalcule toutes les equations. </strong></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -987,8 +1015,6 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <pre><code class="python">def compile(self):
     &#34;&#34;&#34;
     ** Precalcule toutes les equations. **
-
-    N&#39;enregistre pas les resultats.
     &#34;&#34;&#34;
     names = [
         &#34;cam_to_gnomonic&#34;,
@@ -1002,7 +1028,10 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         &#34;inter_line&#34;]
     names = [n for n in names if n not in globals()[&#34;compiled_expressions&#34;]]
     for name in names:
-        getattr(self, f&#34;get_fct_{name}&#34;)()</code></pre>
+        getattr(self, f&#34;get_fct_{name}&#34;)()
+
+    if names:
+        self.save() # On enregistre pour gagner du temps les prochaines fois.</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_cam_to_gnomonic"><code class="name flex">
@@ -1035,7 +1064,8 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <span>def <span class="ident">get_fct_cam_to_thetachi</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p><strong> Equation permetant de passer de la camera a la representation theta chi. </strong></p></div>
+<div class="desc"><p><strong> Equation permetant de passer de la camera a la representation theta chi. </strong></p>
+<p>theta et chi sont exprimes en degres</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1043,16 +1073,19 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <pre><code class="python">def get_fct_cam_to_thetachi(self):
     &#34;&#34;&#34;
     ** Equation permetant de passer de la camera a la representation theta chi. **
+
+    theta et chi sont exprimes en degres
     &#34;&#34;&#34;
     if &#34;fct_cam_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
 
     u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
-    theta, chi = self.get_expr_uf_to_thetachi(*u_f)
+    theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
+    theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
     globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;] = lambdify.Lambdify(
         args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-        expr=[theta, chi]) # On l&#39;enregistre une bonne fois pour toutes.
+        expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
     return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]</code></pre>
 </details>
 </dd>
@@ -1119,7 +1152,8 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <span>def <span class="ident">get_fct_gnomonic_to_thetachi</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p><strong> Equation permetant de passer du plan gnomonic a la representation theta chi. </strong></p></div>
+<div class="desc"><p><strong> Equation permetant de passer du plan gnomonic a la representation theta chi. </strong></p>
+<p>theta et chi sont exprimes en degres</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1127,17 +1161,20 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <pre><code class="python">def get_fct_gnomonic_to_thetachi(self):
     &#34;&#34;&#34;
     ** Equation permetant de passer du plan gnomonic a la representation theta chi. **
+
+    theta et chi sont exprimes en degres
     &#34;&#34;&#34;
     if &#34;fct_gnomonic_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]
 
     u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
     u_f = self.get_expr_uq_to_uf(*u_q)
-    theta, chi = self.get_expr_uf_to_thetachi(*u_f)
+    theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
+    theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
     globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;] = lambdify.Lambdify(
         args=[self.x_gnom, self.y_gnom],
-        expr=[theta, chi]) # On l&#39;enregistre une bonne fois pour toutes.
+        expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
     return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]</code></pre>
 </details>
 </dd>
@@ -1225,7 +1262,8 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <span>def <span class="ident">get_fct_thetachi_to_cam</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p><strong> Equation permetant de passer de theta chi a la camera. </strong></p></div>
+<div class="desc"><p><strong> Equation permetant de passer de theta chi a la camera. </strong></p>
+<p>theta et chi doivent etre donnes en degres.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1233,11 +1271,13 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <pre><code class="python">def get_fct_thetachi_to_cam(self):
     &#34;&#34;&#34;
     ** Equation permetant de passer de theta chi a la camera. **
+
+    theta et chi doivent etre donnes en degres.
     &#34;&#34;&#34;
     if &#34;fct_thetachi_to_cam&#34; in globals()[&#34;compiled_expressions&#34;]:
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;]
 
-    u_f = self.get_expr_thetachi_to_uf(self.theta, self.chi)
+    u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
     x_c, y_c = self.get_expr_uf_to_cam(*u_f)
 
     globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;] = lambdify.Lambdify(
@@ -1250,7 +1290,8 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <span>def <span class="ident">get_fct_thetachi_to_gnomonic</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p><strong> Equation permetant de passer de theta chi au plan gnomonic. </strong></p></div>
+<div class="desc"><p><strong> Equation permetant de passer de theta chi au plan gnomonic. </strong></p>
+<p>theta et chi doivent etre donnes en degres.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1258,11 +1299,13 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <pre><code class="python">def get_fct_thetachi_to_gnomonic(self):
     &#34;&#34;&#34;
     ** Equation permetant de passer de theta chi au plan gnomonic. **
+
+    theta et chi doivent etre donnes en degres.
     &#34;&#34;&#34;
     if &#34;fct_thetachi_to_gnomonic&#34; in globals()[&#34;compiled_expressions&#34;]:
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;]
 
-    u_f = self.get_expr_thetachi_to_uf(self.theta, self.chi)
+    u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
     u_q = self.get_expr_uf_to_uq(*u_f)
     x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
 
@@ -1374,13 +1417,11 @@ N'ecrase pas l'ancien contenu.</p></div>
         self.xcen, self.ycen = sympy.symbols(&#34;xcen ycen&#34;, real=True) # Position du point d&#39;incidence normale en pxl par rapport au repere de la camera.
         self.xbet, self.xgam = sympy.symbols(&#34;beta gamma&#34;, real=True) # Rotation autour x camera, Rotation autour axe incidence normale.
         self.pixelsize = sympy.Symbol(&#34;pixelsize&#34;, real=True, positive=True) # Taille des pixels en mm/pxl.
-        self.to_rad = lambda x: x*sympy.pi/180 # deg -&gt; rad
-        self.from_rad = lambda x: 180*x/sympy.pi # rad -&gt; deg
 
         # Les variables.
         self.x_cam, self.y_cam = sympy.symbols(&#34;x_cam y_cam&#34;, real=True, positive=True) # Position du pxl dans le repere du plan de la camera.
         self.x_gnom, self.y_gnom = sympy.symbols(&#34;x_gnom y_gnom&#34;, real=True) # Position des points dans le plan gnomonic.
-        self.theta, self.chi = sympy.symbols(&#34;theta chi&#34;, real=True) # Les angles decrivant le rayon reflechit.
+        self.theta, self.chi = sympy.symbols(&#34;theta chi&#34;, real=True) # Les angles decrivant le rayon reflechi.
 
         # Expression des elements du model.
         self.rx = sympy.Matrix([1, 0, 0])
@@ -1389,7 +1430,7 @@ N'ecrase pas l'ancien contenu.</p></div>
 
         self.u_i = self.rx # Le rayon de lumiere incident norme parallele a l&#39;axe X dans le repere du cristal.
 
-        self.rot_camera = sympy.rot_axis2(self.to_rad(-self.xbet)) @ sympy.rot_axis3(self.to_rad(self.xgam)) # Rotation globale de la camera par rapport au cristal.
+        self.rot_camera = sympy.rot_axis2(-self.xbet*sympy.pi/180) @ sympy.rot_axis3(self.xgam*sympy.pi/180) # Rotation globale de la camera par rapport au cristal.
         self.ci = self.rot_camera @ -self.ry # Vecteur Xcamera.
         self.cj = self.rot_camera @ self.rx # Vecteur Ycamera.
         self.ck = self.rot_camera @ self.rz # Vecteur Zcamera normal au plan de la camera.
@@ -1428,9 +1469,9 @@ N'ecrase pas l'ancien contenu.</p></div>
         &gt;&gt;&gt; x_cam, y_cam = symbols(&#34;x y&#34;)
         &gt;&gt;&gt; transformer.get_expr_cam_to_uf(x_cam, y_cam)
         Matrix([
-        [dd*sin(beta) - pixelsize*((x - xcen)*sin(gamma)*cos(beta) - (y - ycen)*cos(beta)*cos(gamma))],
-        [                                  -pixelsize*((x - xcen)*cos(gamma) + (y - ycen)*sin(gamma))],
-        [dd*cos(beta) + pixelsize*((x - xcen)*sin(beta)*sin(gamma) - (y - ycen)*sin(beta)*cos(gamma))]])
+        [dd*sin(pi*beta/180) - pixelsize*((x - xcen)*sin(pi*gamma/180)*cos(pi*beta/180) - (y - ycen)*cos(pi*beta/180)*cos(pi*gamma/180))],
+        [                                                       -pixelsize*((x - xcen)*cos(pi*gamma/180) + (y - ycen)*sin(pi*gamma/180))],
+        [dd*cos(pi*beta/180) + pixelsize*((x - xcen)*sin(pi*beta/180)*sin(pi*gamma/180) - (y - ycen)*sin(pi*beta/180)*cos(pi*gamma/180))]])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         x_cam_atomic, y_cam_atomic = sympy.symbols(&#34;x_cam y_cam&#34;, real=True)
@@ -1465,9 +1506,9 @@ N'ecrase pas l'ancien contenu.</p></div>
         &gt;&gt;&gt; uf_x, uf_y, uf_z = symbols(&#34;uf_x, uf_y, uf_z&#34;)
         &gt;&gt;&gt; x_cam, y_cam = transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z)
         &gt;&gt;&gt; x_cam
-        (-dd*uf_x*sin(gamma)*cos(beta) - dd*uf_y*cos(gamma) + dd*uf_z*sin(beta)*sin(gamma) + pixelsize*uf_x*xcen*sin(beta) + pixelsize*uf_z*xcen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+        (-dd*uf_x*sin(pi*gamma/180)*cos(pi*beta/180) - dd*uf_y*cos(pi*gamma/180) + dd*uf_z*sin(pi*beta/180)*sin(pi*gamma/180) + pixelsize*uf_x*xcen*sin(pi*beta/180) + pixelsize*uf_z*xcen*cos(pi*beta/180))/(pixelsize*(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180)))
         &gt;&gt;&gt; y_cam
-        (dd*uf_x*cos(beta)*cos(gamma) - dd*uf_y*sin(gamma) - dd*uf_z*sin(beta)*cos(gamma) + pixelsize*uf_x*ycen*sin(beta) + pixelsize*uf_z*ycen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+        (dd*uf_x*cos(pi*beta/180)*cos(pi*gamma/180) - dd*uf_y*sin(pi*gamma/180) - dd*uf_z*sin(pi*beta/180)*cos(pi*gamma/180) + pixelsize*uf_x*ycen*sin(pi*beta/180) + pixelsize*uf_z*ycen*cos(pi*beta/180))/(pixelsize*(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180)))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         uf_x_atomic, uf_y_atomic, uf_z_atomic = sympy.symbols(&#34;uf_x uf_y uf_z&#34;, real=True)
@@ -1645,6 +1686,11 @@ N'ecrase pas l'ancien contenu.</p></div>
         &#34;&#34;&#34;
         ** Equation permetant de passer de uf a thetachi. **
 
+        Notes
+        -----
+        Les resultats sont en radian. Il ne sont pas converti
+        en degres a ce stade car ca gene la simplification.
+
         Parameters
         ----------
         uf_x, uf_y, uf_z
@@ -1672,21 +1718,25 @@ N'ecrase pas l'ancien contenu.</p></div>
 
         theta_rad = sympy.acos(uf_x_atomic/sympy.sqrt(uf_x_atomic**2 + uf_y_atomic**2 + uf_z_atomic**2))/2
         chi_rad = sympy.asin(uf_y_atomic/sympy.sqrt(uf_y_atomic**2 + uf_z_atomic**2))
-        theta, chi = self.from_rad(theta_rad), self.from_rad(chi_rad)
 
-        return (theta.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}),
-                chi.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}))
+        return (theta_rad.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}),
+                chi_rad.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}))
 
     def get_expr_thetachi_to_uf(self, theta, chi):
         &#34;&#34;&#34;
         ** Equation permetant de passer de thetachi a uf. **
 
+        Notes
+        -----
+        A ce stade, les angles sont exprimes en radian pour des 
+        raisons de simplifications symbolique.
+
         Parameters
         ----------
         theta
-            Angle de rotation du plan christalin autour de -x.
+            Angle de rotation du plan christalin autour de -x. (en rad)
         chi
-            La moitier de l&#39;angle de rotation du plan christalin autour de -y.
+            La moitier de l&#39;angle de rotation du plan christalin autour de -y. (en rad)
 
         Returns
         -------
@@ -1710,7 +1760,7 @@ N'ecrase pas l'ancien contenu.</p></div>
         theta_atomic, chi_atomic = sympy.symbols(&#34;theta chi&#34;, real=True)
 
         # Expresion du rayon reflechit en fonction des angles.
-        rot_refl = sympy.rot_axis1(self.to_rad(chi_atomic)) @ sympy.rot_axis2(self.to_rad(2*theta_atomic))
+        rot_refl = sympy.rot_axis1(chi_atomic) @ sympy.rot_axis2(2*theta_atomic)
         u_f = rot_refl @ self.u_i
 
         return u_f.subs({theta_atomic: theta, chi_atomic: chi})</code></pre>
@@ -1748,9 +1798,9 @@ le vecteur uf dans le repere principal.</dd>
 &gt;&gt;&gt; x_cam, y_cam = symbols(&quot;x y&quot;)
 &gt;&gt;&gt; transformer.get_expr_cam_to_uf(x_cam, y_cam)
 Matrix([
-[dd*sin(beta) - pixelsize*((x - xcen)*sin(gamma)*cos(beta) - (y - ycen)*cos(beta)*cos(gamma))],
-[                                  -pixelsize*((x - xcen)*cos(gamma) + (y - ycen)*sin(gamma))],
-[dd*cos(beta) + pixelsize*((x - xcen)*sin(beta)*sin(gamma) - (y - ycen)*sin(beta)*cos(gamma))]])
+[dd*sin(pi*beta/180) - pixelsize*((x - xcen)*sin(pi*gamma/180)*cos(pi*beta/180) - (y - ycen)*cos(pi*beta/180)*cos(pi*gamma/180))],
+[                                                       -pixelsize*((x - xcen)*cos(pi*gamma/180) + (y - ycen)*sin(pi*gamma/180))],
+[dd*cos(pi*beta/180) + pixelsize*((x - xcen)*sin(pi*beta/180)*sin(pi*gamma/180) - (y - ycen)*sin(pi*beta/180)*cos(pi*gamma/180))]])
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1786,9 +1836,9 @@ Matrix([
     &gt;&gt;&gt; x_cam, y_cam = symbols(&#34;x y&#34;)
     &gt;&gt;&gt; transformer.get_expr_cam_to_uf(x_cam, y_cam)
     Matrix([
-    [dd*sin(beta) - pixelsize*((x - xcen)*sin(gamma)*cos(beta) - (y - ycen)*cos(beta)*cos(gamma))],
-    [                                  -pixelsize*((x - xcen)*cos(gamma) + (y - ycen)*sin(gamma))],
-    [dd*cos(beta) + pixelsize*((x - xcen)*sin(beta)*sin(gamma) - (y - ycen)*sin(beta)*cos(gamma))]])
+    [dd*sin(pi*beta/180) - pixelsize*((x - xcen)*sin(pi*gamma/180)*cos(pi*beta/180) - (y - ycen)*cos(pi*beta/180)*cos(pi*gamma/180))],
+    [                                                       -pixelsize*((x - xcen)*cos(pi*gamma/180) + (y - ycen)*sin(pi*gamma/180))],
+    [dd*cos(pi*beta/180) + pixelsize*((x - xcen)*sin(pi*beta/180)*sin(pi*gamma/180) - (y - ycen)*sin(pi*beta/180)*cos(pi*gamma/180))]])
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     x_cam_atomic, y_cam_atomic = sympy.symbols(&#34;x_cam y_cam&#34;, real=True)
@@ -1876,12 +1926,15 @@ Matrix([
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Equation permetant de passer de thetachi a uf. </strong></p>
+<h2 id="notes">Notes</h2>
+<p>A ce stade, les angles sont exprimes en radian pour des
+raisons de simplifications symbolique.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>theta</code></strong></dt>
-<dd>Angle de rotation du plan christalin autour de -x.</dd>
+<dd>Angle de rotation du plan christalin autour de -x. (en rad)</dd>
 <dt><strong><code>chi</code></strong></dt>
-<dd>La moitier de l'angle de rotation du plan christalin autour de -y.</dd>
+<dd>La moitier de l'angle de rotation du plan christalin autour de -y. (en rad)</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1909,12 +1962,17 @@ Matrix([
     &#34;&#34;&#34;
     ** Equation permetant de passer de thetachi a uf. **
 
+    Notes
+    -----
+    A ce stade, les angles sont exprimes en radian pour des 
+    raisons de simplifications symbolique.
+
     Parameters
     ----------
     theta
-        Angle de rotation du plan christalin autour de -x.
+        Angle de rotation du plan christalin autour de -x. (en rad)
     chi
-        La moitier de l&#39;angle de rotation du plan christalin autour de -y.
+        La moitier de l&#39;angle de rotation du plan christalin autour de -y. (en rad)
 
     Returns
     -------
@@ -1938,7 +1996,7 @@ Matrix([
     theta_atomic, chi_atomic = sympy.symbols(&#34;theta chi&#34;, real=True)
 
     # Expresion du rayon reflechit en fonction des angles.
-    rot_refl = sympy.rot_axis1(self.to_rad(chi_atomic)) @ sympy.rot_axis2(self.to_rad(2*theta_atomic))
+    rot_refl = sympy.rot_axis1(chi_atomic) @ sympy.rot_axis2(2*theta_atomic)
     u_f = rot_refl @ self.u_i
 
     return u_f.subs({theta_atomic: theta, chi_atomic: chi})</code></pre>
@@ -1969,9 +2027,9 @@ de la camera. (selon l'axe x ou Ci)</dd>
 &gt;&gt;&gt; uf_x, uf_y, uf_z = symbols(&quot;uf_x, uf_y, uf_z&quot;)
 &gt;&gt;&gt; x_cam, y_cam = transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z)
 &gt;&gt;&gt; x_cam
-(-dd*uf_x*sin(gamma)*cos(beta) - dd*uf_y*cos(gamma) + dd*uf_z*sin(beta)*sin(gamma) + pixelsize*uf_x*xcen*sin(beta) + pixelsize*uf_z*xcen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+(-dd*uf_x*sin(pi*gamma/180)*cos(pi*beta/180) - dd*uf_y*cos(pi*gamma/180) + dd*uf_z*sin(pi*beta/180)*sin(pi*gamma/180) + pixelsize*uf_x*xcen*sin(pi*beta/180) + pixelsize*uf_z*xcen*cos(pi*beta/180))/(pixelsize*(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180)))
 &gt;&gt;&gt; y_cam
-(dd*uf_x*cos(beta)*cos(gamma) - dd*uf_y*sin(gamma) - dd*uf_z*sin(beta)*cos(gamma) + pixelsize*uf_x*ycen*sin(beta) + pixelsize*uf_z*ycen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+(dd*uf_x*cos(pi*beta/180)*cos(pi*gamma/180) - dd*uf_y*sin(pi*gamma/180) - dd*uf_z*sin(pi*beta/180)*cos(pi*gamma/180) + pixelsize*uf_x*ycen*sin(pi*beta/180) + pixelsize*uf_z*ycen*cos(pi*beta/180))/(pixelsize*(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180)))
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -2003,9 +2061,9 @@ de la camera. (selon l'axe x ou Ci)</dd>
     &gt;&gt;&gt; uf_x, uf_y, uf_z = symbols(&#34;uf_x, uf_y, uf_z&#34;)
     &gt;&gt;&gt; x_cam, y_cam = transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z)
     &gt;&gt;&gt; x_cam
-    (-dd*uf_x*sin(gamma)*cos(beta) - dd*uf_y*cos(gamma) + dd*uf_z*sin(beta)*sin(gamma) + pixelsize*uf_x*xcen*sin(beta) + pixelsize*uf_z*xcen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+    (-dd*uf_x*sin(pi*gamma/180)*cos(pi*beta/180) - dd*uf_y*cos(pi*gamma/180) + dd*uf_z*sin(pi*beta/180)*sin(pi*gamma/180) + pixelsize*uf_x*xcen*sin(pi*beta/180) + pixelsize*uf_z*xcen*cos(pi*beta/180))/(pixelsize*(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180)))
     &gt;&gt;&gt; y_cam
-    (dd*uf_x*cos(beta)*cos(gamma) - dd*uf_y*sin(gamma) - dd*uf_z*sin(beta)*cos(gamma) + pixelsize*uf_x*ycen*sin(beta) + pixelsize*uf_z*ycen*cos(beta))/(pixelsize*(uf_x*sin(beta) + uf_z*cos(beta)))
+    (dd*uf_x*cos(pi*beta/180)*cos(pi*gamma/180) - dd*uf_y*sin(pi*gamma/180) - dd*uf_z*sin(pi*beta/180)*cos(pi*gamma/180) + pixelsize*uf_x*ycen*sin(pi*beta/180) + pixelsize*uf_z*ycen*cos(pi*beta/180))/(pixelsize*(uf_x*sin(pi*beta/180) + uf_z*cos(pi*beta/180)))
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     uf_x_atomic, uf_y_atomic, uf_z_atomic = sympy.symbols(&#34;uf_x uf_y uf_z&#34;, real=True)
@@ -2034,6 +2092,9 @@ de la camera. (selon l'axe x ou Ci)</dd>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Equation permetant de passer de uf a thetachi. </strong></p>
+<h2 id="notes">Notes</h2>
+<p>Les resultats sont en radian. Il ne sont pas converti
+en degres a ce stade car ca gene la simplification.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>uf_x</code></strong>, <strong><code>uf_y</code></strong>, <strong><code>uf_z</code></strong></dt>
@@ -2065,6 +2126,11 @@ asin(uf_y/sqrt(uf_y**2 + uf_z**2))
     &#34;&#34;&#34;
     ** Equation permetant de passer de uf a thetachi. **
 
+    Notes
+    -----
+    Les resultats sont en radian. Il ne sont pas converti
+    en degres a ce stade car ca gene la simplification.
+
     Parameters
     ----------
     uf_x, uf_y, uf_z
@@ -2092,10 +2158,9 @@ asin(uf_y/sqrt(uf_y**2 + uf_z**2))
 
     theta_rad = sympy.acos(uf_x_atomic/sympy.sqrt(uf_x_atomic**2 + uf_y_atomic**2 + uf_z_atomic**2))/2
     chi_rad = sympy.asin(uf_y_atomic/sympy.sqrt(uf_y_atomic**2 + uf_z_atomic**2))
-    theta, chi = self.from_rad(theta_rad), self.from_rad(chi_rad)
 
-    return (theta.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}),
-            chi.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}))</code></pre>
+    return (theta_rad.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}),
+            chi_rad.subs({uf_x_atomic: uf_x, uf_y_atomic: uf_y, uf_z_atomic: uf_z}))</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Equations.get_expr_uf_to_uq"><code class="name flex">
