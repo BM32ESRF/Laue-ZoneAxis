@@ -28,11 +28,11 @@ class predictionHKL:
         framedim = dictLT.dict_CCD[CCDLabel][0]
         self.dict_dp={}
         self.dict_dp['kf_direction']='Z>0'
-        self.dict_dp['detectorparameters'] = input_params["detectorparameters"]
-        self.dict_dp['detectordistance'] = input_params["detectorparameters"][0]
-        self.dict_dp['detectordiameter'] = input_params["pixelsize"]*framedim[0]
-        self.dict_dp['pixelsize'] = input_params["pixelsize"]
-        self.dict_dp['dim'] = framedim
+        # self.dict_dp['detectorparameters'] = input_params["detectorparameters"]
+        # self.dict_dp['detectordistance'] = input_params["detectorparameters"][0]
+        # self.dict_dp['detectordiameter'] = input_params["pixelsize"]*framedim[0]
+        # self.dict_dp['pixelsize'] = input_params["pixelsize"]
+        # self.dict_dp['dim'] = framedim
         self.material_ = input_params["material_"]
         
         self.save_directory = directory

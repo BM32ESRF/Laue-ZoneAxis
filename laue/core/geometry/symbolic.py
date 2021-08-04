@@ -462,8 +462,8 @@ class Compilator(Equations):
             return globals()["compiled_expressions"]["fct_dist_line"]
 
         # Creation de la droite.
-        theta, dist, x, y = sympy.symbols("theta alpha x y", real=True)
-        p = sympy.Point(dist*sympy.cos(theta), dist*sympy.sin(theta)) # Point appartenant a la droite.
+        phi, mu, x, y = sympy.symbols("phi mu x y", real=True)
+        p = sympy.Point(mu*sympy.cos(phi), mu*sympy.sin(phi)) # Point appartenant a la droite.
         op = sympy.Line(sympy.Point(0, 0), p) # Droite normale a la droite principale.
         line = op.perpendicular_line(p) # C'est la droite principale.
 
@@ -474,7 +474,7 @@ class Compilator(Equations):
         distance = sympy.trigsimp(distance) # Permet un gain de 2.90
 
         # Vectorisation de l'expression.
-        globals()["compiled_expressions"]["fct_dist_line"] = lambdify.Lambdify([theta, dist, x, y], distance)
+        globals()["compiled_expressions"]["fct_dist_line"] = lambdify.Lambdify([phi, mu, x, y], distance)
         return globals()["compiled_expressions"]["fct_dist_line"]
 
     def get_fct_gnomonic_to_cam(self):
@@ -525,22 +525,20 @@ class Compilator(Equations):
 
         # Calcul de la distance entre la droite et l'origine.
         d1 = sympy.Line(sympy.Point(xa, ya), sympy.Point(xb, yb)) # C'est la droite passant par les 2 points.
-        dist = d1.distance(sympy.Point(0, 0)) # La distance separant l'origine de la droite.
+        mu = d1.distance(sympy.Point(0, 0)) # La distance separant l'origine de la droite.
 
         # Calcul de l'angle entre l'axe horizontal et la droite.
         p = d1.projection(sympy.Point(0, 0)) # Le point ou la distance entre ce point de la droite et l'origine est minimale.
         n = p / sympy.sqrt(p.x**2 + p.y**2) # On normalise le point.
-        theta_abs = sympy.acos(n.x) # La valeur absolue de theta.
-        theta_sign = sympy.sign(n.y) # Si il est negatif c'est que theta < 0, si il est positif alors theta > 0
-        theta = theta_abs * theta_sign # Compris entre -pi et +pi
-        # theta = sympy.simplify(theta)
+        phi_abs = sympy.acos(n.x) # La valeur absolue de phi.
+        phi_sign = sympy.sign(n.y) # Si il est negatif c'est que phi < 0, si il est positif alors phi > 0
+        phi = phi_abs * phi_sign # Compris entre -pi et +pi
 
         # Optimisation.
-        theta = theta # Permet un gain de 1.00
-        dist = sympy.trigsimp(sympy.cancel(dist)) # Permet un gain de 1.40
+        mu = sympy.trigsimp(sympy.cancel(mu)) # Permet un gain de 1.40
 
         # Vectorisation des expressions.
-        globals()["compiled_expressions"]["fct_hough"] = lambdify.Lambdify([xa, ya, xb, yb], [theta, dist])
+        globals()["compiled_expressions"]["fct_hough"] = lambdify.Lambdify([xa, ya, xb, yb], [phi, mu])
         return globals()["compiled_expressions"]["fct_hough"]
 
     def get_fct_inter_line(self):
@@ -551,9 +549,9 @@ class Compilator(Equations):
             return globals()["compiled_expressions"]["fct_inter_line"]
 
         # Creation des 2 droites.
-        theta_1, dist_1, theta_2, dist_2 = sympy.symbols("theta_1, dist_1, theta_2, dist_2", real=True)
-        p1 = sympy.Point(dist_1*sympy.cos(theta_1), dist_1*sympy.sin(theta_1)) # Point appartenant a la premiere droite.
-        p2 = sympy.Point(dist_2*sympy.cos(theta_2), dist_2*sympy.sin(theta_2)) # Point appartenant a la seconde droite.
+        phi_1, mu_1, phi_2, mu_2 = sympy.symbols("phi_1, mu_1, phi_2, mu_2", real=True)
+        p1 = sympy.Point(mu_1*sympy.cos(phi_1), mu_1*sympy.sin(phi_1)) # Point appartenant a la premiere droite.
+        p2 = sympy.Point(mu_2*sympy.cos(phi_2), mu_2*sympy.sin(phi_2)) # Point appartenant a la seconde droite.
         op1 = sympy.Line(sympy.Point(0, 0), p1) # Droite normale a la premiere droite.
         op2 = sympy.Line(sympy.Point(0, 0), p2) # Droite normale a la deuxieme droite.
         line1 = op1.perpendicular_line(p1) # La premiere droite.
@@ -569,7 +567,7 @@ class Compilator(Equations):
 
         # Vectorisation des expressions.
         globals()["compiled_expressions"]["fct_inter_line"] = lambdify.Lambdify(
-            [theta_1, dist_1, theta_2, dist_2], [inter_x, inter_y])
+            [phi_1, mu_1, phi_2, mu_2], [inter_x, inter_y])
         return globals()["compiled_expressions"]["fct_inter_line"]
 
     def get_fct_thetachi_to_gnomonic(self):

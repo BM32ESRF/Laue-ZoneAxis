@@ -214,7 +214,7 @@ class Transformer(Compilator):
         return self._generic_transformation("cam_to_thetachi", pxl_x, pxl_y,
             parameters=parameters, dtype=dtype)
 
-    def dist_line(self, theta_vect, dist_vect, x_vect, y_vect, *, dtype=np.float64):
+    def dist_line(self, phi_vect, mu_vect, x_vect, y_vect, *, dtype=np.float64):
         """
         ** Calcul les distances projetees des points sur une droite. **
 
@@ -224,10 +224,10 @@ class Transformer(Compilator):
 
         Parameters
         ----------
-        theta_vect : np.ndarray
+        phi_vect : np.ndarray
             Les angles des droites normales aux droites principales.
             shape = ``(*nbr_droites)``
-        dist_vect : np.ndarray
+        mu_vect : np.ndarray
             Les distances entre les droites et l'origine.
             shape = ``(*nbr_droites)``
         x_vect : np.ndarray
@@ -265,18 +265,18 @@ class Transformer(Compilator):
         array([[1., 0., 2., 1.],
                [1., 0., 2., 0.]], dtype=float32)
         >>>
-        >>> theta_vect, dist_vect = np.random.normal(size=(1, 2)), np.random.normal(size=(1, 2))
+        >>> phi_vect, mu_vect = np.random.normal(size=(1, 2)), np.random.normal(size=(1, 2))
         >>> x_vect, y_vect = np.random.normal(size=(3, 4, 5)), np.random.normal(size=(3, 4, 5))
-        >>> transformer.dist_line(theta_vect, dist_vect, x_vect, y_vect).shape
+        >>> transformer.dist_line(phi_vect, mu_vect, x_vect, y_vect).shape
         (1, 2, 3, 4, 5)
         >>>
         """
-        assert isinstance(theta_vect, np.ndarray), \
-            f"'theta_vect' has to be of type np.ndarray, not {type(theta_vect).__name__}."
-        assert isinstance(dist_vect, np.ndarray), \
-            f"'dist_vect' has to be of type np.ndarray, not {type(dist_vect).__name__}."
-        assert theta_vect.shape == dist_vect.shape, \
-            f"Les 2 parametres de droite doivent avoir la meme taille: {theta_vect.shape} vs {dist_vect.shape}."
+        assert isinstance(phi_vect, np.ndarray), \
+            f"'phi_vect' has to be of type np.ndarray, not {type(phi_vect).__name__}."
+        assert isinstance(mu_vect, np.ndarray), \
+            f"'mu_vect' has to be of type np.ndarray, not {type(mu_vect).__name__}."
+        assert phi_vect.shape == mu_vect.shape, \
+            f"Les 2 parametres de droite doivent avoir la meme taille: {phi_vect.shape} vs {mu_vect.shape}."
         assert isinstance(x_vect, np.ndarray), \
             f"'x_vect' has to be of type np.ndarray, not {type(x_vect).__name__}."
         assert isinstance(y_vect, np.ndarray), \
@@ -286,17 +286,17 @@ class Transformer(Compilator):
         assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
             f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
 
-        theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
+        phi_vect, mu_vect = phi_vect.astype(dtype, copy=False), mu_vect.astype(dtype, copy=False)
         x_vect, y_vect = x_vect.astype(dtype, copy=False), y_vect.astype(dtype, copy=False)
 
-        nbr_droites = theta_vect.shape
+        nbr_droites = phi_vect.shape
         nbr_points = x_vect.shape
 
         # Ca ne vaut pas le coup de paralleliser car c'est tres rapide.
         func = self.get_fct_dist_line()
-        result = np.array([func(theta, dist, x_vect, y_vect)
-                           for theta, dist
-                           in zip(theta_vect.ravel(), dist_vect.ravel())
+        result = np.array([func(phi, mu, x_vect, y_vect)
+                           for phi, mu
+                           in zip(phi_vect.ravel(), mu_vect.ravel())
                           ], dtype=dtype).reshape((*nbr_droites, *nbr_points))
         return np.nan_to_num(result, copy=False, nan=0.0)
 
@@ -438,15 +438,15 @@ class Transformer(Compilator):
         Returns
         -------
         np.ndarray
-            * theta : np.ndarray
+            * phi : np.ndarray
                 * Les angles au sens trigomometrique des vecteurs reliant l'origine
                 ``O`` (0, 0) au point ``P`` appartenant a la droite tel que ``||OP||``
                 soit la plus petite possible.
-                * theta € [-pi, pi]
+                * phi € ]-pi, pi]
                 * shape = ``(*over_dims, n*(n-1)/2)``
-            * dist : np.ndarray
+            * lamb : np.ndarray
                 * Ce sont les normes des vecteur ``OP``.
-                * dist € [0, +oo].
+                * lamb € [0, +oo].
                 * shape = ``(*over_dims, n*(n-1)/2)``
             * Ces 2 grandeurs sont concatenees dans une seule array de
         shape = ``(2, *over_dims, n*(n-1)/2)``
@@ -494,22 +494,22 @@ class Transformer(Compilator):
             copy=False,
             nan=0.0)
 
-    def hough_reduce(self, theta_vect, dist_vect, *, nbr=4, tol=0.018, dtype=np.float32):
+    def hough_reduce(self, phi_vect, mu_vect, *, nbr=4, tol=0.018, dtype=np.float32):
         """
         ** Regroupe des droites ressemblantes. **
 
         Notes
         -----
         * Cette methode est concue pour traiter les donnees issues de ``laue.core.geometry.transformer.Transformer.hough``.
-        * La metrique utilise est la distance euclidiene sur un cylindre ferme sur theta.
+        * La metrique utilise est la distance euclidiene sur un cylindre ferme sur phi.
         * En raison de performance et de memoire, les calculs se font sur des float32.
 
         Parameters
         ----------
-        theta_vect : np.ndarray
+        phi_vect : np.ndarray
             * Vecteur des angles compris entre [-pi, pi].
             * shape = ``(*over_dims, nbr_inter)``
-        dist_vect : np.ndarray
+        mu_vect : np.ndarray
             * Vecteur des distances des droites a l'origine comprises [0, +oo].
             * shape = ``(*over_dims, nbr_inter)``
         tol : float
@@ -547,11 +547,11 @@ class Transformer(Compilator):
         Type de retour ``float`` vs ``object``.
         >>> x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
         ...         np.array([ 0.,  1.,  1., -1.,  1.]))
-        >>> theta, dist = transformer.hough(x, y)
-        >>> np.round(transformer.hough_reduce(theta, dist, nbr=3), 2)
+        >>> phi, mu = transformer.hough(x, y)
+        >>> np.round(transformer.hough_reduce(phi, mu, nbr=3), 2)
         array([[-0.79,  1.57],
                [ 0.71,  1.  ]], dtype=float32)
-        >>> res = transformer.hough_reduce(theta.reshape((1, -1)), dist.reshape((1, -1)), nbr=3)
+        >>> res = transformer.hough_reduce(phi.reshape((1, -1)), mu.reshape((1, -1)), nbr=3)
         >>> res.dtype
         dtype('O')
         >>> res.shape
@@ -564,18 +564,18 @@ class Transformer(Compilator):
         Les dimensions de retour.
         >>> x, y = (np.random.normal(size=(6, 5, 4)),
         ...         np.random.normal(size=(6, 5, 4)))
-        >>> theta, dist = transformer.hough(x, y)
-        >>> transformer.hough_reduce(theta, dist).shape
+        >>> phi, mu = transformer.hough(x, y)
+        >>> transformer.hough_reduce(phi, mu).shape
         (6, 5)
         >>> 
         """
-        assert isinstance(theta_vect, np.ndarray), \
-            f"'theta_vect' has to be of type np.ndarray, not {type(theta_vect).__name__}."
-        assert isinstance(dist_vect, np.ndarray), \
-            f"'dist_vect' has to be of type np.ndarray, not {type(dist_vect).__name__}."
-        assert theta_vect.shape == dist_vect.shape, \
-            f"Les 2 entrees doivent avoir la meme taille: {theta_vect.shape} vs {dist_vect.shape}."
-        assert theta_vect.ndim >= 1, "La matrice ne doit pas etre vide."
+        assert isinstance(phi_vect, np.ndarray), \
+            f"'phi_vect' has to be of type np.ndarray, not {type(phi_vect).__name__}."
+        assert isinstance(mu_vect, np.ndarray), \
+            f"'mu_vect' has to be of type np.ndarray, not {type(mu_vect).__name__}."
+        assert phi_vect.shape == mu_vect.shape, \
+            f"Les 2 entrees doivent avoir la meme taille: {phi_vect.shape} vs {mu_vect.shape}."
+        assert phi_vect.ndim >= 1, "La matrice ne doit pas etre vide."
         assert isinstance(tol, float), f"'tol' has to be a float, not a {type(tol).__name__}."
         assert 0.0 < tol <= 0.5, ("Les valeurs coherentes de 'tol' se trouvent entre "
             f"]0, 1/2], or tol vaut {tol}, ce qui sort de cet intervalle.")
@@ -585,20 +585,20 @@ class Transformer(Compilator):
             f"Les types ne peuvent etre que np.float16, np.float32, np.float64. Pas {dtype}."
 
         # On fait la conversion des le debut pour un gain de temps.
-        theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
+        phi_vect, mu_vect = phi_vect.astype(dtype, copy=False), mu_vect.astype(dtype, copy=False)
 
-        *over_dims, nbr_inter = theta_vect.shape # Recuperation des dimensions.
+        *over_dims, nbr_inter = phi_vect.shape # Recuperation des dimensions.
         nbr = (nbr*(nbr-1))/2 # On converti le nombre de points alignes en nbr de segments.
 
         # On commence par travailler avec les donnees reduites.
-        theta_theo_std = math.pi / math.sqrt(3) # Variance theorique = (math.pi - -math.pi)**2 / 12
-        dist_std = np.nanstd(dist_vect, axis=-1) # Ecart type non biaise (sum(*over_dims)/N), shape: (*over_dims)
-        dist_vect = (dist_vect * theta_theo_std
-            / np.repeat(dist_std[..., np.newaxis], nbr_inter, axis=-1)) # Les distances quasi reduites.
+        phi_theo_std = math.pi / math.sqrt(3) # Variance theorique = (math.pi - -math.pi)**2 / 12
+        mu_std = np.nanstd(mu_vect, axis=-1) # Ecart type non biaise (sum(*over_dims)/N), shape: (*over_dims)
+        mu_vect = (mu_vect * phi_theo_std
+            / np.repeat(mu_std[..., np.newaxis], nbr_inter, axis=-1)) # Les distances quasi reduites.
         
         # Extraction des clusters.
         if not len(over_dims): # Cas des tableaux 1d.
-            return self._clustering_1d(theta_vect, dist_vect, dist_std, tol, nbr)
+            return self._clustering_1d(phi_vect, mu_vect, mu_std, tol, nbr)
 
         clusters = np.empty(np.prod(over_dims, dtype=int), dtype=object) # On doit d'abord creer un tableau d'objet 1d.
         if multiprocessing.current_process().name == "MainProcess" and np.prod(over_dims) >= os.cpu_count(): # Si ca vaut le coup de parraleliser:
@@ -611,27 +611,27 @@ class Transformer(Compilator):
                         (
                             Transformer._clustering_1d,
                             ser_self,
-                            {"theta_vect_1d":theta, "dist_vect_1d":dist, "std":std, "tol":tol, "nbr":nbr}
+                            {"phi_vect_1d":phi, "mu_vect_1d":mu, "std":std, "tol":tol, "nbr":nbr}
                         )
-                        for theta, dist, std
+                        for phi, mu, std
                         in zip(
-                            theta_vect.reshape((-1, nbr_inter)),
-                            dist_vect.reshape((-1, nbr_inter)),
-                            np.nditer(dist_std)
+                            phi_vect.reshape((-1, nbr_inter)),
+                            mu_vect.reshape((-1, nbr_inter)),
+                            np.nditer(mu_std)
                         )
                     )
                 )
         else:
-            clusters[:] = [self._clustering_1d(theta, dist, std, tol, nbr)
-                           for theta, dist, std in zip(
-                                    theta_vect.reshape((-1, nbr_inter)),
-                                    dist_vect.reshape((-1, nbr_inter)),
-                                    np.nditer(dist_std))] 
+            clusters[:] = [self._clustering_1d(chi, mu, std, tol, nbr)
+                           for chi, mu, std in zip(
+                                    phi_vect.reshape((-1, nbr_inter)),
+                                    mu_vect.reshape((-1, nbr_inter)),
+                                    np.nditer(mu_std))] 
         clusters = clusters.reshape(over_dims) # On redimensione a la fin de sorte a garentir les dimensions.
 
         return clusters
 
-    def inter_lines(self, theta_vect, dist_vect, *, dtype=np.float32):
+    def inter_lines(self, phi_vect, mu_vect, *, dtype=np.float32):
         r"""
         ** Calcul les points d'intersection entre les droites. **
 
@@ -643,10 +643,10 @@ class Transformer(Compilator):
 
         Parameters
         ----------
-        theta_vect : np.ndarray
+        phi_vect : np.ndarray
             * Vecteur des angles compris entre [-pi, pi].
             * shape = (*over_dims, nbr_droites)
-        dist_vect : np.ndarray
+        mu_vect : np.ndarray
             * Vecteur des distances des droites a l'origine comprises [0, +oo].
             * shape = (*over_dims, nbr_droites)
         dtype : type, optional
@@ -677,34 +677,34 @@ class Transformer(Compilator):
         >>> transformer = Transformer()
         >>> np.random.seed(0)
         >>> x, y = np.random.normal(size=(2, 4, 5, 6))
-        >>> theta, dist = transformer.hough(x, y)
-        >>> theta.shape
+        >>> phi, mu = transformer.hough(x, y)
+        >>> phi.shape
         (4, 5, 15)
-        >>> transformer.inter_lines(theta, dist).shape
+        >>> transformer.inter_lines(phi, mu).shape
         (2, 4, 5, 105)
         >>>
         """
-        assert isinstance(theta_vect, np.ndarray), \
-            f"'theta_vect' has to be of type np.ndarray, not {type(theta_vect).__name__}."
-        assert isinstance(dist_vect, np.ndarray), \
-            f"'dist_vect' has to be of type np.ndarray, not {type(dist_vect).__name__}."
-        assert theta_vect.shape == dist_vect.shape, \
-            f"Les 2 entrees doivent avoir la meme taille: {theta_vect.shape} vs {dist_vect.shape}."
-        assert theta_vect.ndim >= 1, "La matrice ne doit pas etre vide."
-        assert theta_vect.shape[-1] >= 2, \
-            f"Il doit y avoir au moins 2 droites par famille, pas {theta_vect.shape[-1]}."
+        assert isinstance(phi_vect, np.ndarray), \
+            f"'phi_vect' has to be of type np.ndarray, not {type(phi_vect).__name__}."
+        assert isinstance(mu_vect, np.ndarray), \
+            f"'mu_vect' has to be of type np.ndarray, not {type(mu_vect).__name__}."
+        assert phi_vect.shape == mu_vect.shape, \
+            f"Les 2 entrees doivent avoir la meme taille: {phi_vect.shape} vs {mu_vect.shape}."
+        assert phi_vect.ndim >= 1, "La matrice ne doit pas etre vide."
+        assert phi_vect.shape[-1] >= 2, \
+            f"Il doit y avoir au moins 2 droites par famille, pas {phi_vect.shape[-1]}."
         assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
             f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
 
-        theta_vect, dist_vect = theta_vect.astype(dtype, copy=False), dist_vect.astype(dtype, copy=False)
-        n = theta_vect.shape[-1]
+        phi_vect, mu_vect = phi_vect.astype(dtype, copy=False), mu_vect.astype(dtype, copy=False)
+        n = phi_vect.shape[-1]
 
-        theta_1 = np.concatenate([np.repeat(theta_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
-        dist_1 = np.concatenate([np.repeat(dist_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
-        theta_2 = np.concatenate([theta_vect[..., i+1:] for i in range(n-1)], axis=-1)
-        dist_2 = np.concatenate([dist_vect[..., i+1:] for i in range(n-1)], axis=-1)
+        phi_1 = np.concatenate([np.repeat(phi_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
+        mu_1 = np.concatenate([np.repeat(mu_vect[..., i, np.newaxis], n-i-1, axis=-1) for i in range(n-1)], axis=-1)
+        phi_2 = np.concatenate([phi_vect[..., i+1:] for i in range(n-1)], axis=-1)
+        mu_2 = np.concatenate([mu_vect[..., i+1:] for i in range(n-1)], axis=-1)
 
-        return np.stack(self.get_fct_inter_line()(theta_1, dist_1, theta_2, dist_2))
+        return np.stack(self.get_fct_inter_line()(phi_1, mu_1, phi_2, mu_2))
 
     def thetachi_to_cam(self, theta, chi, parameters, *, dtype=np.float32):
         """
@@ -816,7 +816,7 @@ class Transformer(Compilator):
         return self._generic_transformation("thetachi_to_gnomonic", theta, chi,
             parameters=None, dtype=dtype)
 
-    def _clustering_1d(self, theta_vect_1d, dist_vect_1d, std, tol, nbr):
+    def _clustering_1d(self, phi_vect_1d, mu_vect_1d, std, tol, nbr):
         """
         ** Help for hough_reduce. **
 
@@ -825,42 +825,42 @@ class Transformer(Compilator):
         """
         from sklearn.cluster import DBSCAN
 
-        dtype_catser = theta_vect_1d.dtype.type
-        THETA_STD = dtype_catser(math.pi / math.sqrt(3))
+        dtype_catser = phi_vect_1d.dtype.type
+        PHI_STD = dtype_catser(math.pi / math.sqrt(3))
         WEIGHT = 0.65 # 0 => tres souple sur les angles, 1=> tres souple sur les distances.
 
         # On retire les droites aberantes.
-        mask_to_keep = np.isfinite(theta_vect_1d) & np.isfinite(dist_vect_1d)
+        mask_to_keep = np.isfinite(phi_vect_1d) & np.isfinite(mu_vect_1d)
         if not mask_to_keep.any(): # Si il ne reste plus rien.
             return np.array([], dtype=dtype_catser)
-        theta_vect_1d, dist_vect_1d = theta_vect_1d[mask_to_keep], dist_vect_1d[mask_to_keep]
+        phi_vect_1d, mu_vect_1d = phi_vect_1d[mask_to_keep], mu_vect_1d[mask_to_keep]
 
         # On passe dans un autre repere de facon a ce que -pi et pi se retrouvent a cote.
         if numexpr is not None:
-            theta_x = numexpr.evaluate("2*WEIGHT*cos(theta_vect_1d)")
-            theta_y = numexpr.evaluate("2*WEIGHT*sin(theta_vect_1d)")
+            phi_x = numexpr.evaluate("2*WEIGHT*cos(phi_vect_1d)")
+            phi_y = numexpr.evaluate("2*WEIGHT*sin(phi_vect_1d)")
         else:
-            theta_x, theta_y = 2*WEIGHT*np.cos(theta_vect_1d), 2*WEIGHT*np.sin(theta_vect_1d)
+            phi_x, phi_y = 2*WEIGHT*np.cos(phi_vect_1d), 2*WEIGHT*np.sin(phi_vect_1d)
 
         # Recherche des clusters.
         n_jobs = -1 if multiprocessing.current_process().name == "MainProcess" else 1
         db_res = DBSCAN(eps=tol, min_samples=nbr, n_jobs=n_jobs).fit(
-            np.vstack((theta_x, theta_y, 2*(1-WEIGHT)*dist_vect_1d)).transpose())
+            np.vstack((phi_x, phi_y, 2*(1-WEIGHT)*mu_vect_1d)).transpose())
 
         # Mise en forme des clusters.
         clusters_dict = collections.defaultdict(lambda: [])
         keep = db_res.labels_ != -1 # Les indices des clusters a garder.
-        for x_cyl, y_cyl, dist, group in zip(
-                theta_x[keep], theta_y[keep], dist_vect_1d[keep], db_res.labels_[keep]):
-            clusters_dict[group].append((x_cyl, y_cyl, dist))
+        for x_cyl, y_cyl, mu, group in zip(
+                phi_x[keep], phi_y[keep], mu_vect_1d[keep], db_res.labels_[keep]):
+            clusters_dict[group].append((x_cyl, y_cyl, mu))
 
-        theta = np.array([np.arccos(cluster[:, 0].mean()/(2*WEIGHT))*np.sign(cluster[:, 1].sum())
+        phi = np.array([np.arccos(cluster[:, 0].mean()/(2*WEIGHT))*np.sign(cluster[:, 1].sum())
                     for cluster in map(np.array, clusters_dict.values())],
                     dtype=dtype_catser)
-        dist = np.array([cluster[:, 2].mean()
+        mu = np.array([cluster[:, 2].mean()
                         for cluster in map(np.array, clusters_dict.values())],
-                    dtype=dtype_catser) * std / THETA_STD
-        return np.array([theta, dist], dtype=dtype_catser)
+                    dtype=dtype_catser) * std / PHI_STD
+        return np.array([phi, mu], dtype=dtype_catser)
 
     def _generic_transformation(self, transform, data1, data2, *, parameters, dtype):
         """

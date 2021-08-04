@@ -225,12 +225,9 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_gnomonic_positions().shape
         (2, 78)
-        &gt;&gt;&gt; np.round(
-        ...     diag.get_gnomonic_positions(n=4, sort=&#34;quality&#34;),
-        ...     2)
-        ...
-        array([[-0.1 , -0.21, -0.04, -0.35],
-               [ 0.58,  0.48,  0.57,  0.37]], dtype=float32)
+        &gt;&gt;&gt; np.round(diag.get_gnomonic_positions(n=4, sort=&#34;quality&#34;), 2)
+        array([[ 0.25,  0.08,  0.27, -0.26],
+               [ 0.32,  0.01, -0.3 , -0.2 ]], dtype=float32)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # On calcul les projections pour tous les points a la fois.
@@ -521,8 +518,8 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt; diag.get_positions().shape
         (2, 78)
         &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=&#34;quality&#34;))
-        array([[ 132.,  160.,  192.,  214.],
-               [1205.,  907., 1297.,  492.]])
+        array([[ 622.,  932., 1243., 1276.],
+               [1657., 1214., 1661.,  599.]])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return np.array(
@@ -602,7 +599,8 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt; diag.get_theta_chi().shape
         (2, 78)
         &gt;&gt;&gt; np.round(diag.get_theta_chi(n=4, sort=&#34;quality&#34;))
-        ...
+        array([[ 29.,  40.,  29.,  58.],
+               [ 20.,   1., -18., -21.]], dtype=float32)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # On calcul les projections pour tous les points a la fois.
@@ -1312,12 +1310,9 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_gnomonic_positions().shape
         (2, 78)
-        &gt;&gt;&gt; np.round(
-        ...     diag.get_gnomonic_positions(n=4, sort=&#34;quality&#34;),
-        ...     2)
-        ...
-        array([[-0.1 , -0.21, -0.04, -0.35],
-               [ 0.58,  0.48,  0.57,  0.37]], dtype=float32)
+        &gt;&gt;&gt; np.round(diag.get_gnomonic_positions(n=4, sort=&#34;quality&#34;), 2)
+        array([[ 0.25,  0.08,  0.27, -0.26],
+               [ 0.32,  0.01, -0.3 , -0.2 ]], dtype=float32)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # On calcul les projections pour tous les points a la fois.
@@ -1608,8 +1603,8 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; diag.get_positions().shape
         (2, 78)
         &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=&#34;quality&#34;))
-        array([[ 132.,  160.,  192.,  214.],
-               [1205.,  907., 1297.,  492.]])
+        array([[ 622.,  932., 1243., 1276.],
+               [1657., 1214., 1661.,  599.]])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         return np.array(
@@ -1689,7 +1684,8 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; diag.get_theta_chi().shape
         (2, 78)
         &gt;&gt;&gt; np.round(diag.get_theta_chi(n=4, sort=&#34;quality&#34;))
-        ...
+        array([[ 29.,  40.,  29.,  58.],
+               [ 20.,   1., -18., -21.]], dtype=float32)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # On calcul les projections pour tous les points a la fois.
@@ -2701,12 +2697,9 @@ En general l'un des parametres de set_calibration.</dd>
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.get_gnomonic_positions().shape
 (2, 78)
-&gt;&gt;&gt; np.round(
-...     diag.get_gnomonic_positions(n=4, sort=&quot;quality&quot;),
-...     2)
-...
-array([[-0.1 , -0.21, -0.04, -0.35],
-       [ 0.58,  0.48,  0.57,  0.37]], dtype=float32)
+&gt;&gt;&gt; np.round(diag.get_gnomonic_positions(n=4, sort=&quot;quality&quot;), 2)
+array([[ 0.25,  0.08,  0.27, -0.26],
+       [ 0.32,  0.01, -0.3 , -0.2 ]], dtype=float32)
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -2744,12 +2737,9 @@ array([[-0.1 , -0.21, -0.04, -0.35],
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; diag.get_gnomonic_positions().shape
     (2, 78)
-    &gt;&gt;&gt; np.round(
-    ...     diag.get_gnomonic_positions(n=4, sort=&#34;quality&#34;),
-    ...     2)
-    ...
-    array([[-0.1 , -0.21, -0.04, -0.35],
-           [ 0.58,  0.48,  0.57,  0.37]], dtype=float32)
+    &gt;&gt;&gt; np.round(diag.get_gnomonic_positions(n=4, sort=&#34;quality&#34;), 2)
+    array([[ 0.25,  0.08,  0.27, -0.26],
+           [ 0.32,  0.01, -0.3 , -0.2 ]], dtype=float32)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     # On calcul les projections pour tous les points a la fois.
@@ -3221,8 +3211,8 @@ True
 &gt;&gt;&gt; diag.get_positions().shape
 (2, 78)
 &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=&quot;quality&quot;))
-array([[ 132.,  160.,  192.,  214.],
-       [1205.,  907., 1297.,  492.]])
+array([[ 622.,  932., 1243., 1276.],
+       [1657., 1214., 1661.,  599.]])
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -3257,8 +3247,8 @@ array([[ 132.,  160.,  192.,  214.],
     &gt;&gt;&gt; diag.get_positions().shape
     (2, 78)
     &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=&#34;quality&#34;))
-    array([[ 132.,  160.,  192.,  214.],
-           [1205.,  907., 1297.,  492.]])
+    array([[ 622.,  932., 1243., 1276.],
+           [1657., 1214., 1661.,  599.]])
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     return np.array(
@@ -3377,7 +3367,8 @@ quality: 0.5153
 &gt;&gt;&gt; diag.get_theta_chi().shape
 (2, 78)
 &gt;&gt;&gt; np.round(diag.get_theta_chi(n=4, sort=&quot;quality&quot;))
-...
+array([[ 29.,  40.,  29.,  58.],
+       [ 20.,   1., -18., -21.]], dtype=float32)
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -3410,7 +3401,8 @@ quality: 0.5153
     &gt;&gt;&gt; diag.get_theta_chi().shape
     (2, 78)
     &gt;&gt;&gt; np.round(diag.get_theta_chi(n=4, sort=&#34;quality&#34;))
-    ...
+    array([[ 29.,  40.,  29.,  58.],
+           [ 20.,   1., -18., -21.]], dtype=float32)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     # On calcul les projections pour tous les points a la fois.

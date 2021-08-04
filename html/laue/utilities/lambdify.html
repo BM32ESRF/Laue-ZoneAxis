@@ -295,7 +295,8 @@ class Lambdify:
         self.expr = expr
 
         # Preparation vectoriele.
-        self.n_expr = evalf(
+        if _simplify:
+            self.expr = evalf(
                 simplify(
                     self.expr,
                     measure=time_cost,
@@ -303,10 +304,10 @@ class Lambdify:
                     rational=False
                 ),
                 n=25
-            ) if _simplify else self.expr
-        self.fct = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numpy&#34;)
+            )
+        self.fct = lambdify(self.args, self.expr, cse=True, modules=&#34;numpy&#34;)
         try:
-            self.fct_numexpr = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numexpr&#34;)
+            self.fct_numexpr = lambdify(self.args, self.expr, cse=True, modules=&#34;numexpr&#34;)
         except (TypeError, RuntimeError):
             self.fct_numexpr = None
 
@@ -433,7 +434,6 @@ class Lambdify:
             {
                 &#34;args&#34;: self.args,
                 &#34;expr&#34;: self.expr,
-                &#34;n_expr&#34;: self.n_expr
             }
         )
 
@@ -457,9 +457,7 @@ class Lambdify:
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         attr = cloudpickle.loads(data)
-        l = Lambdify(attr[&#34;args&#34;], attr[&#34;n_expr&#34;], _simplify=False)
-        l.expr = attr[&#34;expr&#34;]
-        return l</code></pre>
+        return Lambdify(attr[&#34;args&#34;], attr[&#34;expr&#34;], _simplify=False)</code></pre>
 </details>
 </section>
 <section>
@@ -538,7 +536,8 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
         self.expr = expr
 
         # Preparation vectoriele.
-        self.n_expr = evalf(
+        if _simplify:
+            self.expr = evalf(
                 simplify(
                     self.expr,
                     measure=time_cost,
@@ -546,10 +545,10 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
                     rational=False
                 ),
                 n=25
-            ) if _simplify else self.expr
-        self.fct = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numpy&#34;)
+            )
+        self.fct = lambdify(self.args, self.expr, cse=True, modules=&#34;numpy&#34;)
         try:
-            self.fct_numexpr = lambdify(self.args, self.n_expr, cse=True, modules=&#34;numexpr&#34;)
+            self.fct_numexpr = lambdify(self.args, self.expr, cse=True, modules=&#34;numexpr&#34;)
         except (TypeError, RuntimeError):
             self.fct_numexpr = None
 
@@ -676,7 +675,6 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
             {
                 &#34;args&#34;: self.args,
                 &#34;expr&#34;: self.expr,
-                &#34;n_expr&#34;: self.n_expr
             }
         )
 
@@ -700,9 +698,7 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         attr = cloudpickle.loads(data)
-        l = Lambdify(attr[&#34;args&#34;], attr[&#34;n_expr&#34;], _simplify=False)
-        l.expr = attr[&#34;expr&#34;]
-        return l</code></pre>
+        return Lambdify(attr[&#34;args&#34;], attr[&#34;expr&#34;], _simplify=False)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -742,7 +738,6 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
         {
             &#34;args&#34;: self.args,
             &#34;expr&#34;: self.expr,
-            &#34;n_expr&#34;: self.n_expr
         }
     )</code></pre>
 </details>
@@ -790,9 +785,7 @@ x + y + cos(x + y)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     attr = cloudpickle.loads(data)
-    l = Lambdify(attr[&#34;args&#34;], attr[&#34;n_expr&#34;], _simplify=False)
-    l.expr = attr[&#34;expr&#34;]
-    return l</code></pre>
+    return Lambdify(attr[&#34;args&#34;], attr[&#34;expr&#34;], _simplify=False)</code></pre>
 </details>
 </dd>
 </dl>

@@ -52,11 +52,11 @@ def distance(axis1, axis2, *, weight=.5):
         * Importance de l'angle entre les droites plutot que
         leurs distances par rapport a l'origine.
         * 0.0 => Seule la distance compte:
-        \[ dist = \lvert d1-d2 \rvert \]
+        \[ dist = \lvert \mu1-\mu2 \rvert \]
         * 0.5 => L'angle et la distance comptent pareillement:
-        \[ dist = \sqrt{\lambda^2.(\pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert )^2 + (1-\lambda)^2.(d1-d2)^2} \]
-        * 1.0 => Seule l'angle compte:
-        \[ dist = \pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert \]
+        \[ dist = \sqrt{weight^2.(\pi - \lvert \lvert \varphi1-\varphi2 \rvert - \pi \rvert )^2 + (1-weight)^2.(d1-d2)^2} \]
+        * 1.0 => Seul l'angle compte:
+        \[ dist = \pi - \lvert \lvert \varphi1-\varphi2 \rvert - \pi \rvert \]
 
     Returns
     -------
@@ -141,28 +141,29 @@ def distance(axis1, axis2, *, weight=.5):
 
     # Calcul des distances
     meth = lambda axis: axis.get_polar_coords() if isinstance(axis, ZoneAxis) else axis
-    angle1, dist1 = np.array([meth(axis) for axis in axis1], dtype=np.float32).transpose()
-    angle2, dist2 = np.array([meth(axis) for axis in axis2], dtype=np.float32).transpose()
-    angle1, angle2 = np.meshgrid(angle1, angle2, indexing="ij", copy=False)
-    dist1, dist2 = np.meshgrid(dist1, dist2, indexing="ij", copy=False)
+    phi1, mu1 = np.array([meth(axis) for axis in axis1], dtype=np.float32).transpose()
+    phi2, mu2 = np.array([meth(axis) for axis in axis2], dtype=np.float32).transpose()
+    phi1, phi2 = np.meshgrid(phi1, phi2, indexing="ij", copy=False)
+    mu1, mu2 = np.meshgrid(mu1, mu2, indexing="ij", copy=False)
     pi = np.float32(np.pi)
 
     if weight == 0:
-        return np.abs(dist2-dist1)
+        return np.abs(mu2-mu1)
     if weight == 1:
-        return pi - np.abs(np.abs(angle2-angle1) - pi)
+        return pi - np.abs(np.abs(phi2-phi1) - pi)
     if numexpr is not None:
-        return numexpr.evaluate("sqrt(weight**2*(pi - abs(abs(angle2-angle1) - pi))**2 "
-                                "+ (1-weight)**2*(dist2-dist1)**2)")
+        return numexpr.evaluate("sqrt(weight**2*(pi - abs(abs(phi2-phi1) - pi))**2 "
+                                "+ (1-weight)**2*(mu2-mu1)**2)")
     return np.sqrt(
-        weight**2*(pi - np.abs(np.abs(angle2-angle1) - pi))**2
-      + (1-weight)**2*(dist2-dist1)**2)
+        weight**2*(pi - np.abs(np.abs(phi2-phi1) - pi))**2
+      + (1-weight)**2*(mu2-mu1)**2)
+
 
 class ZoneAxis:
     """
     Un axe de zone seul.
     """
-    def __init__(self, diagram, spots_ind, identifier, angle, dist):
+    def __init__(self, diagram, spots_ind, identifier, phi, mu):
         """
         Notes
         -----
@@ -183,9 +184,9 @@ class ZoneAxis:
         identifier : int
             Identifiant unique de l'axe de zone. Cet identifiant est unique au
             sein d'un diagramme mais pas forcement au sein d'une experience.
-        theta : float
+        phi : float
             Angle entre l'axe ``x`` et le vecteur normal a cet axe passant par l'origine.
-        dist : float
+        mu : float
             Distance entre cette droite et l'origine.
         """
         self.diagram = diagram
@@ -194,9 +195,9 @@ class ZoneAxis:
                 (int(ind), diagram[ind])
                 for ind in sorted(spots_ind)
             ))
-        self.identifier = identifier
-        self.angle = angle
-        self.dist = dist
+        self._identifier = identifier
+        self._phi = phi
+        self._mu = mu
 
     def dist_mean(self):
         """
@@ -219,11 +220,11 @@ class ZoneAxis:
         <class 'numpy.float64'>
         >>>
         """
-        theta_vect, dist_vect = self.get_polar_coords()
-        theta_vect, dist_vect = np.array([theta_vect]), np.array([dist_vect])
+        phi_vect, mu_vect = self.get_polar_coords()
+        phi_vect, mu_vect = np.array([phi_vect]), np.array([mu_vect])
         x_vect, y_vect = np.array([spot.get_gnomonic() for spot in self]).transpose()
         return self.diagram.experiment.transformer.dist_line(
-            theta_vect, dist_vect, x_vect, y_vect).mean()
+            phi_vect, mu_vect, x_vect, y_vect).mean()
 
     def get_id(self):
         """
@@ -241,7 +242,7 @@ class ZoneAxis:
         True
         >>>
         """
-        return self.identifier
+        return self._identifier
 
     def get_polar_coords(self):
         """
@@ -249,10 +250,10 @@ class ZoneAxis:
 
         Returns
         -------
-        angle : float
-            Le meme angle que celui donne a l'initialisateur.
-        dist : float
-            La meme distance que celle donnee a l'imitialisateur.
+        phi : float
+            L'angle de la normale a cet axe.
+        mu : float
+            La distance entre la droite et l'origine.
 
         Examples
         --------
@@ -261,14 +262,14 @@ class ZoneAxis:
         >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = diag.find_zone_axes()[0]
         >>>
-        >>> angle, dist = axis.get_polar_coords()
-        >>> type(angle) # In radian.
+        >>> phi, mu = axis.get_polar_coords()
+        >>> type(phi) # In radian.
         <class 'numpy.float32'>
-        >>> type(dist) # In mm.
+        >>> type(mu) # In mm.
         <class 'numpy.float32'>
         >>>
         """
-        return self.angle, self.dist
+        return self._phi, self._mu
 
     def get_quality(self):
         """
@@ -319,9 +320,9 @@ class ZoneAxis:
             a, b = .1, .8
             lna = math.log((1-a)/a)
             lnb = math.log((1-b)/b)
-            mu = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
-            lamb = lna / (mu - nbr_min)
-            return 1 / (1 + math.exp(-lamb*(nbr-mu)))
+            beta = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
+            lamb = lna / (beta - nbr_min)
+            return 1 / (1 + math.exp(-lamb*(nbr-beta)))
 
         nbr_weight = .75 # Importance du nombre de points par raport a la proximite.
         return nbr_weight*nbr_2_score(len(self)) + (1-nbr_weight)*dmean_2_score(self.dist_mean())
@@ -362,9 +363,9 @@ class ZoneAxis:
             axe_pyplot.set_xlabel("x.Gi (mm)")
             axe_pyplot.set_ylabel("y.Gj (mm)")
 
-        normal = np.array([math.cos(self.angle), math.sin(self.angle)])
-        director = np.array([math.sin(self.angle), -math.cos(self.angle)])
-        point1 = self.dist * normal
+        normal = np.array([math.cos(self._phi), math.sin(self._phi)])
+        director = np.array([math.sin(self._phi), -math.cos(self._phi)])
+        point1 = self._mu * normal
         point2 = point1 + director
         axe_pyplot.axline(point1, point2, lw=0.5, color="gray", clip_box=((-.1, -.1), (.1, .1)))
 
@@ -410,9 +411,9 @@ class ZoneAxis:
             axe_pyplot.set_xlabel("x.Ci (pxl)")
             axe_pyplot.set_ylabel("y.Cj (pxl)")
 
-        normal = np.array([math.cos(self.angle), math.sin(self.angle)])
-        director = np.array([math.sin(self.angle), -math.cos(self.angle)])
-        centre = self.dist * normal
+        normal = np.array([math.cos(self._phi), math.sin(self._phi)])
+        director = np.array([math.sin(self._phi), -math.cos(self._phi)])
+        centre = self._mu * normal
         points_gnom_x = centre[0] + np.linspace(-2.0, 2.0, 50)*director[0]
         points_gnom_y = centre[1] + np.linspace(-2.0, 2.0, 50)*director[1]
         cam_x, cam_y = self.diagram.experiment.transformer.gnomonic_to_cam(
@@ -483,7 +484,7 @@ class ZoneAxis:
         int
             Identifiant "unique" (du moins le plus possible) representant cet axe de zone.
         """
-        return hash((self.diagram, self.identifier))
+        return hash((self.diagram, self._identifier))
 
     def __iter__(self):
         """
@@ -538,8 +539,7 @@ class ZoneAxis:
         ** Renvoie une chaine evaluable de self. **
         """
         return ("ZoneAxis("
-                # f"diagram={repr(self.diagram)}, " # Affichage bien trop gourmand.
                 f"spots_ind={tuple(self.spots.keys())}, "
-                f"identifier={self.identifier}, "
-                f"angle={self.angle:.4f}, "
-                f"dist={self.dist:.4f})")
+                f"identifier={self._identifier}, "
+                f"phi={self._phi:.4f}, "
+                f"mu={self._mu:.4f})")

@@ -309,7 +309,6 @@ class Experiment:
         unknown_parameters = PARAM_SET - set(given_parameters)
         if not unknown_parameters: # Si Il n&#39;y a rien a calculer.
             self._calibration_parameters = given_parameters
-            self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
             if self.verbose:
                 if self.verbose &gt;= 2:
                     print(&#34;\t\tOK: Tout est fournis, il n&#39;y a rien a faire.&#34;)
@@ -387,7 +386,6 @@ class Experiment:
         # Mise en forme du resultat.
         fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
         self._calibration_parameters = {**given_parameters, **fit_parameters}
-        self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
         if self.verbose:
             print(f&#34;\tOK: set_calibration terminee: {self._calibration_parameters}&#34;)
         return self._calibration_parameters
@@ -670,6 +668,7 @@ class Experiment:
                 * Au lieu de retourner un generateur, retourne une liste.
         **kwds
             Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_subsets``.
+            Se sont aussi ceux de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
 
         Returns
         -------
@@ -723,7 +722,7 @@ class Experiment:
                                 atomic_find_subsets,
                                 (   # transformer, gnomonics, dmax, nbr, tol
                                     diag.find_subsets(**kwds, _get_args=True)
-                                    for diag in self
+                                    for _, diag in zip(self.find_zone_axes(tense_flow=True, **kwds), self)
                                 )
                             )
                         )
@@ -816,8 +815,7 @@ class Experiment:
             &#34;&#34;&#34;
             if multiprocessing.current_process().name == &#34;MainProcess&#34;:
                 # Compilation et serialisation des equations.
-                self.transformer.compile()
-                self.set_calibration()
+                self.transformer.compile(self.set_calibration(), transform=&#34;cam_to_gnomonic&#34;)
                 transformer_ser = cloudpickle.dumps(self.transformer)
 
                 # Parallelisation des fils.
@@ -1654,7 +1652,6 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         unknown_parameters = PARAM_SET - set(given_parameters)
         if not unknown_parameters: # Si Il n&#39;y a rien a calculer.
             self._calibration_parameters = given_parameters
-            self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
             if self.verbose:
                 if self.verbose &gt;= 2:
                     print(&#34;\t\tOK: Tout est fournis, il n&#39;y a rien a faire.&#34;)
@@ -1732,7 +1729,6 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         # Mise en forme du resultat.
         fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
         self._calibration_parameters = {**given_parameters, **fit_parameters}
-        self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
         if self.verbose:
             print(f&#34;\tOK: set_calibration terminee: {self._calibration_parameters}&#34;)
         return self._calibration_parameters
@@ -2015,6 +2011,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                 * Au lieu de retourner un generateur, retourne une liste.
         **kwds
             Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_subsets``.
+            Se sont aussi ceux de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
 
         Returns
         -------
@@ -2068,7 +2065,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                                 atomic_find_subsets,
                                 (   # transformer, gnomonics, dmax, nbr, tol
                                     diag.find_subsets(**kwds, _get_args=True)
-                                    for diag in self
+                                    for _, diag in zip(self.find_zone_axes(tense_flow=True, **kwds), self)
                                 )
                             )
                         )
@@ -2161,8 +2158,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
             &#34;&#34;&#34;
             if multiprocessing.current_process().name == &#34;MainProcess&#34;:
                 # Compilation et serialisation des equations.
-                self.transformer.compile()
-                self.set_calibration()
+                self.transformer.compile(self.set_calibration(), transform=&#34;cam_to_gnomonic&#34;)
                 transformer_ser = cloudpickle.dumps(self.transformer)
 
                 # Parallelisation des fils.
@@ -2906,7 +2902,8 @@ recommence a partir du debut et l'ordre reste inchange.</li>
 </ul>
 </dd>
 <dt><strong><code>**kwds</code></strong></dt>
-<dd>Se sont les parametres de la fonction <code><a title="laue.diagram.LaueDiagram.find_subsets" href="../core/subsets.html#laue.core.subsets.Splitable.find_subsets">Splitable.find_subsets()</a></code>.</dd>
+<dd>Se sont les parametres de la fonction <code><a title="laue.diagram.LaueDiagram.find_subsets" href="../core/subsets.html#laue.core.subsets.Splitable.find_subsets">Splitable.find_subsets()</a></code>.
+Se sont aussi ceux de la fonction <code><a title="laue.diagram.LaueDiagram.find_zone_axes" href="../diagram.html#laue.diagram.LaueDiagram.find_zone_axes">LaueDiagram.find_zone_axes()</a></code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2957,6 +2954,7 @@ recommence a partir du debut et l'ordre reste inchange.</li>
             * Au lieu de retourner un generateur, retourne une liste.
     **kwds
         Se sont les parametres de la fonction ``laue.diagram.LaueDiagram.find_subsets``.
+        Se sont aussi ceux de la fonction ``laue.diagram.LaueDiagram.find_zone_axes``.
 
     Returns
     -------
@@ -3010,7 +3008,7 @@ recommence a partir du debut et l'ordre reste inchange.</li>
                             atomic_find_subsets,
                             (   # transformer, gnomonics, dmax, nbr, tol
                                 diag.find_subsets(**kwds, _get_args=True)
-                                for diag in self
+                                for _, diag in zip(self.find_zone_axes(tense_flow=True, **kwds), self)
                             )
                         )
                     )
@@ -3166,8 +3164,7 @@ sont de type <code><a title="laue.zone_axis.ZoneAxis" href="../zone_axis.html#la
         &#34;&#34;&#34;
         if multiprocessing.current_process().name == &#34;MainProcess&#34;:
             # Compilation et serialisation des equations.
-            self.transformer.compile()
-            self.set_calibration()
+            self.transformer.compile(self.set_calibration(), transform=&#34;cam_to_gnomonic&#34;)
             transformer_ser = cloudpickle.dumps(self.transformer)
 
             # Parallelisation des fils.
@@ -3894,7 +3891,6 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     unknown_parameters = PARAM_SET - set(given_parameters)
     if not unknown_parameters: # Si Il n&#39;y a rien a calculer.
         self._calibration_parameters = given_parameters
-        self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
         if self.verbose:
             if self.verbose &gt;= 2:
                 print(&#34;\t\tOK: Tout est fournis, il n&#39;y a rien a faire.&#34;)
@@ -3972,7 +3968,6 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     # Mise en forme du resultat.
     fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
     self._calibration_parameters = {**given_parameters, **fit_parameters}
-    self.transformer.compile(self._calibration_parameters) # Juste pour l&#39;optimisation.
     if self.verbose:
         print(f&#34;\tOK: set_calibration terminee: {self._calibration_parameters}&#34;)
     return self._calibration_parameters</code></pre>

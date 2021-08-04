@@ -260,17 +260,6 @@ class Spot:
         self._gnomonic = (xg, yg)
         return self._gnomonic
 
-    def get_hkl(self):
-        """
-        ** Recupere les indices de Miller. **
-
-        Returns
-        -------
-        tuple
-            Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
-        """
-        raise NotImplementedError("Demandez a Ravis, il sera ravis de vous repondre!")
-
     def get_id(self):
         """
         ** Renvoi le numero de ce spot. **
@@ -533,6 +522,28 @@ class Spot:
             plt.show()
 
         return axe_pyplot
+
+    def predict_hkl(self, *args, **kwds):
+        """
+        ** Predit les indices hkl avec une reseau de neurones. **
+
+        Parameters
+        ----------
+        *args
+            Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+        **kwds
+            Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+
+        Returns
+        -------
+        hkl : tuple
+            Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
+        score : float
+            Fiablilite de la prediction entre 0 et 1.
+            Un score > 95% assure que les indices de miller
+            trouves sont correctes.
+        """
+        raise NotImplementedError("Demandez a Ravis, il sera ravis de vous repondre!")
 
     def _clean(self):
         """

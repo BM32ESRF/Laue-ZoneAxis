@@ -137,14 +137,14 @@ class LaueDiagram(Splitable):
             if self.experiment.verbose:
                 print(f"Recherche des axes de {self.get_id()}...")
             from laue.core.zone_axes import _get_zone_axes_pickle
-            angles, dists, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
+            phi_s, mu_s, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
                 (self.experiment.transformer,
                 self.get_gnomonic_positions(),
                 dmax, nbr, tol))
             if self.experiment.verbose:
                 print(f"t\tOK: {len(axis_spots_ind)} axes trouves.")
         else:
-            angles, dists, axis_spots_ind, spots_axes_ind = _axes_args
+            phi_s, mu_s, axis_spots_ind, spots_axes_ind = _axes_args
 
         # Creation des objets 'ZoneAxis'.
         from laue.zone_axis import ZoneAxis
@@ -152,9 +152,9 @@ class LaueDiagram(Splitable):
             ZoneAxis(diagram=self,
                      spots_ind=spots_ind,
                      identifier=i,
-                     angle=angle,
-                     dist=dist)
-            for i, (angle, dist, spots_ind) in enumerate(zip(angles, dists, axis_spots_ind))]
+                     phi=phi,
+                     mu=mu)
+            for i, (phi, mu, spots_ind) in enumerate(zip(phi_s, mu_s, axis_spots_ind))]
 
         # Attribution des axes aux spots.
         for spot, axes_ind in zip(self, spots_axes_ind):

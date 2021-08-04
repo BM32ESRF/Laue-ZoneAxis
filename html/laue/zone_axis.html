@@ -88,11 +88,11 @@ def distance(axis1, axis2, *, weight=.5):
         * Importance de l&#39;angle entre les droites plutot que
         leurs distances par rapport a l&#39;origine.
         * 0.0 =&gt; Seule la distance compte:
-        \[ dist = \lvert d1-d2 \rvert \]
+        \[ dist = \lvert \mu1-\mu2 \rvert \]
         * 0.5 =&gt; L&#39;angle et la distance comptent pareillement:
-        \[ dist = \sqrt{\lambda^2.(\pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert )^2 + (1-\lambda)^2.(d1-d2)^2} \]
-        * 1.0 =&gt; Seule l&#39;angle compte:
-        \[ dist = \pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert \]
+        \[ dist = \sqrt{weight^2.(\pi - \lvert \lvert \varphi1-\varphi2 \rvert - \pi \rvert )^2 + (1-weight)^2.(d1-d2)^2} \]
+        * 1.0 =&gt; Seul l&#39;angle compte:
+        \[ dist = \pi - \lvert \lvert \varphi1-\varphi2 \rvert - \pi \rvert \]
 
     Returns
     -------
@@ -612,11 +612,11 @@ les combinaisons possibles d'axes entre <code>axis1</code> et <code>axis2</code>
 <li>Importance de l'angle entre les droites plutot que
 leurs distances par rapport a l'origine.</li>
 <li>0.0 =&gt; Seule la distance compte:
-<span><span class="MathJax_Preview"> dist = \lvert d1-d2 \rvert </span><script type="math/tex; mode=display"> dist = \lvert d1-d2 \rvert </script></span></li>
+<span><span class="MathJax_Preview"> dist = \lvert \mu1-\mu2 \rvert </span><script type="math/tex; mode=display"> dist = \lvert \mu1-\mu2 \rvert </script></span></li>
 <li>0.5 =&gt; L'angle et la distance comptent pareillement:
-<span><span class="MathJax_Preview"> dist = \sqrt{\lambda^2.(\pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert )^2 + (1-\lambda)^2.(d1-d2)^2} </span><script type="math/tex; mode=display"> dist = \sqrt{\lambda^2.(\pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert )^2 + (1-\lambda)^2.(d1-d2)^2} </script></span></li>
-<li>1.0 =&gt; Seule l'angle compte:
-<span><span class="MathJax_Preview"> dist = \pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert </span><script type="math/tex; mode=display"> dist = \pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert </script></span></li>
+<span><span class="MathJax_Preview"> dist = \sqrt{weight^2.(\pi - \lvert \lvert \varphi1-\varphi2 \rvert - \pi \rvert )^2 + (1-weight)^2.(d1-d2)^2} </span><script type="math/tex; mode=display"> dist = \sqrt{weight^2.(\pi - \lvert \lvert \varphi1-\varphi2 \rvert - \pi \rvert )^2 + (1-weight)^2.(d1-d2)^2} </script></span></li>
+<li>1.0 =&gt; Seul l'angle compte:
+<span><span class="MathJax_Preview"> dist = \pi - \lvert \lvert \varphi1-\varphi2 \rvert - \pi \rvert </span><script type="math/tex; mode=display"> dist = \pi - \lvert \lvert \varphi1-\varphi2 \rvert - \pi \rvert </script></span></li>
 </ul>
 </dd>
 </dl>
@@ -692,11 +692,11 @@ du cluster a l'axe isole est renvoye.</li>
         * Importance de l&#39;angle entre les droites plutot que
         leurs distances par rapport a l&#39;origine.
         * 0.0 =&gt; Seule la distance compte:
-        \[ dist = \lvert d1-d2 \rvert \]
+        \[ dist = \lvert \mu1-\mu2 \rvert \]
         * 0.5 =&gt; L&#39;angle et la distance comptent pareillement:
-        \[ dist = \sqrt{\lambda^2.(\pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert )^2 + (1-\lambda)^2.(d1-d2)^2} \]
-        * 1.0 =&gt; Seule l&#39;angle compte:
-        \[ dist = \pi - \lvert \lvert \theta1-\theta2 \rvert - \pi \rvert \]
+        \[ dist = \sqrt{weight^2.(\pi - \lvert \lvert \varphi1-\varphi2 \rvert - \pi \rvert )^2 + (1-weight)^2.(d1-d2)^2} \]
+        * 1.0 =&gt; Seul l&#39;angle compte:
+        \[ dist = \pi - \lvert \lvert \varphi1-\varphi2 \rvert - \pi \rvert \]
 
     Returns
     -------

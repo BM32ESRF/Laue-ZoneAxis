@@ -31,25 +31,28 @@ def test_geometry_dtype():
         from laue import Transformer
         from laue.utilities.parsing import extract_parameters
     parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
-    trans = Transformer()
+    transformer = Transformer()
 
-    _print("cam_to_gnomonic:")
-    for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        for boucle in range(3):
-            rtype = trans.cam_to_gnomonic(np.zeros(1), np.zeros(1), parameters, dtype=dtype).dtype.type
-            _print(f"\tboucle {boucle}: {dtype.__name__}->{rtype.__name__}")
-            assert rtype == dtype
-
-    _print("gnomonic_to_cam:")
-    for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        for boucle in range(3):
-            rtype = trans.gnomonic_to_cam(np.zeros(1), np.zeros(1), parameters, dtype=dtype).dtype.type
-            _print(f"\tboucle {boucle}: {dtype.__name__}->{rtype.__name__}")
-            assert rtype == dtype
+    for func in [
+            transformer.cam_to_gnomonic,
+            transformer.gnomonic_to_cam,
+            transformer.cam_to_thetachi,
+            transformer.thetachi_to_cam,
+            transformer.thetachi_to_gnomonic,
+            transformer.gnomonic_to_thetachi]:
+        _print(f"{func.__name__}:")
+        for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
+            for boucle in range(3):
+                try:
+                    rtype = func(.5*np.ones(1), .5*np.ones(1), parameters, dtype=dtype).dtype.type
+                except TypeError:
+                    rtype = func(.5*np.ones(1), .5*np.ones(1), dtype=dtype).dtype.type
+                _print(f"\tboucle {boucle}: {dtype.__name__}->{rtype.__name__}")
+                assert rtype == dtype
 
     _print("dist_line:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = trans.dist_line(
+        rtype = transformer.dist_line(
             np.array([0, np.pi/2]), np.array([1, 1]),
             np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]),
             dtype=dtype).dtype.type
@@ -58,7 +61,7 @@ def test_geometry_dtype():
 
     _print("hough:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = trans.hough(
+        rtype = transformer.hough(
             np.array([0, 1, 2]), np.array([2, 1, 0]),
             dtype=dtype).dtype.type
         _print(f"\t{dtype.__name__}->{rtype.__name__}")
@@ -66,8 +69,8 @@ def test_geometry_dtype():
 
     _print("hough_reduce:")
     for dtype in {np.float16, np.float32, np.float64}:
-        rtype = trans.hough_reduce(
-            *trans.hough(
+        rtype = transformer.hough_reduce(
+            *transformer.hough(
                 np.array([0, 1, 2]), np.array([2, -1, 0]),
                 dtype=dtype
             ),
@@ -78,7 +81,7 @@ def test_geometry_dtype():
 
     _print("inter_lines:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = trans.inter_lines(
+        rtype = transformer.inter_lines(
             np.array([0, np.pi/2]), np.array([1, 1]),
             dtype=dtype).dtype.type
         _print(f"\t{dtype.__name__}->{rtype.__name__}")
@@ -158,6 +161,26 @@ def test_geometry_bij():
         """
         S'assure que l'expression vaille 0.
         """
+        bounds = {
+            "xc": (0, 2048),
+            "yc": (0, 2048),
+            "xg": (-.6, .6),
+            "yg": (-.6, .6),
+            "dd": (20, 200),
+            "xcen": (724, 1324),
+            "ycen": (724, 1324),
+            "gamma": (-2, 2),
+            "beta": (-2, 2),
+            "chi": (-np.pi/4, np.pi/4),
+            "theta": (np.pi/8, 3*np.pi/8),
+            "uf_x": (-.5, .5),
+            "uf_y": (-.5, .5),
+            "uf_z": (.4, .6),
+            "uq_x": (-.6, -.4),
+            "uq_y": (-.5, .5),
+            "uq_z": (.4, .6),
+        }
+
         expr = sympy.simplify(sympy.factor(expr, deep=True), inverse=True)
         if expr == 0:
             _print("ok formel")
@@ -165,14 +188,17 @@ def test_geometry_bij():
         _print("fail formel, ", end="")
 
         symbols = list(expr.free_symbols)
-        if expr.has(sympy.cos) or expr.has(sympy.sin) or expr.has(sympy.Abs):
-            x_vect = np.linspace(.1, np.pi/4-.1, 21)
-        else:
-            x_vect = np.linspace(-1, 1, 21)
+        args = np.meshgrid(
+            *(
+                np.linspace(*bounds[str(symbol)], 11)
+                for symbol in symbols
+            ),
+            copy=False
+        )
+
         fct = sympy.lambdify(symbols, expr, modules="numpy")
-        args = np.meshgrid(*((x_vect,)*len(symbols)), copy=False)
         res = fct(*args)
-        is_ok = np.nanmax(np.abs(res)) < 1e-8
+        is_ok = np.nanmax(np.abs(res)) < 1e-3
         if not is_ok:
             _print("failed numerical")
             _print(f"\texpr = {expr}")

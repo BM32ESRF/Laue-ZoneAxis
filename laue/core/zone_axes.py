@@ -14,6 +14,7 @@ except ImportError:
     numexpr = None
 import psutil
 
+
 def atomic_find_zone_axes(transformer, gnomonics, dmax, nbr, tol):
     """
     ** Fonction 'bas niveau' de recherche d'axes de zonnes. **

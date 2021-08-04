@@ -274,7 +274,6 @@ class Experiment:
         unknown_parameters = PARAM_SET - set(given_parameters)
         if not unknown_parameters: # Si Il n'y a rien a calculer.
             self._calibration_parameters = given_parameters
-            # self.transformer.compile(self._calibration_parameters) # Juste pour l'optimisation.
             if self.verbose:
                 if self.verbose >= 2:
                     print("\t\tOK: Tout est fournis, il n'y a rien a faire.")
@@ -352,7 +351,6 @@ class Experiment:
         # Mise en forme du resultat.
         fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
         self._calibration_parameters = {**given_parameters, **fit_parameters}
-        # self.transformer.compile(self._calibration_parameters) # Juste pour l'optimisation.
         if self.verbose:
             print(f"\tOK: set_calibration terminee: {self._calibration_parameters}")
         return self._calibration_parameters
