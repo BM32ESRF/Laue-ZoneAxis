@@ -294,17 +294,6 @@ class Spot:
         self._gnomonic = (xg, yg)
         return self._gnomonic
 
-    def get_hkl(self):
-        &#34;&#34;&#34;
-        ** Recupere les indices de Miller. **
-
-        Returns
-        -------
-        tuple
-            Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
-
     def get_id(self):
         &#34;&#34;&#34;
         ** Renvoi le numero de ce spot. **
@@ -568,6 +557,28 @@ class Spot:
 
         return axe_pyplot
 
+    def predict_hkl(self, *args, **kwds):
+        &#34;&#34;&#34;
+        ** Predit les indices hkl avec une reseau de neurones. **
+
+        Parameters
+        ----------
+        *args
+            Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+        **kwds
+            Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+
+        Returns
+        -------
+        hkl : tuple
+            Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
+        score : float
+            Fiablilite de la prediction entre 0 et 1.
+            Un score &gt; 95% assure que les indices de miller
+            trouves sont correctes.
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
+
     def _clean(self):
         &#34;&#34;&#34;
         ** Vide les attributs recaculables. **
@@ -696,7 +707,7 @@ la liste des distance qui separe ce spot unique a tous les autres.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; from laue.spot import distance
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
@@ -997,17 +1008,6 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         self._gnomonic = (xg, yg)
         return self._gnomonic
 
-    def get_hkl(self):
-        &#34;&#34;&#34;
-        ** Recupere les indices de Miller. **
-
-        Returns
-        -------
-        tuple
-            Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
-
     def get_id(self):
         &#34;&#34;&#34;
         ** Renvoi le numero de ce spot. **
@@ -1271,6 +1271,28 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
 
         return axe_pyplot
 
+    def predict_hkl(self, *args, **kwds):
+        &#34;&#34;&#34;
+        ** Predit les indices hkl avec une reseau de neurones. **
+
+        Parameters
+        ----------
+        *args
+            Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+        **kwds
+            Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+
+        Returns
+        -------
+        hkl : tuple
+            Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
+        score : float
+            Fiablilite de la prediction entre 0 et 1.
+            Un score &gt; 95% assure que les indices de miller
+            trouves sont correctes.
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
+
     def _clean(self):
         &#34;&#34;&#34;
         ** Vide les attributs recaculables. **
@@ -1391,7 +1413,7 @@ des distances avec <code>np.meshgrid</code>.</li>
 <dd>La distance en mm.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; spot1, spot2 = diag[:2]
@@ -1447,7 +1469,7 @@ Si ce spot est a l'intersection de plusieurs axes,
 l'ensemble contiendra plusieurs elements.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; spot = diag.select_spots(n=1, sort=&quot;quality&quot;).pop()
@@ -1504,7 +1526,7 @@ l'ensemble contiendra plusieurs elements.</dd>
 <dd>x, y, w, h</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
@@ -1555,7 +1577,7 @@ Spot(position=(1370.52, 1874.78), quality=0.573)
 0.0 =&gt; Tache biscornue.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
@@ -1605,7 +1627,7 @@ Spot(position=(1370.52, 1874.78), quality=0.573)
 <dd>Les coordonnees x, y de la tache dans le plan gnomonic (en mm). de type (float, float)</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0][0]
@@ -1653,32 +1675,6 @@ array([ 0.314 , -0.4397])
     return self._gnomonic</code></pre>
 </details>
 </dd>
-<dt id="laue.spot.Spot.get_hkl"><code class="name flex">
-<span>def <span class="ident">get_hkl</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p><strong> Recupere les indices de Miller. </strong></p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>tuple</code></dt>
-<dd>Les 3 indices de Miller h, k et l dans un tuple (int, int, int).</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_hkl(self):
-    &#34;&#34;&#34;
-    ** Recupere les indices de Miller. **
-
-    Returns
-    -------
-    tuple
-        Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
-    &#34;&#34;&#34;
-    raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)</code></pre>
-</details>
-</dd>
 <dt id="laue.spot.Spot.get_id"><code class="name flex">
 <span>def <span class="ident">get_id</span></span>(<span>self)</span>
 </code></dt>
@@ -1686,7 +1682,7 @@ array([ 0.314 , -0.4397])
 <div class="desc"><p><strong> Renvoi le numero de ce spot. </strong></p>
 <p>Au sein d'un diagrame, chaque numero de spot est unique.</p>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; all(spot.get_id() == i for i, spot in enumerate(diag))
@@ -1728,7 +1724,7 @@ True
 Seules les valeurs au dessus du fond diffus sont considerees.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
@@ -1782,7 +1778,7 @@ Spot(position=(1370.52, 1874.78), quality=0.573)
 <dd>Les coordonnees x, y du centre de gravite de la tache (en pxl). de type (float, float).</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
@@ -1847,7 +1843,7 @@ array([1370.5172, 1874.7801])
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
@@ -1909,7 +1905,7 @@ projection sur le plan <code>(x, y)</code> de l'axe du rayon reflechit. (en deg)
 <code>(y, z)</code> de l'axe du rayon reflechit. (en deg)</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0][0]
@@ -1974,7 +1970,7 @@ array([ 25., -25.])
 <dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0][0]
 &gt;&gt;&gt;
@@ -2048,7 +2044,7 @@ array([ 25., -25.])
 <dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0][0]
 &gt;&gt;&gt;
@@ -2114,6 +2110,54 @@ array([ 25., -25.])
     return axe_pyplot</code></pre>
 </details>
 </dd>
+<dt id="laue.spot.Spot.predict_hkl"><code class="name flex">
+<span>def <span class="ident">predict_hkl</span></span>(<span>self, *args, **kwds)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Predit les indices hkl avec une reseau de neurones. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>*args</code></strong></dt>
+<dd>Same parameters as <code><a title="laue.core.hkl_nn.prediction.Predictor" href="core/hkl_nn/prediction.html#laue.core.hkl_nn.prediction.Predictor">Predictor</a></code>.</dd>
+<dt><strong><code>**kwds</code></strong></dt>
+<dd>Same parameters as <code><a title="laue.core.hkl_nn.prediction.Predictor" href="core/hkl_nn/prediction.html#laue.core.hkl_nn.prediction.Predictor">Predictor</a></code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>hkl</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>Les 3 indices de Miller h, k et l dans un tuple (int, int, int).</dd>
+<dt><strong><code>score</code></strong> :&ensp;<code>float</code></dt>
+<dd>Fiablilite de la prediction entre 0 et 1.
+Un score &gt; 95% assure que les indices de miller
+trouves sont correctes.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_hkl(self, *args, **kwds):
+    &#34;&#34;&#34;
+    ** Predit les indices hkl avec une reseau de neurones. **
+
+    Parameters
+    ----------
+    *args
+        Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+    **kwds
+        Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+
+    Returns
+    -------
+    hkl : tuple
+        Les 3 indices de Miller h, k et l dans un tuple (int, int, int).
+    score : float
+        Fiablilite de la prediction entre 0 et 1.
+        Un score &gt; 95% assure que les indices de miller
+        trouves sont correctes.
+    &#34;&#34;&#34;
+    raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -2148,7 +2192,6 @@ array([ 25., -25.])
 <li><code><a title="laue.spot.Spot.get_bbox" href="#laue.spot.Spot.get_bbox">get_bbox</a></code></li>
 <li><code><a title="laue.spot.Spot.get_distortion" href="#laue.spot.Spot.get_distortion">get_distortion</a></code></li>
 <li><code><a title="laue.spot.Spot.get_gnomonic" href="#laue.spot.Spot.get_gnomonic">get_gnomonic</a></code></li>
-<li><code><a title="laue.spot.Spot.get_hkl" href="#laue.spot.Spot.get_hkl">get_hkl</a></code></li>
 <li><code><a title="laue.spot.Spot.get_id" href="#laue.spot.Spot.get_id">get_id</a></code></li>
 <li><code><a title="laue.spot.Spot.get_intensity" href="#laue.spot.Spot.get_intensity">get_intensity</a></code></li>
 <li><code><a title="laue.spot.Spot.get_position" href="#laue.spot.Spot.get_position">get_position</a></code></li>
@@ -2156,6 +2199,7 @@ array([ 25., -25.])
 <li><code><a title="laue.spot.Spot.get_theta_chi" href="#laue.spot.Spot.get_theta_chi">get_theta_chi</a></code></li>
 <li><code><a title="laue.spot.Spot.plot_gnomonic" href="#laue.spot.Spot.plot_gnomonic">plot_gnomonic</a></code></li>
 <li><code><a title="laue.spot.Spot.plot_xy" href="#laue.spot.Spot.plot_xy">plot_xy</a></code></li>
+<li><code><a title="laue.spot.Spot.predict_hkl" href="#laue.spot.Spot.predict_hkl">predict_hkl</a></code></li>
 </ul>
 </li>
 </ul>

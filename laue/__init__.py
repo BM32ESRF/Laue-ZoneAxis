@@ -26,7 +26,7 @@ creation d'une experience
 >>> experiment = laue.Experiment(image)
 >>>
 >>> experiment
-Experiment(verbose=False, max_space=5, threshold=5.1)
+Experiment('laue/examples')
 >>>
 
 recuperation des diagrammes
@@ -44,7 +44,7 @@ recuperation des diagrammes
 # $ python3 -m pytest --doctest-modules laue && python3 -m pytest laue/tools/tests.py
 
 __all__ = ["Experiment", "Transformer",
-           "atomic_find_zone_axes", "atomic_find_subsets"]
+           "atomic_pic_search", "atomic_find_zone_axes", "atomic_find_subsets"]
 __pdoc__ = {"tests": False,
             "Experiment.__getitem__": True,
             "Experiment.__iter__": True,
@@ -52,5 +52,6 @@ __pdoc__ = {"tests": False,
 
 from laue.experiment.base_experiment import Experiment
 from laue.core.geometry.transformer import Transformer
+from laue.core.pic_search import atomic_pic_search
 from laue.core.zone_axes import atomic_find_zone_axes
 from laue.core.subsets import atomic_find_subsets

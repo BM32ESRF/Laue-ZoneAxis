@@ -16,8 +16,12 @@ import os
 import pickle
 import re
 
+from fast_histogram import histogram1d
 import h5py
 import numpy as np
+
+
+__pdoc__ = {"Predictor.__call__": True}
 
 
 class Predictor:
@@ -85,3 +89,64 @@ class Predictor:
                 if ':' in key: # contains data if ':' in key
                     weights[f[key].name] = f[key].value
         return weights
+
+    def _predict(self, x):
+        """
+        ** Help for ``Predictor.__call__``. **
+        """
+        softmax = lambda x: (np.exp(x).T / np.sum(np.exp(x).T, axis=0)).T
+        # first layer
+        l0 = np.dot(x, self.wb[self.temp_key[1]]) + self.wb[self.temp_key[0]] 
+        l0 = np.maximum(0, l0) ## ReLU activation
+        # Second layer
+        l1 = np.dot(l0, self.wb[self.temp_key[3]]) + self.wb[self.temp_key[2]] 
+        l1 = np.maximum(0, l1) ## ReLU activation
+        # Third layer
+        l2 = np.dot(l1, self.wb[self.temp_key[5]]) + self.wb[self.temp_key[4]]
+        l2 = np.maximum(0, l2) ## ReLU activation
+        # Output layer
+        l3 = np.dot(l2, self.wb[self.temp_key[7]]) + self.wb[self.temp_key[6]]
+        l3 = softmax(l3) ## output softmax activation
+        return l3
+
+    def __call__(self, theta_chi):
+        """
+        ** Estime les hkl. **
+
+        Parameters
+        ----------
+        theta_chi : np.ndarray
+            La matrice des thetas et des chi.
+            shape = (2, n), avec n le nombre de spots.
+
+        Returns
+        -------
+        hkl
+            Le vecteur des indices hkl
+        score
+            Le vecteur des fiabilitees.
+        """
+        sorted_data = theta_chi.transpose()
+        tabledistancerandom = np.transpose(GT.calculdist_from_thetachi(sorted_data, sorted_data))
+        
+        codebars_all = []        
+        spots_in_center = np.arange(0,len(data_theta))
+
+        for i in spots_in_center:
+            spotangles = tabledistancerandom[i]
+            spotangles = np.delete(spotangles, i)# removing the self distance
+            # codebars = np.histogram(spotangles, bins=angbins)[0]
+            codebars = histogram1d(spotangles, range=[min(self.angbins), max(self.angbins)], bins=len(self.angbins)-1)
+            ## normalize the same way as training data
+            max_codebars = np.max(codebars)
+            codebars = codebars / max_codebars
+            codebars_all.append(codebars)
+        ## reshape for the model to predict all spots at once
+        codebars = np.array(codebars_all)
+        ## Do prediction of all spots at once
+        prediction = self._predict(codebars)
+        max_pred = np.max(prediction, axis=1)
+        class_predicted = np.argmax(prediction, axis=1)
+        predicted_hkl = self.classhkl[class_predicted]
+        ## return predicted HKL and their softmax confidence
+        return predicted_hkl, max_pred

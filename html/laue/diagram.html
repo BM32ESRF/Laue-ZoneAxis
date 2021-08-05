@@ -68,7 +68,7 @@ class LaueDiagram(Splitable):
     &#34;&#34;&#34;
     Represente un diagramme de Laue associe a une seule image.
     &#34;&#34;&#34;
-    def __init__(self, name, spots, experiment, **kwargs):
+    def __init__(self, name, experiment):
         &#34;&#34;&#34;
         Notes
         -----
@@ -82,25 +82,44 @@ class LaueDiagram(Splitable):
         ----------
         name : str
             Nom de l&#39;image du diagramme.
-        spots : set
-            Ensemble des points chauds. Ils doivent heriter de ``laue.spot.Spot``.
         experiment : Experiment
             Instance de l&#39;experience qui contient ce diagramme.
             Cet objet doit heriter de ``laue.experiment.base_experiment.Experiment``.
-        image_xy : np.ndarray, optional
-            Matrice numpy de l&#39;image de depart.
         &#34;&#34;&#34;
-        self.name = name
+        self._name = name
         self.experiment = experiment # C&#39;est l&#39;experience qui contient ce diagramme.
-        self.spots = spots # La liste des spots en vrac. Pas set car l&#39;ordre doit etre fige.
-        self.image_xy = kwargs.get(&#34;image_xy&#34;, None) # None si il faut preserver la RAM.
+        self._spots = [] # La liste des spots en vrac. Ils doivent etres rempli par ailleur.
 
         # Declaration des variables futur.
-        self.quality = None # Facteur qui dit a quel point ce diagramme est joli a l&#39;oeil.
-        self.image_gnom = None # Image projete dans le plan gnomonic.
-        self.sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
-        self.axes = {} # Les axes de zones
-        self.spots_set = None # L&#39;ensemble des spots pour une recherche plus rapide.
+        self._quality = None # Facteur qui dit a quel point ce diagramme est joli a l&#39;oeil.
+        self._image_xy = None # L&#39;image brute avec le fond et tout.
+        self._image_gnom = None # Image projete dans le plan gnomonic.
+        self._sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
+        self._axes = {} # Les axes de zones.
+        self._spots_set = None # L&#39;ensemble des spots pour une recherche plus rapide.
+
+    def _set_spots(self, spots):
+        &#34;&#34;&#34;
+        ** Met les spots dans le diagrame. **
+
+        Parameters
+        ----------
+        spots : list
+            Ensemble des points chauds. Ils doivent heriter de ``laue.spot.Spot``.
+            Pas set car l&#39;ordre doit etre fige.
+        &#34;&#34;&#34;
+        self._spots = spots
+
+    def _set_image(self, image):
+        &#34;&#34;&#34;
+        ** Ajoute le contenu de l&#39;image brute. **
+
+        Parameters
+        ----------
+        image : np.ndarray
+            L&#39;image 2d en niveau de gris encodee en np.uint16.
+        &#34;&#34;&#34;
+        self._image_xy = image
 
     def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
         _axes_args=None, _get_args=False):
@@ -163,36 +182,36 @@ class LaueDiagram(Splitable):
             gnomonics = self.get_gnomonic_positions()
             return gnomonics, dmax, nbr, tol
 
-        if (dmax, nbr, tol) in self.axes: # Si on a deja la solution.
-            return self.axes[(dmax, nbr, tol)]
+        if (dmax, nbr, tol) in self._axes: # Si on a deja la solution.
+            return self._axes[(dmax, nbr, tol)]
 
         if _axes_args is None: # Si le travail n&#39;est pas premache.
             if self.experiment.verbose:
                 print(f&#34;Recherche des axes de {self.get_id()}...&#34;)
             from laue.core.zone_axes import _get_zone_axes_pickle
-            angles, dists, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
+            phi_s, mu_s, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
                 (self.experiment.transformer,
                 self.get_gnomonic_positions(),
                 dmax, nbr, tol))
             if self.experiment.verbose:
                 print(f&#34;t\tOK: {len(axis_spots_ind)} axes trouves.&#34;)
         else:
-            angles, dists, axis_spots_ind, spots_axes_ind = _axes_args
+            phi_s, mu_s, axis_spots_ind, spots_axes_ind = _axes_args
 
         # Creation des objets &#39;ZoneAxis&#39;.
         from laue.zone_axis import ZoneAxis
-        self.axes[(dmax, nbr, tol)] = [
+        self._axes[(dmax, nbr, tol)] = [
             ZoneAxis(diagram=self,
                      spots_ind=spots_ind,
                      identifier=i,
-                     angle=angle,
-                     dist=dist)
-            for i, (angle, dist, spots_ind) in enumerate(zip(angles, dists, axis_spots_ind))]
+                     phi=phi,
+                     mu=mu)
+            for i, (phi, mu, spots_ind) in enumerate(zip(phi_s, mu_s, axis_spots_ind))]
 
         # Attribution des axes aux spots.
         for spot, axes_ind in zip(self, spots_axes_ind):
-            spot.axes = {self.axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
-        return self.axes[(dmax, nbr, tol)]
+            spot.axes = {self._axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
+        return self._axes[(dmax, nbr, tol)]
 
     def get_gnomonic_positions(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -231,7 +250,7 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # On calcul les projections pour tous les points a la fois.
-        if self.spots[0]._gnomonic is None:
+        if self._spots[0]._gnomonic is None:
             coords_gnomonic = self.experiment.transformer.cam_to_gnomonic(
                 *self.get_positions(n=n, sort=sort),
                 self.experiment.set_calibration())
@@ -262,7 +281,7 @@ class LaueDiagram(Splitable):
         &#39;laue/examples/ge_blanc.mccd&#39;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return self.name
+        return self._name
 
     def get_image_gnomonic(self):
         &#34;&#34;&#34;
@@ -300,8 +319,8 @@ class LaueDiagram(Splitable):
                [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        if self.image_gnom is not None:
-            return self.image_gnom
+        if self._image_gnom is not None:
+            return self._image_gnom
 
         if self.experiment.verbose:
             print(f&#34;Image gnomonic de {self.get_id()}...&#34;)
@@ -313,7 +332,7 @@ class LaueDiagram(Splitable):
             map_x, map_y, interpolation=cv2.INTER_LINEAR)
 
         if psutil is not None and psutil.virtual_memory().percent &lt; 75:
-            self.image_gnom = image_gnom
+            self._image_gnom = image_gnom
 
         if self.experiment.verbose:
             print(f&#34;\tOK: Image gnomonic caluculee.&#34;)
@@ -351,8 +370,8 @@ class LaueDiagram(Splitable):
         28899
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        if self.image_xy is not None:
-            return self.image_xy
+        if self._image_xy is not None:
+            return self._image_xy
 
         if not os.path.exists(self.get_id()):
             raise NameError(f&#34;Impossible de trouver le fichier {repr(self.get_id())}.&#34;)
@@ -361,7 +380,7 @@ class LaueDiagram(Splitable):
         image = read_image(self.get_id())
 
         if psutil is not None and psutil.virtual_memory().percent &lt; 75:
-            self.image_xy = image
+            self._image_xy = image
 
         return image
 
@@ -485,7 +504,7 @@ class LaueDiagram(Splitable):
                 raise ValueError(f&#34;Il faut selectioner au moin 1 voisin. {n_max} c&#39;est pas suffisant.&#34;)
             nbr = min(nbr, n_max)
 
-        neighbors = [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+        neighbors = [self._spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
         if self.experiment.verbose:
             print(f&#34;\tOK: il y a {len(neighbors)} voisins.&#34;)
         return neighbors
@@ -565,13 +584,13 @@ class LaueDiagram(Splitable):
                 return 1
             return math.exp(-(x-n_best_max)*(math.log(2)/n_best_max))
 
-        if self.quality is not None:
-            return self.quality
+        if self._quality is not None:
+            return self._quality
 
         spot_qual_weight = 0.5
 
-        self.quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
-        return self.quality
+        self._quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
+        return self._quality
 
     def get_theta_chi(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -604,7 +623,7 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # On calcul les projections pour tous les points a la fois.
-        if self.spots[0]._thetachi is None:
+        if self._spots[0]._thetachi is None:
             angles_thetachi = self.experiment.transformer.cam_to_thetachi(
                 *self.get_positions(n=n, sort=sort),
                 self.experiment.set_calibration())
@@ -893,21 +912,21 @@ class LaueDiagram(Splitable):
 
         if sort is None: # Si il n&#39;y a pas de tri a faire.
             if n is None:
-                return self.spots.copy()
-            return self.spots[:n]
+                return self._spots.copy()
+            return self._spots[:n]
 
         if hasattr(sort, &#34;__call__&#34;):
-            l_spots = sorted(self.spots, key=sort)
-        if sort in self.sorted_spots: # On enregistre la liste pour de melleur
-            l_spots = self.sorted_spots[sort] #  perfs aux apels suivants.
+            l_spots = sorted(self._spots, key=sort)
+        if sort in self._sorted_spots: # On enregistre la liste pour de melleur
+            l_spots = self._sorted_spots[sort] #  perfs aux apels suivants.
         else:
             if sort == &#34;intensity&#34;:
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_intensity()))
+                l_spots = sorted(self._spots, key=(lambda spot: -spot.get_intensity()))
             elif sort == &#34;distortion&#34;:
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_distortion()))
+                l_spots = sorted(self._spots, key=(lambda spot: -spot.get_distortion()))
             elif sort == &#34;quality&#34;:
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_quality()))
-            self.sorted_spots[sort] = l_spots
+                l_spots = sorted(self._spots, key=(lambda spot: -spot.get_quality()))
+            self._sorted_spots[sort] = l_spots
 
         if n is not None:
             return l_spots[:n]
@@ -923,12 +942,12 @@ class LaueDiagram(Splitable):
         place en memoire.
         &#34;&#34;&#34;
         if os.path.exists(self.get_id()): # Il ne faut pas supprimer
-            self.image_xy = None # une image que l&#39;on ne peut pas retrouver!
-        self.quality = None
-        self.image_gnom = None
-        self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
-        self.axes = {} # Les axes de zone depandent de beaucoup de choses, on reste donc prudent.
-        self.spots_set = None # On libere de la memoire en faisant ca.
+            self._image_xy = None # une image que l&#39;on ne peut pas retrouver!
+        self._quality = None
+        self._image_gnom = None
+        self._sorted_spots = {} # Si jamais la set_calibration ou un spot change.
+        self._axes = {} # Les axes de zone depandent de beaucoup de choses, on reste donc prudent.
+        self._spots_set = None # On libere de la memoire en faisant ca.
         for spot in self:
             spot._clean()
 
@@ -975,9 +994,9 @@ class LaueDiagram(Splitable):
                 return False
             spot = self[spot]
 
-        if self.spots_set is None:
-            self.spots_set = set(self)
-        return spot in self.spots_set
+        if self._spots_set is None:
+            self._spots_set = set(self)
+        return spot in self._spots_set
 
     def __getitem__(self, item):
         &#34;&#34;&#34;
@@ -1032,10 +1051,10 @@ class LaueDiagram(Splitable):
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if isinstance(item, (int, np.integer)):
-            return self.spots[item]
+            return self._spots[item]
 
         if isinstance(item, slice):
-            return self.spots[item]
+            return self._spots[item]
 
         if isinstance(item, (Spot, tuple)):
             return self.get_neighbors(item, n_max=1).pop()
@@ -1075,7 +1094,7 @@ class LaueDiagram(Splitable):
         ...
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        yield from self.spots
+        yield from self._spots
 
     def __len__(self):
         &#34;&#34;&#34;
@@ -1090,7 +1109,7 @@ class LaueDiagram(Splitable):
         78
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return len(self.spots)
+        return len(self._spots)
 
     def __str__(self):
         &#34;&#34;&#34;
@@ -1121,7 +1140,7 @@ class LaueDiagram(Splitable):
 <dl>
 <dt id="laue.diagram.LaueDiagram"><code class="flex name class">
 <span>class <span class="ident">LaueDiagram</span></span>
-<span>(</span><span>name, spots, experiment, **kwargs)</span>
+<span>(</span><span>name, experiment)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Represente un diagramme de Laue associe a une seule image.</p>
@@ -1137,13 +1156,9 @@ l'enorme mefiance envers les humains.</li>
 <dl>
 <dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
 <dd>Nom de l'image du diagramme.</dd>
-<dt><strong><code>spots</code></strong> :&ensp;<code>set</code></dt>
-<dd>Ensemble des points chauds. Ils doivent heriter de <code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code>.</dd>
 <dt><strong><code>experiment</code></strong> :&ensp;<code>Experiment</code></dt>
 <dd>Instance de l'experience qui contient ce diagramme.
 Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experiment" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></code>.</dd>
-<dt><strong><code>image_xy</code></strong> :&ensp;<code>np.ndarray</code>, optional</dt>
-<dd>Matrice numpy de l'image de depart.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1153,7 +1168,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
     &#34;&#34;&#34;
     Represente un diagramme de Laue associe a une seule image.
     &#34;&#34;&#34;
-    def __init__(self, name, spots, experiment, **kwargs):
+    def __init__(self, name, experiment):
         &#34;&#34;&#34;
         Notes
         -----
@@ -1167,25 +1182,44 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         ----------
         name : str
             Nom de l&#39;image du diagramme.
-        spots : set
-            Ensemble des points chauds. Ils doivent heriter de ``laue.spot.Spot``.
         experiment : Experiment
             Instance de l&#39;experience qui contient ce diagramme.
             Cet objet doit heriter de ``laue.experiment.base_experiment.Experiment``.
-        image_xy : np.ndarray, optional
-            Matrice numpy de l&#39;image de depart.
         &#34;&#34;&#34;
-        self.name = name
+        self._name = name
         self.experiment = experiment # C&#39;est l&#39;experience qui contient ce diagramme.
-        self.spots = spots # La liste des spots en vrac. Pas set car l&#39;ordre doit etre fige.
-        self.image_xy = kwargs.get(&#34;image_xy&#34;, None) # None si il faut preserver la RAM.
+        self._spots = [] # La liste des spots en vrac. Ils doivent etres rempli par ailleur.
 
         # Declaration des variables futur.
-        self.quality = None # Facteur qui dit a quel point ce diagramme est joli a l&#39;oeil.
-        self.image_gnom = None # Image projete dans le plan gnomonic.
-        self.sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
-        self.axes = {} # Les axes de zones
-        self.spots_set = None # L&#39;ensemble des spots pour une recherche plus rapide.
+        self._quality = None # Facteur qui dit a quel point ce diagramme est joli a l&#39;oeil.
+        self._image_xy = None # L&#39;image brute avec le fond et tout.
+        self._image_gnom = None # Image projete dans le plan gnomonic.
+        self._sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
+        self._axes = {} # Les axes de zones.
+        self._spots_set = None # L&#39;ensemble des spots pour une recherche plus rapide.
+
+    def _set_spots(self, spots):
+        &#34;&#34;&#34;
+        ** Met les spots dans le diagrame. **
+
+        Parameters
+        ----------
+        spots : list
+            Ensemble des points chauds. Ils doivent heriter de ``laue.spot.Spot``.
+            Pas set car l&#39;ordre doit etre fige.
+        &#34;&#34;&#34;
+        self._spots = spots
+
+    def _set_image(self, image):
+        &#34;&#34;&#34;
+        ** Ajoute le contenu de l&#39;image brute. **
+
+        Parameters
+        ----------
+        image : np.ndarray
+            L&#39;image 2d en niveau de gris encodee en np.uint16.
+        &#34;&#34;&#34;
+        self._image_xy = image
 
     def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
         _axes_args=None, _get_args=False):
@@ -1248,36 +1282,36 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             gnomonics = self.get_gnomonic_positions()
             return gnomonics, dmax, nbr, tol
 
-        if (dmax, nbr, tol) in self.axes: # Si on a deja la solution.
-            return self.axes[(dmax, nbr, tol)]
+        if (dmax, nbr, tol) in self._axes: # Si on a deja la solution.
+            return self._axes[(dmax, nbr, tol)]
 
         if _axes_args is None: # Si le travail n&#39;est pas premache.
             if self.experiment.verbose:
                 print(f&#34;Recherche des axes de {self.get_id()}...&#34;)
             from laue.core.zone_axes import _get_zone_axes_pickle
-            angles, dists, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
+            phi_s, mu_s, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
                 (self.experiment.transformer,
                 self.get_gnomonic_positions(),
                 dmax, nbr, tol))
             if self.experiment.verbose:
                 print(f&#34;t\tOK: {len(axis_spots_ind)} axes trouves.&#34;)
         else:
-            angles, dists, axis_spots_ind, spots_axes_ind = _axes_args
+            phi_s, mu_s, axis_spots_ind, spots_axes_ind = _axes_args
 
         # Creation des objets &#39;ZoneAxis&#39;.
         from laue.zone_axis import ZoneAxis
-        self.axes[(dmax, nbr, tol)] = [
+        self._axes[(dmax, nbr, tol)] = [
             ZoneAxis(diagram=self,
                      spots_ind=spots_ind,
                      identifier=i,
-                     angle=angle,
-                     dist=dist)
-            for i, (angle, dist, spots_ind) in enumerate(zip(angles, dists, axis_spots_ind))]
+                     phi=phi,
+                     mu=mu)
+            for i, (phi, mu, spots_ind) in enumerate(zip(phi_s, mu_s, axis_spots_ind))]
 
         # Attribution des axes aux spots.
         for spot, axes_ind in zip(self, spots_axes_ind):
-            spot.axes = {self.axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
-        return self.axes[(dmax, nbr, tol)]
+            spot.axes = {self._axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
+        return self._axes[(dmax, nbr, tol)]
 
     def get_gnomonic_positions(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -1316,7 +1350,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # On calcul les projections pour tous les points a la fois.
-        if self.spots[0]._gnomonic is None:
+        if self._spots[0]._gnomonic is None:
             coords_gnomonic = self.experiment.transformer.cam_to_gnomonic(
                 *self.get_positions(n=n, sort=sort),
                 self.experiment.set_calibration())
@@ -1347,7 +1381,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &#39;laue/examples/ge_blanc.mccd&#39;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return self.name
+        return self._name
 
     def get_image_gnomonic(self):
         &#34;&#34;&#34;
@@ -1385,8 +1419,8 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
                [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        if self.image_gnom is not None:
-            return self.image_gnom
+        if self._image_gnom is not None:
+            return self._image_gnom
 
         if self.experiment.verbose:
             print(f&#34;Image gnomonic de {self.get_id()}...&#34;)
@@ -1398,7 +1432,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             map_x, map_y, interpolation=cv2.INTER_LINEAR)
 
         if psutil is not None and psutil.virtual_memory().percent &lt; 75:
-            self.image_gnom = image_gnom
+            self._image_gnom = image_gnom
 
         if self.experiment.verbose:
             print(f&#34;\tOK: Image gnomonic caluculee.&#34;)
@@ -1436,8 +1470,8 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         28899
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        if self.image_xy is not None:
-            return self.image_xy
+        if self._image_xy is not None:
+            return self._image_xy
 
         if not os.path.exists(self.get_id()):
             raise NameError(f&#34;Impossible de trouver le fichier {repr(self.get_id())}.&#34;)
@@ -1446,7 +1480,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         image = read_image(self.get_id())
 
         if psutil is not None and psutil.virtual_memory().percent &lt; 75:
-            self.image_xy = image
+            self._image_xy = image
 
         return image
 
@@ -1570,7 +1604,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
                 raise ValueError(f&#34;Il faut selectioner au moin 1 voisin. {n_max} c&#39;est pas suffisant.&#34;)
             nbr = min(nbr, n_max)
 
-        neighbors = [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+        neighbors = [self._spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
         if self.experiment.verbose:
             print(f&#34;\tOK: il y a {len(neighbors)} voisins.&#34;)
         return neighbors
@@ -1650,13 +1684,13 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
                 return 1
             return math.exp(-(x-n_best_max)*(math.log(2)/n_best_max))
 
-        if self.quality is not None:
-            return self.quality
+        if self._quality is not None:
+            return self._quality
 
         spot_qual_weight = 0.5
 
-        self.quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
-        return self.quality
+        self._quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
+        return self._quality
 
     def get_theta_chi(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -1689,7 +1723,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         # On calcul les projections pour tous les points a la fois.
-        if self.spots[0]._thetachi is None:
+        if self._spots[0]._thetachi is None:
             angles_thetachi = self.experiment.transformer.cam_to_thetachi(
                 *self.get_positions(n=n, sort=sort),
                 self.experiment.set_calibration())
@@ -1978,21 +2012,21 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
 
         if sort is None: # Si il n&#39;y a pas de tri a faire.
             if n is None:
-                return self.spots.copy()
-            return self.spots[:n]
+                return self._spots.copy()
+            return self._spots[:n]
 
         if hasattr(sort, &#34;__call__&#34;):
-            l_spots = sorted(self.spots, key=sort)
-        if sort in self.sorted_spots: # On enregistre la liste pour de melleur
-            l_spots = self.sorted_spots[sort] #  perfs aux apels suivants.
+            l_spots = sorted(self._spots, key=sort)
+        if sort in self._sorted_spots: # On enregistre la liste pour de melleur
+            l_spots = self._sorted_spots[sort] #  perfs aux apels suivants.
         else:
             if sort == &#34;intensity&#34;:
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_intensity()))
+                l_spots = sorted(self._spots, key=(lambda spot: -spot.get_intensity()))
             elif sort == &#34;distortion&#34;:
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_distortion()))
+                l_spots = sorted(self._spots, key=(lambda spot: -spot.get_distortion()))
             elif sort == &#34;quality&#34;:
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_quality()))
-            self.sorted_spots[sort] = l_spots
+                l_spots = sorted(self._spots, key=(lambda spot: -spot.get_quality()))
+            self._sorted_spots[sort] = l_spots
 
         if n is not None:
             return l_spots[:n]
@@ -2008,12 +2042,12 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         place en memoire.
         &#34;&#34;&#34;
         if os.path.exists(self.get_id()): # Il ne faut pas supprimer
-            self.image_xy = None # une image que l&#39;on ne peut pas retrouver!
-        self.quality = None
-        self.image_gnom = None
-        self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
-        self.axes = {} # Les axes de zone depandent de beaucoup de choses, on reste donc prudent.
-        self.spots_set = None # On libere de la memoire en faisant ca.
+            self._image_xy = None # une image que l&#39;on ne peut pas retrouver!
+        self._quality = None
+        self._image_gnom = None
+        self._sorted_spots = {} # Si jamais la set_calibration ou un spot change.
+        self._axes = {} # Les axes de zone depandent de beaucoup de choses, on reste donc prudent.
+        self._spots_set = None # On libere de la memoire en faisant ca.
         for spot in self:
             spot._clean()
 
@@ -2060,9 +2094,9 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
                 return False
             spot = self[spot]
 
-        if self.spots_set is None:
-            self.spots_set = set(self)
-        return spot in self.spots_set
+        if self._spots_set is None:
+            self._spots_set = set(self)
+        return spot in self._spots_set
 
     def __getitem__(self, item):
         &#34;&#34;&#34;
@@ -2117,10 +2151,10 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if isinstance(item, (int, np.integer)):
-            return self.spots[item]
+            return self._spots[item]
 
         if isinstance(item, slice):
-            return self.spots[item]
+            return self._spots[item]
 
         if isinstance(item, (Spot, tuple)):
             return self.get_neighbors(item, n_max=1).pop()
@@ -2160,7 +2194,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         ...
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        yield from self.spots
+        yield from self._spots
 
     def __len__(self):
         &#34;&#34;&#34;
@@ -2175,7 +2209,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         78
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return len(self.spots)
+        return len(self._spots)
 
     def __str__(self):
         &#34;&#34;&#34;
@@ -2217,7 +2251,7 @@ si il est present ou pas. Ou bien l'index de ce spot.</dd>
 <dd>True si le spot est present dans ce diagramme, False sinon.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt;
@@ -2282,9 +2316,9 @@ True
             return False
         spot = self[spot]
 
-    if self.spots_set is None:
-        self.spots_set = set(self)
-    return spot in self.spots_set</code></pre>
+    if self._spots_set is None:
+        self._spots_set = set(self)
+    return spot in self._spots_set</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.__getitem__"><code class="name flex">
@@ -2330,7 +2364,7 @@ l'intervalle fournit. Comme si <code><a title="laue.diagram.LaueDiagram" href="#
 <dd>Si les arguments fournis ne sont pas du bon type.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
@@ -2406,10 +2440,10 @@ array([0.25, 0.32])
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     if isinstance(item, (int, np.integer)):
-        return self.spots[item]
+        return self._spots[item]
 
     if isinstance(item, slice):
-        return self.spots[item]
+        return self._spots[item]
 
     if isinstance(item, (Spot, tuple)):
         return self.get_neighbors(item, n_max=1).pop()
@@ -2454,7 +2488,7 @@ Seul les pointeurs sont cedes, ce qui implique que toute
 modification d'un spot sera globale.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; for spot in diag:
@@ -2489,7 +2523,7 @@ modification d'un spot sera globale.</dd>
     ...
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    yield from self.spots</code></pre>
+    yield from self._spots</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.__len__"><code class="name flex">
@@ -2498,7 +2532,7 @@ modification d'un spot sera globale.</dd>
 <dd>
 <div class="desc"><p><strong> Renvoi le nombre de spots. </strong></p>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; len(diag)
@@ -2522,7 +2556,7 @@ modification d'un spot sera globale.</dd>
     78
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    return len(self.spots)</code></pre>
+    return len(self._spots)</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.find_zone_axes"><code class="name flex">
@@ -2556,7 +2590,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
 <dd>La liste des axes de zone de type <code><a title="laue.zone_axis.ZoneAxis" href="zone_axis.html#laue.zone_axis.ZoneAxis">ZoneAxis</a></code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; type(diag.find_zone_axes())
@@ -2630,36 +2664,36 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
         gnomonics = self.get_gnomonic_positions()
         return gnomonics, dmax, nbr, tol
 
-    if (dmax, nbr, tol) in self.axes: # Si on a deja la solution.
-        return self.axes[(dmax, nbr, tol)]
+    if (dmax, nbr, tol) in self._axes: # Si on a deja la solution.
+        return self._axes[(dmax, nbr, tol)]
 
     if _axes_args is None: # Si le travail n&#39;est pas premache.
         if self.experiment.verbose:
             print(f&#34;Recherche des axes de {self.get_id()}...&#34;)
         from laue.core.zone_axes import _get_zone_axes_pickle
-        angles, dists, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
+        phi_s, mu_s, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
             (self.experiment.transformer,
             self.get_gnomonic_positions(),
             dmax, nbr, tol))
         if self.experiment.verbose:
             print(f&#34;t\tOK: {len(axis_spots_ind)} axes trouves.&#34;)
     else:
-        angles, dists, axis_spots_ind, spots_axes_ind = _axes_args
+        phi_s, mu_s, axis_spots_ind, spots_axes_ind = _axes_args
 
     # Creation des objets &#39;ZoneAxis&#39;.
     from laue.zone_axis import ZoneAxis
-    self.axes[(dmax, nbr, tol)] = [
+    self._axes[(dmax, nbr, tol)] = [
         ZoneAxis(diagram=self,
                  spots_ind=spots_ind,
                  identifier=i,
-                 angle=angle,
-                 dist=dist)
-        for i, (angle, dist, spots_ind) in enumerate(zip(angles, dists, axis_spots_ind))]
+                 phi=phi,
+                 mu=mu)
+        for i, (phi, mu, spots_ind) in enumerate(zip(phi_s, mu_s, axis_spots_ind))]
 
     # Attribution des axes aux spots.
     for spot, axes_ind in zip(self, spots_axes_ind):
-        spot.axes = {self.axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
-    return self.axes[(dmax, nbr, tol)]</code></pre>
+        spot.axes = {self._axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
+    return self._axes[(dmax, nbr, tol)]</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.get_gnomonic_positions"><code class="name flex">
@@ -2691,7 +2725,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
 En general l'un des parametres de set_calibration.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
@@ -2743,7 +2777,7 @@ array([[ 0.25,  0.08,  0.27, -0.26],
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     # On calcul les projections pour tous les points a la fois.
-    if self.spots[0]._gnomonic is None:
+    if self._spots[0]._gnomonic is None:
         coords_gnomonic = self.experiment.transformer.cam_to_gnomonic(
             *self.get_positions(n=n, sort=sort),
             self.experiment.set_calibration())
@@ -2769,7 +2803,7 @@ d'acces au fichier image qui a permis de constituer le diagramme.</li>
 <li>Si le chemin d'acces est inconnu, un nom par defaut unique est genere.</li>
 </ul>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_id()
@@ -2797,7 +2831,7 @@ d'acces au fichier image qui a permis de constituer le diagramme.</li>
     &#39;laue/examples/ge_blanc.mccd&#39;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    return self.name</code></pre>
+    return self._name</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.get_image_gnomonic"><code class="name flex">
@@ -2821,7 +2855,7 @@ un appel a la fonction <code><a title="laue.experiment.base_experiment.Experimen
 <dd>Si il manque des infos pour satisfaire cette demande.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.get_image_gnomonic()
@@ -2874,8 +2908,8 @@ array([[0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    if self.image_gnom is not None:
-        return self.image_gnom
+    if self._image_gnom is not None:
+        return self._image_gnom
 
     if self.experiment.verbose:
         print(f&#34;Image gnomonic de {self.get_id()}...&#34;)
@@ -2887,7 +2921,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
         map_x, map_y, interpolation=cv2.INTER_LINEAR)
 
     if psutil is not None and psutil.virtual_memory().percent &lt; 75:
-        self.image_gnom = image_gnom
+        self._image_gnom = image_gnom
 
     if self.experiment.verbose:
         print(f&#34;\tOK: Image gnomonic caluculee.&#34;)
@@ -2911,7 +2945,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
 <dd>Si l'image est introuvable.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_image_xy()
@@ -2961,8 +2995,8 @@ array([[0, 0, 0, ..., 0, 0, 0],
     28899
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    if self.image_xy is not None:
-        return self.image_xy
+    if self._image_xy is not None:
+        return self._image_xy
 
     if not os.path.exists(self.get_id()):
         raise NameError(f&#34;Impossible de trouver le fichier {repr(self.get_id())}.&#34;)
@@ -2971,7 +3005,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
     image = read_image(self.get_id())
 
     if psutil is not None and psutil.virtual_memory().percent &lt; 75:
-        self.image_xy = image
+        self._image_xy = image
 
     return image</code></pre>
 </details>
@@ -3026,7 +3060,7 @@ Le premier element peut etre le spot de reference si il existe.</dd>
 <dd>Si l'un des type est absurde.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; spot, = diag.select_spots(n=1, sort=&quot;intensity&quot;)
@@ -3173,7 +3207,7 @@ True
             raise ValueError(f&#34;Il faut selectioner au moin 1 voisin. {n_max} c&#39;est pas suffisant.&#34;)
         nbr = min(nbr, n_max)
 
-    neighbors = [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+    neighbors = [self._spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
     if self.experiment.verbose:
         print(f&#34;\tOK: il y a {len(neighbors)} voisins.&#34;)
     return neighbors</code></pre>
@@ -3204,7 +3238,7 @@ True
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
@@ -3275,7 +3309,7 @@ array([[ 622.,  932., 1243., 1276.],
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = (&quot;laue/examples/ge_blanc.mccd&quot;, &quot;laue/examples/roi1_0001.mccd&quot;)
 &gt;&gt;&gt; diag1, diag2 = laue.Experiment(images)[:2]
 &gt;&gt;&gt;
@@ -3328,13 +3362,13 @@ quality: 0.5153
             return 1
         return math.exp(-(x-n_best_max)*(math.log(2)/n_best_max))
 
-    if self.quality is not None:
-        return self.quality
+    if self._quality is not None:
+        return self._quality
 
     spot_qual_weight = 0.5
 
-    self.quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
-    return self.quality</code></pre>
+    self._quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
+    return self._quality</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.get_theta_chi"><code class="name flex">
@@ -3360,7 +3394,7 @@ quality: 0.5153
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
@@ -3406,7 +3440,7 @@ array([[ 29.,  40.,  29.,  58.],
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     # On calcul les projections pour tous les points a la fois.
-    if self.spots[0]._thetachi is None:
+    if self._spots[0]._thetachi is None:
         angles_thetachi = self.experiment.transformer.cam_to_thetachi(
             *self.get_positions(n=n, sort=sort),
             self.experiment.set_calibration())
@@ -3441,7 +3475,7 @@ array([[ 29.,  40.,  29.,  58.],
 <dd>La figure matplotlib completee.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.plot_all(display=False)
@@ -3511,18 +3545,18 @@ array([[ 29.,  40.,  29.,  58.],
 <dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt;
 </code></pre>
 <p>Sans preciser l'axe.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; diag.plot_gnomonic(display=False)
+<pre><code class="python-repl">&gt;&gt;&gt; diag.plot_gnomonic(display=False)
 &lt;AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'&gt;
 &gt;&gt;&gt;
 </code></pre>
 <p>En precisant l'axe.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
+<pre><code class="python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
 &gt;&gt;&gt; fig = plt.figure()
 &gt;&gt;&gt; axe = fig.add_subplot()
 &gt;&gt;&gt; diag.plot_gnomonic(axe, display=False)
@@ -3622,7 +3656,7 @@ array([[ 29.,  40.,  29.,  58.],
 <dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt;
@@ -3711,7 +3745,7 @@ L'extension doit etre comprise dans le nom du fichier.
 Si un fichier du meme nom existe deja, il est ecrase.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import os, tempfile
+<pre><code class="python-repl">&gt;&gt;&gt; import os, tempfile
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
@@ -3811,7 +3845,7 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 <dd>La liste des spots. Chaque element est de type <code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.select_spots(n=2, sort=&quot;intensity&quot;)
@@ -3879,21 +3913,21 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 
     if sort is None: # Si il n&#39;y a pas de tri a faire.
         if n is None:
-            return self.spots.copy()
-        return self.spots[:n]
+            return self._spots.copy()
+        return self._spots[:n]
 
     if hasattr(sort, &#34;__call__&#34;):
-        l_spots = sorted(self.spots, key=sort)
-    if sort in self.sorted_spots: # On enregistre la liste pour de melleur
-        l_spots = self.sorted_spots[sort] #  perfs aux apels suivants.
+        l_spots = sorted(self._spots, key=sort)
+    if sort in self._sorted_spots: # On enregistre la liste pour de melleur
+        l_spots = self._sorted_spots[sort] #  perfs aux apels suivants.
     else:
         if sort == &#34;intensity&#34;:
-            l_spots = sorted(self.spots, key=(lambda spot: -spot.get_intensity()))
+            l_spots = sorted(self._spots, key=(lambda spot: -spot.get_intensity()))
         elif sort == &#34;distortion&#34;:
-            l_spots = sorted(self.spots, key=(lambda spot: -spot.get_distortion()))
+            l_spots = sorted(self._spots, key=(lambda spot: -spot.get_distortion()))
         elif sort == &#34;quality&#34;:
-            l_spots = sorted(self.spots, key=(lambda spot: -spot.get_quality()))
-        self.sorted_spots[sort] = l_spots
+            l_spots = sorted(self._spots, key=(lambda spot: -spot.get_quality()))
+        self._sorted_spots[sort] = l_spots
 
     if n is not None:
         return l_spots[:n]

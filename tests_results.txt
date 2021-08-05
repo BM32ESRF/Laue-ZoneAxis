@@ -1,73 +1,142 @@
-DATE: Wed Aug  4 13:19:38 2021
-NCPU: 2
+DATE: Thu Aug  5 15:02:06 2021
+NCPU: 8
 ============ TEST GEOMETRY DTYPE =============
 cam_to_gnomonic:
-	boucle 0: float128->float128
-	boucle 1: float128->float128
-	boucle 2: float128->float128
-	boucle 0: float64->float64
-	boucle 1: float64->float64
-	boucle 2: float64->float64
 	boucle 0: float32->float32
 	boucle 1: float32->float32
 	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
+	boucle 0: float128->float128
+	boucle 1: float128->float128
+	boucle 2: float128->float128
+	boucle 0: float64->float64
+	boucle 1: float64->float64
+	boucle 2: float64->float64
 gnomonic_to_cam:
-	boucle 0: float128->float128
-	boucle 1: float128->float128
-	boucle 2: float128->float128
-	boucle 0: float64->float64
-	boucle 1: float64->float64
-	boucle 2: float64->float64
 	boucle 0: float32->float32
 	boucle 1: float32->float32
 	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
+	boucle 0: float128->float128
+	boucle 1: float128->float128
+	boucle 2: float128->float128
+	boucle 0: float64->float64
+	boucle 1: float64->float64
+	boucle 2: float64->float64
+cam_to_thetachi:
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
+	boucle 0: float16->float16
+	boucle 1: float16->float16
+	boucle 2: float16->float16
+	boucle 0: float128->float128
+	boucle 1: float128->float128
+	boucle 2: float128->float128
+	boucle 0: float64->float64
+	boucle 1: float64->float64
+	boucle 2: float64->float64
+thetachi_to_cam:
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
+	boucle 0: float16->float16
+	boucle 1: float16->float16
+	boucle 2: float16->float16
+	boucle 0: float128->float128
+	boucle 1: float128->float128
+	boucle 2: float128->float128
+	boucle 0: float64->float64
+	boucle 1: float64->float64
+	boucle 2: float64->float64
+thetachi_to_gnomonic:
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
+	boucle 0: float16->float16
+	boucle 1: float16->float16
+	boucle 2: float16->float16
+	boucle 0: float128->float128
+	boucle 1: float128->float128
+	boucle 2: float128->float128
+	boucle 0: float64->float64
+	boucle 1: float64->float64
+	boucle 2: float64->float64
+gnomonic_to_thetachi:
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
+	boucle 0: float16->float16
+	boucle 1: float16->float16
+	boucle 2: float16->float16
+	boucle 0: float128->float128
+	boucle 1: float128->float128
+	boucle 2: float128->float128
+	boucle 0: float64->float64
+	boucle 1: float64->float64
+	boucle 2: float64->float64
 dist_line:
-	float128->float128
-	float64->float64
 	float32->float32
 	float16->float16
+	float128->float128
+	float64->float64
 hough:
-	float128->float128
-	float64->float64
 	float32->float32
 	float16->float16
+	float128->float128
+	float64->float64
 hough_reduce:
-	float64->float64
 	float32->float32
 	float16->float16
+	float64->float64
 inter_lines:
+	float32->float32
+	float16->float16
 	float128->float128
 	float64->float64
-	float32->float32
-	float16->float16
 ============ TEST GEOMETRY SHAPE =============
-shape: (5, 3)
-boucle 0, cam_to_gnomonic(...).shape -> (2, 5, 3)
-boucle 0, gnomonic_to_cam(...).shape -> (2, 5, 3)
-boucle 0, cam_to_thetachi(...).shape -> (2, 5, 3)
-boucle 0, thetachi_to_cam(...).shape -> (2, 5, 3)
-boucle 0, thetachi_to_gnomonic(...).shape -> (2, 5, 3)
-boucle 0, gnomonic_to_thetachi(...).shape -> (2, 5, 3)
-boucle 1, cam_to_gnomonic(...).shape -> (2, 5, 3)
-boucle 1, gnomonic_to_cam(...).shape -> (2, 5, 3)
-boucle 1, cam_to_thetachi(...).shape -> (2, 5, 3)
-boucle 1, thetachi_to_cam(...).shape -> (2, 5, 3)
-boucle 1, thetachi_to_gnomonic(...).shape -> (2, 5, 3)
-boucle 1, gnomonic_to_thetachi(...).shape -> (2, 5, 3)
-boucle 2, cam_to_gnomonic(...).shape -> (2, 5, 3)
-boucle 2, gnomonic_to_cam(...).shape -> (2, 5, 3)
-boucle 2, cam_to_thetachi(...).shape -> (2, 5, 3)
-boucle 2, thetachi_to_cam(...).shape -> (2, 5, 3)
-boucle 2, thetachi_to_gnomonic(...).shape -> (2, 5, 3)
-boucle 2, gnomonic_to_thetachi(...).shape -> (2, 5, 3)
-dist_line(...).shape -> (5, 3, 5, 3)
-hough(...).shape -> (2, 5, 3)
-inter_lines(...).shape -> (2, 5, 3)
+shape: (8,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 8)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 8)
+boucle 0, cam_to_thetachi(...).shape -> (2, 8)
+boucle 0, thetachi_to_cam(...).shape -> (2, 8)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 8)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 8)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 8)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 8)
+boucle 1, cam_to_thetachi(...).shape -> (2, 8)
+boucle 1, thetachi_to_cam(...).shape -> (2, 8)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 8)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 8)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 8)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 8)
+boucle 2, cam_to_thetachi(...).shape -> (2, 8)
+boucle 2, thetachi_to_cam(...).shape -> (2, 8)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 8)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 8)
+dist_line(...).shape -> (8, 8)
+hough(...).shape -> (2, 28)
+inter_lines(...).shape -> (2, 28)
 =============== TEST BIJECTION ===============
-uf2cam o cam2uf: fail formel, 
+uf2cam o cam2uf: fail formel, ok numerical
+cam2uf o uf2cam: fail formel, ok numerical
+uq2uf o uf2uq: ok formel
+uf2uq o uq2uf: ok formel
+gnom2uq o uq2gnom: ok formel
+uq2gnom o gnom2uq: ok formel
+thetachi2uf o uf2thetachi: fail formel, ok numerical
+uf2thetachi o thetachi2uf: fail formel, ok numerical
+============== TEST READ IMAGES ==============
+/home/robin/documents/stages/esrf/data/zbb1_roi1/*.mccd 1681 images: 25.116 s
+/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 images: 1.038 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 images: 885.873 ms
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 images: 417.341 ms
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 images: 417.407 ms
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 images: 947.324 ms
+/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 images: 584.764 ms
+============= TEST FIND DIAGRAMS =============
+/home/robin/documents/stages/esrf/data/zbb1_roi1/*.mccd 

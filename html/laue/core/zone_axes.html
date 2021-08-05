@@ -32,12 +32,10 @@ C'est vraiment le coeur de la recherche atomisee.</p>
 </summary>
 <pre><code class="python">#!/usr/bin/env python3
 
-
 &#34;&#34;&#34;
 Recherche les axes de zone sans aucune mise en forme.
 C&#39;est vraiment le coeur de la recherche atomisee.
 &#34;&#34;&#34;
-
 
 import numpy as np
 try:
@@ -45,6 +43,7 @@ try:
 except ImportError:
     numexpr = None
 import psutil
+
 
 def atomic_find_zone_axes(transformer, gnomonics, dmax, nbr, tol):
     &#34;&#34;&#34;
@@ -352,7 +351,7 @@ On a <code>len(axes_spots_ind) == nbr_d_axe_de_zones</code>.</dd>
 On a <code>len(spots_axes_ind) == nbr_de_spots</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()

@@ -671,7 +671,7 @@ serialisation puis la deserialisation.</p>
 Si il ne sont pas precise, seul les attributs serialisables sont gardes.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; from laue.utilities.multi_core import reduce_object
+<pre><code class="python-repl">&gt;&gt;&gt; from laue.utilities.multi_core import reduce_object
 &gt;&gt;&gt;
 &gt;&gt;&gt; class Foo:
 ...     def __init__(self):
@@ -803,7 +803,7 @@ True
 <div class="desc"><p><strong> Permet d'iterer plusieurs instances d'un unique generateur. </strong></p>
 <h2 id="examples">Examples</h2>
 <p>Example avec une classe.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; from laue.utilities.multi_core import RecallingIterator
+<pre><code class="python-repl">&gt;&gt;&gt; from laue.utilities.multi_core import RecallingIterator
 &gt;&gt;&gt;
 &gt;&gt;&gt; class Foo:
 ...     def __init__(self):
@@ -825,7 +825,7 @@ True
 &gt;&gt;&gt;
 </code></pre>
 <p>Example sans classe</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; it = iter(range(5))
+<pre><code class="python-repl">&gt;&gt;&gt; it = iter(range(5))
 &gt;&gt;&gt; for a, b in zip(RecallingIterator(it), RecallingIterator(it)):
 ...     a, b
 ... 

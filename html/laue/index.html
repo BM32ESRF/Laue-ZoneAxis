@@ -41,19 +41,19 @@ Il faut ensuite saisir la commande suivante:<ul>
 </ul>
 <h2 id="examples">Examples</h2>
 <p>preparation</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt;
 </code></pre>
 <p>creation d'une experience</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+<pre><code class="python-repl">&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(image)
 &gt;&gt;&gt;
 &gt;&gt;&gt; experiment
-Experiment(verbose=False, max_space=5, threshold=5.1)
+Experiment('laue/examples')
 &gt;&gt;&gt;
 </code></pre>
 <p>recuperation des diagrammes</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; for diag in experiment:
+<pre><code class="python-repl">&gt;&gt;&gt; for diag in experiment:
 ...     print(type(diag))
 ...
 &lt;class 'laue.diagram.LaueDiagram'&gt;
@@ -91,7 +91,7 @@ creation d&#39;une experience
 &gt;&gt;&gt; experiment = laue.Experiment(image)
 &gt;&gt;&gt;
 &gt;&gt;&gt; experiment
-Experiment(verbose=False, max_space=5, threshold=5.1)
+Experiment(&#39;laue/examples&#39;)
 &gt;&gt;&gt;
 
 recuperation des diagrammes
@@ -109,7 +109,7 @@ recuperation des diagrammes
 # $ python3 -m pytest --doctest-modules laue &amp;&amp; python3 -m pytest laue/tools/tests.py
 
 __all__ = [&#34;Experiment&#34;, &#34;Transformer&#34;,
-           &#34;atomic_find_zone_axes&#34;, &#34;atomic_find_subsets&#34;]
+           &#34;atomic_pic_search&#34;, &#34;atomic_find_zone_axes&#34;, &#34;atomic_find_subsets&#34;]
 __pdoc__ = {&#34;tests&#34;: False,
             &#34;Experiment.__getitem__&#34;: True,
             &#34;Experiment.__iter__&#34;: True,
@@ -117,6 +117,7 @@ __pdoc__ = {&#34;tests&#34;: False,
 
 from laue.experiment.base_experiment import Experiment
 from laue.core.geometry.transformer import Transformer
+from laue.core.pic_search import atomic_pic_search
 from laue.core.zone_axes import atomic_find_zone_axes
 from laue.core.subsets import atomic_find_subsets</code></pre>
 </details>
@@ -192,7 +193,7 @@ qui y sont raccrochees. Il doit prendre la forme suivante:
 <dd>Chaque element est un ensemble d'indice de spot appartenant au meme grain.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; spots_dict = {0: {'gnom': (0.3136510725564478, -0.44091934214920697), 'axes': set()},
 ...               1: {'gnom': (0.3092269223801162, -0.3703963974694111), 'axes': {0}},
 ...               2: {'gnom': (0.29464954430652696, 0.39670741889986955), 'axes': {1}},
@@ -566,7 +567,7 @@ On a <code>len(axes_spots_ind) == nbr_d_axe_de_zones</code>.</dd>
 On a <code>len(spots_axes_ind) == nbr_de_spots</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
@@ -861,6 +862,167 @@ set()
         for old_axes_ind in spots_axes_ind]
 
     return angles, dists, axes_spots_ind, spots_axes_ind</code></pre>
+</details>
+</dd>
+<dt id="laue.atomic_pic_search"><code class="name flex">
+<span>def <span class="ident">atomic_pic_search</span></span>(<span>image, kernel_font, kernel_dilate, threshold)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Fonction 'bas niveau de pic search atomic serialisable. </strong></p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Cette fonction n'est pas faite pour etre utilisee directement,
+il vaut mieux s'en servir a travers <code><a title="laue.Experiment.get_diagrams" href="#laue.Experiment.get_diagrams">Experiment.get_diagrams()</a></code>
+ou encore via <code><a title="laue.Experiment.__iter__" href="#laue.Experiment.__iter__">Experiment.__iter__()</a></code> car le context
+est mieu gere, les entrees sont plus simples et les sorties aussi.</li>
+<li>Il n'y a pas de verifications sur les entrees car elles sont faite
+dans les methodes de plus haut niveau.</li>
+<li>Cette fonction n'est pas parallelisee. Par contre les methodes
+de <code><a title="laue.Experiment" href="#laue.Experiment">Experiment</a></code> gerent nativement le parallelisme.</li>
+<li>L'utilisation de cette fonction ne fera qu'alourdir et ralentir votre code.</li>
+</ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Image 2d en niveau de gris codee en np.uint16.
+C'est l'image brute, sans pre-traitement et avec le fond diffus.</dd>
+<dt><strong><code>kernel_font</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Le masque de l'element structurant pour l'estimation
+du fond par ouverture morphologique.</dd>
+<dt><strong><code>kernel_dilate</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Le masque de l'element structurant pour la dilatation morphologique
+sur l'image binarisee afin d'aglomerer les grains proches.</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code></dt>
+<dd>Le niveau de seuillage relatif a la variance de l'image.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>Une liste qui contient autant d'elements de de pic trouves.
+Les element sont des dictionaires</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="python-repl">&gt;&gt;&gt; import cv2
+&gt;&gt;&gt; from laue import atomic_pic_search
+&gt;&gt;&gt; from laue.utilities.image import read_image
+&gt;&gt;&gt; image_path = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt;
+&gt;&gt;&gt; image = read_image(image_path)
+&gt;&gt;&gt; kernel_font = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (21, 21))
+&gt;&gt;&gt; kernel_dilate = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+&gt;&gt;&gt; threshold = 5.1
+&gt;&gt;&gt;
+&gt;&gt;&gt; res = atomic_pic_search(image, kernel_font, kernel_dilate, threshold)
+&gt;&gt;&gt; type(res)
+&lt;class 'list'&gt;
+&gt;&gt;&gt; len(res)
+78
+&gt;&gt;&gt; res[0][&quot;bbox&quot;]
+(1368, 1873, 6, 5)
+&gt;&gt;&gt; res[0][&quot;distortion&quot;]
+0.8471580534997302
+&gt;&gt;&gt; res[0][&quot;spot_im&quot;]
+array([[  8,  10,  16,  16,   8,   5],
+       [ 11,  17,  67,  76,  13,   9],
+       [  7,  19, 184, 229,  14,   6],
+       [  9,   6,  12,  19,   8,   4],
+       [  5,   3,   3,   9,  14,   7]], dtype=uint16)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def atomic_pic_search(image, kernel_font, kernel_dilate, threshold):
+    &#34;&#34;&#34;
+    ** Fonction &#39;bas niveau de pic search atomic serialisable. **
+
+    Notes
+    -----
+    * Cette fonction n&#39;est pas faite pour etre utilisee directement,
+    il vaut mieux s&#39;en servir a travers ``laue.Experiment.get_diagrams``
+    ou encore via ``laue.Experiment.__iter__`` car le context
+    est mieu gere, les entrees sont plus simples et les sorties aussi.
+    * Il n&#39;y a pas de verifications sur les entrees car elles sont faite
+    dans les methodes de plus haut niveau.
+    * Cette fonction n&#39;est pas parallelisee. Par contre les methodes
+    de ``laue.Experiment`` gerent nativement le parallelisme.
+    * L&#39;utilisation de cette fonction ne fera qu&#39;alourdir et ralentir votre code.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        Image 2d en niveau de gris codee en np.uint16.
+        C&#39;est l&#39;image brute, sans pre-traitement et avec le fond diffus.
+    kernel_font : np.ndarray
+        Le masque de l&#39;element structurant pour l&#39;estimation
+        du fond par ouverture morphologique.
+    kernel_dilate : np.ndarray
+        Le masque de l&#39;element structurant pour la dilatation morphologique
+        sur l&#39;image binarisee afin d&#39;aglomerer les grains proches.
+    threshold : float
+        Le niveau de seuillage relatif a la variance de l&#39;image.
+
+    Returns
+    -------
+    list
+        Une liste qui contient autant d&#39;elements de de pic trouves.
+        Les element sont des dictionaires
+
+    Examples
+    --------
+    &gt;&gt;&gt; import cv2
+    &gt;&gt;&gt; from laue import atomic_pic_search
+    &gt;&gt;&gt; from laue.utilities.image import read_image
+    &gt;&gt;&gt; image_path = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; image = read_image(image_path)
+    &gt;&gt;&gt; kernel_font = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (21, 21))
+    &gt;&gt;&gt; kernel_dilate = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    &gt;&gt;&gt; threshold = 5.1
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; res = atomic_pic_search(image, kernel_font, kernel_dilate, threshold)
+    &gt;&gt;&gt; type(res)
+    &lt;class &#39;list&#39;&gt;
+    &gt;&gt;&gt; len(res)
+    78
+    &gt;&gt;&gt; res[0][&#34;bbox&#34;]
+    (1368, 1873, 6, 5)
+    &gt;&gt;&gt; res[0][&#34;distortion&#34;]
+    0.8471580534997302
+    &gt;&gt;&gt; res[0][&#34;spot_im&#34;]
+    array([[  8,  10,  16,  16,   8,   5],
+           [ 11,  17,  67,  76,  13,   9],
+           [  7,  19, 184, 229,  14,   6],
+           [  9,   6,  12,  19,   8,   4],
+           [  5,   3,   3,   9,  14,   7]], dtype=uint16)
+    &gt;&gt;&gt; 
+    &#34;&#34;&#34;
+    # Binarisation de l&#39;image.
+    bg_image = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel_font, iterations=1)
+    fg_image = image - bg_image
+    thresh_image = (fg_image &gt; threshold*fg_image.std()).astype(np.uint8)
+    dilated_image = cv2.dilate(thresh_image, kernel_dilate, iterations=1)
+
+    # Detection des contours grossiers.
+    outlines, _ = cv2.findContours(dilated_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    bbox = [cv2.boundingRect(outl) for outl in outlines]
+
+    # Calcul des distortions.
+    distortions_open = (2*np.sqrt(np.pi)) / np.array([
+        cv2.arcLength(outl, True)/np.sqrt(cv2.contourArea(outl))
+        for outl in outlines])
+
+    # Preparation des arguments des spots.
+    spots_args = [
+        {
+            &#34;bbox&#34;: (x, y, w, h),
+            &#34;spot_im&#34;: fg_image[y:y+h, x:x+w],
+            &#34;distortion&#34;: dis,
+        }
+        for dis, (x, y, w, h) in zip(distortions_open, bbox)]
+
+    return spots_args</code></pre>
 </details>
 </dd>
 </dl>
@@ -1365,6 +1527,8 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         &#34;&#34;&#34;
         ** Genere les diagrammes de l&#39;experience. **
 
+        C&#39;est la qu&#39;est effectue le pic search.
+
         Notes
         -----
         * Performances:
@@ -1410,6 +1574,20 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
+        def cast_to_diagram(spots_args, name, image=None):
+            &#34;&#34;&#34;
+            Met en forme du pic search pour en faire des diagrames.
+            &#34;&#34;&#34;
+            laue_diagram = LaueDiagram(name, experiment=self)
+            spots = [Spot(diagram=laue_diagram, identifier=i, **spot_args)
+                     for i, spot_args in enumerate(spots_args)]
+            laue_diagram._set_spots(spots)
+            if image is not None and (
+                    (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent &lt; 50)
+                    ):
+                laue_diagram._set_image(image)
+            return laue_diagram
+
         def update_len(func):
             &#34;&#34;&#34;
             Tient a jour la longueur de l&#39;experience.
@@ -1447,32 +1625,42 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
             Premiere vraie lecture. Cede les diagrammes.
             &#34;&#34;&#34;
             if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-                attrs = [&#34;kernel_font&#34;, &#34;threshold&#34;, &#34;kernel_dilate&#34;]
-                mini_self = collections.namedtuple(&#34;SelfCopy&#34;, attrs)(
-                    *(getattr(self, attr) for attr in attrs)
-                    ) # Strategie car &#39;pickle&#39; ne sais pas faire ca.
-                ser_self = cloudpickle.dumps(mini_self)
-
-                from laue.utilities.multi_core import pickleable_method
+                from laue.core.pic_search import _pickelable_pic_search
                 from laue.utilities.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (
-                        self._help_get_diagrams(name, image, spot_args=spot_args)
-                        for (name, image, spot_args) in limited_imap(pool,
-                            pickleable_method,
+                        cast_to_diagram(spots_args, name, image)
+                        for spots_args, (name, image) in limited_imap(pool,
+                            _pickelable_pic_search,
                             (
                                 (
-                                    Experiment._help_get_diagrams,
-                                    ser_self,
-                                    {&#34;name&#34;:name, &#34;image&#34;:image, &#34;thread&#34;:True}
+                                    (
+                                        image,
+                                        self.kernel_font,
+                                        self.kernel_dilate,
+                                        self.threshold
+                                    ),
+                                    (name, image)
                                 )
                                 for name, image in self.read_images()
                             )
                         )
                     )
             else:
-                yield from (self._help_get_diagrams(name, image)
-                    for name, image in self.read_images())
+                from laue import atomic_pic_search
+                yield from (
+                    cast_to_diagram(
+                        atomic_pic_search(
+                            image,
+                            self.kernel_font,
+                            self.kernel_dilate,
+                            self.threshold
+                        ),
+                        name,
+                        image
+                    )
+                    for name, image in self.read_images()
+                )
         
         if self._diagrams_iterator is None:
             self._diagrams_iterator = iter(_diagram_extractor(self))
@@ -1481,61 +1669,6 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         return (
             (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
             if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self)))
-
-    def _help_get_diagrams(self, name, image, thread=False, spot_args=None):
-        &#34;&#34;&#34;
-        ** Comme ``laue.experiment.base_experiment.Experiment.get_diagrams`` pour une seule image. **
-
-        * Cette methode n&#39;est utile qu&#39;a fin de parallelisation.
-        * Elle ne doit pas etre appelle par l&#39;utilisateur.
-        * Cette methode est indirectement appelle par self.get_diagrams().
-        * Il n&#39;y a pas de verifications pour une histoire de performance.
-
-        :retrun: Le diagramme de Laue correspondant.
-        :rtype: LaueDiagram
-        &#34;&#34;&#34;
-        if isinstance(self, bytes):
-            self = cloudpickle.loads(self)
-
-        if spot_args is None:
-            # Binarisation de l&#39;image.
-            bg_image = cv2.morphologyEx(image, cv2.MORPH_OPEN, self.kernel_font, iterations=1)
-            fg_image = image - bg_image
-            thresh_image = (fg_image &gt; self.threshold*fg_image.std()).astype(np.uint8)
-            dilated_image = cv2.dilate(thresh_image, self.kernel_dilate, iterations=1)
-
-            # Detection des contours grossiers.
-            outlines, _ = cv2.findContours(dilated_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            bbox = [cv2.boundingRect(outl) for outl in outlines]
-
-            # Calcul des distortions.
-            distortions_open = (2*np.sqrt(np.pi)) / np.array([
-                cv2.arcLength(outl, True)/np.sqrt(cv2.contourArea(outl))
-                for outl in outlines])
-
-            # Preparations des arguments des spot.
-            spot_args = [((x, y, w, h), fg_image[y:y+h, x:x+w], dis)
-                for dis, (x, y, w, h) in zip(distortions_open, bbox)]
-
-        if thread:
-            if (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent &lt; 50):
-                return (name, image, spot_args)
-            return (name, None, spot_args)
-
-        # Mise en forme du resultat.
-        if image is not None and (
-                (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent &lt; 50)
-                ):
-            laue_diagram = LaueDiagram(name, None, experiment=self, image_xy=image)
-        else:
-            laue_diagram = LaueDiagram(name, None, experiment=self)
-
-        # Creation des ensembles de spots.
-        spots_open = [Spot(bbox=bbox, spot_im=spot_im, distortion=distortion, diagram=laue_diagram, identifier=i)
-                     for i, (bbox, spot_im, distortion) in enumerate(spot_args)]
-        laue_diagram.spots = spots_open
-
-        return laue_diagram
 
     def find_subsets(self, *, tense_flow=False, **kwds):
         &#34;&#34;&#34;
@@ -1939,7 +2072,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                 for image_info in func(*func_args, **func_kwargs):
                     yield image_info
                     if self.verbose &gt;= 2:
-                        print(f&#34;\timage : (...{str(image_info)[-20:]}) cedes.&#34;)
+                        print(f&#34;\timage : (...{str(image_info)[-20:]}) cedee.&#34;)
 
                 if self.verbose:
                     print(&#34;\tOK: Toutes les images sont lues.&#34;)
@@ -1954,12 +2087,12 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
             # Convertion str vers generateur
             if isinstance(self._images, str): # Dans le cas ou une chaine de caractere
                 if os.path.isdir(self._images): # decrit l&#39;ensemble des images.
-                    self._images = (
+                    self._images = sorted(
                         os.path.join(father, file)
                         for father, _, files in os.walk(self._images)
                         for file in files)
                 else:
-                    self._images = glob.iglob(self._images, recursive=True)
+                    self._images = sorted(glob.iglob(self._images, recursive=True))
 
             yield from self._images
 
@@ -2094,7 +2227,8 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                     f&#34;Or vous tentez d&#39;acceder au {limit+1}eme diagrame!&#34;)
             if len(self) and -limit &gt; len(self):
                 raise KeyError(f&#34;L&#39;experience n&#39;est faite que de {len(self)} diagrames, &#34;
-                    f&#34;Or vous tentez d&#39;acceder rang {limit}. Le plus petit rang possible c&#39;est {-len(self)}.&#34;)
+                    f&#34;Or vous tentez d&#39;acceder au rang {limit}. &#34;
+                    f&#34;Le plus petit rang possible c&#39;est {-len(self)}.&#34;)
 
             # Cas ou il faut extraire.
             if limit &gt;= 0:
@@ -2171,10 +2305,8 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         &#34;&#34;&#34;
         ** Renvoi une chaine evaluable de self. **
         &#34;&#34;&#34;
-        kwargs = [&#34;verbose&#34;, &#34;max_space&#34;, &#34;threshold&#34;]
-        attr1 = [f&#34;{kwarg}={repr(getattr(self, kwarg))}&#34; for kwarg in kwargs]
-        attr2 = [f&#34;{k}={v}&#34; for k, v in self.kwargs.items()]
-        return &#34;Experiment(%s)&#34; % &#34;, &#34;.join(attr1 + attr2)
+        name = repr(&#34;/&#34;.join(self[0].get_id().split(&#34;/&#34;)[:-1]))
+        return f&#34;Experiment({name})&#34;
 
     def __str__(self):
         &#34;&#34;&#34;
@@ -2193,6 +2325,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="laue.experiment.organized_experiment.OrganizedExperiment" href="experiment/organized_experiment.html#laue.experiment.organized_experiment.OrganizedExperiment">OrganizedExperiment</a></li>
 <li><a title="laue.experiment.theorical_experiment.TheoricalExperiment" href="experiment/theorical_experiment.html#laue.experiment.theorical_experiment.TheoricalExperiment">TheoricalExperiment</a></li>
 </ul>
 <h3>Methods</h3>
@@ -2226,7 +2359,7 @@ liste de diagrames ordones dans l'ordre de generation des images.</li>
 <dd>Si la clef n'est pas correcte.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt;
 &gt;&gt;&gt; type(laue.Experiment(images)[0])
@@ -2299,7 +2432,8 @@ liste de diagrames ordones dans l'ordre de generation des images.</li>
                 f&#34;Or vous tentez d&#39;acceder au {limit+1}eme diagrame!&#34;)
         if len(self) and -limit &gt; len(self):
             raise KeyError(f&#34;L&#39;experience n&#39;est faite que de {len(self)} diagrames, &#34;
-                f&#34;Or vous tentez d&#39;acceder rang {limit}. Le plus petit rang possible c&#39;est {-len(self)}.&#34;)
+                f&#34;Or vous tentez d&#39;acceder au rang {limit}. &#34;
+                f&#34;Le plus petit rang possible c&#39;est {-len(self)}.&#34;)
 
         # Cas ou il faut extraire.
         if limit &gt;= 0:
@@ -2347,7 +2481,7 @@ la methode <code><a title="laue.experiment.base_experiment.Experiment.get_diagra
 <dd>Chaque diagramme contenus dans l'experience.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(image)
 &gt;&gt;&gt;
@@ -2464,7 +2598,7 @@ Se sont aussi ceux de la fonction <code><a title="laue.diagram.LaueDiagram.find_
 <dd>Pour chaque diagramme de cette experience, cede une estimation des grains.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&quot;laue/examples/ge_blanc.det&quot;)
 &gt;&gt;&gt;
@@ -2623,7 +2757,7 @@ des axes de zones du diagramme. Les elements de l'ensemble
 sont de type <code><a title="laue.zone_axis.ZoneAxis" href="zone_axis.html#laue.zone_axis.ZoneAxis">ZoneAxis</a></code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&quot;laue/examples/ge_blanc.det&quot;)
 &gt;&gt;&gt;
@@ -2757,6 +2891,7 @@ sont de type <code><a title="laue.zone_axis.ZoneAxis" href="zone_axis.html#laue.
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Genere les diagrammes de l'experience. </strong></p>
+<p>C'est la qu'est effectue le pic search.</p>
 <h2 id="notes">Notes</h2>
 <ul>
 <li>Performances:<ul>
@@ -2802,7 +2937,7 @@ soient lues afin de tout renvoyer en meme temps.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(images)
 &gt;&gt;&gt;
@@ -2820,6 +2955,8 @@ soient lues afin de tout renvoyer en meme temps.</li>
 <pre><code class="python">def get_diagrams(self, *, tense_flow=False):
     &#34;&#34;&#34;
     ** Genere les diagrammes de l&#39;experience. **
+
+    C&#39;est la qu&#39;est effectue le pic search.
 
     Notes
     -----
@@ -2866,6 +3003,20 @@ soient lues afin de tout renvoyer en meme temps.</li>
     &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
+    def cast_to_diagram(spots_args, name, image=None):
+        &#34;&#34;&#34;
+        Met en forme du pic search pour en faire des diagrames.
+        &#34;&#34;&#34;
+        laue_diagram = LaueDiagram(name, experiment=self)
+        spots = [Spot(diagram=laue_diagram, identifier=i, **spot_args)
+                 for i, spot_args in enumerate(spots_args)]
+        laue_diagram._set_spots(spots)
+        if image is not None and (
+                (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent &lt; 50)
+                ):
+            laue_diagram._set_image(image)
+        return laue_diagram
+
     def update_len(func):
         &#34;&#34;&#34;
         Tient a jour la longueur de l&#39;experience.
@@ -2903,32 +3054,42 @@ soient lues afin de tout renvoyer en meme temps.</li>
         Premiere vraie lecture. Cede les diagrammes.
         &#34;&#34;&#34;
         if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            attrs = [&#34;kernel_font&#34;, &#34;threshold&#34;, &#34;kernel_dilate&#34;]
-            mini_self = collections.namedtuple(&#34;SelfCopy&#34;, attrs)(
-                *(getattr(self, attr) for attr in attrs)
-                ) # Strategie car &#39;pickle&#39; ne sais pas faire ca.
-            ser_self = cloudpickle.dumps(mini_self)
-
-            from laue.utilities.multi_core import pickleable_method
+            from laue.core.pic_search import _pickelable_pic_search
             from laue.utilities.multi_core import limited_imap
             with multiprocessing.Pool() as pool:
                 yield from (
-                    self._help_get_diagrams(name, image, spot_args=spot_args)
-                    for (name, image, spot_args) in limited_imap(pool,
-                        pickleable_method,
+                    cast_to_diagram(spots_args, name, image)
+                    for spots_args, (name, image) in limited_imap(pool,
+                        _pickelable_pic_search,
                         (
                             (
-                                Experiment._help_get_diagrams,
-                                ser_self,
-                                {&#34;name&#34;:name, &#34;image&#34;:image, &#34;thread&#34;:True}
+                                (
+                                    image,
+                                    self.kernel_font,
+                                    self.kernel_dilate,
+                                    self.threshold
+                                ),
+                                (name, image)
                             )
                             for name, image in self.read_images()
                         )
                     )
                 )
         else:
-            yield from (self._help_get_diagrams(name, image)
-                for name, image in self.read_images())
+            from laue import atomic_pic_search
+            yield from (
+                cast_to_diagram(
+                    atomic_pic_search(
+                        image,
+                        self.kernel_font,
+                        self.kernel_dilate,
+                        self.threshold
+                    ),
+                    name,
+                    image
+                )
+                for name, image in self.read_images()
+            )
     
     if self._diagrams_iterator is None:
         self._diagrams_iterator = iter(_diagram_extractor(self))
@@ -3061,7 +3222,7 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
 <dd>Si les images ne sont pas de la meme taille.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt; for image in laue.Experiment(images):
 ...     pass
@@ -3158,7 +3319,7 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
             for image_info in func(*func_args, **func_kwargs):
                 yield image_info
                 if self.verbose &gt;= 2:
-                    print(f&#34;\timage : (...{str(image_info)[-20:]}) cedes.&#34;)
+                    print(f&#34;\timage : (...{str(image_info)[-20:]}) cedee.&#34;)
 
             if self.verbose:
                 print(&#34;\tOK: Toutes les images sont lues.&#34;)
@@ -3173,12 +3334,12 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
         # Convertion str vers generateur
         if isinstance(self._images, str): # Dans le cas ou une chaine de caractere
             if os.path.isdir(self._images): # decrit l&#39;ensemble des images.
-                self._images = (
+                self._images = sorted(
                     os.path.join(father, file)
                     for father, _, files in os.walk(self._images)
                     for file in files)
             else:
-                self._images = glob.iglob(self._images, recursive=True)
+                self._images = sorted(glob.iglob(self._images, recursive=True))
 
         yield from self._images
 
@@ -3216,7 +3377,7 @@ L'extension doit etre comprise dans le nom du fichier.
 Si un fichier du meme nom existe deja, il est ecrase.</dd>
 </dl>
 <h2 id="example">Example</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import os, tempfile
+<pre><code class="python-repl">&gt;&gt;&gt; import os, tempfile
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt;
 &gt;&gt;&gt; images = [&quot;laue/examples/ge_blanc.mccd&quot;]
@@ -3313,7 +3474,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
 <dd>Si il y a des incoherences dans les parametres.</dd>
 </dl>
 <h2 id="example">Example</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
 &gt;&gt;&gt; parameters = experiment.set_calibration()
@@ -4488,7 +4649,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -4497,7 +4658,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
 array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
@@ -4508,7 +4669,7 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
 ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
@@ -4606,7 +4767,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -4615,7 +4776,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
 array([[ 64.,  60.,  51.,  39.,  30.,  26.],
@@ -4626,7 +4787,7 @@ array([[ 64.,  60.,  51.,  39.,  30.,  26.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.cam_to_thetachi(0.0, 0.0, parameters).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.cam_to_thetachi(0.0, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
 ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
@@ -4808,7 +4969,7 @@ risque d'y avoir des arrondis qui engendrent:
 shape = <code>(*nbr_droites, *nbr_points)</code></dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -4949,7 +5110,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -4961,7 +5122,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
 array([[   3.,  412.,  821., 1230., 1639., 2048.],
@@ -4972,7 +5133,7 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
 ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
@@ -5071,7 +5232,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
@@ -5081,7 +5242,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
 array([[ 64.,  60.,  51.,  39.,  30.,  26.],
@@ -5092,7 +5253,7 @@ array([[ 64.,  60.,  51.,  39.,  30.,  26.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.gnomonic_to_thetachi(0.0, 0.0).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.gnomonic_to_thetachi(0.0, 0.0).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
 ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
@@ -5207,7 +5368,7 @@ soit la plus petite possible.</li>
 </dl>
 <p>shape = <code>(2, *over_dims, n*(n-1)/2)</code></p>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue.core.geometry import transformer
 &gt;&gt;&gt; transformer = transformer.Transformer()
 &gt;&gt;&gt; x, y = np.random.normal(size=(2, 6))
@@ -5362,12 +5523,12 @@ de l'appel de cette fonction sur le nuage de points unique correspondant.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue.core.geometry import transformer
 &gt;&gt;&gt; transformer = transformer.Transformer()
 </code></pre>
 <p>Type de retour <code>float</code> vs <code>object</code>.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
+<pre><code class="python-repl">&gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
 ...         np.array([ 0.,  1.,  1., -1.,  1.]))
 &gt;&gt;&gt; phi, mu = transformer.hough(x, y)
 &gt;&gt;&gt; np.round(transformer.hough_reduce(phi, mu, nbr=3), 2)
@@ -5384,7 +5545,7 @@ array([[-0.79,  1.57],
 &gt;&gt;&gt;
 </code></pre>
 <p>Les dimensions de retour.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; x, y = (np.random.normal(size=(6, 5, 4)),
+<pre><code class="python-repl">&gt;&gt;&gt; x, y = (np.random.normal(size=(6, 5, 4)),
 ...         np.random.normal(size=(6, 5, 4)))
 &gt;&gt;&gt; phi, mu = transformer.hough(x, y)
 &gt;&gt;&gt; transformer.hough_reduce(phi, mu).shape
@@ -5586,7 +5747,7 @@ La shape du tenseur final est donc: <strong> shape = <code>(2, *over_dims, n*(n-
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; np.random.seed(0)
@@ -5707,7 +5868,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -5717,7 +5878,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_cam(theta, chi, parameters))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_cam(theta, chi, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.thetachi_to_cam(theta, chi, parameters))
 array([[   3.,  412.,  821., 1230., 1639., 2048.],
@@ -5728,7 +5889,7 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.thetachi_to_cam(np.pi/4, 0.0, parameters).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.thetachi_to_cam(np.pi/4, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
 ...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
@@ -5825,7 +5986,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; theta, chi = np.array([[ 63.605,  59.91 ,  51.367,  38.546,  30.05 ,  26.378],
@@ -5833,7 +5994,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_gnomonic(theta, chi))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_gnomonic(theta, chi))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.thetachi_to_gnomonic(theta, chi), 2)
 array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
@@ -5844,7 +6005,7 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.thetachi_to_gnomonic(np.pi/4, 0.0).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.thetachi_to_gnomonic(np.pi/4, 0.0).shape
 (2,)
 &gt;&gt;&gt; theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
 ...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
@@ -5965,6 +6126,7 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
 <ul class="">
 <li><code><a title="laue.atomic_find_subsets" href="#laue.atomic_find_subsets">atomic_find_subsets</a></code></li>
 <li><code><a title="laue.atomic_find_zone_axes" href="#laue.atomic_find_zone_axes">atomic_find_zone_axes</a></code></li>
+<li><code><a title="laue.atomic_pic_search" href="#laue.atomic_pic_search">atomic_pic_search</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

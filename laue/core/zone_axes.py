@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
-
 """
 Recherche les axes de zone sans aucune mise en forme.
 C'est vraiment le coeur de la recherche atomisee.
 """
-
 
 import numpy as np
 try:

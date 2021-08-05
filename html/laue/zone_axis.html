@@ -177,28 +177,29 @@ def distance(axis1, axis2, *, weight=.5):
 
     # Calcul des distances
     meth = lambda axis: axis.get_polar_coords() if isinstance(axis, ZoneAxis) else axis
-    angle1, dist1 = np.array([meth(axis) for axis in axis1], dtype=np.float32).transpose()
-    angle2, dist2 = np.array([meth(axis) for axis in axis2], dtype=np.float32).transpose()
-    angle1, angle2 = np.meshgrid(angle1, angle2, indexing=&#34;ij&#34;, copy=False)
-    dist1, dist2 = np.meshgrid(dist1, dist2, indexing=&#34;ij&#34;, copy=False)
+    phi1, mu1 = np.array([meth(axis) for axis in axis1], dtype=np.float32).transpose()
+    phi2, mu2 = np.array([meth(axis) for axis in axis2], dtype=np.float32).transpose()
+    phi1, phi2 = np.meshgrid(phi1, phi2, indexing=&#34;ij&#34;, copy=False)
+    mu1, mu2 = np.meshgrid(mu1, mu2, indexing=&#34;ij&#34;, copy=False)
     pi = np.float32(np.pi)
 
     if weight == 0:
-        return np.abs(dist2-dist1)
+        return np.abs(mu2-mu1)
     if weight == 1:
-        return pi - np.abs(np.abs(angle2-angle1) - pi)
+        return pi - np.abs(np.abs(phi2-phi1) - pi)
     if numexpr is not None:
-        return numexpr.evaluate(&#34;sqrt(weight**2*(pi - abs(abs(angle2-angle1) - pi))**2 &#34;
-                                &#34;+ (1-weight)**2*(dist2-dist1)**2)&#34;)
+        return numexpr.evaluate(&#34;sqrt(weight**2*(pi - abs(abs(phi2-phi1) - pi))**2 &#34;
+                                &#34;+ (1-weight)**2*(mu2-mu1)**2)&#34;)
     return np.sqrt(
-        weight**2*(pi - np.abs(np.abs(angle2-angle1) - pi))**2
-      + (1-weight)**2*(dist2-dist1)**2)
+        weight**2*(pi - np.abs(np.abs(phi2-phi1) - pi))**2
+      + (1-weight)**2*(mu2-mu1)**2)
+
 
 class ZoneAxis:
     &#34;&#34;&#34;
     Un axe de zone seul.
     &#34;&#34;&#34;
-    def __init__(self, diagram, spots_ind, identifier, angle, dist):
+    def __init__(self, diagram, spots_ind, identifier, phi, mu):
         &#34;&#34;&#34;
         Notes
         -----
@@ -219,9 +220,9 @@ class ZoneAxis:
         identifier : int
             Identifiant unique de l&#39;axe de zone. Cet identifiant est unique au
             sein d&#39;un diagramme mais pas forcement au sein d&#39;une experience.
-        theta : float
+        phi : float
             Angle entre l&#39;axe ``x`` et le vecteur normal a cet axe passant par l&#39;origine.
-        dist : float
+        mu : float
             Distance entre cette droite et l&#39;origine.
         &#34;&#34;&#34;
         self.diagram = diagram
@@ -230,9 +231,9 @@ class ZoneAxis:
                 (int(ind), diagram[ind])
                 for ind in sorted(spots_ind)
             ))
-        self.identifier = identifier
-        self.angle = angle
-        self.dist = dist
+        self._identifier = identifier
+        self._phi = phi
+        self._mu = mu
 
     def dist_mean(self):
         &#34;&#34;&#34;
@@ -255,11 +256,11 @@ class ZoneAxis:
         &lt;class &#39;numpy.float64&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        theta_vect, dist_vect = self.get_polar_coords()
-        theta_vect, dist_vect = np.array([theta_vect]), np.array([dist_vect])
+        phi_vect, mu_vect = self.get_polar_coords()
+        phi_vect, mu_vect = np.array([phi_vect]), np.array([mu_vect])
         x_vect, y_vect = np.array([spot.get_gnomonic() for spot in self]).transpose()
         return self.diagram.experiment.transformer.dist_line(
-            theta_vect, dist_vect, x_vect, y_vect).mean()
+            phi_vect, mu_vect, x_vect, y_vect).mean()
 
     def get_id(self):
         &#34;&#34;&#34;
@@ -277,7 +278,7 @@ class ZoneAxis:
         True
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return self.identifier
+        return self._identifier
 
     def get_polar_coords(self):
         &#34;&#34;&#34;
@@ -285,10 +286,10 @@ class ZoneAxis:
 
         Returns
         -------
-        angle : float
-            Le meme angle que celui donne a l&#39;initialisateur.
-        dist : float
-            La meme distance que celle donnee a l&#39;imitialisateur.
+        phi : float
+            L&#39;angle de la normale a cet axe.
+        mu : float
+            La distance entre la droite et l&#39;origine.
 
         Examples
         --------
@@ -297,14 +298,14 @@ class ZoneAxis:
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
-        &gt;&gt;&gt; angle, dist = axis.get_polar_coords()
-        &gt;&gt;&gt; type(angle) # In radian.
+        &gt;&gt;&gt; phi, mu = axis.get_polar_coords()
+        &gt;&gt;&gt; type(phi) # In radian.
         &lt;class &#39;numpy.float32&#39;&gt;
-        &gt;&gt;&gt; type(dist) # In mm.
+        &gt;&gt;&gt; type(mu) # In mm.
         &lt;class &#39;numpy.float32&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return self.angle, self.dist
+        return self._phi, self._mu
 
     def get_quality(self):
         &#34;&#34;&#34;
@@ -355,9 +356,9 @@ class ZoneAxis:
             a, b = .1, .8
             lna = math.log((1-a)/a)
             lnb = math.log((1-b)/b)
-            mu = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
-            lamb = lna / (mu - nbr_min)
-            return 1 / (1 + math.exp(-lamb*(nbr-mu)))
+            beta = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
+            lamb = lna / (beta - nbr_min)
+            return 1 / (1 + math.exp(-lamb*(nbr-beta)))
 
         nbr_weight = .75 # Importance du nombre de points par raport a la proximite.
         return nbr_weight*nbr_2_score(len(self)) + (1-nbr_weight)*dmean_2_score(self.dist_mean())
@@ -398,9 +399,9 @@ class ZoneAxis:
             axe_pyplot.set_xlabel(&#34;x.Gi (mm)&#34;)
             axe_pyplot.set_ylabel(&#34;y.Gj (mm)&#34;)
 
-        normal = np.array([math.cos(self.angle), math.sin(self.angle)])
-        director = np.array([math.sin(self.angle), -math.cos(self.angle)])
-        point1 = self.dist * normal
+        normal = np.array([math.cos(self._phi), math.sin(self._phi)])
+        director = np.array([math.sin(self._phi), -math.cos(self._phi)])
+        point1 = self._mu * normal
         point2 = point1 + director
         axe_pyplot.axline(point1, point2, lw=0.5, color=&#34;gray&#34;, clip_box=((-.1, -.1), (.1, .1)))
 
@@ -446,9 +447,9 @@ class ZoneAxis:
             axe_pyplot.set_xlabel(&#34;x.Ci (pxl)&#34;)
             axe_pyplot.set_ylabel(&#34;y.Cj (pxl)&#34;)
 
-        normal = np.array([math.cos(self.angle), math.sin(self.angle)])
-        director = np.array([math.sin(self.angle), -math.cos(self.angle)])
-        centre = self.dist * normal
+        normal = np.array([math.cos(self._phi), math.sin(self._phi)])
+        director = np.array([math.sin(self._phi), -math.cos(self._phi)])
+        centre = self._mu * normal
         points_gnom_x = centre[0] + np.linspace(-2.0, 2.0, 50)*director[0]
         points_gnom_y = centre[1] + np.linspace(-2.0, 2.0, 50)*director[1]
         cam_x, cam_y = self.diagram.experiment.transformer.gnomonic_to_cam(
@@ -519,7 +520,7 @@ class ZoneAxis:
         int
             Identifiant &#34;unique&#34; (du moins le plus possible) representant cet axe de zone.
         &#34;&#34;&#34;
-        return hash((self.diagram, self.identifier))
+        return hash((self.diagram, self._identifier))
 
     def __iter__(self):
         &#34;&#34;&#34;
@@ -574,11 +575,10 @@ class ZoneAxis:
         ** Renvoie une chaine evaluable de self. **
         &#34;&#34;&#34;
         return (&#34;ZoneAxis(&#34;
-                # f&#34;diagram={repr(self.diagram)}, &#34; # Affichage bien trop gourmand.
                 f&#34;spots_ind={tuple(self.spots.keys())}, &#34;
-                f&#34;identifier={self.identifier}, &#34;
-                f&#34;angle={self.angle:.4f}, &#34;
-                f&#34;dist={self.dist:.4f})&#34;)</code></pre>
+                f&#34;identifier={self._identifier}, &#34;
+                f&#34;phi={self._phi:.4f}, &#34;
+                f&#34;mu={self._mu:.4f})&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -642,7 +642,7 @@ du cluster a l'axe isole est renvoye.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; from laue.zone_axis import distance
 &gt;&gt;&gt; ax1, ax2 = (-2.719, 0.2432), (0.02063, 0.0799)
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
@@ -781,22 +781,22 @@ du cluster a l'axe isole est renvoye.</li>
 
     # Calcul des distances
     meth = lambda axis: axis.get_polar_coords() if isinstance(axis, ZoneAxis) else axis
-    angle1, dist1 = np.array([meth(axis) for axis in axis1], dtype=np.float32).transpose()
-    angle2, dist2 = np.array([meth(axis) for axis in axis2], dtype=np.float32).transpose()
-    angle1, angle2 = np.meshgrid(angle1, angle2, indexing=&#34;ij&#34;, copy=False)
-    dist1, dist2 = np.meshgrid(dist1, dist2, indexing=&#34;ij&#34;, copy=False)
+    phi1, mu1 = np.array([meth(axis) for axis in axis1], dtype=np.float32).transpose()
+    phi2, mu2 = np.array([meth(axis) for axis in axis2], dtype=np.float32).transpose()
+    phi1, phi2 = np.meshgrid(phi1, phi2, indexing=&#34;ij&#34;, copy=False)
+    mu1, mu2 = np.meshgrid(mu1, mu2, indexing=&#34;ij&#34;, copy=False)
     pi = np.float32(np.pi)
 
     if weight == 0:
-        return np.abs(dist2-dist1)
+        return np.abs(mu2-mu1)
     if weight == 1:
-        return pi - np.abs(np.abs(angle2-angle1) - pi)
+        return pi - np.abs(np.abs(phi2-phi1) - pi)
     if numexpr is not None:
-        return numexpr.evaluate(&#34;sqrt(weight**2*(pi - abs(abs(angle2-angle1) - pi))**2 &#34;
-                                &#34;+ (1-weight)**2*(dist2-dist1)**2)&#34;)
+        return numexpr.evaluate(&#34;sqrt(weight**2*(pi - abs(abs(phi2-phi1) - pi))**2 &#34;
+                                &#34;+ (1-weight)**2*(mu2-mu1)**2)&#34;)
     return np.sqrt(
-        weight**2*(pi - np.abs(np.abs(angle2-angle1) - pi))**2
-      + (1-weight)**2*(dist2-dist1)**2)</code></pre>
+        weight**2*(pi - np.abs(np.abs(phi2-phi1) - pi))**2
+      + (1-weight)**2*(mu2-mu1)**2)</code></pre>
 </details>
 </dd>
 </dl>
@@ -806,7 +806,7 @@ du cluster a l'axe isole est renvoye.</li>
 <dl>
 <dt id="laue.zone_axis.ZoneAxis"><code class="flex name class">
 <span>class <span class="ident">ZoneAxis</span></span>
-<span>(</span><span>diagram, spots_ind, identifier, angle, dist)</span>
+<span>(</span><span>diagram, spots_ind, identifier, phi, mu)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Un axe de zone seul.</p>
@@ -829,9 +829,9 @@ via le parametre <code>diagram</code>.</dd>
 <dt><strong><code>identifier</code></strong> :&ensp;<code>int</code></dt>
 <dd>Identifiant unique de l'axe de zone. Cet identifiant est unique au
 sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
-<dt><strong><code>theta</code></strong> :&ensp;<code>float</code></dt>
+<dt><strong><code>phi</code></strong> :&ensp;<code>float</code></dt>
 <dd>Angle entre l'axe <code>x</code> et le vecteur normal a cet axe passant par l'origine.</dd>
-<dt><strong><code>dist</code></strong> :&ensp;<code>float</code></dt>
+<dt><strong><code>mu</code></strong> :&ensp;<code>float</code></dt>
 <dd>Distance entre cette droite et l'origine.</dd>
 </dl></div>
 <details class="source">
@@ -842,7 +842,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
     &#34;&#34;&#34;
     Un axe de zone seul.
     &#34;&#34;&#34;
-    def __init__(self, diagram, spots_ind, identifier, angle, dist):
+    def __init__(self, diagram, spots_ind, identifier, phi, mu):
         &#34;&#34;&#34;
         Notes
         -----
@@ -863,9 +863,9 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         identifier : int
             Identifiant unique de l&#39;axe de zone. Cet identifiant est unique au
             sein d&#39;un diagramme mais pas forcement au sein d&#39;une experience.
-        theta : float
+        phi : float
             Angle entre l&#39;axe ``x`` et le vecteur normal a cet axe passant par l&#39;origine.
-        dist : float
+        mu : float
             Distance entre cette droite et l&#39;origine.
         &#34;&#34;&#34;
         self.diagram = diagram
@@ -874,9 +874,9 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
                 (int(ind), diagram[ind])
                 for ind in sorted(spots_ind)
             ))
-        self.identifier = identifier
-        self.angle = angle
-        self.dist = dist
+        self._identifier = identifier
+        self._phi = phi
+        self._mu = mu
 
     def dist_mean(self):
         &#34;&#34;&#34;
@@ -899,11 +899,11 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &lt;class &#39;numpy.float64&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        theta_vect, dist_vect = self.get_polar_coords()
-        theta_vect, dist_vect = np.array([theta_vect]), np.array([dist_vect])
+        phi_vect, mu_vect = self.get_polar_coords()
+        phi_vect, mu_vect = np.array([phi_vect]), np.array([mu_vect])
         x_vect, y_vect = np.array([spot.get_gnomonic() for spot in self]).transpose()
         return self.diagram.experiment.transformer.dist_line(
-            theta_vect, dist_vect, x_vect, y_vect).mean()
+            phi_vect, mu_vect, x_vect, y_vect).mean()
 
     def get_id(self):
         &#34;&#34;&#34;
@@ -921,7 +921,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         True
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return self.identifier
+        return self._identifier
 
     def get_polar_coords(self):
         &#34;&#34;&#34;
@@ -929,10 +929,10 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
 
         Returns
         -------
-        angle : float
-            Le meme angle que celui donne a l&#39;initialisateur.
-        dist : float
-            La meme distance que celle donnee a l&#39;imitialisateur.
+        phi : float
+            L&#39;angle de la normale a cet axe.
+        mu : float
+            La distance entre la droite et l&#39;origine.
 
         Examples
         --------
@@ -941,14 +941,14 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
-        &gt;&gt;&gt; angle, dist = axis.get_polar_coords()
-        &gt;&gt;&gt; type(angle) # In radian.
+        &gt;&gt;&gt; phi, mu = axis.get_polar_coords()
+        &gt;&gt;&gt; type(phi) # In radian.
         &lt;class &#39;numpy.float32&#39;&gt;
-        &gt;&gt;&gt; type(dist) # In mm.
+        &gt;&gt;&gt; type(mu) # In mm.
         &lt;class &#39;numpy.float32&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return self.angle, self.dist
+        return self._phi, self._mu
 
     def get_quality(self):
         &#34;&#34;&#34;
@@ -999,9 +999,9 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
             a, b = .1, .8
             lna = math.log((1-a)/a)
             lnb = math.log((1-b)/b)
-            mu = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
-            lamb = lna / (mu - nbr_min)
-            return 1 / (1 + math.exp(-lamb*(nbr-mu)))
+            beta = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
+            lamb = lna / (beta - nbr_min)
+            return 1 / (1 + math.exp(-lamb*(nbr-beta)))
 
         nbr_weight = .75 # Importance du nombre de points par raport a la proximite.
         return nbr_weight*nbr_2_score(len(self)) + (1-nbr_weight)*dmean_2_score(self.dist_mean())
@@ -1042,9 +1042,9 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
             axe_pyplot.set_xlabel(&#34;x.Gi (mm)&#34;)
             axe_pyplot.set_ylabel(&#34;y.Gj (mm)&#34;)
 
-        normal = np.array([math.cos(self.angle), math.sin(self.angle)])
-        director = np.array([math.sin(self.angle), -math.cos(self.angle)])
-        point1 = self.dist * normal
+        normal = np.array([math.cos(self._phi), math.sin(self._phi)])
+        director = np.array([math.sin(self._phi), -math.cos(self._phi)])
+        point1 = self._mu * normal
         point2 = point1 + director
         axe_pyplot.axline(point1, point2, lw=0.5, color=&#34;gray&#34;, clip_box=((-.1, -.1), (.1, .1)))
 
@@ -1090,9 +1090,9 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
             axe_pyplot.set_xlabel(&#34;x.Ci (pxl)&#34;)
             axe_pyplot.set_ylabel(&#34;y.Cj (pxl)&#34;)
 
-        normal = np.array([math.cos(self.angle), math.sin(self.angle)])
-        director = np.array([math.sin(self.angle), -math.cos(self.angle)])
-        centre = self.dist * normal
+        normal = np.array([math.cos(self._phi), math.sin(self._phi)])
+        director = np.array([math.sin(self._phi), -math.cos(self._phi)])
+        centre = self._mu * normal
         points_gnom_x = centre[0] + np.linspace(-2.0, 2.0, 50)*director[0]
         points_gnom_y = centre[1] + np.linspace(-2.0, 2.0, 50)*director[1]
         cam_x, cam_y = self.diagram.experiment.transformer.gnomonic_to_cam(
@@ -1163,7 +1163,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         int
             Identifiant &#34;unique&#34; (du moins le plus possible) representant cet axe de zone.
         &#34;&#34;&#34;
-        return hash((self.diagram, self.identifier))
+        return hash((self.diagram, self._identifier))
 
     def __iter__(self):
         &#34;&#34;&#34;
@@ -1218,11 +1218,10 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         ** Renvoie une chaine evaluable de self. **
         &#34;&#34;&#34;
         return (&#34;ZoneAxis(&#34;
-                # f&#34;diagram={repr(self.diagram)}, &#34; # Affichage bien trop gourmand.
                 f&#34;spots_ind={tuple(self.spots.keys())}, &#34;
-                f&#34;identifier={self.identifier}, &#34;
-                f&#34;angle={self.angle:.4f}, &#34;
-                f&#34;dist={self.dist:.4f})&#34;)</code></pre>
+                f&#34;identifier={self._identifier}, &#34;
+                f&#34;phi={self._phi:.4f}, &#34;
+                f&#34;mu={self._mu:.4f})&#34;)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -1244,7 +1243,7 @@ au sein de <code><a title="laue.diagram.LaueDiagram" href="diagram.html#laue.dia
 <dd>True si le spot est lie a cet axe de zone, False sinon.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
@@ -1336,7 +1335,7 @@ True
     int
         Identifiant &#34;unique&#34; (du moins le plus possible) representant cet axe de zone.
     &#34;&#34;&#34;
-    return hash((self.diagram, self.identifier))</code></pre>
+    return hash((self.diagram, self._identifier))</code></pre>
 </details>
 </dd>
 <dt id="laue.zone_axis.ZoneAxis.__iter__"><code class="name flex">
@@ -1350,7 +1349,7 @@ True
 <dd>Les spots de cet axe de zone par indice croissant.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
@@ -1392,7 +1391,7 @@ True
 <dd>
 <div class="desc"><p><strong> Renvoie le nombre de points contenus dans cet axe de zone. </strong></p>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
@@ -1436,7 +1435,7 @@ True
 <dd>La moyenne des distances. Voir <code><a title="laue.core.geometry.transformer.Transformer.dist_line" href="core/geometry/transformer.html#laue.core.geometry.transformer.Transformer.dist_line">Transformer.dist_line()</a></code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
@@ -1471,11 +1470,11 @@ True
     &lt;class &#39;numpy.float64&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    theta_vect, dist_vect = self.get_polar_coords()
-    theta_vect, dist_vect = np.array([theta_vect]), np.array([dist_vect])
+    phi_vect, mu_vect = self.get_polar_coords()
+    phi_vect, mu_vect = np.array([phi_vect]), np.array([mu_vect])
     x_vect, y_vect = np.array([spot.get_gnomonic() for spot in self]).transpose()
     return self.diagram.experiment.transformer.dist_line(
-        theta_vect, dist_vect, x_vect, y_vect).mean()</code></pre>
+        phi_vect, mu_vect, x_vect, y_vect).mean()</code></pre>
 </details>
 </dd>
 <dt id="laue.zone_axis.ZoneAxis.get_id"><code class="name flex">
@@ -1486,7 +1485,7 @@ True
 <p>Au seins d'un diagrame les axes ont des identifiants
 allant de [0, nbr_axes[.</p>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
@@ -1513,7 +1512,7 @@ True
     True
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    return self.identifier</code></pre>
+    return self._identifier</code></pre>
 </details>
 </dd>
 <dt id="laue.zone_axis.ZoneAxis.get_polar_coords"><code class="name flex">
@@ -1523,21 +1522,21 @@ True
 <div class="desc"><p><strong> Recupere l'angle et la distance representant l'axe. </strong></p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>angle</code></strong> :&ensp;<code>float</code></dt>
-<dd>Le meme angle que celui donne a l'initialisateur.</dd>
-<dt><strong><code>dist</code></strong> :&ensp;<code>float</code></dt>
-<dd>La meme distance que celle donnee a l'imitialisateur.</dd>
+<dt><strong><code>phi</code></strong> :&ensp;<code>float</code></dt>
+<dd>L'angle de la normale a cet axe.</dd>
+<dt><strong><code>mu</code></strong> :&ensp;<code>float</code></dt>
+<dd>La distance entre la droite et l'origine.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
 &gt;&gt;&gt;
-&gt;&gt;&gt; angle, dist = axis.get_polar_coords()
-&gt;&gt;&gt; type(angle) # In radian.
+&gt;&gt;&gt; phi, mu = axis.get_polar_coords()
+&gt;&gt;&gt; type(phi) # In radian.
 &lt;class 'numpy.float32'&gt;
-&gt;&gt;&gt; type(dist) # In mm.
+&gt;&gt;&gt; type(mu) # In mm.
 &lt;class 'numpy.float32'&gt;
 &gt;&gt;&gt;
 </code></pre></div>
@@ -1551,10 +1550,10 @@ True
 
     Returns
     -------
-    angle : float
-        Le meme angle que celui donne a l&#39;initialisateur.
-    dist : float
-        La meme distance que celle donnee a l&#39;imitialisateur.
+    phi : float
+        L&#39;angle de la normale a cet axe.
+    mu : float
+        La distance entre la droite et l&#39;origine.
 
     Examples
     --------
@@ -1563,14 +1562,14 @@ True
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
     &gt;&gt;&gt;
-    &gt;&gt;&gt; angle, dist = axis.get_polar_coords()
-    &gt;&gt;&gt; type(angle) # In radian.
+    &gt;&gt;&gt; phi, mu = axis.get_polar_coords()
+    &gt;&gt;&gt; type(phi) # In radian.
     &lt;class &#39;numpy.float32&#39;&gt;
-    &gt;&gt;&gt; type(dist) # In mm.
+    &gt;&gt;&gt; type(mu) # In mm.
     &lt;class &#39;numpy.float32&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    return self.angle, self.dist</code></pre>
+    return self._phi, self._mu</code></pre>
 </details>
 </dd>
 <dt id="laue.zone_axis.ZoneAxis.get_quality"><code class="name flex">
@@ -1594,7 +1593,7 @@ et la proximite des spots lies a cet axe.<ul>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
@@ -1656,9 +1655,9 @@ True
         a, b = .1, .8
         lna = math.log((1-a)/a)
         lnb = math.log((1-b)/b)
-        mu = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
-        lamb = lna / (mu - nbr_min)
-        return 1 / (1 + math.exp(-lamb*(nbr-mu)))
+        beta = (nbr_min*lnb - nbr_max*lna) / (lnb - lna)
+        lamb = lna / (beta - nbr_min)
+        return 1 / (1 + math.exp(-lamb*(nbr-beta)))
 
     nbr_weight = .75 # Importance du nombre de points par raport a la proximite.
     return nbr_weight*nbr_2_score(len(self)) + (1-nbr_weight)*dmean_2_score(self.dist_mean())</code></pre>
@@ -1677,7 +1676,7 @@ True
 <dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
+<pre><code class="python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
@@ -1733,9 +1732,9 @@ True
         axe_pyplot.set_xlabel(&#34;x.Gi (mm)&#34;)
         axe_pyplot.set_ylabel(&#34;y.Gj (mm)&#34;)
 
-    normal = np.array([math.cos(self.angle), math.sin(self.angle)])
-    director = np.array([math.sin(self.angle), -math.cos(self.angle)])
-    point1 = self.dist * normal
+    normal = np.array([math.cos(self._phi), math.sin(self._phi)])
+    director = np.array([math.sin(self._phi), -math.cos(self._phi)])
+    point1 = self._mu * normal
     point2 = point1 + director
     axe_pyplot.axline(point1, point2, lw=0.5, color=&#34;gray&#34;, clip_box=((-.1, -.1), (.1, .1)))
 
@@ -1759,7 +1758,7 @@ True
 <dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
+<pre><code class="python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
@@ -1815,9 +1814,9 @@ True
         axe_pyplot.set_xlabel(&#34;x.Ci (pxl)&#34;)
         axe_pyplot.set_ylabel(&#34;y.Cj (pxl)&#34;)
 
-    normal = np.array([math.cos(self.angle), math.sin(self.angle)])
-    director = np.array([math.sin(self.angle), -math.cos(self.angle)])
-    centre = self.dist * normal
+    normal = np.array([math.cos(self._phi), math.sin(self._phi)])
+    director = np.array([math.sin(self._phi), -math.cos(self._phi)])
+    centre = self._mu * normal
     points_gnom_x = centre[0] + np.linspace(-2.0, 2.0, 50)*director[0]
     points_gnom_y = centre[1] + np.linspace(-2.0, 2.0, 50)*director[1]
     cam_x, cam_y = self.diagram.experiment.transformer.gnomonic_to_cam(

@@ -35,7 +35,7 @@ class LaueDiagram(Splitable):
     """
     Represente un diagramme de Laue associe a une seule image.
     """
-    def __init__(self, name, spots, experiment, **kwargs):
+    def __init__(self, name, experiment):
         """
         Notes
         -----
@@ -49,25 +49,44 @@ class LaueDiagram(Splitable):
         ----------
         name : str
             Nom de l'image du diagramme.
-        spots : set
-            Ensemble des points chauds. Ils doivent heriter de ``laue.spot.Spot``.
         experiment : Experiment
             Instance de l'experience qui contient ce diagramme.
             Cet objet doit heriter de ``laue.experiment.base_experiment.Experiment``.
-        image_xy : np.ndarray, optional
-            Matrice numpy de l'image de depart.
         """
-        self.name = name
+        self._name = name
         self.experiment = experiment # C'est l'experience qui contient ce diagramme.
-        self.spots = spots # La liste des spots en vrac. Pas set car l'ordre doit etre fige.
-        self.image_xy = kwargs.get("image_xy", None) # None si il faut preserver la RAM.
+        self._spots = [] # La liste des spots en vrac. Ils doivent etres rempli par ailleur.
 
         # Declaration des variables futur.
-        self.quality = None # Facteur qui dit a quel point ce diagramme est joli a l'oeil.
-        self.image_gnom = None # Image projete dans le plan gnomonic.
-        self.sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
-        self.axes = {} # Les axes de zones
-        self.spots_set = None # L'ensemble des spots pour une recherche plus rapide.
+        self._quality = None # Facteur qui dit a quel point ce diagramme est joli a l'oeil.
+        self._image_xy = None # L'image brute avec le fond et tout.
+        self._image_gnom = None # Image projete dans le plan gnomonic.
+        self._sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
+        self._axes = {} # Les axes de zones.
+        self._spots_set = None # L'ensemble des spots pour une recherche plus rapide.
+
+    def _set_spots(self, spots):
+        """
+        ** Met les spots dans le diagrame. **
+
+        Parameters
+        ----------
+        spots : list
+            Ensemble des points chauds. Ils doivent heriter de ``laue.spot.Spot``.
+            Pas set car l'ordre doit etre fige.
+        """
+        self._spots = spots
+
+    def _set_image(self, image):
+        """
+        ** Ajoute le contenu de l'image brute. **
+
+        Parameters
+        ----------
+        image : np.ndarray
+            L'image 2d en niveau de gris encodee en np.uint16.
+        """
+        self._image_xy = image
 
     def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
         _axes_args=None, _get_args=False):
@@ -130,8 +149,8 @@ class LaueDiagram(Splitable):
             gnomonics = self.get_gnomonic_positions()
             return gnomonics, dmax, nbr, tol
 
-        if (dmax, nbr, tol) in self.axes: # Si on a deja la solution.
-            return self.axes[(dmax, nbr, tol)]
+        if (dmax, nbr, tol) in self._axes: # Si on a deja la solution.
+            return self._axes[(dmax, nbr, tol)]
 
         if _axes_args is None: # Si le travail n'est pas premache.
             if self.experiment.verbose:
@@ -148,7 +167,7 @@ class LaueDiagram(Splitable):
 
         # Creation des objets 'ZoneAxis'.
         from laue.zone_axis import ZoneAxis
-        self.axes[(dmax, nbr, tol)] = [
+        self._axes[(dmax, nbr, tol)] = [
             ZoneAxis(diagram=self,
                      spots_ind=spots_ind,
                      identifier=i,
@@ -158,8 +177,8 @@ class LaueDiagram(Splitable):
 
         # Attribution des axes aux spots.
         for spot, axes_ind in zip(self, spots_axes_ind):
-            spot.axes = {self.axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
-        return self.axes[(dmax, nbr, tol)]
+            spot.axes = {self._axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
+        return self._axes[(dmax, nbr, tol)]
 
     def get_gnomonic_positions(self, *, n=None, sort=None):
         """
@@ -198,7 +217,7 @@ class LaueDiagram(Splitable):
         >>>
         """
         # On calcul les projections pour tous les points a la fois.
-        if self.spots[0]._gnomonic is None:
+        if self._spots[0]._gnomonic is None:
             coords_gnomonic = self.experiment.transformer.cam_to_gnomonic(
                 *self.get_positions(n=n, sort=sort),
                 self.experiment.set_calibration())
@@ -229,7 +248,7 @@ class LaueDiagram(Splitable):
         'laue/examples/ge_blanc.mccd'
         >>>
         """
-        return self.name
+        return self._name
 
     def get_image_gnomonic(self):
         """
@@ -267,8 +286,8 @@ class LaueDiagram(Splitable):
                [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
         >>>
         """
-        if self.image_gnom is not None:
-            return self.image_gnom
+        if self._image_gnom is not None:
+            return self._image_gnom
 
         if self.experiment.verbose:
             print(f"Image gnomonic de {self.get_id()}...")
@@ -280,7 +299,7 @@ class LaueDiagram(Splitable):
             map_x, map_y, interpolation=cv2.INTER_LINEAR)
 
         if psutil is not None and psutil.virtual_memory().percent < 75:
-            self.image_gnom = image_gnom
+            self._image_gnom = image_gnom
 
         if self.experiment.verbose:
             print(f"\tOK: Image gnomonic caluculee.")
@@ -318,8 +337,8 @@ class LaueDiagram(Splitable):
         28899
         >>>
         """
-        if self.image_xy is not None:
-            return self.image_xy
+        if self._image_xy is not None:
+            return self._image_xy
 
         if not os.path.exists(self.get_id()):
             raise NameError(f"Impossible de trouver le fichier {repr(self.get_id())}.")
@@ -328,7 +347,7 @@ class LaueDiagram(Splitable):
         image = read_image(self.get_id())
 
         if psutil is not None and psutil.virtual_memory().percent < 75:
-            self.image_xy = image
+            self._image_xy = image
 
         return image
 
@@ -452,7 +471,7 @@ class LaueDiagram(Splitable):
                 raise ValueError(f"Il faut selectioner au moin 1 voisin. {n_max} c'est pas suffisant.")
             nbr = min(nbr, n_max)
 
-        neighbors = [self.spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
+        neighbors = [self._spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
         if self.experiment.verbose:
             print(f"\tOK: il y a {len(neighbors)} voisins.")
         return neighbors
@@ -532,13 +551,13 @@ class LaueDiagram(Splitable):
                 return 1
             return math.exp(-(x-n_best_max)*(math.log(2)/n_best_max))
 
-        if self.quality is not None:
-            return self.quality
+        if self._quality is not None:
+            return self._quality
 
         spot_qual_weight = 0.5
 
-        self.quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
-        return self.quality
+        self._quality = (1-spot_qual_weight)*f_nbr(len(self), 60, 120) + spot_qual_weight*np.mean([spot.get_quality() for spot in self])
+        return self._quality
 
     def get_theta_chi(self, *, n=None, sort=None):
         """
@@ -571,7 +590,7 @@ class LaueDiagram(Splitable):
         >>>
         """
         # On calcul les projections pour tous les points a la fois.
-        if self.spots[0]._thetachi is None:
+        if self._spots[0]._thetachi is None:
             angles_thetachi = self.experiment.transformer.cam_to_thetachi(
                 *self.get_positions(n=n, sort=sort),
                 self.experiment.set_calibration())
@@ -860,21 +879,21 @@ class LaueDiagram(Splitable):
 
         if sort is None: # Si il n'y a pas de tri a faire.
             if n is None:
-                return self.spots.copy()
-            return self.spots[:n]
+                return self._spots.copy()
+            return self._spots[:n]
 
         if hasattr(sort, "__call__"):
-            l_spots = sorted(self.spots, key=sort)
-        if sort in self.sorted_spots: # On enregistre la liste pour de melleur
-            l_spots = self.sorted_spots[sort] #  perfs aux apels suivants.
+            l_spots = sorted(self._spots, key=sort)
+        if sort in self._sorted_spots: # On enregistre la liste pour de melleur
+            l_spots = self._sorted_spots[sort] #  perfs aux apels suivants.
         else:
             if sort == "intensity":
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_intensity()))
+                l_spots = sorted(self._spots, key=(lambda spot: -spot.get_intensity()))
             elif sort == "distortion":
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_distortion()))
+                l_spots = sorted(self._spots, key=(lambda spot: -spot.get_distortion()))
             elif sort == "quality":
-                l_spots = sorted(self.spots, key=(lambda spot: -spot.get_quality()))
-            self.sorted_spots[sort] = l_spots
+                l_spots = sorted(self._spots, key=(lambda spot: -spot.get_quality()))
+            self._sorted_spots[sort] = l_spots
 
         if n is not None:
             return l_spots[:n]
@@ -890,12 +909,12 @@ class LaueDiagram(Splitable):
         place en memoire.
         """
         if os.path.exists(self.get_id()): # Il ne faut pas supprimer
-            self.image_xy = None # une image que l'on ne peut pas retrouver!
-        self.quality = None
-        self.image_gnom = None
-        self.sorted_spots = {} # Si jamais la set_calibration ou un spot change.
-        self.axes = {} # Les axes de zone depandent de beaucoup de choses, on reste donc prudent.
-        self.spots_set = None # On libere de la memoire en faisant ca.
+            self._image_xy = None # une image que l'on ne peut pas retrouver!
+        self._quality = None
+        self._image_gnom = None
+        self._sorted_spots = {} # Si jamais la set_calibration ou un spot change.
+        self._axes = {} # Les axes de zone depandent de beaucoup de choses, on reste donc prudent.
+        self._spots_set = None # On libere de la memoire en faisant ca.
         for spot in self:
             spot._clean()
 
@@ -942,9 +961,9 @@ class LaueDiagram(Splitable):
                 return False
             spot = self[spot]
 
-        if self.spots_set is None:
-            self.spots_set = set(self)
-        return spot in self.spots_set
+        if self._spots_set is None:
+            self._spots_set = set(self)
+        return spot in self._spots_set
 
     def __getitem__(self, item):
         """
@@ -999,10 +1018,10 @@ class LaueDiagram(Splitable):
         >>>
         """
         if isinstance(item, (int, np.integer)):
-            return self.spots[item]
+            return self._spots[item]
 
         if isinstance(item, slice):
-            return self.spots[item]
+            return self._spots[item]
 
         if isinstance(item, (Spot, tuple)):
             return self.get_neighbors(item, n_max=1).pop()
@@ -1042,7 +1061,7 @@ class LaueDiagram(Splitable):
         ...
         >>>
         """
-        yield from self.spots
+        yield from self._spots
 
     def __len__(self):
         """
@@ -1057,7 +1076,7 @@ class LaueDiagram(Splitable):
         78
         >>>
         """
-        return len(self.spots)
+        return len(self._spots)
 
     def __str__(self):
         """

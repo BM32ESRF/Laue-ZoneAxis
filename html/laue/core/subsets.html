@@ -470,7 +470,7 @@ qui y sont raccrochees. Il doit prendre la forme suivante:
 <dd>Chaque element est un ensemble d'indice de spot appartenant au meme grain.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; spots_dict = {0: {'gnom': (0.3136510725564478, -0.44091934214920697), 'axes': set()},
 ...               1: {'gnom': (0.3092269223801162, -0.3703963974694111), 'axes': {0}},
 ...               2: {'gnom': (0.29464954430652696, 0.39670741889986955), 'axes': {1}},
@@ -1012,7 +1012,7 @@ dans des clusters differents. Cette distance est la distance euclidiene du plan
 gnomonic (en mm).</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
 &gt;&gt;&gt; type(diag.find_subsets())

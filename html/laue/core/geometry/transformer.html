@@ -1140,7 +1140,7 @@ generes avec le comptage naturel (representation des nombres
 en base n).</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; from laue.core.geometry.transformer import comb2ind
+<pre><code class="python-repl">&gt;&gt;&gt; from laue.core.geometry.transformer import comb2ind
 &gt;&gt;&gt; comb2ind(0, 1, n=6)
 0
 &gt;&gt;&gt; comb2ind(0, 2, n=6)
@@ -1253,7 +1253,7 @@ ajence comme decrit dans <code><a title="laue.core.geometry.transformer.comb2ind
 <dd>Le second des 2 indicices (<code>ind2</code>). De sorte que <code>comb2ind(ind1, ind2) == comb</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; from laue.core.geometry.transformer import ind2comb
+<pre><code class="python-repl">&gt;&gt;&gt; from laue.core.geometry.transformer import ind2comb
 &gt;&gt;&gt; ind2comb(0, n=6)
 (0, 1)
 &gt;&gt;&gt; ind2comb(1, n=6)
@@ -2295,7 +2295,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -2304,7 +2304,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
 array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
@@ -2315,7 +2315,7 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
 ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
@@ -2413,7 +2413,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -2422,7 +2422,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
 array([[ 64.,  60.,  51.,  39.,  30.,  26.],
@@ -2433,7 +2433,7 @@ array([[ 64.,  60.,  51.,  39.,  30.,  26.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.cam_to_thetachi(0.0, 0.0, parameters).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.cam_to_thetachi(0.0, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
 ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
@@ -2615,7 +2615,7 @@ risque d'y avoir des arrondis qui engendrent:
 shape = <code>(*nbr_droites, *nbr_points)</code></dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -2756,7 +2756,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -2768,7 +2768,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
 array([[   3.,  412.,  821., 1230., 1639., 2048.],
@@ -2779,7 +2779,7 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
 ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
@@ -2878,7 +2878,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
@@ -2888,7 +2888,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
 array([[ 64.,  60.,  51.,  39.,  30.,  26.],
@@ -2899,7 +2899,7 @@ array([[ 64.,  60.,  51.,  39.,  30.,  26.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.gnomonic_to_thetachi(0.0, 0.0).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.gnomonic_to_thetachi(0.0, 0.0).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
 ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
@@ -3014,7 +3014,7 @@ soit la plus petite possible.</li>
 </dl>
 <p>shape = <code>(2, *over_dims, n*(n-1)/2)</code></p>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue.core.geometry import transformer
 &gt;&gt;&gt; transformer = transformer.Transformer()
 &gt;&gt;&gt; x, y = np.random.normal(size=(2, 6))
@@ -3169,12 +3169,12 @@ de l'appel de cette fonction sur le nuage de points unique correspondant.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue.core.geometry import transformer
 &gt;&gt;&gt; transformer = transformer.Transformer()
 </code></pre>
 <p>Type de retour <code>float</code> vs <code>object</code>.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
+<pre><code class="python-repl">&gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
 ...         np.array([ 0.,  1.,  1., -1.,  1.]))
 &gt;&gt;&gt; phi, mu = transformer.hough(x, y)
 &gt;&gt;&gt; np.round(transformer.hough_reduce(phi, mu, nbr=3), 2)
@@ -3191,7 +3191,7 @@ array([[-0.79,  1.57],
 &gt;&gt;&gt;
 </code></pre>
 <p>Les dimensions de retour.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; x, y = (np.random.normal(size=(6, 5, 4)),
+<pre><code class="python-repl">&gt;&gt;&gt; x, y = (np.random.normal(size=(6, 5, 4)),
 ...         np.random.normal(size=(6, 5, 4)))
 &gt;&gt;&gt; phi, mu = transformer.hough(x, y)
 &gt;&gt;&gt; transformer.hough_reduce(phi, mu).shape
@@ -3393,7 +3393,7 @@ La shape du tenseur final est donc: <strong> shape = <code>(2, *over_dims, n*(n-
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; np.random.seed(0)
@@ -3514,7 +3514,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -3524,7 +3524,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_cam(theta, chi, parameters))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_cam(theta, chi, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.thetachi_to_cam(theta, chi, parameters))
 array([[   3.,  412.,  821., 1230., 1639., 2048.],
@@ -3535,7 +3535,7 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.thetachi_to_cam(np.pi/4, 0.0, parameters).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.thetachi_to_cam(np.pi/4, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
 ...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
@@ -3632,7 +3632,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; theta, chi = np.array([[ 63.605,  59.91 ,  51.367,  38.546,  30.05 ,  26.378],
@@ -3640,7 +3640,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_gnomonic(theta, chi))
+<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_gnomonic(theta, chi))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.thetachi_to_gnomonic(theta, chi), 2)
 array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
@@ -3651,7 +3651,7 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.thetachi_to_gnomonic(np.pi/4, 0.0).shape
+<pre><code class="python-repl">&gt;&gt;&gt; transformer.thetachi_to_gnomonic(np.pi/4, 0.0).shape
 (2,)
 &gt;&gt;&gt; theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
 ...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))

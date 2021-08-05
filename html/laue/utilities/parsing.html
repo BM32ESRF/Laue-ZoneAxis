@@ -313,7 +313,7 @@ Les clefs et les valeurs typique sont par example:
 <dd>Si il manque des parametres.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
+<pre><code class="python-repl">&gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; output = lambda pars: &quot;, &quot;.join(f&quot;{repr(k)}: {round(pars[k], 2)}&quot; for k in sorted(pars))
 &gt;&gt;&gt;
 &gt;&gt;&gt; output(extract_parameters(config_file=&quot;laue/examples/ge_blanc.det&quot;))

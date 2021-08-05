@@ -434,6 +434,8 @@ class Experiment:
         """
         ** Genere les diagrammes de l'experience. **
 
+        C'est la qu'est effectue le pic search.
+
         Notes
         -----
         * Performances:
@@ -479,6 +481,20 @@ class Experiment:
         <class 'laue.diagram.LaueDiagram'>
         >>>
         """
+        def cast_to_diagram(spots_args, name, image=None):
+            """
+            Met en forme du pic search pour en faire des diagrames.
+            """
+            laue_diagram = LaueDiagram(name, experiment=self)
+            spots = [Spot(diagram=laue_diagram, identifier=i, **spot_args)
+                     for i, spot_args in enumerate(spots_args)]
+            laue_diagram._set_spots(spots)
+            if image is not None and (
+                    (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent < 50)
+                    ):
+                laue_diagram._set_image(image)
+            return laue_diagram
+
         def update_len(func):
             """
             Tient a jour la longueur de l'experience.
@@ -516,32 +532,42 @@ class Experiment:
             Premiere vraie lecture. Cede les diagrammes.
             """
             if multiprocessing.current_process().name == "MainProcess":
-                attrs = ["kernel_font", "threshold", "kernel_dilate"]
-                mini_self = collections.namedtuple("SelfCopy", attrs)(
-                    *(getattr(self, attr) for attr in attrs)
-                    ) # Strategie car 'pickle' ne sais pas faire ca.
-                ser_self = cloudpickle.dumps(mini_self)
-
-                from laue.utilities.multi_core import pickleable_method
+                from laue.core.pic_search import _pickelable_pic_search
                 from laue.utilities.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (
-                        self._help_get_diagrams(name, image, spot_args=spot_args)
-                        for (name, image, spot_args) in limited_imap(pool,
-                            pickleable_method,
+                        cast_to_diagram(spots_args, name, image)
+                        for spots_args, (name, image) in limited_imap(pool,
+                            _pickelable_pic_search,
                             (
                                 (
-                                    Experiment._help_get_diagrams,
-                                    ser_self,
-                                    {"name":name, "image":image, "thread":True}
+                                    (
+                                        image,
+                                        self.kernel_font,
+                                        self.kernel_dilate,
+                                        self.threshold
+                                    ),
+                                    (name, image)
                                 )
                                 for name, image in self.read_images()
                             )
                         )
                     )
             else:
-                yield from (self._help_get_diagrams(name, image)
-                    for name, image in self.read_images())
+                from laue import atomic_pic_search
+                yield from (
+                    cast_to_diagram(
+                        atomic_pic_search(
+                            image,
+                            self.kernel_font,
+                            self.kernel_dilate,
+                            self.threshold
+                        ),
+                        name,
+                        image
+                    )
+                    for name, image in self.read_images()
+                )
         
         if self._diagrams_iterator is None:
             self._diagrams_iterator = iter(_diagram_extractor(self))
@@ -550,61 +576,6 @@ class Experiment:
         return (
             (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
             if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self)))
-
-    def _help_get_diagrams(self, name, image, thread=False, spot_args=None):
-        """
-        ** Comme ``laue.experiment.base_experiment.Experiment.get_diagrams`` pour une seule image. **
-
-        * Cette methode n'est utile qu'a fin de parallelisation.
-        * Elle ne doit pas etre appelle par l'utilisateur.
-        * Cette methode est indirectement appelle par self.get_diagrams().
-        * Il n'y a pas de verifications pour une histoire de performance.
-
-        :retrun: Le diagramme de Laue correspondant.
-        :rtype: LaueDiagram
-        """
-        if isinstance(self, bytes):
-            self = cloudpickle.loads(self)
-
-        if spot_args is None:
-            # Binarisation de l'image.
-            bg_image = cv2.morphologyEx(image, cv2.MORPH_OPEN, self.kernel_font, iterations=1)
-            fg_image = image - bg_image
-            thresh_image = (fg_image > self.threshold*fg_image.std()).astype(np.uint8)
-            dilated_image = cv2.dilate(thresh_image, self.kernel_dilate, iterations=1)
-
-            # Detection des contours grossiers.
-            outlines, _ = cv2.findContours(dilated_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            bbox = [cv2.boundingRect(outl) for outl in outlines]
-
-            # Calcul des distortions.
-            distortions_open = (2*np.sqrt(np.pi)) / np.array([
-                cv2.arcLength(outl, True)/np.sqrt(cv2.contourArea(outl))
-                for outl in outlines])
-
-            # Preparations des arguments des spot.
-            spot_args = [((x, y, w, h), fg_image[y:y+h, x:x+w], dis)
-                for dis, (x, y, w, h) in zip(distortions_open, bbox)]
-
-        if thread:
-            if (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent < 50):
-                return (name, image, spot_args)
-            return (name, None, spot_args)
-
-        # Mise en forme du resultat.
-        if image is not None and (
-                (not os.path.exists(name)) or (psutil is not None and psutil.virtual_memory().percent < 50)
-                ):
-            laue_diagram = LaueDiagram(name, None, experiment=self, image_xy=image)
-        else:
-            laue_diagram = LaueDiagram(name, None, experiment=self)
-
-        # Creation des ensembles de spots.
-        spots_open = [Spot(bbox=bbox, spot_im=spot_im, distortion=distortion, diagram=laue_diagram, identifier=i)
-                     for i, (bbox, spot_im, distortion) in enumerate(spot_args)]
-        laue_diagram.spots = spots_open
-
-        return laue_diagram
 
     def find_subsets(self, *, tense_flow=False, **kwds):
         """
@@ -1008,7 +979,7 @@ class Experiment:
                 for image_info in func(*func_args, **func_kwargs):
                     yield image_info
                     if self.verbose >= 2:
-                        print(f"\timage : (...{str(image_info)[-20:]}) cedes.")
+                        print(f"\timage : (...{str(image_info)[-20:]}) cedee.")
 
                 if self.verbose:
                     print("\tOK: Toutes les images sont lues.")
@@ -1023,12 +994,12 @@ class Experiment:
             # Convertion str vers generateur
             if isinstance(self._images, str): # Dans le cas ou une chaine de caractere
                 if os.path.isdir(self._images): # decrit l'ensemble des images.
-                    self._images = (
+                    self._images = sorted(
                         os.path.join(father, file)
                         for father, _, files in os.walk(self._images)
                         for file in files)
                 else:
-                    self._images = glob.iglob(self._images, recursive=True)
+                    self._images = sorted(glob.iglob(self._images, recursive=True))
 
             yield from self._images
 
@@ -1163,7 +1134,8 @@ class Experiment:
                     f"Or vous tentez d'acceder au {limit+1}eme diagrame!")
             if len(self) and -limit > len(self):
                 raise KeyError(f"L'experience n'est faite que de {len(self)} diagrames, "
-                    f"Or vous tentez d'acceder rang {limit}. Le plus petit rang possible c'est {-len(self)}.")
+                    f"Or vous tentez d'acceder au rang {limit}. "
+                    f"Le plus petit rang possible c'est {-len(self)}.")
 
             # Cas ou il faut extraire.
             if limit >= 0:
@@ -1240,10 +1212,8 @@ class Experiment:
         """
         ** Renvoi une chaine evaluable de self. **
         """
-        kwargs = ["verbose", "max_space", "threshold"]
-        attr1 = [f"{kwarg}={repr(getattr(self, kwarg))}" for kwarg in kwargs]
-        attr2 = [f"{k}={v}" for k, v in self.kwargs.items()]
-        return "Experiment(%s)" % ", ".join(attr1 + attr2)
+        name = repr("/".join(self[0].get_id().split("/")[:-1]))
+        return f"Experiment({name})"
 
     def __str__(self):
         """

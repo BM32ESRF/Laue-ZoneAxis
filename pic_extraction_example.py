@@ -15,7 +15,7 @@ DEG = PI / 180.0
 ## detector parameters
 detectorplaneparameters = [70.22, 1039.395, 943.57, 0.7478, 0.07186] #ZBB1
 pixelsize = 0.079142
-CCDLabel="MARCCD165"
+CCDLabel = "MARCCD165"
 
 ## parameters for NN prediction
 input_params = {
