@@ -19,6 +19,83 @@ import numpy as np
 
 CALIBRATION_PARAMETERS = None
 
+# Help for test functions.
+
+def _new_seed():
+    from numpy.random import MT19937
+    from numpy.random import RandomState, SeedSequence
+    rs = RandomState(MT19937(SeedSequence(123456789)))
+    yield rs
+
+def _find_images_dir(images_min=10, root=os.path.expanduser("~")):
+    """
+    ** Recherche les images des experiences. **
+
+    Paremeters
+    ----------
+    images_min : int
+        Le nombre minium d'images dans un dossier.
+    root : str
+        Le repertoire racine a explorer recursivement.
+    """
+    from laue.utilities.multi_core import RecallingIterator
+
+    def generator():
+        extensions = {".mccd", ".mccd.gz", ".tiff", ".tiff.gz"}
+        for father, dirs, files in os.walk(root):
+            if len(files) < images_min:
+                continue
+            for extension in extensions:
+                if len([f for f in files if f.endswith(extension)]) >= images_min:
+                    yield f"{father}/*{extension}"
+
+    if "images_iterator" not in globals():
+        globals()["images_iterator"] = iter(generator())
+    return RecallingIterator(globals()["images_iterator"])
+
+def _timer(f):
+    def f_bis(*args, **kwargs):
+        ti = time.time()
+        res = f(*args, **kwargs)
+        print(f"Temps pour {f.__name__} at pid {os.getpid()}: {_ftime(time.time()-ti)} s.")
+        return res
+    return f_bis
+
+def _print(*elements, **kwargs):
+    if "first_print_call" not in globals():
+        globals()["first_print_call"] = None
+        with open("tests_results.txt", "w") as f:
+            f.write(f"DATE: {time.asctime()}\n")
+            f.write(f"NCPU: {os.cpu_count()}\n")
+    with open("tests_results.txt", "a", encoding="utf-8") as f:
+        print(*elements, **kwargs, file=f)
+
+def _ftime(t):
+    if t < 1e-6:
+        return f"{t*1e9:.3f} ns"
+    if t < 1e-3:
+        return f"{t*1e6:.3f} us"
+    if t < 1e0:
+        return f"{t*1e3:.3f} ms"
+    return f"{t:.3f} s"
+
+class CWDasRoot:
+    """
+    ** Permet de se placer a la racine du module. **
+    """
+    def __init__(self):
+        self.old_cwd = os.getcwd()
+
+    def __enter__(self):
+        file_path = os.path.abspath(__file__)
+        root = os.path.dirname(os.path.dirname(os.path.dirname(file_path)))
+        os.chdir(root)
+        sys.path.insert(0, root)
+
+    def __exit__(self, type, value, traceback):
+        os.chdir(self.old_cwd)
+
+
 # Tests theoriques.
 
 def test_geometry_dtype():
@@ -86,52 +163,6 @@ def test_geometry_dtype():
             dtype=dtype).dtype.type
         _print(f"\t{dtype.__name__}->{rtype.__name__}")
         assert rtype == dtype
-
-def test_geometry_shape():
-    """
-    S'assure que les dimensions soient concervees..
-    """
-    _print("============ TEST GEOMETRY SHAPE =============")
-    with CWDasRoot():
-        from laue import Transformer
-        from laue.utilities.parsing import extract_parameters
-    parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
-    transformer = Transformer()
-
-    shape = tuple(np.random.randint(2, 10, size=np.random.randint(1, 5)))
-    _print(f"shape: {shape}")
-
-    for boucle in range(3): # On fait 2 boucle car ca recompile en cours de route.
-        for func in [
-                transformer.cam_to_gnomonic,
-                transformer.gnomonic_to_cam,
-                transformer.cam_to_thetachi,
-                transformer.thetachi_to_cam,
-                transformer.thetachi_to_gnomonic,
-                transformer.gnomonic_to_thetachi]:
-            try:
-                res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape), parameters)
-            except TypeError:
-                res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape))
-            _print(f"boucle {boucle}, {func.__name__}(...).shape -> {res.shape}")
-            assert res.shape == (2,) + shape
-
-    res = transformer.dist_line(
-        np.ones(shape=shape), np.ones(shape=shape),
-        np.zeros(shape=shape), np.zeros(shape=shape))
-    _print(f"dist_line(...).shape -> {res.shape}")
-    assert res.shape == (*shape, *shape)
-
-    res = transformer.hough(
-        np.random.normal(size=shape), np.random.normal(size=shape))
-    _print(f"hough(...).shape -> {res.shape}")
-    assert res.shape == (2,) + shape[:-1] + ((shape[-1]*(shape[-1]-1))//2,)
-
-    res = transformer.inter_lines(
-        np.random.uniform(-np.pi, np.pi, size=shape),
-        np.random.uniform(0, 2, size=shape))
-    _print(f"inter_lines(...).shape -> {res.shape}")
-    assert res.shape == (2,) + shape[:-1] + ((shape[-1]*(shape[-1]-1))//2,)
 
 def test_geometry_bij():
     """
@@ -208,57 +239,119 @@ def test_geometry_bij():
         return True
 
     # camera <=> uf
-    _print("uf2cam o cam2uf: ", end="")
+    _print("cam <=> uf: ", end="")
     xc_bis, yc_bis = transformer.get_expr_uf_to_cam(
         *transformer.get_expr_cam_to_uf(xc, yc))
-    assert is_zero((xc_bis - xc)**2 + (yc_bis - yc)**2)
-
-    _print("cam2uf o uf2cam: ", end="")
     uf_x_bis, uf_y_bis, uf_z_bis = transformer.get_expr_cam_to_uf(
         *transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z))
     u_f_bis = uf_x_bis*N.i + uf_y_bis*N.j + uf_z_bis*N.k
-    assert is_zero((u_f ^ u_f_bis).magnitude())
+    assert is_zero((xc_bis - xc)**2 + (yc_bis - yc)**2) or is_zero((u_f ^ u_f_bis).magnitude())
 
     # uf <=> uq
-
-    _print("uq2uf o uf2uq: ", end="")
+    _print("uf <=> uq: ", end="")
     uf_x_bis, uf_y_bis, uf_z_bis = transformer.get_expr_uq_to_uf(
         *transformer.get_expr_uf_to_uq(uf_x, uf_y, uf_z))
     u_f_bis = uf_x_bis*N.i + uf_y_bis*N.j + uf_z_bis*N.k
-    assert is_zero((u_f ^ u_f_bis).magnitude())
-
-    _print("uf2uq o uq2uf: ", end="")
     uq_x_bis, uq_y_bis, uq_z_bis = transformer.get_expr_uf_to_uq(
         *transformer.get_expr_uq_to_uf(uq_x, uq_y, uq_z))
     u_q_bis = uq_x_bis*N.i + uq_y_bis*N.j + uq_z_bis*N.k
-    assert is_zero((u_q ^ u_q_bis).magnitude())
+    assert is_zero((u_f ^ u_f_bis).magnitude()) or is_zero((u_q ^ u_q_bis).magnitude())
 
     # uq <=> gnomonic
-
-    _print("gnom2uq o uq2gnom: ", end="")
+    _print("uq <=> gnom: ", end="")
     uq_x_bis, uq_y_bis, uq_z_bis = transformer.get_expr_gnomonic_to_uq(
         *transformer.get_expr_uq_to_gnomonic(uq_x, uq_y, uq_z))
     u_q_bis = uq_x_bis*N.i + uq_y_bis*N.j + uq_z_bis*N.k
-    assert is_zero((u_q ^ u_q_bis).magnitude())
-
-    _print("uq2gnom o gnom2uq: ", end="")
     xg_bis, yg_bis = transformer.get_expr_uq_to_gnomonic(
         *transformer.get_expr_gnomonic_to_uq(xg, yg))
-    assert is_zero((xg_bis - xg)**2 + (yg_bis - yg)**2)
+    assert is_zero((u_q ^ u_q_bis).magnitude()) or is_zero((xg_bis - xg)**2 + (yg_bis - yg)**2)
     
     # uf <=> thetachi
-
-    _print("thetachi2uf o uf2thetachi: ", end="")
+    _print("uf <=> thetachi: ", end="")
     uf_x_bis, uf_y_bis, uf_z_bis = transformer.get_expr_thetachi_to_uf(
         *transformer.get_expr_uf_to_thetachi(uf_x, uf_y, uf_z))
     u_f_bis = uf_x_bis*N.i + uf_y_bis*N.j + uf_z_bis*N.k
-    assert is_zero((u_f ^ u_f_bis).magnitude())
-
-    _print("uf2thetachi o thetachi2uf: ", end="")
     theta_bis, chi_bis = transformer.get_expr_uf_to_thetachi(
         *transformer.get_expr_thetachi_to_uf(theta, chi))
-    assert is_zero((theta_bis - theta)**2 + (chi_bis - chi)**2)
+    assert is_zero((u_f ^ u_f_bis).magnitude()) or is_zero((theta_bis - theta)**2 + (chi_bis - chi)**2)
 
+
+# Tests aleatoire.
+
+def test_geometry_shape():
+    """
+    S'assure que les dimensions soient concervees..
+    """
+    _print("============ TEST GEOMETRY SHAPE =============")
+    with CWDasRoot():
+        from laue import Transformer
+        from laue.utilities.parsing import extract_parameters
+    parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
+    transformer = Transformer()
+
+    for rand in _new_seed():
+        shape = tuple(rand.randint(2, 10, size=rand.randint(1, 5)))
+        _print(f"shape: {shape}")
+
+        for boucle in range(3): # On fait 2 boucle car ca recompile en cours de route.
+            for func in [
+                    transformer.cam_to_gnomonic,
+                    transformer.gnomonic_to_cam,
+                    transformer.cam_to_thetachi,
+                    transformer.thetachi_to_cam,
+                    transformer.thetachi_to_gnomonic,
+                    transformer.gnomonic_to_thetachi]:
+                try:
+                    res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape), parameters)
+                except TypeError:
+                    res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape))
+                _print(f"boucle {boucle}, {func.__name__}(...).shape -> {res.shape}")
+                assert res.shape == (2,) + shape
+
+        res = transformer.dist_line(
+            np.ones(shape=shape), np.ones(shape=shape),
+            np.zeros(shape=shape), np.zeros(shape=shape))
+        _print(f"dist_line(...).shape -> {res.shape}")
+        assert res.shape == (*shape, *shape)
+
+        res = transformer.hough(
+            rand.normal(size=shape), rand.normal(size=shape))
+        _print(f"hough(...).shape -> {res.shape}")
+        assert res.shape == (2,) + shape[:-1] + ((shape[-1]*(shape[-1]-1))//2,)
+
+        res = transformer.inter_lines(
+            rand.uniform(-np.pi, np.pi, size=shape),
+            rand.uniform(0, 2, size=shape))
+        _print(f"inter_lines(...).shape -> {res.shape}")
+        assert res.shape == (2,) + shape[:-1] + ((shape[-1]*(shape[-1]-1))//2,)
+
+def test_ordered_shape():
+    _print("============== TEST READ IMAGES ==============")
+    with CWDasRoot():
+        from laue.experiment.ordered_experiment import OrderedExperiment
+    from itertools import cycle
+    images = cycle(["laue/examples/ge_blanc.mccd"])
+
+    class GetPosition:
+        def __init__(self, rand):
+            self.rand = rand
+            self.shape = (rand.randint(1, 200), rand.randint(1, 200))
+            self.index = np.arange(self.shape[0]*self.shape[1])
+            self.rand.shuffle(self.index)
+
+            self.x, self.y = np.meshgrid(
+                sorted(rand.normal(size=self.shape[0])),
+                sorted(rand.normal(size=self.shape[1])))
+            self.x, self.y = self.x.ravel(), self.y.ravel()
+
+        def __call__(self, i):
+            i_mod = i % (self.shape[0]*self.shape[1])
+            return self.x[self.index[i_mod]], self.y[self.index[i_mod]]
+
+    for rand in _new_seed():
+        position = GetPosition(rand)
+        experiment = OrderedExperiment(images, position=position)
+        assert experiment.get_shape() == position.shape
 
 # Tests sur les donnees reelles.
 
@@ -354,74 +447,3 @@ def test_grain_separation():
 
         all_grains2 = [diag.find_subsets() for diag in experiment]
         assert all_grains1 == all_grains2
-
-
-# Help for test functions.
-
-def _find_images_dir(images_min=10, root=os.path.expanduser("~")):
-    """
-    ** Recherche les images des experiences. **
-
-    Paremeters
-    ----------
-    images_min : int
-        Le nombre minium d'images dans un dossier.
-    root : str
-        Le repertoire racine a explorer recursivement.
-    """
-    from laue.utilities.multi_core import RecallingIterator
-   
-    def generator():
-        extensions = {".mccd", ".mccd.gz", ".tiff", ".tiff.gz"}
-        for father, dirs, files in os.walk(root):
-            if len(files) < images_min:
-                continue
-            for extension in extensions:
-                if len([f for f in files if f.endswith(extension)]) >= images_min:
-                    yield f"{father}/*{extension}"
-
-    if "images_iterator" not in globals():
-        globals()["images_iterator"] = iter(generator())
-    return RecallingIterator(globals()["images_iterator"])
-
-def _timer(f):
-    def f_bis(*args, **kwargs):
-        ti = time.time()
-        res = f(*args, **kwargs)
-        print(f"Temps pour {f.__name__} at pid {os.getpid()}: {_ftime(time.time()-ti)} s.")
-        return res
-    return f_bis
-
-def _print(*elements, **kwargs):
-    if "first_print_call" not in globals():
-        globals()["first_print_call"] = None
-        with open("tests_results.txt", "w") as f:
-            f.write(f"DATE: {time.asctime()}\n")
-            f.write(f"NCPU: {os.cpu_count()}\n")
-    with open("tests_results.txt", "a", encoding="utf-8") as f:
-        print(*elements, **kwargs, file=f)
-
-def _ftime(t):
-    if t < 1e-6:
-        return f"{t*1e9:.3f} ns"
-    if t < 1e-3:
-        return f"{t*1e6:.3f} us"
-    if t < 1e0:
-        return f"{t*1e3:.3f} ms"
-    return f"{t:.3f} s"
-
-class CWDasRoot:
-    """
-    ** Permet de se placer a la racine du module. **
-    """
-    def __init__(self):
-        self.old_cwd = os.getcwd()
-
-    def __enter__(self):
-        file_path = os.path.abspath(__file__)
-        root = os.path.dirname(os.path.dirname(os.path.dirname(file_path)))
-        os.chdir(root)
-        sys.path.insert(0, root)
-
-    def __exit__(self, type, value, traceback):
-        os.chdir(self.old_cwd)

@@ -1,0 +1,13 @@
+cloudpickle==1.6.0
+fast_histogram
+h5py
+matplotlib==3.4.2
+networkx==2.6.2
+numexpr==2.7.3
+numpy>=1.21.1
+opencv-python==4.5.3.56
+pdoc3
+psutil
+pytest=6.2.4
+sklearn==0.24.2
+sympy>=1.8

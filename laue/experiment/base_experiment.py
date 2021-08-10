@@ -1083,7 +1083,7 @@ class Experiment:
 
     def __getitem__(self, item):
         """
-        ** Recupere un diagrame. **
+        ** Recupere un ou plusieurs diagrame.s. **
 
         Retroune le ou les diagrames de type ``laue.diagram.LaueDiagram``.
 
@@ -1154,11 +1154,11 @@ class Experiment:
             return get_diag_list(item)[item]
 
         if isinstance(item, slice):
-            assert item.start is None or isinstance(item.start, int), \
+            assert item.start is None or isinstance(item.start, (int, np.integer)), \
                 f"Slice arguments has to be int, not {type(item.start).__name__}."
-            assert item.stop is None or isinstance(item.stop, int), \
+            assert item.stop is None or isinstance(item.stop, (int, np.integer)), \
                 f"Slice arguments has to be int, not {type(item.stop).__name__}."
-            assert item.step is None or isinstance(item.step, int), \
+            assert item.step is None or isinstance(item.step, (int, np.integer)), \
                 f"Slice arguments has to be int, not {type(item.step).__name__}."
             l1 = get_diag_list(item.start, ignore=True) if item.start is not None else []
             l2 = get_diag_list(item.stop, ignore=True) if item.stop is not None else self.get_diagrams()

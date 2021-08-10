@@ -273,7 +273,7 @@ class Lambdify:
         self.fct = lambdify(self.args, self.expr, cse=True, modules="numpy")
         try:
             self.fct_numexpr = lambdify(self.args, self.expr, cse=True, modules="numexpr")
-        except (TypeError, RuntimeError):
+        except (ImportError, TypeError, RuntimeError):
             self.fct_numexpr = None
 
     def __str__(self):

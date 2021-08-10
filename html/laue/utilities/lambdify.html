@@ -308,7 +308,7 @@ class Lambdify:
         self.fct = lambdify(self.args, self.expr, cse=True, modules=&#34;numpy&#34;)
         try:
             self.fct_numexpr = lambdify(self.args, self.expr, cse=True, modules=&#34;numexpr&#34;)
-        except (TypeError, RuntimeError):
+        except (ImportError, TypeError, RuntimeError):
             self.fct_numexpr = None
 
     def __str__(self):
@@ -549,7 +549,7 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
         self.fct = lambdify(self.args, self.expr, cse=True, modules=&#34;numpy&#34;)
         try:
             self.fct_numexpr = lambdify(self.args, self.expr, cse=True, modules=&#34;numexpr&#34;)
-        except (TypeError, RuntimeError):
+        except (ImportError, TypeError, RuntimeError):
             self.fct_numexpr = None
 
     def __str__(self):

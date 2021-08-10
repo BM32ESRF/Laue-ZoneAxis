@@ -58,6 +58,9 @@ import h5py
 import numpy as np
 
 
+__pdoc__ = {&#34;Predictor.__call__&#34;: True}
+
+
 class Predictor:
     &#34;&#34;&#34;
     Cette classe permet de charger le model
@@ -338,6 +341,74 @@ une bonne fois pour toutes.</p>
         ## return predicted HKL and their softmax confidence
         return predicted_hkl, max_pred</code></pre>
 </details>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.core.hkl_nn.prediction.Predictor.__call__"><code class="name flex">
+<span>def <span class="ident">__call__</span></span>(<span>self, theta_chi)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Estime les hkl. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>theta_chi</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>La matrice des thetas et des chi.
+shape = (2, n), avec n le nombre de spots.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>hkl</code></dt>
+<dd>Le vecteur des indices hkl</dd>
+<dt><code>score</code></dt>
+<dd>Le vecteur des fiabilitees.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __call__(self, theta_chi):
+    &#34;&#34;&#34;
+    ** Estime les hkl. **
+
+    Parameters
+    ----------
+    theta_chi : np.ndarray
+        La matrice des thetas et des chi.
+        shape = (2, n), avec n le nombre de spots.
+
+    Returns
+    -------
+    hkl
+        Le vecteur des indices hkl
+    score
+        Le vecteur des fiabilitees.
+    &#34;&#34;&#34;
+    sorted_data = theta_chi.transpose()
+    tabledistancerandom = np.transpose(GT.calculdist_from_thetachi(sorted_data, sorted_data))
+    
+    codebars_all = []        
+    spots_in_center = np.arange(0,len(data_theta))
+
+    for i in spots_in_center:
+        spotangles = tabledistancerandom[i]
+        spotangles = np.delete(spotangles, i)# removing the self distance
+        # codebars = np.histogram(spotangles, bins=angbins)[0]
+        codebars = histogram1d(spotangles, range=[min(self.angbins), max(self.angbins)], bins=len(self.angbins)-1)
+        ## normalize the same way as training data
+        max_codebars = np.max(codebars)
+        codebars = codebars / max_codebars
+        codebars_all.append(codebars)
+    ## reshape for the model to predict all spots at once
+    codebars = np.array(codebars_all)
+    ## Do prediction of all spots at once
+    prediction = self._predict(codebars)
+    max_pred = np.max(prediction, axis=1)
+    class_predicted = np.argmax(prediction, axis=1)
+    predicted_hkl = self.classhkl[class_predicted]
+    ## return predicted HKL and their softmax confidence
+    return predicted_hkl, max_pred</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -359,6 +430,9 @@ une bonne fois pour toutes.</p>
 <ul>
 <li>
 <h4><code><a title="laue.core.hkl_nn.prediction.Predictor" href="#laue.core.hkl_nn.prediction.Predictor">Predictor</a></code></h4>
+<ul class="">
+<li><code><a title="laue.core.hkl_nn.prediction.Predictor.__call__" href="#laue.core.hkl_nn.prediction.Predictor.__call__">__call__</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

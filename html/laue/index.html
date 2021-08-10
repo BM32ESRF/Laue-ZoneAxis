@@ -29,8 +29,8 @@
 <ul>
 <li>Pour effectuer les bancs de tests, il faut installer le module <code>pip install pytest</code>.
 Il faut ensuite saisir la commande suivante:<ul>
-<li><code>clear &amp;&amp; pytest --doctest-modules laue/
-&amp;&amp; pytest -vv --exitfirst laue/tests.py &amp;&amp; cat tests_results.txt</code></li>
+<li><code>clear &amp;&amp; python -m pytest --doctest-modules laue/
+&amp;&amp; python -m pytest -vv --exitfirst laue/tests.py &amp;&amp; cat tests_results.txt</code></li>
 </ul>
 </li>
 <li>Pour generer la documentation, il faut installer le module <code>pip install pdoc3</code>.
@@ -73,8 +73,8 @@ Notes
 -----
 * Pour effectuer les bancs de tests, il faut installer le module ``pip install pytest``.
     Il faut ensuite saisir la commande suivante:
-    * ``clear &amp;&amp; pytest --doctest-modules laue/
-        &amp;&amp; pytest -vv --exitfirst laue/tests.py &amp;&amp; cat tests_results.txt``
+    * ``clear &amp;&amp; python -m pytest --doctest-modules laue/
+        &amp;&amp; python -m pytest -vv --exitfirst laue/tests.py &amp;&amp; cat tests_results.txt``
 * Pour generer la documentation, il faut installer le module ``pip install pdoc3``.
     Il faut ensuite saisir la commande suivante:
     * ``pdoc3 laue/ -c latex_math=True --force --html``
@@ -108,14 +108,16 @@ recuperation des diagrammes
 # Pour faire passer les tests, il faut taper:
 # $ python3 -m pytest --doctest-modules laue &amp;&amp; python3 -m pytest laue/tools/tests.py
 
-__all__ = [&#34;Experiment&#34;, &#34;Transformer&#34;,
+__all__ = [&#34;Experiment&#34;, &#34;OrderedExperiment&#34;, &#34;Transformer&#34;,
            &#34;atomic_pic_search&#34;, &#34;atomic_find_zone_axes&#34;, &#34;atomic_find_subsets&#34;]
 __pdoc__ = {&#34;tests&#34;: False,
             &#34;Experiment.__getitem__&#34;: True,
             &#34;Experiment.__iter__&#34;: True,
-            &#34;Experiment.__len__&#34;: True}
+            &#34;Experiment.__len__&#34;: True,
+            &#34;OrderedExperiment.__getitem__&#34;: True}
 
 from laue.experiment.base_experiment import Experiment
+from laue.experiment.ordered_experiment import OrderedExperiment
 from laue.core.geometry.transformer import Transformer
 from laue.core.pic_search import atomic_pic_search
 from laue.core.zone_axes import atomic_find_zone_axes
@@ -2176,7 +2178,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
 
     def __getitem__(self, item):
         &#34;&#34;&#34;
-        ** Recupere un diagrame. **
+        ** Recupere un ou plusieurs diagrame.s. **
 
         Retroune le ou les diagrames de type ``laue.diagram.LaueDiagram``.
 
@@ -2325,7 +2327,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="laue.experiment.organized_experiment.OrganizedExperiment" href="experiment/organized_experiment.html#laue.experiment.organized_experiment.OrganizedExperiment">OrganizedExperiment</a></li>
+<li><a title="laue.experiment.ordered_experiment.OrderedExperiment" href="experiment/ordered_experiment.html#laue.experiment.ordered_experiment.OrderedExperiment">OrderedExperiment</a></li>
 <li><a title="laue.experiment.theorical_experiment.TheoricalExperiment" href="experiment/theorical_experiment.html#laue.experiment.theorical_experiment.TheoricalExperiment">TheoricalExperiment</a></li>
 </ul>
 <h3>Methods</h3>
@@ -2334,7 +2336,7 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
 <span>def <span class="ident">__getitem__</span></span>(<span>self, item)</span>
 </code></dt>
 <dd>
-<div class="desc"><p><strong> Recupere un diagrame. </strong></p>
+<div class="desc"><p><strong> Recupere un ou plusieurs diagrame.s. </strong></p>
 <p>Retroune le ou les diagrames de type <code><a title="laue.diagram.LaueDiagram" href="diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code>.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -2381,7 +2383,7 @@ liste de diagrames ordones dans l'ordre de generation des images.</li>
 </summary>
 <pre><code class="python">def __getitem__(self, item):
     &#34;&#34;&#34;
-    ** Recupere un diagrame. **
+    ** Recupere un ou plusieurs diagrame.s. **
 
     Retroune le ou les diagrames de type ``laue.diagram.LaueDiagram``.
 
@@ -3688,6 +3690,525 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
 </details>
 </dd>
 </dl>
+</dd>
+<dt id="laue.OrderedExperiment"><code class="flex name class">
+<span>class <span class="ident">OrderedExperiment</span></span>
+<span>(</span><span>*args, position, time=&lt;function OrderedExperiment.&lt;lambda&gt;&gt;, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Permet de travailler sur un lot ordonne d'images. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>time</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Fonction qui a tout indice de diagrame (int)
+Associe le temps ecoule depuis le debut de l'experience (float).
+Les indices commencent a 0 inclu.</dd>
+<dt><strong><code>position</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Fonction qui a tout indice de diagrame (int)
+Associe la position en x et en y du diagrame
+correspondant. Les indices commencent a 0 inclu.</dd>
+<dt><strong><code>*args</code></strong></dt>
+<dd>Same as <code><a title="laue.Experiment" href="#laue.Experiment">Experiment</a></code>.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Same as <code><a title="laue.Experiment" href="#laue.Experiment">Experiment</a></code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class OrderedExperiment(Experiment):
+    &#34;&#34;&#34;
+    ** Permet de travailler sur un lot ordonne d&#39;images. **
+    &#34;&#34;&#34;
+    def __init__(self, *args, position, time=(lambda ind: .0*ind), **kwargs):
+        &#34;&#34;&#34;
+        Parameters
+        ----------
+        time : callable
+            Fonction qui a tout indice de diagrame (int)
+            Associe le temps ecoule depuis le debut de l&#39;experience (float).
+            Les indices commencent a 0 inclu.
+        position : callable
+            Fonction qui a tout indice de diagrame (int)
+            Associe la position en x et en y du diagrame
+            correspondant. Les indices commencent a 0 inclu.
+
+        *args
+            Same as ``laue.Experiment.__init__``.
+        **kwargs
+            Same as ``laue.Experiment.__init__``.
+        &#34;&#34;&#34;
+        assert hasattr(position, &#34;__call__&#34;), &#34;&#39;position&#39; has to be callable.&#34;
+        assert hasattr(time, &#34;__call__&#34;), &#34;&#39;time&#39; has to be a callable.&#34;
+        
+        Experiment.__init__(self, *args, **kwargs)
+
+        self.time = time
+        self.position = position
+
+        # Memory attrs.
+        self._next_row = 0
+        self._t_min, self._t_max = None, None
+        self._x_min, self._x_max = None, None
+        self._y_min, self._y_max = None, None
+        self._t_dict, self._x_dict, self._y_dict = {}, {}, {}
+        self._index = None
+
+    def _full_update(self, i_max=None):
+        &#34;&#34;&#34;
+        ** Met a jour les tables. **
+
+        Les elements sont calcules jusqu&#39;a ``self[i_max]`` inclu.
+        &#34;&#34;&#34;
+        if i_max is None:
+            i_max = len(self._buff_diags)-1
+        for current_row in range(self._next_row, i_max+1):
+            self._update(current_row)
+            self._next_row = current_row + 1
+
+    def _update(self, i):
+        &#34;&#34;&#34;
+        ** Ajoute un elements aux tables de correspondances. **
+        &#34;&#34;&#34;
+        t, (x, y) = self.time(i), self.position(i)
+
+        self._t_dict[t] = self._t_dict.get(t, set()) | {i}
+        self._x_dict[x] = self._x_dict.get(x, set()) | {i}
+        self._y_dict[y] = self._y_dict.get(y, set()) | {i}
+
+        self._t_min = min(self._t_min, t) if self._t_min is not None else t
+        self._t_max = min(self._t_max, t) if self._t_max is not None else t
+        self._x_min = min(self._x_min, x) if self._x_min is not None else x
+        self._x_max = min(self._x_max, x) if self._x_max is not None else x
+        self._y_min = min(self._y_min, y) if self._y_min is not None else y
+        self._y_max = min(self._y_max, y) if self._y_max is not None else y
+
+    def get_shape(self):
+        &#34;&#34;&#34;
+        ** Recupere les 2 dimensions x, y. **
+
+        Returns
+        -------
+        x : int
+            Le nombre de diagrames sur l&#39;axe x.
+        y : int
+            Le nombre de diagrames pris selon l&#39;axe y.
+
+        Examples
+        --------
+        &gt;&gt;&gt; from itertools import cycle
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
+        &gt;&gt;&gt; def get_positions(i, x_max, y_max):
+        ...     i_mod = i % (x_max*y_max)
+        ...     return divmod(i_mod, y_max)
+        ...
+        &gt;&gt;&gt; experiment = laue.OrderedExperiment(images,
+        ...     position=(lambda i: get_positions(i, 41, 82)))
+        &gt;&gt;&gt; experiment.get_shape()
+        (41, 82)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def is_first():
+            &#34;&#34;&#34;Renvoie True si on a fini le cycle.&#34;&#34;&#34;
+            x, y = self.position(self._next_row)
+            return bool(self._x_dict.get(x, set()) &amp; self._y_dict.get(y, set()))
+
+        while not is_first():
+            self._full_update(self._next_row)
+
+        return len(self._x_dict), len(self._y_dict)
+
+    def get_index(self):
+        &#34;&#34;&#34;
+        ** Recupere la matrice des index d&#39;une couche. **
+
+        Returns
+        -------
+        np.ndarray
+            La matrice 2d ayant le role d&#39;une fonction de N**2 dans N.
+            A couple de rang (x, y) associ le rang &#39;ravel&#39; du diagrame.
+
+        Examples
+        --------
+        &gt;&gt;&gt; from itertools import cycle
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
+
+        Cas balayage.
+        &gt;&gt;&gt; def get_position(i):
+        ...     i_mod = i % 12
+        ...     return divmod(i_mod, 4)
+        ...
+        &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+        &gt;&gt;&gt; experiment.get_index()
+        array([[ 0,  1,  2,  3],
+               [ 4,  5,  6,  7],
+               [ 8,  9, 10, 11]], dtype=uint32)
+        &gt;&gt;&gt;
+
+        Cas non conventionel
+        &gt;&gt;&gt; def get_position(i):
+        ...     x = [0, 1, 1, 2, 2, 0, 2, 1, 0, 1, 0, 2]
+        ...     y = [0, 2, 3, 1, 0, 2, 2, 0, 1, 1, 3, 3]
+        ...     return x[i%12], y[i%12]
+        ...
+        &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+        &gt;&gt;&gt; experiment.get_index()
+        array([[ 0,  1,  2,  3],
+               [ 4,  5,  6,  7],
+               [ 8,  9, 10, 11]], dtype=uint32)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        def min_inter(a, b, x_ind, y_ind):
+            inter = a &amp; b
+            if self.ignore_errors:
+                return min(inter, default=np.nan)
+            if not inter:
+                raise ValueError(f&#34;pour la {x_ind+1}eme coordonnee sur x&#34;
+                                 f&#34;et la {y_ind+1}eme coordonnee sur y, &#34;
+                                  &#34;aucun numero de diagrame n&#39;est fournis &#34;
+                                  &#34;par la fonction ``self.position``.&#34;) from err
+            return min(a &amp; b)
+
+        if self._index is not None:
+            return self._index
+
+        x, y = self.get_shape()
+        self._index = np.array([[
+                    min_inter(ind_x_set, ind_y_set, x_ind, y_ind)
+                    for y_ind, ind_y_set
+                    in sorted(self._y_dict.items(), key=lambda t: t[0])]
+                for x_ind, ind_x_set
+                in sorted(self._x_dict.items(), key=lambda t: t[0])],
+            dtype=np.uint32)
+        return self._index
+
+    def __getitem__(self, item):
+        &#34;&#34;&#34;
+        ** Recupere un diagrame ou un tenseur de diagrames. **
+
+        Retourne le ou les diagrames de type ``laue.diagram.LaueDiagram``.
+
+        Parameters
+        ----------
+        item
+            Il faut voir cette experience comme un tableau
+            numpy a 3 dimensions. La premiere est associee au temps,
+            la seconde a l&#39;axe x et la derniere a l&#39;axe y.
+
+        Returns
+        -------
+        diagrams
+            * Si l&#39;une des 3 dimensions est omise ou bien que c&#39;est
+            un slice, retourne une array numpy remplie de diagrames.
+            * Si les 3 coordonnees sont entieres, le diagrame
+            correspondant est renvoye.
+
+        Examples
+        --------
+        &gt;&gt;&gt; from itertools import cycle
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
+        &gt;&gt;&gt; def get_position(i):
+        ...     i_mod = i % 12
+        ...     return divmod(i_mod, 4)
+        ...
+        &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if isinstance(item, tuple):
+            if len(item) == 3:
+                if all(isinstance(coord, int) for coord in item):
+
+                    return super()[0]
+
+        raise NotImplementedError</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="laue.experiment.base_experiment.Experiment" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.OrderedExperiment.__getitem__"><code class="name flex">
+<span>def <span class="ident">__getitem__</span></span>(<span>self, item)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere un diagrame ou un tenseur de diagrames. </strong></p>
+<p>Retourne le ou les diagrames de type <code><a title="laue.diagram.LaueDiagram" href="diagram.html#laue.diagram.LaueDiagram">LaueDiagram</a></code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>item</code></strong></dt>
+<dd>Il faut voir cette experience comme un tableau
+numpy a 3 dimensions. La premiere est associee au temps,
+la seconde a l'axe x et la derniere a l'axe y.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>diagrams</code></dt>
+<dd>
+<ul>
+<li>Si l'une des 3 dimensions est omise ou bien que c'est
+un slice, retourne une array numpy remplie de diagrames.</li>
+<li>Si les 3 coordonnees sont entieres, le diagrame
+correspondant est renvoye.</li>
+</ul>
+</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="python-repl">&gt;&gt;&gt; from itertools import cycle
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt; images = cycle([&quot;laue/examples/ge_blanc.mccd&quot;])
+&gt;&gt;&gt; def get_position(i):
+...     i_mod = i % 12
+...     return divmod(i_mod, 4)
+...
+&gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __getitem__(self, item):
+    &#34;&#34;&#34;
+    ** Recupere un diagrame ou un tenseur de diagrames. **
+
+    Retourne le ou les diagrames de type ``laue.diagram.LaueDiagram``.
+
+    Parameters
+    ----------
+    item
+        Il faut voir cette experience comme un tableau
+        numpy a 3 dimensions. La premiere est associee au temps,
+        la seconde a l&#39;axe x et la derniere a l&#39;axe y.
+
+    Returns
+    -------
+    diagrams
+        * Si l&#39;une des 3 dimensions est omise ou bien que c&#39;est
+        un slice, retourne une array numpy remplie de diagrames.
+        * Si les 3 coordonnees sont entieres, le diagrame
+        correspondant est renvoye.
+
+    Examples
+    --------
+    &gt;&gt;&gt; from itertools import cycle
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
+    &gt;&gt;&gt; def get_position(i):
+    ...     i_mod = i % 12
+    ...     return divmod(i_mod, 4)
+    ...
+    &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    if isinstance(item, tuple):
+        if len(item) == 3:
+            if all(isinstance(coord, int) for coord in item):
+
+                return super()[0]
+
+    raise NotImplementedError</code></pre>
+</details>
+</dd>
+<dt id="laue.OrderedExperiment.get_index"><code class="name flex">
+<span>def <span class="ident">get_index</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere la matrice des index d'une couche. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>La matrice 2d ayant le role d'une fonction de N**2 dans N.
+A couple de rang (x, y) associ le rang 'ravel' du diagrame.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="python-repl">&gt;&gt;&gt; from itertools import cycle
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt; images = cycle([&quot;laue/examples/ge_blanc.mccd&quot;])
+</code></pre>
+<p>Cas balayage.</p>
+<pre><code class="python-repl">&gt;&gt;&gt; def get_position(i):
+...     i_mod = i % 12
+...     return divmod(i_mod, 4)
+...
+&gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+&gt;&gt;&gt; experiment.get_index()
+array([[ 0,  1,  2,  3],
+       [ 4,  5,  6,  7],
+       [ 8,  9, 10, 11]], dtype=uint32)
+&gt;&gt;&gt;
+</code></pre>
+<p>Cas non conventionel</p>
+<pre><code class="python-repl">&gt;&gt;&gt; def get_position(i):
+...     x = [0, 1, 1, 2, 2, 0, 2, 1, 0, 1, 0, 2]
+...     y = [0, 2, 3, 1, 0, 2, 2, 0, 1, 1, 3, 3]
+...     return x[i%12], y[i%12]
+...
+&gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+&gt;&gt;&gt; experiment.get_index()
+array([[ 0,  1,  2,  3],
+       [ 4,  5,  6,  7],
+       [ 8,  9, 10, 11]], dtype=uint32)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_index(self):
+    &#34;&#34;&#34;
+    ** Recupere la matrice des index d&#39;une couche. **
+
+    Returns
+    -------
+    np.ndarray
+        La matrice 2d ayant le role d&#39;une fonction de N**2 dans N.
+        A couple de rang (x, y) associ le rang &#39;ravel&#39; du diagrame.
+
+    Examples
+    --------
+    &gt;&gt;&gt; from itertools import cycle
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
+
+    Cas balayage.
+    &gt;&gt;&gt; def get_position(i):
+    ...     i_mod = i % 12
+    ...     return divmod(i_mod, 4)
+    ...
+    &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+    &gt;&gt;&gt; experiment.get_index()
+    array([[ 0,  1,  2,  3],
+           [ 4,  5,  6,  7],
+           [ 8,  9, 10, 11]], dtype=uint32)
+    &gt;&gt;&gt;
+
+    Cas non conventionel
+    &gt;&gt;&gt; def get_position(i):
+    ...     x = [0, 1, 1, 2, 2, 0, 2, 1, 0, 1, 0, 2]
+    ...     y = [0, 2, 3, 1, 0, 2, 2, 0, 1, 1, 3, 3]
+    ...     return x[i%12], y[i%12]
+    ...
+    &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+    &gt;&gt;&gt; experiment.get_index()
+    array([[ 0,  1,  2,  3],
+           [ 4,  5,  6,  7],
+           [ 8,  9, 10, 11]], dtype=uint32)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    def min_inter(a, b, x_ind, y_ind):
+        inter = a &amp; b
+        if self.ignore_errors:
+            return min(inter, default=np.nan)
+        if not inter:
+            raise ValueError(f&#34;pour la {x_ind+1}eme coordonnee sur x&#34;
+                             f&#34;et la {y_ind+1}eme coordonnee sur y, &#34;
+                              &#34;aucun numero de diagrame n&#39;est fournis &#34;
+                              &#34;par la fonction ``self.position``.&#34;) from err
+        return min(a &amp; b)
+
+    if self._index is not None:
+        return self._index
+
+    x, y = self.get_shape()
+    self._index = np.array([[
+                min_inter(ind_x_set, ind_y_set, x_ind, y_ind)
+                for y_ind, ind_y_set
+                in sorted(self._y_dict.items(), key=lambda t: t[0])]
+            for x_ind, ind_x_set
+            in sorted(self._x_dict.items(), key=lambda t: t[0])],
+        dtype=np.uint32)
+    return self._index</code></pre>
+</details>
+</dd>
+<dt id="laue.OrderedExperiment.get_shape"><code class="name flex">
+<span>def <span class="ident">get_shape</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere les 2 dimensions x, y. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>Le nombre de diagrames sur l'axe x.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>Le nombre de diagrames pris selon l'axe y.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="python-repl">&gt;&gt;&gt; from itertools import cycle
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt; images = cycle([&quot;laue/examples/ge_blanc.mccd&quot;])
+&gt;&gt;&gt; def get_positions(i, x_max, y_max):
+...     i_mod = i % (x_max*y_max)
+...     return divmod(i_mod, y_max)
+...
+&gt;&gt;&gt; experiment = laue.OrderedExperiment(images,
+...     position=(lambda i: get_positions(i, 41, 82)))
+&gt;&gt;&gt; experiment.get_shape()
+(41, 82)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_shape(self):
+    &#34;&#34;&#34;
+    ** Recupere les 2 dimensions x, y. **
+
+    Returns
+    -------
+    x : int
+        Le nombre de diagrames sur l&#39;axe x.
+    y : int
+        Le nombre de diagrames pris selon l&#39;axe y.
+
+    Examples
+    --------
+    &gt;&gt;&gt; from itertools import cycle
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
+    &gt;&gt;&gt; def get_positions(i, x_max, y_max):
+    ...     i_mod = i % (x_max*y_max)
+    ...     return divmod(i_mod, y_max)
+    ...
+    &gt;&gt;&gt; experiment = laue.OrderedExperiment(images,
+    ...     position=(lambda i: get_positions(i, 41, 82)))
+    &gt;&gt;&gt; experiment.get_shape()
+    (41, 82)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    def is_first():
+        &#34;&#34;&#34;Renvoie True si on a fini le cycle.&#34;&#34;&#34;
+        x, y = self.position(self._next_row)
+        return bool(self._x_dict.get(x, set()) &amp; self._y_dict.get(y, set()))
+
+    while not is_first():
+        self._full_update(self._next_row)
+
+    return len(self._x_dict), len(self._y_dict)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="laue.experiment.base_experiment.Experiment" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></b></code>:
+<ul class="hlist">
+<li><code><a title="laue.experiment.base_experiment.Experiment.__iter__" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.__iter__">__iter__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.__len__" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.__len__">__len__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.find_subsets" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.find_subsets">find_subsets</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.find_zone_axes" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.find_zone_axes">find_zone_axes</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.get_diagrams" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.get_diagrams">get_diagrams</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.get_images_shape" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.get_images_shape">get_images_shape</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.get_mean" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.get_mean">get_mean</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.read_images" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.read_images">read_images</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.save_file" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.save_file">save_file</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.set_calibration" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.set_calibration">set_calibration</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="laue.Transformer"><code class="flex name class">
 <span>class <span class="ident">Transformer</span></span>
@@ -6145,6 +6666,14 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
 <li><code><a title="laue.Experiment.read_images" href="#laue.Experiment.read_images">read_images</a></code></li>
 <li><code><a title="laue.Experiment.save_file" href="#laue.Experiment.save_file">save_file</a></code></li>
 <li><code><a title="laue.Experiment.set_calibration" href="#laue.Experiment.set_calibration">set_calibration</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="laue.OrderedExperiment" href="#laue.OrderedExperiment">OrderedExperiment</a></code></h4>
+<ul class="">
+<li><code><a title="laue.OrderedExperiment.__getitem__" href="#laue.OrderedExperiment.__getitem__">__getitem__</a></code></li>
+<li><code><a title="laue.OrderedExperiment.get_index" href="#laue.OrderedExperiment.get_index">get_index</a></code></li>
+<li><code><a title="laue.OrderedExperiment.get_shape" href="#laue.OrderedExperiment.get_shape">get_shape</a></code></li>
 </ul>
 </li>
 <li>
