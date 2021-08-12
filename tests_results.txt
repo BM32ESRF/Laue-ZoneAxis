@@ -1,10 +1,7 @@
-DATE: Tue Aug 10 16:41:55 2021
-NCPU: 8
+DATE: Thu Aug 12 12:19:30 2021
+NCPU: 2
 ============ TEST GEOMETRY DTYPE =============
 cam_to_gnomonic:
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -14,10 +11,10 @@ cam_to_gnomonic:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 gnomonic_to_cam:
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -27,10 +24,10 @@ gnomonic_to_cam:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 cam_to_thetachi:
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -40,10 +37,10 @@ cam_to_thetachi:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 thetachi_to_cam:
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -53,10 +50,10 @@ thetachi_to_cam:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 thetachi_to_gnomonic:
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -66,10 +63,10 @@ thetachi_to_gnomonic:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 gnomonic_to_thetachi:
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -79,25 +76,28 @@ gnomonic_to_thetachi:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 dist_line:
-	float32->float32
 	float16->float16
 	float128->float128
 	float64->float64
+	float32->float32
 hough:
-	float32->float32
 	float16->float16
 	float128->float128
 	float64->float64
+	float32->float32
 hough_reduce:
-	float32->float32
 	float16->float16
 	float64->float64
-inter_lines:
 	float32->float32
+inter_lines:
 	float16->float16
 	float128->float128
 	float64->float64
+	float32->float32
 =============== TEST BIJECTION ===============
 cam <=> uf: fail formel, ok numerical
 uf <=> uq: ok formel
@@ -126,12 +126,210 @@ boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
 dist_line(...).shape -> (2, 2)
 hough(...).shape -> (2, 1)
 inter_lines(...).shape -> (2, 1)
+shape: (2,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 0, cam_to_thetachi(...).shape -> (2, 2)
+boucle 0, thetachi_to_cam(...).shape -> (2, 2)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 1, cam_to_thetachi(...).shape -> (2, 2)
+boucle 1, thetachi_to_cam(...).shape -> (2, 2)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 2, cam_to_thetachi(...).shape -> (2, 2)
+boucle 2, thetachi_to_cam(...).shape -> (2, 2)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
+dist_line(...).shape -> (2, 2)
+hough(...).shape -> (2, 1)
+inter_lines(...).shape -> (2, 1)
+shape: (2,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 0, cam_to_thetachi(...).shape -> (2, 2)
+boucle 0, thetachi_to_cam(...).shape -> (2, 2)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 1, cam_to_thetachi(...).shape -> (2, 2)
+boucle 1, thetachi_to_cam(...).shape -> (2, 2)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 2, cam_to_thetachi(...).shape -> (2, 2)
+boucle 2, thetachi_to_cam(...).shape -> (2, 2)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
+dist_line(...).shape -> (2, 2)
+hough(...).shape -> (2, 1)
+inter_lines(...).shape -> (2, 1)
+shape: (2,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 0, cam_to_thetachi(...).shape -> (2, 2)
+boucle 0, thetachi_to_cam(...).shape -> (2, 2)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 1, cam_to_thetachi(...).shape -> (2, 2)
+boucle 1, thetachi_to_cam(...).shape -> (2, 2)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 2, cam_to_thetachi(...).shape -> (2, 2)
+boucle 2, thetachi_to_cam(...).shape -> (2, 2)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
+dist_line(...).shape -> (2, 2)
+hough(...).shape -> (2, 1)
+inter_lines(...).shape -> (2, 1)
+shape: (2,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 0, cam_to_thetachi(...).shape -> (2, 2)
+boucle 0, thetachi_to_cam(...).shape -> (2, 2)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 1, cam_to_thetachi(...).shape -> (2, 2)
+boucle 1, thetachi_to_cam(...).shape -> (2, 2)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 2, cam_to_thetachi(...).shape -> (2, 2)
+boucle 2, thetachi_to_cam(...).shape -> (2, 2)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
+dist_line(...).shape -> (2, 2)
+hough(...).shape -> (2, 1)
+inter_lines(...).shape -> (2, 1)
+shape: (2,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 0, cam_to_thetachi(...).shape -> (2, 2)
+boucle 0, thetachi_to_cam(...).shape -> (2, 2)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 1, cam_to_thetachi(...).shape -> (2, 2)
+boucle 1, thetachi_to_cam(...).shape -> (2, 2)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 2, cam_to_thetachi(...).shape -> (2, 2)
+boucle 2, thetachi_to_cam(...).shape -> (2, 2)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
+dist_line(...).shape -> (2, 2)
+hough(...).shape -> (2, 1)
+inter_lines(...).shape -> (2, 1)
+shape: (2,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 0, cam_to_thetachi(...).shape -> (2, 2)
+boucle 0, thetachi_to_cam(...).shape -> (2, 2)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 1, cam_to_thetachi(...).shape -> (2, 2)
+boucle 1, thetachi_to_cam(...).shape -> (2, 2)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 2, cam_to_thetachi(...).shape -> (2, 2)
+boucle 2, thetachi_to_cam(...).shape -> (2, 2)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
+dist_line(...).shape -> (2, 2)
+hough(...).shape -> (2, 1)
+inter_lines(...).shape -> (2, 1)
+shape: (2,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 0, cam_to_thetachi(...).shape -> (2, 2)
+boucle 0, thetachi_to_cam(...).shape -> (2, 2)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 1, cam_to_thetachi(...).shape -> (2, 2)
+boucle 1, thetachi_to_cam(...).shape -> (2, 2)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 2, cam_to_thetachi(...).shape -> (2, 2)
+boucle 2, thetachi_to_cam(...).shape -> (2, 2)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
+dist_line(...).shape -> (2, 2)
+hough(...).shape -> (2, 1)
+inter_lines(...).shape -> (2, 1)
+shape: (2,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 0, cam_to_thetachi(...).shape -> (2, 2)
+boucle 0, thetachi_to_cam(...).shape -> (2, 2)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 1, cam_to_thetachi(...).shape -> (2, 2)
+boucle 1, thetachi_to_cam(...).shape -> (2, 2)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 2, cam_to_thetachi(...).shape -> (2, 2)
+boucle 2, thetachi_to_cam(...).shape -> (2, 2)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
+dist_line(...).shape -> (2, 2)
+hough(...).shape -> (2, 1)
+inter_lines(...).shape -> (2, 1)
+shape: (2,)
+boucle 0, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 0, cam_to_thetachi(...).shape -> (2, 2)
+boucle 0, thetachi_to_cam(...).shape -> (2, 2)
+boucle 0, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 0, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 1, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 1, cam_to_thetachi(...).shape -> (2, 2)
+boucle 1, thetachi_to_cam(...).shape -> (2, 2)
+boucle 1, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 1, gnomonic_to_thetachi(...).shape -> (2, 2)
+boucle 2, cam_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_cam(...).shape -> (2, 2)
+boucle 2, cam_to_thetachi(...).shape -> (2, 2)
+boucle 2, thetachi_to_cam(...).shape -> (2, 2)
+boucle 2, thetachi_to_gnomonic(...).shape -> (2, 2)
+boucle 2, gnomonic_to_thetachi(...).shape -> (2, 2)
+dist_line(...).shape -> (2, 2)
+hough(...).shape -> (2, 1)
+inter_lines(...).shape -> (2, 1)
 ============== TEST READ IMAGES ==============
 ============== TEST READ IMAGES ==============
-/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 images: 2.534 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 images: 2.058 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 images: 1.068 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 images: 1.387 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 images: 2.097 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 images: 1.631 s
-/home/robin/images/zbb1_roi1/*.mccd 1681 images: 132.468 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 images: 7.548 s
+/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 images: 11.823 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 images: 6.197 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 images: 6.283 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 images: 10.535 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 images: 10.964 s
+/home/robin/images/zbb1_roi1/*.mccd 

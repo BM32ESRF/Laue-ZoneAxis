@@ -1092,5 +1092,4 @@ class LaueDiagram(Splitable):
         ** Renvoi une chaine evaluable de self. **
         """
         return ("LaueDiagram("
-                f"name={repr(self.get_id())}, "
-                f"experiment={repr(self.experiment)})")
+                f"name={repr(self.get_id())})")

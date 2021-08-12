@@ -38,11 +38,6 @@ recuperation des diagrammes
 
 """
 
-# Pour genereer la documentation, il faut taper dans un terminal:
-# $ pdoc3 laue/ -c latex_math=True --force --html
-# Pour faire passer les tests, il faut taper:
-# $ python3 -m pytest --doctest-modules laue && python3 -m pytest laue/tools/tests.py
-
 __all__ = ["Experiment", "OrderedExperiment", "Transformer",
            "atomic_pic_search", "atomic_find_zone_axes", "atomic_find_subsets"]
 __pdoc__ = {"tests": False,

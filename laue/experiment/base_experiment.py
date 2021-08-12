@@ -1143,14 +1143,14 @@ class Experiment:
                 self._buff_diags = []
                 for i, diag in enumerate(self):
                     self._buff_diags.append(diag)
-                    if i == self._buff_diags:
+                    if i == limit:
                         break
             else:
                 self._buff_diags = self.get_diagrams()
 
             return get_diag_list(limit=limit, ignore=ignore)
 
-        if isinstance(item, int):
+        if isinstance(item, (int, np.integer)):
             return get_diag_list(item)[item]
 
         if isinstance(item, slice):

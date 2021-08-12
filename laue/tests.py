@@ -24,8 +24,8 @@ CALIBRATION_PARAMETERS = None
 def _new_seed():
     from numpy.random import MT19937
     from numpy.random import RandomState, SeedSequence
-    rs = RandomState(MT19937(SeedSequence(123456789)))
-    yield rs
+    for i in range(10):
+        yield RandomState(MT19937(SeedSequence(123456789)))
 
 def _find_images_dir(images_min=10, root=os.path.expanduser("~")):
     """
