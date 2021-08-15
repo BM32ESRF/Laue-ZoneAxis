@@ -14,6 +14,8 @@ import numbers
 
 import numpy as np
 
+from laue.utilities.serialization import SpotPickleable
+
 
 __pdoc__ = {"Spot.__hash__": True,
             "Spot.__sub__": True}
@@ -133,7 +135,7 @@ def distance(spot1, spot2, *, space="camera"):
     return np.sqrt((x1-x2)**2 + (y1-y2)**2)
 
 
-class Spot:
+class Spot(SpotPickleable):
     """
     Represente un spot sur un diagramme de laue.
     """
@@ -166,9 +168,9 @@ class Spot:
         """
         # Constantes.
         self.x, self.y, self.w, self.h = bbox
-        self.spot_im = spot_im
-        self.distortion = distortion # Facteur de diformite.
-        self.diagram = diagram # Le contenaur.
+        self._spot_im = spot_im
+        self._distortion = distortion # Facteur de diformite.
+        self.diagram = diagram # Le conteneur.
         self._identifier = identifier # Le rang.
 
         # Declaration des variables futur.
@@ -178,7 +180,6 @@ class Spot:
         self._thetachi = None # Angles du rayon diffractes ayant engendre ce point.
         self._quality = None # Beautee du point.
         self.hkl = None # Les 3 indices de Miller h, k et l.
-        self.axes = None # Les axes de zone.
 
     def get_bbox(self):
         """
@@ -227,7 +228,7 @@ class Spot:
         0.8472
         >>>
         """
-        return self.distortion
+        return self._distortion
 
     def get_gnomonic(self):
         """
@@ -277,6 +278,32 @@ class Spot:
         """
         return self._identifier
 
+    def get_image(self):
+        """
+        ** Retourne l'image du spot isole. **
+
+        Returns
+        -------
+        np.ndarray
+            La partie de l'image du diagrame de laue dans laquelle
+            est presente le spot. Seule la valeur des pixels presents
+            au dessus du fond sont renvoyees. Le type est uint16.
+
+        Examples
+        --------
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> spot = laue.Experiment(image)[0][0]
+        >>> spot.get_image()
+        array([[  8,  10,  16,  16,   8,   5],
+               [ 11,  17,  67,  76,  13,   9],
+               [  7,  19, 184, 229,  14,   6],
+               [  9,   6,  12,  19,   8,   4],
+               [  5,   3,   3,   9,  14,   7]], dtype=uint16)
+        >>>
+        """
+        return self._spot_im
+
     def get_intensity(self):
         r"""
         ** Calcul l'intensite de la tache. **
@@ -302,7 +329,7 @@ class Spot:
         """
         if self._intensity is not None:
             return self._intensity
-        self._intensity = self.spot_im.sum()
+        self._intensity = self.get_image().sum()
         return self._intensity
 
     def get_position(self):
@@ -330,7 +357,7 @@ class Spot:
         """
         if self._position is not None:
             return self._position
-        x, y = (self.spot_im/self.get_intensity() * np.array(np.meshgrid(
+        x, y = (self.get_image()/self.get_intensity() * np.array(np.meshgrid(
                 np.arange(self.x, self.x+self.w), np.arange(self.y, self.y+self.h)))
                 ).reshape((2, -1)).sum(axis=1)
         self._position = (x, y)
@@ -366,7 +393,10 @@ class Spot:
         distortion_weight = 0.667
 
         a = -math.log(1-val_cout_ref) / cout_ref
-        self._quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
+        self._quality = (
+            (1-distortion_weight)
+          * (1 - math.exp(-a*self.get_intensity()))
+          + distortion_weight*self.get_distortion())
         return self._quality
 
     def get_theta_chi(self):
@@ -429,10 +459,10 @@ class Spot:
         <class 'laue.zone_axis.ZoneAxis'>
         >>>
         """
-        if self.axes is not None:
-            return self.axes
-        self.diagram.find_zone_axes(**kwds) # met automatiquement a jour self.axes.
-        return self.axes
+        return {
+            zone_axis for zone_axis
+            in self.diagram.find_zone_axes(**kwds)
+            if self in zone_axis}
 
     def plot_gnomonic(self, axe_pyplot=None, *, display=True):
         """
@@ -558,7 +588,6 @@ class Spot:
         self._intensity = None # Si jamais l'image change.
         self._position = None # Si jamais l'image change.
         self._quality = None # Car on vient de changer 'self._intensity'.
-        self.axes = None # Car si la projection gnomonique change, tout change.
 
     def __hash__(self):
         """

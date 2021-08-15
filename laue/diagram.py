@@ -22,7 +22,7 @@ except ImportError:
 
 from laue.spot import Spot
 from laue.core.subsets import Splitable
-
+from laue.utilities.serialization import DiagramPickleable
 
 __pdoc__ = {"LaueDiagram.__contains__": True,
             "LaueDiagram.__getitem__": True,
@@ -31,7 +31,7 @@ __pdoc__ = {"LaueDiagram.__contains__": True,
             "LaueDiagram.__len__": True}
 
 
-class LaueDiagram(Splitable):
+class LaueDiagram(Splitable, DiagramPickleable):
     """
     Represente un diagramme de Laue associe a une seule image.
     """
@@ -55,7 +55,7 @@ class LaueDiagram(Splitable):
         """
         self._name = name
         self.experiment = experiment # C'est l'experience qui contient ce diagramme.
-        self._spots = [] # La liste des spots en vrac. Ils doivent etres rempli par ailleur.
+        self._spots = [] # La liste des spots en vrac. Ils doivent etres remplis par ailleur.
 
         # Declaration des variables futur.
         self._quality = None # Facteur qui dit a quel point ce diagramme est joli a l'oeil.
@@ -175,9 +175,6 @@ class LaueDiagram(Splitable):
                      mu=mu)
             for i, (phi, mu, spots_ind) in enumerate(zip(phi_s, mu_s, axis_spots_ind))]
 
-        # Attribution des axes aux spots.
-        for spot, axes_ind in zip(self, spots_axes_ind):
-            spot.axes = {self._axes[(dmax, nbr, tol)][axis_ind] for axis_ind in axes_ind}
         return self._axes[(dmax, nbr, tol)]
 
     def get_gnomonic_positions(self, *, n=None, sort=None):

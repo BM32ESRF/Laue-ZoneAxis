@@ -24,6 +24,8 @@ try:
 except ImportError:
     psutil = None
 
+from laue.utilities.serialization import ZoneAxisPickleable
+
 
 __pdoc__ = {"ZoneAxis.__contains__": True,
             "ZoneAxis.__hash__": True,
@@ -159,7 +161,7 @@ def distance(axis1, axis2, *, weight=.5):
       + (1-weight)**2*(mu2-mu1)**2)
 
 
-class ZoneAxis:
+class ZoneAxis(ZoneAxisPickleable):
     """
     Un axe de zone seul.
     """

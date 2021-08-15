@@ -25,7 +25,7 @@ def _new_seed():
     from numpy.random import MT19937
     from numpy.random import RandomState, SeedSequence
     for i in range(10):
-        yield RandomState(MT19937(SeedSequence(123456789)))
+        yield RandomState(MT19937(SeedSequence(i)))
 
 def _find_images_dir(images_min=10, root=os.path.expanduser("~")):
     """
@@ -293,20 +293,19 @@ def test_geometry_shape():
         shape = tuple(rand.randint(2, 10, size=rand.randint(1, 5)))
         _print(f"shape: {shape}")
 
-        for boucle in range(3): # On fait 2 boucle car ca recompile en cours de route.
-            for func in [
-                    transformer.cam_to_gnomonic,
-                    transformer.gnomonic_to_cam,
-                    transformer.cam_to_thetachi,
-                    transformer.thetachi_to_cam,
-                    transformer.thetachi_to_gnomonic,
-                    transformer.gnomonic_to_thetachi]:
-                try:
-                    res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape), parameters)
-                except TypeError:
-                    res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape))
-                _print(f"boucle {boucle}, {func.__name__}(...).shape -> {res.shape}")
-                assert res.shape == (2,) + shape
+        for func in [
+                transformer.cam_to_gnomonic,
+                transformer.gnomonic_to_cam,
+                transformer.cam_to_thetachi,
+                transformer.thetachi_to_cam,
+                transformer.thetachi_to_gnomonic,
+                transformer.gnomonic_to_thetachi]:
+            try:
+                res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape), parameters)
+            except TypeError:
+                res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape))
+            _print(f"{func.__name__}(...).shape -> {res.shape}")
+            assert res.shape == (2,) + shape
 
         res = transformer.dist_line(
             np.ones(shape=shape), np.ones(shape=shape),

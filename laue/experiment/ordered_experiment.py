@@ -100,10 +100,9 @@ class OrderedExperiment(Experiment):
         Examples
         --------
         >>> import laue
-        >>> X, Y = 41, 48
         >>> def get_positions(i):
-        ...     i_mod = i % (X*Y)
-        ...     return divmod(i_mod, Y)
+        ...     i_mod = i % 3362
+        ...     return divmod(i_mod, 82)
         ...
         >>> exp = laue.OrderedExperiment((None,), position=get_positions)
         >>> exp.get_shape()
@@ -240,7 +239,7 @@ class OrderedExperiment(Experiment):
         >>> experiment[:2, 1:3, 0]
         array([[[LaueDiagram(name='image_1')],
                 [LaueDiagram(name='image_2')]],
-
+        <BLANKLINE>
                [[LaueDiagram(name='image_5')],
                 [LaueDiagram(name='image_6')]]], dtype=object)
         >>> experiment[0, 0, 2:5]
@@ -249,10 +248,10 @@ class OrderedExperiment(Experiment):
         >>> experiment[::-1, :2, -1]
         array([[[LaueDiagram(name='image_116')],
                 [LaueDiagram(name='image_117')]],
-
+        <BLANKLINE>
                [[LaueDiagram(name='image_112')],
                 [LaueDiagram(name='image_113')]],
-
+        <BLANKLINE>
                [[LaueDiagram(name='image_108')],
                 [LaueDiagram(name='image_109')]]], dtype=object)
         >>>
