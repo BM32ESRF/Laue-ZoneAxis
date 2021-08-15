@@ -1178,22 +1178,22 @@ class Experiment:
                 self._buff_diags = []
                 for i, diag in enumerate(self):
                     self._buff_diags.append(diag)
-                    if i == self._buff_diags:
+                    if i == limit:
                         break
             else:
                 self._buff_diags = self.get_diagrams()
 
             return get_diag_list(limit=limit, ignore=ignore)
 
-        if isinstance(item, int):
+        if isinstance(item, (int, np.integer)):
             return get_diag_list(item)[item]
 
         if isinstance(item, slice):
-            assert item.start is None or isinstance(item.start, int), \
+            assert item.start is None or isinstance(item.start, (int, np.integer)), \
                 f&#34;Slice arguments has to be int, not {type(item.start).__name__}.&#34;
-            assert item.stop is None or isinstance(item.stop, int), \
+            assert item.stop is None or isinstance(item.stop, (int, np.integer)), \
                 f&#34;Slice arguments has to be int, not {type(item.stop).__name__}.&#34;
-            assert item.step is None or isinstance(item.step, int), \
+            assert item.step is None or isinstance(item.step, (int, np.integer)), \
                 f&#34;Slice arguments has to be int, not {type(item.step).__name__}.&#34;
             l1 = get_diag_list(item.start, ignore=True) if item.start is not None else []
             l2 = get_diag_list(item.stop, ignore=True) if item.stop is not None else self.get_diagrams()
@@ -2491,22 +2491,22 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                 self._buff_diags = []
                 for i, diag in enumerate(self):
                     self._buff_diags.append(diag)
-                    if i == self._buff_diags:
+                    if i == limit:
                         break
             else:
                 self._buff_diags = self.get_diagrams()
 
             return get_diag_list(limit=limit, ignore=ignore)
 
-        if isinstance(item, int):
+        if isinstance(item, (int, np.integer)):
             return get_diag_list(item)[item]
 
         if isinstance(item, slice):
-            assert item.start is None or isinstance(item.start, int), \
+            assert item.start is None or isinstance(item.start, (int, np.integer)), \
                 f&#34;Slice arguments has to be int, not {type(item.start).__name__}.&#34;
-            assert item.stop is None or isinstance(item.stop, int), \
+            assert item.stop is None or isinstance(item.stop, (int, np.integer)), \
                 f&#34;Slice arguments has to be int, not {type(item.stop).__name__}.&#34;
-            assert item.step is None or isinstance(item.step, int), \
+            assert item.step is None or isinstance(item.step, (int, np.integer)), \
                 f&#34;Slice arguments has to be int, not {type(item.step).__name__}.&#34;
             l1 = get_diag_list(item.start, ignore=True) if item.start is not None else []
             l2 = get_diag_list(item.stop, ignore=True) if item.stop is not None else self.get_diagrams()
@@ -2696,22 +2696,22 @@ liste de diagrames ordones dans l'ordre de generation des images.</li>
             self._buff_diags = []
             for i, diag in enumerate(self):
                 self._buff_diags.append(diag)
-                if i == self._buff_diags:
+                if i == limit:
                     break
         else:
             self._buff_diags = self.get_diagrams()
 
         return get_diag_list(limit=limit, ignore=ignore)
 
-    if isinstance(item, int):
+    if isinstance(item, (int, np.integer)):
         return get_diag_list(item)[item]
 
     if isinstance(item, slice):
-        assert item.start is None or isinstance(item.start, int), \
+        assert item.start is None or isinstance(item.start, (int, np.integer)), \
             f&#34;Slice arguments has to be int, not {type(item.start).__name__}.&#34;
-        assert item.stop is None or isinstance(item.stop, int), \
+        assert item.stop is None or isinstance(item.stop, (int, np.integer)), \
             f&#34;Slice arguments has to be int, not {type(item.stop).__name__}.&#34;
-        assert item.step is None or isinstance(item.step, int), \
+        assert item.step is None or isinstance(item.step, (int, np.integer)), \
             f&#34;Slice arguments has to be int, not {type(item.step).__name__}.&#34;
         l1 = get_diag_list(item.start, ignore=True) if item.start is not None else []
         l2 = get_diag_list(item.stop, ignore=True) if item.stop is not None else self.get_diagrams()

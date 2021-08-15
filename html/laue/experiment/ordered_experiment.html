@@ -122,6 +122,8 @@ class OrderedExperiment(Experiment):
         &#34;&#34;&#34;
         ** Recupere les 2 dimensions x, y. **
 
+        Utilise uniquement la fonction ``position`` fourni a l&#39;initialisateur.
+
         Returns
         -------
         x : int
@@ -131,16 +133,13 @@ class OrderedExperiment(Experiment):
 
         Examples
         --------
-        &gt;&gt;&gt; from itertools import cycle
         &gt;&gt;&gt; import laue
-        &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
-        &gt;&gt;&gt; def get_positions(i, x_max, y_max):
-        ...     i_mod = i % (x_max*y_max)
-        ...     return divmod(i_mod, y_max)
+        &gt;&gt;&gt; def get_positions(i):
+        ...     i_mod = i % 3362
+        ...     return divmod(i_mod, 82)
         ...
-        &gt;&gt;&gt; experiment = laue.OrderedExperiment(images,
-        ...     position=(lambda i: get_positions(i, 41, 82)))
-        &gt;&gt;&gt; experiment.get_shape()
+        &gt;&gt;&gt; exp = laue.OrderedExperiment((None,), position=get_positions)
+        &gt;&gt;&gt; exp.get_shape()
         (41, 82)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
@@ -158,6 +157,8 @@ class OrderedExperiment(Experiment):
         &#34;&#34;&#34;
         ** Recupere la matrice des index d&#39;une couche. **
 
+        Utilise uniquement la fonction ``position`` fourni a l&#39;initialisateur.
+
         Returns
         -------
         np.ndarray
@@ -166,16 +167,14 @@ class OrderedExperiment(Experiment):
 
         Examples
         --------
-        &gt;&gt;&gt; from itertools import cycle
         &gt;&gt;&gt; import laue
-        &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
 
         Cas balayage.
         &gt;&gt;&gt; def get_position(i):
         ...     i_mod = i % 12
         ...     return divmod(i_mod, 4)
         ...
-        &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+        &gt;&gt;&gt; experiment = laue.OrderedExperiment((None,), position=get_position)
         &gt;&gt;&gt; experiment.get_index()
         array([[ 0,  1,  2,  3],
                [ 4,  5,  6,  7],
@@ -188,11 +187,11 @@ class OrderedExperiment(Experiment):
         ...     y = [0, 2, 3, 1, 0, 2, 2, 0, 1, 1, 3, 3]
         ...     return x[i%12], y[i%12]
         ...
-        &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+        &gt;&gt;&gt; experiment = laue.OrderedExperiment((None,), position=get_position)
         &gt;&gt;&gt; experiment.get_index()
-        array([[ 0,  1,  2,  3],
-               [ 4,  5,  6,  7],
-               [ 8,  9, 10, 11]], dtype=uint32)
+        array([[ 0,  8,  5, 10],
+               [ 7,  9,  1,  2],
+               [ 4,  3,  6, 11]], dtype=uint32)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         def min_inter(a, b, x_ind, y_ind):
@@ -235,30 +234,109 @@ class OrderedExperiment(Experiment):
         Returns
         -------
         diagrams
-            * Si l&#39;une des 3 dimensions est omise ou bien que c&#39;est
-            un slice, retourne une array numpy remplie de diagrames.
+            * Si seul 1 dimension est precisee, cette methode se refere a
+            la methode ``laue.experiment.base_experiment.Experiment.__getitem__``.
             * Si les 3 coordonnees sont entieres, le diagrame
             correspondant est renvoye.
+            * Si l&#39;une des 3 coordonnees au moins est un slice, une array
+            numpy dimension 3 est renvoyee.
 
         Examples
         --------
-        &gt;&gt;&gt; from itertools import cycle
+        &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
-        &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
+        &gt;&gt;&gt; images = (np.zeros(shape=(2, 2), dtype=np.uint16)
+        ...     for _ in range(120)) # Image generator.
         &gt;&gt;&gt; def get_position(i):
         ...     i_mod = i % 12
         ...     return divmod(i_mod, 4)
         ...
         &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
         &gt;&gt;&gt;
+
+        Acces directe simple.
+        &gt;&gt;&gt; experiment[0]
+        LaueDiagram(name=&#39;image_0&#39;)
+        &gt;&gt;&gt; experiment[1]
+        LaueDiagram(name=&#39;image_1&#39;)
+        &gt;&gt;&gt; experiment[1:10:3]
+        [LaueDiagram(name=&#39;image_1&#39;), LaueDiagram(name=&#39;image_4&#39;), LaueDiagram(name=&#39;image_7&#39;)]
+
+        Acces directe organise.
+        &gt;&gt;&gt; experiment[0, 0, 0]
+        LaueDiagram(name=&#39;image_0&#39;)
+        &gt;&gt;&gt; experiment[2, 3, 0]
+        LaueDiagram(name=&#39;image_11&#39;)
+        &gt;&gt;&gt;
+
+        Acces slice
+        &gt;&gt;&gt; experiment[:2, 1:3, 0]
+        array([[[LaueDiagram(name=&#39;image_1&#39;)],
+                [LaueDiagram(name=&#39;image_2&#39;)]],
+        &lt;BLANKLINE&gt;
+               [[LaueDiagram(name=&#39;image_5&#39;)],
+                [LaueDiagram(name=&#39;image_6&#39;)]]], dtype=object)
+        &gt;&gt;&gt; experiment[0, 0, 2:5]
+        array([[[LaueDiagram(name=&#39;image_24&#39;), LaueDiagram(name=&#39;image_36&#39;),
+                 LaueDiagram(name=&#39;image_48&#39;)]]], dtype=object)
+        &gt;&gt;&gt; experiment[::-1, :2, -1]
+        array([[[LaueDiagram(name=&#39;image_116&#39;)],
+                [LaueDiagram(name=&#39;image_117&#39;)]],
+        &lt;BLANKLINE&gt;
+               [[LaueDiagram(name=&#39;image_112&#39;)],
+                [LaueDiagram(name=&#39;image_113&#39;)]],
+        &lt;BLANKLINE&gt;
+               [[LaueDiagram(name=&#39;image_108&#39;)],
+                [LaueDiagram(name=&#39;image_109&#39;)]]], dtype=object)
+        &gt;&gt;&gt;
         &#34;&#34;&#34;
-        if isinstance(item, tuple):
-            if len(item) == 3:
-                if all(isinstance(coord, int) for coord in item):
+        if isinstance(item, (slice, int, np.integer)):
+            return super().__getitem__(item)
 
-                    return super()[0]
+        if not isinstance(item, tuple):
+            raise ValueError(&#34;La clef doit etre de type, int, slice or tuple &#34;
+                f&#34;not {type(item).__name__}.&#34;)
+        if len(item) != 3:
+            raise ValueError(&#34;Si l&#39;element est un tuple, il doit contenir 3 &#34;
+                f&#34; elements. x, y et t. Il en contient {len(item)}.&#34;)
+        x, y, t = item
+        size = np.prod(self.get_shape(), dtype=np.uint32)
 
-        raise NotImplementedError</code></pre>
+        if all(isinstance(coord, (int, np.integer)) for coord in item):
+            return super().__getitem__(self.get_index()[x, y] + t*size)
+
+        x_index = np.arange(self.get_shape()[0])[x] if isinstance(x, slice) else [x]
+        y_index = np.arange(self.get_shape()[1])[y] if isinstance(y, slice) else [y]
+        if isinstance(t, slice): # Si il est pas nescessaire de lire tous les diagrames.
+            if (    (t.start is None or t.start &gt;= 0)
+                and (t.stop is not None and t.stop &gt; 0)
+                and (t.step is None or t.step &gt; 0)
+                ) or ( # cas croissant ou cas decroissant
+                    (t.start is not None and t.start &gt; 0)
+                and (t.stop is None or t.stop &gt;= 0)
+                and (t.step is not None and t.step &lt; 0)):
+                t_max = max(
+                    (0 if t.stop is None else t.stop), # Cas croissant.
+                    (0 if t.start is None else t.start)) # Cas decroissant.
+            else:
+                if len(self) == 0: # Si il faut lire tous les diagrames.
+                    for _ in self:
+                        pass
+                t_max = (len(self) // np.prod(self.get_shape())) - 1
+            t_index = np.arange(t_max+1)[t]
+        else:
+            t_index = [t]
+
+        table = np.empty((len(x_index), len(y_index), len(t_index)), dtype=object)
+        table[...] = [[[
+                    self[x_, y_, t_]
+                    for t_ in t_index
+                ]
+                for y_ in y_index
+            ]
+            for x_ in x_index
+        ]
+        return table</code></pre>
 </details>
 </section>
 <section>
@@ -366,6 +444,8 @@ correspondant. Les indices commencent a 0 inclu.</dd>
         &#34;&#34;&#34;
         ** Recupere les 2 dimensions x, y. **
 
+        Utilise uniquement la fonction ``position`` fourni a l&#39;initialisateur.
+
         Returns
         -------
         x : int
@@ -375,16 +455,13 @@ correspondant. Les indices commencent a 0 inclu.</dd>
 
         Examples
         --------
-        &gt;&gt;&gt; from itertools import cycle
         &gt;&gt;&gt; import laue
-        &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
-        &gt;&gt;&gt; def get_positions(i, x_max, y_max):
-        ...     i_mod = i % (x_max*y_max)
-        ...     return divmod(i_mod, y_max)
+        &gt;&gt;&gt; def get_positions(i):
+        ...     i_mod = i % 3362
+        ...     return divmod(i_mod, 82)
         ...
-        &gt;&gt;&gt; experiment = laue.OrderedExperiment(images,
-        ...     position=(lambda i: get_positions(i, 41, 82)))
-        &gt;&gt;&gt; experiment.get_shape()
+        &gt;&gt;&gt; exp = laue.OrderedExperiment((None,), position=get_positions)
+        &gt;&gt;&gt; exp.get_shape()
         (41, 82)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
@@ -402,6 +479,8 @@ correspondant. Les indices commencent a 0 inclu.</dd>
         &#34;&#34;&#34;
         ** Recupere la matrice des index d&#39;une couche. **
 
+        Utilise uniquement la fonction ``position`` fourni a l&#39;initialisateur.
+
         Returns
         -------
         np.ndarray
@@ -410,16 +489,14 @@ correspondant. Les indices commencent a 0 inclu.</dd>
 
         Examples
         --------
-        &gt;&gt;&gt; from itertools import cycle
         &gt;&gt;&gt; import laue
-        &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
 
         Cas balayage.
         &gt;&gt;&gt; def get_position(i):
         ...     i_mod = i % 12
         ...     return divmod(i_mod, 4)
         ...
-        &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+        &gt;&gt;&gt; experiment = laue.OrderedExperiment((None,), position=get_position)
         &gt;&gt;&gt; experiment.get_index()
         array([[ 0,  1,  2,  3],
                [ 4,  5,  6,  7],
@@ -432,11 +509,11 @@ correspondant. Les indices commencent a 0 inclu.</dd>
         ...     y = [0, 2, 3, 1, 0, 2, 2, 0, 1, 1, 3, 3]
         ...     return x[i%12], y[i%12]
         ...
-        &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+        &gt;&gt;&gt; experiment = laue.OrderedExperiment((None,), position=get_position)
         &gt;&gt;&gt; experiment.get_index()
-        array([[ 0,  1,  2,  3],
-               [ 4,  5,  6,  7],
-               [ 8,  9, 10, 11]], dtype=uint32)
+        array([[ 0,  8,  5, 10],
+               [ 7,  9,  1,  2],
+               [ 4,  3,  6, 11]], dtype=uint32)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         def min_inter(a, b, x_ind, y_ind):
@@ -479,30 +556,109 @@ correspondant. Les indices commencent a 0 inclu.</dd>
         Returns
         -------
         diagrams
-            * Si l&#39;une des 3 dimensions est omise ou bien que c&#39;est
-            un slice, retourne une array numpy remplie de diagrames.
+            * Si seul 1 dimension est precisee, cette methode se refere a
+            la methode ``laue.experiment.base_experiment.Experiment.__getitem__``.
             * Si les 3 coordonnees sont entieres, le diagrame
             correspondant est renvoye.
+            * Si l&#39;une des 3 coordonnees au moins est un slice, une array
+            numpy dimension 3 est renvoyee.
 
         Examples
         --------
-        &gt;&gt;&gt; from itertools import cycle
+        &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
-        &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
+        &gt;&gt;&gt; images = (np.zeros(shape=(2, 2), dtype=np.uint16)
+        ...     for _ in range(120)) # Image generator.
         &gt;&gt;&gt; def get_position(i):
         ...     i_mod = i % 12
         ...     return divmod(i_mod, 4)
         ...
         &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
         &gt;&gt;&gt;
+
+        Acces directe simple.
+        &gt;&gt;&gt; experiment[0]
+        LaueDiagram(name=&#39;image_0&#39;)
+        &gt;&gt;&gt; experiment[1]
+        LaueDiagram(name=&#39;image_1&#39;)
+        &gt;&gt;&gt; experiment[1:10:3]
+        [LaueDiagram(name=&#39;image_1&#39;), LaueDiagram(name=&#39;image_4&#39;), LaueDiagram(name=&#39;image_7&#39;)]
+
+        Acces directe organise.
+        &gt;&gt;&gt; experiment[0, 0, 0]
+        LaueDiagram(name=&#39;image_0&#39;)
+        &gt;&gt;&gt; experiment[2, 3, 0]
+        LaueDiagram(name=&#39;image_11&#39;)
+        &gt;&gt;&gt;
+
+        Acces slice
+        &gt;&gt;&gt; experiment[:2, 1:3, 0]
+        array([[[LaueDiagram(name=&#39;image_1&#39;)],
+                [LaueDiagram(name=&#39;image_2&#39;)]],
+        &lt;BLANKLINE&gt;
+               [[LaueDiagram(name=&#39;image_5&#39;)],
+                [LaueDiagram(name=&#39;image_6&#39;)]]], dtype=object)
+        &gt;&gt;&gt; experiment[0, 0, 2:5]
+        array([[[LaueDiagram(name=&#39;image_24&#39;), LaueDiagram(name=&#39;image_36&#39;),
+                 LaueDiagram(name=&#39;image_48&#39;)]]], dtype=object)
+        &gt;&gt;&gt; experiment[::-1, :2, -1]
+        array([[[LaueDiagram(name=&#39;image_116&#39;)],
+                [LaueDiagram(name=&#39;image_117&#39;)]],
+        &lt;BLANKLINE&gt;
+               [[LaueDiagram(name=&#39;image_112&#39;)],
+                [LaueDiagram(name=&#39;image_113&#39;)]],
+        &lt;BLANKLINE&gt;
+               [[LaueDiagram(name=&#39;image_108&#39;)],
+                [LaueDiagram(name=&#39;image_109&#39;)]]], dtype=object)
+        &gt;&gt;&gt;
         &#34;&#34;&#34;
-        if isinstance(item, tuple):
-            if len(item) == 3:
-                if all(isinstance(coord, int) for coord in item):
+        if isinstance(item, (slice, int, np.integer)):
+            return super().__getitem__(item)
 
-                    return super()[0]
+        if not isinstance(item, tuple):
+            raise ValueError(&#34;La clef doit etre de type, int, slice or tuple &#34;
+                f&#34;not {type(item).__name__}.&#34;)
+        if len(item) != 3:
+            raise ValueError(&#34;Si l&#39;element est un tuple, il doit contenir 3 &#34;
+                f&#34; elements. x, y et t. Il en contient {len(item)}.&#34;)
+        x, y, t = item
+        size = np.prod(self.get_shape(), dtype=np.uint32)
 
-        raise NotImplementedError</code></pre>
+        if all(isinstance(coord, (int, np.integer)) for coord in item):
+            return super().__getitem__(self.get_index()[x, y] + t*size)
+
+        x_index = np.arange(self.get_shape()[0])[x] if isinstance(x, slice) else [x]
+        y_index = np.arange(self.get_shape()[1])[y] if isinstance(y, slice) else [y]
+        if isinstance(t, slice): # Si il est pas nescessaire de lire tous les diagrames.
+            if (    (t.start is None or t.start &gt;= 0)
+                and (t.stop is not None and t.stop &gt; 0)
+                and (t.step is None or t.step &gt; 0)
+                ) or ( # cas croissant ou cas decroissant
+                    (t.start is not None and t.start &gt; 0)
+                and (t.stop is None or t.stop &gt;= 0)
+                and (t.step is not None and t.step &lt; 0)):
+                t_max = max(
+                    (0 if t.stop is None else t.stop), # Cas croissant.
+                    (0 if t.start is None else t.start)) # Cas decroissant.
+            else:
+                if len(self) == 0: # Si il faut lire tous les diagrames.
+                    for _ in self:
+                        pass
+                t_max = (len(self) // np.prod(self.get_shape())) - 1
+            t_index = np.arange(t_max+1)[t]
+        else:
+            t_index = [t]
+
+        table = np.empty((len(x_index), len(y_index), len(t_index)), dtype=object)
+        table[...] = [[[
+                    self[x_, y_, t_]
+                    for t_ in t_index
+                ]
+                for y_ in y_index
+            ]
+            for x_ in x_index
+        ]
+        return table</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -528,22 +684,61 @@ la seconde a l'axe x et la derniere a l'axe y.</dd>
 <dt><code>diagrams</code></dt>
 <dd>
 <ul>
-<li>Si l'une des 3 dimensions est omise ou bien que c'est
-un slice, retourne une array numpy remplie de diagrames.</li>
+<li>Si seul 1 dimension est precisee, cette methode se refere a
+la methode <code><a title="laue.experiment.base_experiment.Experiment.__getitem__" href="base_experiment.html#laue.experiment.base_experiment.Experiment.__getitem__">Experiment.__getitem__()</a></code>.</li>
 <li>Si les 3 coordonnees sont entieres, le diagrame
 correspondant est renvoye.</li>
+<li>Si l'une des 3 coordonnees au moins est un slice, une array
+numpy dimension 3 est renvoyee.</li>
 </ul>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from itertools import cycle
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
-&gt;&gt;&gt; images = cycle([&quot;laue/examples/ge_blanc.mccd&quot;])
+&gt;&gt;&gt; images = (np.zeros(shape=(2, 2), dtype=np.uint16)
+...     for _ in range(120)) # Image generator.
 &gt;&gt;&gt; def get_position(i):
 ...     i_mod = i % 12
 ...     return divmod(i_mod, 4)
 ...
 &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+&gt;&gt;&gt;
+</code></pre>
+<p>Acces directe simple.</p>
+<pre><code class="python-repl">&gt;&gt;&gt; experiment[0]
+LaueDiagram(name='image_0')
+&gt;&gt;&gt; experiment[1]
+LaueDiagram(name='image_1')
+&gt;&gt;&gt; experiment[1:10:3]
+[LaueDiagram(name='image_1'), LaueDiagram(name='image_4'), LaueDiagram(name='image_7')]
+</code></pre>
+<p>Acces directe organise.</p>
+<pre><code class="python-repl">&gt;&gt;&gt; experiment[0, 0, 0]
+LaueDiagram(name='image_0')
+&gt;&gt;&gt; experiment[2, 3, 0]
+LaueDiagram(name='image_11')
+&gt;&gt;&gt;
+</code></pre>
+<p>Acces slice</p>
+<pre><code class="python-repl">&gt;&gt;&gt; experiment[:2, 1:3, 0]
+array([[[LaueDiagram(name='image_1')],
+        [LaueDiagram(name='image_2')]],
+&lt;BLANKLINE&gt;
+       [[LaueDiagram(name='image_5')],
+        [LaueDiagram(name='image_6')]]], dtype=object)
+&gt;&gt;&gt; experiment[0, 0, 2:5]
+array([[[LaueDiagram(name='image_24'), LaueDiagram(name='image_36'),
+         LaueDiagram(name='image_48')]]], dtype=object)
+&gt;&gt;&gt; experiment[::-1, :2, -1]
+array([[[LaueDiagram(name='image_116')],
+        [LaueDiagram(name='image_117')]],
+&lt;BLANKLINE&gt;
+       [[LaueDiagram(name='image_112')],
+        [LaueDiagram(name='image_113')]],
+&lt;BLANKLINE&gt;
+       [[LaueDiagram(name='image_108')],
+        [LaueDiagram(name='image_109')]]], dtype=object)
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -566,30 +761,109 @@ correspondant est renvoye.</li>
     Returns
     -------
     diagrams
-        * Si l&#39;une des 3 dimensions est omise ou bien que c&#39;est
-        un slice, retourne une array numpy remplie de diagrames.
+        * Si seul 1 dimension est precisee, cette methode se refere a
+        la methode ``laue.experiment.base_experiment.Experiment.__getitem__``.
         * Si les 3 coordonnees sont entieres, le diagrame
         correspondant est renvoye.
+        * Si l&#39;une des 3 coordonnees au moins est un slice, une array
+        numpy dimension 3 est renvoyee.
 
     Examples
     --------
-    &gt;&gt;&gt; from itertools import cycle
+    &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
-    &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
+    &gt;&gt;&gt; images = (np.zeros(shape=(2, 2), dtype=np.uint16)
+    ...     for _ in range(120)) # Image generator.
     &gt;&gt;&gt; def get_position(i):
     ...     i_mod = i % 12
     ...     return divmod(i_mod, 4)
     ...
     &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
     &gt;&gt;&gt;
+
+    Acces directe simple.
+    &gt;&gt;&gt; experiment[0]
+    LaueDiagram(name=&#39;image_0&#39;)
+    &gt;&gt;&gt; experiment[1]
+    LaueDiagram(name=&#39;image_1&#39;)
+    &gt;&gt;&gt; experiment[1:10:3]
+    [LaueDiagram(name=&#39;image_1&#39;), LaueDiagram(name=&#39;image_4&#39;), LaueDiagram(name=&#39;image_7&#39;)]
+
+    Acces directe organise.
+    &gt;&gt;&gt; experiment[0, 0, 0]
+    LaueDiagram(name=&#39;image_0&#39;)
+    &gt;&gt;&gt; experiment[2, 3, 0]
+    LaueDiagram(name=&#39;image_11&#39;)
+    &gt;&gt;&gt;
+
+    Acces slice
+    &gt;&gt;&gt; experiment[:2, 1:3, 0]
+    array([[[LaueDiagram(name=&#39;image_1&#39;)],
+            [LaueDiagram(name=&#39;image_2&#39;)]],
+    &lt;BLANKLINE&gt;
+           [[LaueDiagram(name=&#39;image_5&#39;)],
+            [LaueDiagram(name=&#39;image_6&#39;)]]], dtype=object)
+    &gt;&gt;&gt; experiment[0, 0, 2:5]
+    array([[[LaueDiagram(name=&#39;image_24&#39;), LaueDiagram(name=&#39;image_36&#39;),
+             LaueDiagram(name=&#39;image_48&#39;)]]], dtype=object)
+    &gt;&gt;&gt; experiment[::-1, :2, -1]
+    array([[[LaueDiagram(name=&#39;image_116&#39;)],
+            [LaueDiagram(name=&#39;image_117&#39;)]],
+    &lt;BLANKLINE&gt;
+           [[LaueDiagram(name=&#39;image_112&#39;)],
+            [LaueDiagram(name=&#39;image_113&#39;)]],
+    &lt;BLANKLINE&gt;
+           [[LaueDiagram(name=&#39;image_108&#39;)],
+            [LaueDiagram(name=&#39;image_109&#39;)]]], dtype=object)
+    &gt;&gt;&gt;
     &#34;&#34;&#34;
-    if isinstance(item, tuple):
-        if len(item) == 3:
-            if all(isinstance(coord, int) for coord in item):
+    if isinstance(item, (slice, int, np.integer)):
+        return super().__getitem__(item)
 
-                return super()[0]
+    if not isinstance(item, tuple):
+        raise ValueError(&#34;La clef doit etre de type, int, slice or tuple &#34;
+            f&#34;not {type(item).__name__}.&#34;)
+    if len(item) != 3:
+        raise ValueError(&#34;Si l&#39;element est un tuple, il doit contenir 3 &#34;
+            f&#34; elements. x, y et t. Il en contient {len(item)}.&#34;)
+    x, y, t = item
+    size = np.prod(self.get_shape(), dtype=np.uint32)
 
-    raise NotImplementedError</code></pre>
+    if all(isinstance(coord, (int, np.integer)) for coord in item):
+        return super().__getitem__(self.get_index()[x, y] + t*size)
+
+    x_index = np.arange(self.get_shape()[0])[x] if isinstance(x, slice) else [x]
+    y_index = np.arange(self.get_shape()[1])[y] if isinstance(y, slice) else [y]
+    if isinstance(t, slice): # Si il est pas nescessaire de lire tous les diagrames.
+        if (    (t.start is None or t.start &gt;= 0)
+            and (t.stop is not None and t.stop &gt; 0)
+            and (t.step is None or t.step &gt; 0)
+            ) or ( # cas croissant ou cas decroissant
+                (t.start is not None and t.start &gt; 0)
+            and (t.stop is None or t.stop &gt;= 0)
+            and (t.step is not None and t.step &lt; 0)):
+            t_max = max(
+                (0 if t.stop is None else t.stop), # Cas croissant.
+                (0 if t.start is None else t.start)) # Cas decroissant.
+        else:
+            if len(self) == 0: # Si il faut lire tous les diagrames.
+                for _ in self:
+                    pass
+            t_max = (len(self) // np.prod(self.get_shape())) - 1
+        t_index = np.arange(t_max+1)[t]
+    else:
+        t_index = [t]
+
+    table = np.empty((len(x_index), len(y_index), len(t_index)), dtype=object)
+    table[...] = [[[
+                self[x_, y_, t_]
+                for t_ in t_index
+            ]
+            for y_ in y_index
+        ]
+        for x_ in x_index
+    ]
+    return table</code></pre>
 </details>
 </dd>
 <dt id="laue.experiment.ordered_experiment.OrderedExperiment.get_index"><code class="name flex">
@@ -597,6 +871,7 @@ correspondant est renvoye.</li>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Recupere la matrice des index d'une couche. </strong></p>
+<p>Utilise uniquement la fonction <code>position</code> fourni a l'initialisateur.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>np.ndarray</code></dt>
@@ -604,16 +879,14 @@ correspondant est renvoye.</li>
 A couple de rang (x, y) associ le rang 'ravel' du diagrame.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from itertools import cycle
-&gt;&gt;&gt; import laue
-&gt;&gt;&gt; images = cycle([&quot;laue/examples/ge_blanc.mccd&quot;])
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
 </code></pre>
 <p>Cas balayage.</p>
 <pre><code class="python-repl">&gt;&gt;&gt; def get_position(i):
 ...     i_mod = i % 12
 ...     return divmod(i_mod, 4)
 ...
-&gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+&gt;&gt;&gt; experiment = laue.OrderedExperiment((None,), position=get_position)
 &gt;&gt;&gt; experiment.get_index()
 array([[ 0,  1,  2,  3],
        [ 4,  5,  6,  7],
@@ -626,11 +899,11 @@ array([[ 0,  1,  2,  3],
 ...     y = [0, 2, 3, 1, 0, 2, 2, 0, 1, 1, 3, 3]
 ...     return x[i%12], y[i%12]
 ...
-&gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+&gt;&gt;&gt; experiment = laue.OrderedExperiment((None,), position=get_position)
 &gt;&gt;&gt; experiment.get_index()
-array([[ 0,  1,  2,  3],
-       [ 4,  5,  6,  7],
-       [ 8,  9, 10, 11]], dtype=uint32)
+array([[ 0,  8,  5, 10],
+       [ 7,  9,  1,  2],
+       [ 4,  3,  6, 11]], dtype=uint32)
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -641,6 +914,8 @@ array([[ 0,  1,  2,  3],
     &#34;&#34;&#34;
     ** Recupere la matrice des index d&#39;une couche. **
 
+    Utilise uniquement la fonction ``position`` fourni a l&#39;initialisateur.
+
     Returns
     -------
     np.ndarray
@@ -649,16 +924,14 @@ array([[ 0,  1,  2,  3],
 
     Examples
     --------
-    &gt;&gt;&gt; from itertools import cycle
     &gt;&gt;&gt; import laue
-    &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
 
     Cas balayage.
     &gt;&gt;&gt; def get_position(i):
     ...     i_mod = i % 12
     ...     return divmod(i_mod, 4)
     ...
-    &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+    &gt;&gt;&gt; experiment = laue.OrderedExperiment((None,), position=get_position)
     &gt;&gt;&gt; experiment.get_index()
     array([[ 0,  1,  2,  3],
            [ 4,  5,  6,  7],
@@ -671,11 +944,11 @@ array([[ 0,  1,  2,  3],
     ...     y = [0, 2, 3, 1, 0, 2, 2, 0, 1, 1, 3, 3]
     ...     return x[i%12], y[i%12]
     ...
-    &gt;&gt;&gt; experiment = laue.OrderedExperiment(images, position=get_position)
+    &gt;&gt;&gt; experiment = laue.OrderedExperiment((None,), position=get_position)
     &gt;&gt;&gt; experiment.get_index()
-    array([[ 0,  1,  2,  3],
-           [ 4,  5,  6,  7],
-           [ 8,  9, 10, 11]], dtype=uint32)
+    array([[ 0,  8,  5, 10],
+           [ 7,  9,  1,  2],
+           [ 4,  3,  6, 11]], dtype=uint32)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     def min_inter(a, b, x_ind, y_ind):
@@ -708,6 +981,7 @@ array([[ 0,  1,  2,  3],
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Recupere les 2 dimensions x, y. </strong></p>
+<p>Utilise uniquement la fonction <code>position</code> fourni a l'initialisateur.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
@@ -716,16 +990,13 @@ array([[ 0,  1,  2,  3],
 <dd>Le nombre de diagrames pris selon l'axe y.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from itertools import cycle
-&gt;&gt;&gt; import laue
-&gt;&gt;&gt; images = cycle([&quot;laue/examples/ge_blanc.mccd&quot;])
-&gt;&gt;&gt; def get_positions(i, x_max, y_max):
-...     i_mod = i % (x_max*y_max)
-...     return divmod(i_mod, y_max)
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; def get_positions(i):
+...     i_mod = i % 3362
+...     return divmod(i_mod, 82)
 ...
-&gt;&gt;&gt; experiment = laue.OrderedExperiment(images,
-...     position=(lambda i: get_positions(i, 41, 82)))
-&gt;&gt;&gt; experiment.get_shape()
+&gt;&gt;&gt; exp = laue.OrderedExperiment((None,), position=get_positions)
+&gt;&gt;&gt; exp.get_shape()
 (41, 82)
 &gt;&gt;&gt;
 </code></pre></div>
@@ -737,6 +1008,8 @@ array([[ 0,  1,  2,  3],
     &#34;&#34;&#34;
     ** Recupere les 2 dimensions x, y. **
 
+    Utilise uniquement la fonction ``position`` fourni a l&#39;initialisateur.
+
     Returns
     -------
     x : int
@@ -746,16 +1019,13 @@ array([[ 0,  1,  2,  3],
 
     Examples
     --------
-    &gt;&gt;&gt; from itertools import cycle
     &gt;&gt;&gt; import laue
-    &gt;&gt;&gt; images = cycle([&#34;laue/examples/ge_blanc.mccd&#34;])
-    &gt;&gt;&gt; def get_positions(i, x_max, y_max):
-    ...     i_mod = i % (x_max*y_max)
-    ...     return divmod(i_mod, y_max)
+    &gt;&gt;&gt; def get_positions(i):
+    ...     i_mod = i % 3362
+    ...     return divmod(i_mod, 82)
     ...
-    &gt;&gt;&gt; experiment = laue.OrderedExperiment(images,
-    ...     position=(lambda i: get_positions(i, 41, 82)))
-    &gt;&gt;&gt; experiment.get_shape()
+    &gt;&gt;&gt; exp = laue.OrderedExperiment((None,), position=get_positions)
+    &gt;&gt;&gt; exp.get_shape()
     (41, 82)
     &gt;&gt;&gt;
     &#34;&#34;&#34;

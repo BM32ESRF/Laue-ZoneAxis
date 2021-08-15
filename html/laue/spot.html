@@ -48,6 +48,8 @@ import numbers
 
 import numpy as np
 
+from laue.utilities.serialization import SpotPickleable
+
 
 __pdoc__ = {&#34;Spot.__hash__&#34;: True,
             &#34;Spot.__sub__&#34;: True}
@@ -167,7 +169,7 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
     return np.sqrt((x1-x2)**2 + (y1-y2)**2)
 
 
-class Spot:
+class Spot(SpotPickleable):
     &#34;&#34;&#34;
     Represente un spot sur un diagramme de laue.
     &#34;&#34;&#34;
@@ -200,9 +202,9 @@ class Spot:
         &#34;&#34;&#34;
         # Constantes.
         self.x, self.y, self.w, self.h = bbox
-        self.spot_im = spot_im
-        self.distortion = distortion # Facteur de diformite.
-        self.diagram = diagram # Le contenaur.
+        self._spot_im = spot_im
+        self._distortion = distortion # Facteur de diformite.
+        self.diagram = diagram # Le conteneur.
         self._identifier = identifier # Le rang.
 
         # Declaration des variables futur.
@@ -212,7 +214,6 @@ class Spot:
         self._thetachi = None # Angles du rayon diffractes ayant engendre ce point.
         self._quality = None # Beautee du point.
         self.hkl = None # Les 3 indices de Miller h, k et l.
-        self.axes = None # Les axes de zone.
 
     def get_bbox(self):
         &#34;&#34;&#34;
@@ -261,7 +262,7 @@ class Spot:
         0.8472
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return self.distortion
+        return self._distortion
 
     def get_gnomonic(self):
         &#34;&#34;&#34;
@@ -311,6 +312,32 @@ class Spot:
         &#34;&#34;&#34;
         return self._identifier
 
+    def get_image(self):
+        &#34;&#34;&#34;
+        ** Retourne l&#39;image du spot isole. **
+
+        Returns
+        -------
+        np.ndarray
+            La partie de l&#39;image du diagrame de laue dans laquelle
+            est presente le spot. Seule la valeur des pixels presents
+            au dessus du fond sont renvoyees. Le type est uint16.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
+        &gt;&gt;&gt; spot.get_image()
+        array([[  8,  10,  16,  16,   8,   5],
+               [ 11,  17,  67,  76,  13,   9],
+               [  7,  19, 184, 229,  14,   6],
+               [  9,   6,  12,  19,   8,   4],
+               [  5,   3,   3,   9,  14,   7]], dtype=uint16)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self._spot_im
+
     def get_intensity(self):
         r&#34;&#34;&#34;
         ** Calcul l&#39;intensite de la tache. **
@@ -336,7 +363,7 @@ class Spot:
         &#34;&#34;&#34;
         if self._intensity is not None:
             return self._intensity
-        self._intensity = self.spot_im.sum()
+        self._intensity = self.get_image().sum()
         return self._intensity
 
     def get_position(self):
@@ -364,7 +391,7 @@ class Spot:
         &#34;&#34;&#34;
         if self._position is not None:
             return self._position
-        x, y = (self.spot_im/self.get_intensity() * np.array(np.meshgrid(
+        x, y = (self.get_image()/self.get_intensity() * np.array(np.meshgrid(
                 np.arange(self.x, self.x+self.w), np.arange(self.y, self.y+self.h)))
                 ).reshape((2, -1)).sum(axis=1)
         self._position = (x, y)
@@ -400,7 +427,10 @@ class Spot:
         distortion_weight = 0.667
 
         a = -math.log(1-val_cout_ref) / cout_ref
-        self._quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
+        self._quality = (
+            (1-distortion_weight)
+          * (1 - math.exp(-a*self.get_intensity()))
+          + distortion_weight*self.get_distortion())
         return self._quality
 
     def get_theta_chi(self):
@@ -463,10 +493,10 @@ class Spot:
         &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        if self.axes is not None:
-            return self.axes
-        self.diagram.find_zone_axes(**kwds) # met automatiquement a jour self.axes.
-        return self.axes
+        return {
+            zone_axis for zone_axis
+            in self.diagram.find_zone_axes(**kwds)
+            if self in zone_axis}
 
     def plot_gnomonic(self, axe_pyplot=None, *, display=True):
         &#34;&#34;&#34;
@@ -592,7 +622,6 @@ class Spot:
         self._intensity = None # Si jamais l&#39;image change.
         self._position = None # Si jamais l&#39;image change.
         self._quality = None # Car on vient de changer &#39;self._intensity&#39;.
-        self.axes = None # Car si la projection gnomonique change, tout change.
 
     def __hash__(self):
         &#34;&#34;&#34;
@@ -881,7 +910,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Spot:
+<pre><code class="python">class Spot(SpotPickleable):
     &#34;&#34;&#34;
     Represente un spot sur un diagramme de laue.
     &#34;&#34;&#34;
@@ -914,9 +943,9 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &#34;&#34;&#34;
         # Constantes.
         self.x, self.y, self.w, self.h = bbox
-        self.spot_im = spot_im
-        self.distortion = distortion # Facteur de diformite.
-        self.diagram = diagram # Le contenaur.
+        self._spot_im = spot_im
+        self._distortion = distortion # Facteur de diformite.
+        self.diagram = diagram # Le conteneur.
         self._identifier = identifier # Le rang.
 
         # Declaration des variables futur.
@@ -926,7 +955,6 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         self._thetachi = None # Angles du rayon diffractes ayant engendre ce point.
         self._quality = None # Beautee du point.
         self.hkl = None # Les 3 indices de Miller h, k et l.
-        self.axes = None # Les axes de zone.
 
     def get_bbox(self):
         &#34;&#34;&#34;
@@ -975,7 +1003,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         0.8472
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return self.distortion
+        return self._distortion
 
     def get_gnomonic(self):
         &#34;&#34;&#34;
@@ -1025,6 +1053,32 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &#34;&#34;&#34;
         return self._identifier
 
+    def get_image(self):
+        &#34;&#34;&#34;
+        ** Retourne l&#39;image du spot isole. **
+
+        Returns
+        -------
+        np.ndarray
+            La partie de l&#39;image du diagrame de laue dans laquelle
+            est presente le spot. Seule la valeur des pixels presents
+            au dessus du fond sont renvoyees. Le type est uint16.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
+        &gt;&gt;&gt; spot.get_image()
+        array([[  8,  10,  16,  16,   8,   5],
+               [ 11,  17,  67,  76,  13,   9],
+               [  7,  19, 184, 229,  14,   6],
+               [  9,   6,  12,  19,   8,   4],
+               [  5,   3,   3,   9,  14,   7]], dtype=uint16)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        return self._spot_im
+
     def get_intensity(self):
         r&#34;&#34;&#34;
         ** Calcul l&#39;intensite de la tache. **
@@ -1050,7 +1104,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &#34;&#34;&#34;
         if self._intensity is not None:
             return self._intensity
-        self._intensity = self.spot_im.sum()
+        self._intensity = self.get_image().sum()
         return self._intensity
 
     def get_position(self):
@@ -1078,7 +1132,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &#34;&#34;&#34;
         if self._position is not None:
             return self._position
-        x, y = (self.spot_im/self.get_intensity() * np.array(np.meshgrid(
+        x, y = (self.get_image()/self.get_intensity() * np.array(np.meshgrid(
                 np.arange(self.x, self.x+self.w), np.arange(self.y, self.y+self.h)))
                 ).reshape((2, -1)).sum(axis=1)
         self._position = (x, y)
@@ -1114,7 +1168,10 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         distortion_weight = 0.667
 
         a = -math.log(1-val_cout_ref) / cout_ref
-        self._quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
+        self._quality = (
+            (1-distortion_weight)
+          * (1 - math.exp(-a*self.get_intensity()))
+          + distortion_weight*self.get_distortion())
         return self._quality
 
     def get_theta_chi(self):
@@ -1177,10 +1234,10 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        if self.axes is not None:
-            return self.axes
-        self.diagram.find_zone_axes(**kwds) # met automatiquement a jour self.axes.
-        return self.axes
+        return {
+            zone_axis for zone_axis
+            in self.diagram.find_zone_axes(**kwds)
+            if self in zone_axis}
 
     def plot_gnomonic(self, axe_pyplot=None, *, display=True):
         &#34;&#34;&#34;
@@ -1306,7 +1363,6 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         self._intensity = None # Si jamais l&#39;image change.
         self._position = None # Si jamais l&#39;image change.
         self._quality = None # Car on vient de changer &#39;self._intensity&#39;.
-        self.axes = None # Car si la projection gnomonique change, tout change.
 
     def __hash__(self):
         &#34;&#34;&#34;
@@ -1367,6 +1423,10 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         &#34;&#34;&#34;
         return distance(self, other, space=&#34;camera&#34;)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="laue.utilities.serialization.SpotPickleable" href="utilities/serialization.html#laue.utilities.serialization.SpotPickleable">SpotPickleable</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="laue.spot.Spot.__hash__"><code class="name flex">
@@ -1508,10 +1568,10 @@ l'ensemble contiendra plusieurs elements.</dd>
     &lt;class &#39;laue.zone_axis.ZoneAxis&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    if self.axes is not None:
-        return self.axes
-    self.diagram.find_zone_axes(**kwds) # met automatiquement a jour self.axes.
-    return self.axes</code></pre>
+    return {
+        zone_axis for zone_axis
+        in self.diagram.find_zone_axes(**kwds)
+        if self in zone_axis}</code></pre>
 </details>
 </dd>
 <dt id="laue.spot.Spot.get_bbox"><code class="name flex">
@@ -1613,7 +1673,7 @@ Spot(position=(1370.52, 1874.78), quality=0.573)
     0.8472
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    return self.distortion</code></pre>
+    return self._distortion</code></pre>
 </details>
 </dd>
 <dt id="laue.spot.Spot.get_gnomonic"><code class="name flex">
@@ -1711,6 +1771,61 @@ True
     return self._identifier</code></pre>
 </details>
 </dd>
+<dt id="laue.spot.Spot.get_image"><code class="name flex">
+<span>def <span class="ident">get_image</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Retourne l'image du spot isole. </strong></p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>La partie de l'image du diagrame de laue dans laquelle
+est presente le spot. Seule la valeur des pixels presents
+au dessus du fond sont renvoyees. Le type est uint16.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="python-repl">&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
+&gt;&gt;&gt; spot.get_image()
+array([[  8,  10,  16,  16,   8,   5],
+       [ 11,  17,  67,  76,  13,   9],
+       [  7,  19, 184, 229,  14,   6],
+       [  9,   6,  12,  19,   8,   4],
+       [  5,   3,   3,   9,  14,   7]], dtype=uint16)
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_image(self):
+    &#34;&#34;&#34;
+    ** Retourne l&#39;image du spot isole. **
+
+    Returns
+    -------
+    np.ndarray
+        La partie de l&#39;image du diagrame de laue dans laquelle
+        est presente le spot. Seule la valeur des pixels presents
+        au dessus du fond sont renvoyees. Le type est uint16.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
+    &gt;&gt;&gt; spot.get_image()
+    array([[  8,  10,  16,  16,   8,   5],
+           [ 11,  17,  67,  76,  13,   9],
+           [  7,  19, 184, 229,  14,   6],
+           [  9,   6,  12,  19,   8,   4],
+           [  5,   3,   3,   9,  14,   7]], dtype=uint16)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return self._spot_im</code></pre>
+</details>
+</dd>
 <dt id="laue.spot.Spot.get_intensity"><code class="name flex">
 <span>def <span class="ident">get_intensity</span></span>(<span>self)</span>
 </code></dt>
@@ -1762,7 +1877,7 @@ Spot(position=(1370.52, 1874.78), quality=0.573)
     &#34;&#34;&#34;
     if self._intensity is not None:
         return self._intensity
-    self._intensity = self.spot_im.sum()
+    self._intensity = self.get_image().sum()
     return self._intensity</code></pre>
 </details>
 </dd>
@@ -1817,7 +1932,7 @@ array([1370.5172, 1874.7801])
     &#34;&#34;&#34;
     if self._position is not None:
         return self._position
-    x, y = (self.spot_im/self.get_intensity() * np.array(np.meshgrid(
+    x, y = (self.get_image()/self.get_intensity() * np.array(np.meshgrid(
             np.arange(self.x, self.x+self.w), np.arange(self.y, self.y+self.h)))
             ).reshape((2, -1)).sum(axis=1)
     self._position = (x, y)
@@ -1886,7 +2001,10 @@ Spot(position=(1370.52, 1874.78), quality=0.573)
     distortion_weight = 0.667
 
     a = -math.log(1-val_cout_ref) / cout_ref
-    self._quality = (1-distortion_weight)*(1 - math.exp(-a*self.get_intensity())) + distortion_weight*self.get_distortion()
+    self._quality = (
+        (1-distortion_weight)
+      * (1 - math.exp(-a*self.get_intensity()))
+      + distortion_weight*self.get_distortion())
     return self._quality</code></pre>
 </details>
 </dd>
@@ -2193,6 +2311,7 @@ trouves sont correctes.</dd>
 <li><code><a title="laue.spot.Spot.get_distortion" href="#laue.spot.Spot.get_distortion">get_distortion</a></code></li>
 <li><code><a title="laue.spot.Spot.get_gnomonic" href="#laue.spot.Spot.get_gnomonic">get_gnomonic</a></code></li>
 <li><code><a title="laue.spot.Spot.get_id" href="#laue.spot.Spot.get_id">get_id</a></code></li>
+<li><code><a title="laue.spot.Spot.get_image" href="#laue.spot.Spot.get_image">get_image</a></code></li>
 <li><code><a title="laue.spot.Spot.get_intensity" href="#laue.spot.Spot.get_intensity">get_intensity</a></code></li>
 <li><code><a title="laue.spot.Spot.get_position" href="#laue.spot.Spot.get_position">get_position</a></code></li>
 <li><code><a title="laue.spot.Spot.get_quality" href="#laue.spot.Spot.get_quality">get_quality</a></code></li>

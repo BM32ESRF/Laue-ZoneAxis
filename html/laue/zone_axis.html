@@ -60,6 +60,8 @@ try:
 except ImportError:
     psutil = None
 
+from laue.utilities.serialization import ZoneAxisPickleable
+
 
 __pdoc__ = {&#34;ZoneAxis.__contains__&#34;: True,
             &#34;ZoneAxis.__hash__&#34;: True,
@@ -195,7 +197,7 @@ def distance(axis1, axis2, *, weight=.5):
       + (1-weight)**2*(mu2-mu1)**2)
 
 
-class ZoneAxis:
+class ZoneAxis(ZoneAxisPickleable):
     &#34;&#34;&#34;
     Un axe de zone seul.
     &#34;&#34;&#34;
@@ -838,7 +840,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ZoneAxis:
+<pre><code class="python">class ZoneAxis(ZoneAxisPickleable):
     &#34;&#34;&#34;
     Un axe de zone seul.
     &#34;&#34;&#34;
@@ -1223,6 +1225,10 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
                 f&#34;phi={self._phi:.4f}, &#34;
                 f&#34;mu={self._mu:.4f})&#34;)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="laue.utilities.serialization.ZoneAxisPickleable" href="utilities/serialization.html#laue.utilities.serialization.ZoneAxisPickleable">ZoneAxisPickleable</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="laue.zone_axis.ZoneAxis.__contains__"><code class="name flex">
@@ -1834,6 +1840,15 @@ True
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="laue.utilities.serialization.ZoneAxisPickleable" href="utilities/serialization.html#laue.utilities.serialization.ZoneAxisPickleable">ZoneAxisPickleable</a></b></code>:
+<ul class="hlist">
+<li><code><a title="laue.utilities.serialization.ZoneAxisPickleable.__getstate__" href="utilities/serialization.html#laue.utilities.serialization.ZoneAxisPickleable.__getstate__">__getstate__</a></code></li>
+<li><code><a title="laue.utilities.serialization.ZoneAxisPickleable.__setstate__" href="utilities/serialization.html#laue.utilities.serialization.ZoneAxisPickleable.__setstate__">__setstate__</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
