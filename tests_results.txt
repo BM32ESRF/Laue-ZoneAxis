@@ -212,4 +212,20 @@ inter_lines(...).shape -> (2, 36)
 /home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 images: 1.239 s
 /home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 images: 2.205 s
 /home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 images: 1.554 s
+/home/robin/images/zbb1_roi1/*.mccd 1681 images: 158.551 s
+============= TEST FIND DIAGRAMS =============
+/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 diagrams: 1.173 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 diagrams: 923.881 ms
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 diagrams: 593.196 ms
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 diagrams: 647.718 ms
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 diagrams: 1.123 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 diagrams: 782.177 ms
+/home/robin/images/zbb1_roi1/*.mccd 1681 diagrams: 1617.665 s
+============== TEST CALIBRATION ==============
+/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 152.088 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 102.919 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 222.068 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 190.565 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 203.388 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 57.843 s
 /home/robin/images/zbb1_roi1/*.mccd 

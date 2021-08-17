@@ -454,6 +454,23 @@ class Compilator(Equations):
             expr=[theta_deg, chi_deg]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["fct_cam_to_thetachi"]
 
+    def get_fct_cosine_dist(self):
+        """
+        ** Equation de la cosine distance des vecteur uq. **
+        """
+        if "fct_cosine_dist" in globals()["compiled_expressions"]:
+            return globals["compiled_expressions"]["fct_cosine_dist"]
+
+        theta1, chi1 = sympy.symbols("theta_1 chi_1", real=True)
+        theta2, chi2 = sympy.symbols("theta_2 chi_2", real=True)
+        uq_1 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta1, chi1))
+        uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta2, chi2))
+        dist_expr = sympy.acos(uq_1.dot(uq_2)/(uq_1.norm()*uq_2.norm())) # Cosine distance.
+
+        globals()["compiled_expressions"]["fct_cosine_dist"] = lambdify.Lambdify(
+            [theta1, chi1, theta2, chi2], dist_expr)
+        return globals()["compiled_expressions"]["fct_cosine_dist"]
+
     def get_fct_dist_line(self):
         """
         ** Equation de projection de points sur une droite. **

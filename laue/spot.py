@@ -22,10 +22,15 @@ __pdoc__ = {"Spot.__hash__": True,
 
 
 def distance(spot1, spot2, *, space="camera"):
-    """
+    r"""
     ** Calcul la distance entre plusieur spots. **
 
     C'est une generalisation de la methode ``Spot.__sub__``.
+
+    Les formules de calcul des distances sont les suivantes:
+    \[ distance\_camera = \sqrt{(pxl\_spot1_x - pxl\_spot2_x)^2 - (pxl\_spot1_y - pxl\_spot2_y)^2} \]
+    \[ distance\_gnomonic = \sqrt{(gnom\_spot1_x - gnom\_spot2_x)^2 - (gnom\_spot1_y - gnom\_spot2_y)^2} \]
+    \[ distance\_cosine = \arccos{(\sin{(\chi_{1})} \sin{(\chi_{2})} \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} + \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} \cos{(\chi_{1})} \cos{(\chi_{2})} + \cos{(2 \theta_{1})} \cos{(2 \theta_{2})})} \]
 
     Parameters
     ----------
@@ -43,7 +48,7 @@ def distance(spot1, spot2, *, space="camera"):
     space : str
         * "camera" => Distance euclidienne (en pixel) dans le plan de la camera.
         * "gnomonic" => Distance euclidienne (en mm) dans le plan gnomonic.
-        * "angle" => Cosine distance (en degre) entre les vecteurs ``uq`` (axe de reflexion).
+        * "cosine" => Cosine distance (en degre) entre les vecteurs ``uq`` (axe de reflexion).
 
     Returns
     -------
@@ -93,7 +98,7 @@ def distance(spot1, spot2, *, space="camera"):
     if isinstance(spot2, tuple):
         assert len(spot2) == 2, f"Il ne doit y avoir que 2 coordonnees, pas {len(spot2)}."
         assert all(isinstance(c, numbers.Number) for c in spot2)
-    assert space in {"camera", "gnomonic", "angle"}, f"'space' can not be {repr(space)}."
+    assert space in {"camera", "gnomonic", "cosine"}, f"'space' can not be {repr(space)}."
 
     # Simplification du probleme.
     if isinstance(spot1, (Spot, tuple)) and isinstance(spot2, (Spot, tuple)):
@@ -118,8 +123,19 @@ def distance(spot1, spot2, *, space="camera"):
         numexpr = None
 
     # Cas ou l'on doit calculer une matrice de distances.
-    if space == "angle":
-        raise NotImplementedError
+    if space == "cosine":
+        from sympy import symbols, acos
+        from laue.utilities.lambdify import Lambdify
+        from laue import Transformer
+        tran = Transformer()
+        theta1, chi1 = symbols("theta_1 chi_1", real=True)
+        theta2, chi2 = symbols("theta_2 chi_2", real=True)
+        uq_1 = tran.get_expr_uf_to_uq(*tran.get_expr_thetachi_to_uf(theta1, chi1))
+        uq_2 = tran.get_expr_uf_to_uq(*tran.get_expr_thetachi_to_uf(theta2, chi2))
+        uq_1, uq_2 = uq_1.normalized(), uq_2.normalized()
+        dist_expr = acos(uq_1.dot(uq_2))
+        dist_func = Lambdify([theta1, chi1, theta2, chi2], dist_expr)
+        return dist_func
 
     if space == "camera":
         meth = lambda spot: spot.get_position() if isinstance(spot, Spot) else spot

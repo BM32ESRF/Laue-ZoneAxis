@@ -50,7 +50,6 @@ Si le module ``numexpr`` est installe, certaines optimisations pourront etre fai
 import numbers
 import time
 
-import cloudpickle
 import numpy as np
 import sympy
 
@@ -416,9 +415,9 @@ class Lambdify:
             return self.fct_numexpr(*args)
         return self.fct(*args)
 
-    def dumps(self):
+    def __getstate__(self):
         &#34;&#34;&#34;
-        ** Transforme cet objet en binaire. **
+        ** Extrait l&#39;information serialisable. **
 
         Examples
         --------
@@ -426,38 +425,31 @@ class Lambdify:
         &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
         &gt;&gt;&gt;
         &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-        &gt;&gt;&gt; type(l.dumps())
-        &lt;class &#39;bytes&#39;&gt;
+        &gt;&gt;&gt; l.__getstate__()
+        {&#39;args&#39;: [x, y], &#39;expr&#39;: x + y + cos(x + y)}
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return cloudpickle.dumps(
-            {
-                &#34;args&#34;: self.args,
-                &#34;expr&#34;: self.expr,
-            }
-        )
+        return {&#34;args&#34;: self.args,
+                &#34;expr&#34;: self.expr}
 
-    def loads(data):
+    def __setstate__(self, state):
         &#34;&#34;&#34;
-        ** Recre un objet a partir du binaire. **
+        ** Instancie l&#39;objet a partir de l&#39;etat. **
 
         Examples
         --------
+        &gt;&gt;&gt; import pickle
         &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
         &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
         &gt;&gt;&gt;
         &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-        &gt;&gt;&gt; data = l.dumps()
-        &gt;&gt;&gt; type(data)
-        &lt;class &#39;bytes&#39;&gt;
-        &gt;&gt;&gt; type(Lambdify.loads(data))
-        &lt;class &#39;laue.utilities.lambdify.Lambdify&#39;&gt;
-        &gt;&gt;&gt; Lambdify.loads(data)()
-        x + y + cos(x + y)
+        &gt;&gt;&gt; l
+        Lambdify([x, y], x + y + cos(x + y))
+        &gt;&gt;&gt; pickle.loads(pickle.dumps(l))
+        Lambdify([x, y], x + y + cos(x + y))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        attr = cloudpickle.loads(data)
-        return Lambdify(attr[&#34;args&#34;], attr[&#34;expr&#34;], _simplify=False)</code></pre>
+        self.__init__(state[&#34;args&#34;], state[&#34;expr&#34;], _simplify=False)</code></pre>
 </details>
 </section>
 <section>
@@ -657,9 +649,9 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
             return self.fct_numexpr(*args)
         return self.fct(*args)
 
-    def dumps(self):
+    def __getstate__(self):
         &#34;&#34;&#34;
-        ** Transforme cet objet en binaire. **
+        ** Extrait l&#39;information serialisable. **
 
         Examples
         --------
@@ -667,128 +659,32 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
         &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
         &gt;&gt;&gt;
         &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-        &gt;&gt;&gt; type(l.dumps())
-        &lt;class &#39;bytes&#39;&gt;
+        &gt;&gt;&gt; l.__getstate__()
+        {&#39;args&#39;: [x, y], &#39;expr&#39;: x + y + cos(x + y)}
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        return cloudpickle.dumps(
-            {
-                &#34;args&#34;: self.args,
-                &#34;expr&#34;: self.expr,
-            }
-        )
+        return {&#34;args&#34;: self.args,
+                &#34;expr&#34;: self.expr}
 
-    def loads(data):
+    def __setstate__(self, state):
         &#34;&#34;&#34;
-        ** Recre un objet a partir du binaire. **
+        ** Instancie l&#39;objet a partir de l&#39;etat. **
 
         Examples
         --------
+        &gt;&gt;&gt; import pickle
         &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
         &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
         &gt;&gt;&gt;
         &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-        &gt;&gt;&gt; data = l.dumps()
-        &gt;&gt;&gt; type(data)
-        &lt;class &#39;bytes&#39;&gt;
-        &gt;&gt;&gt; type(Lambdify.loads(data))
-        &lt;class &#39;laue.utilities.lambdify.Lambdify&#39;&gt;
-        &gt;&gt;&gt; Lambdify.loads(data)()
-        x + y + cos(x + y)
+        &gt;&gt;&gt; l
+        Lambdify([x, y], x + y + cos(x + y))
+        &gt;&gt;&gt; pickle.loads(pickle.dumps(l))
+        Lambdify([x, y], x + y + cos(x + y))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        attr = cloudpickle.loads(data)
-        return Lambdify(attr[&#34;args&#34;], attr[&#34;expr&#34;], _simplify=False)</code></pre>
+        self.__init__(state[&#34;args&#34;], state[&#34;expr&#34;], _simplify=False)</code></pre>
 </details>
-<h3>Methods</h3>
-<dl>
-<dt id="laue.utilities.lambdify.Lambdify.dumps"><code class="name flex">
-<span>def <span class="ident">dumps</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p><strong> Transforme cet objet en binaire. </strong></p>
-<h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
-&gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
-&gt;&gt;&gt;
-&gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-&gt;&gt;&gt; type(l.dumps())
-&lt;class 'bytes'&gt;
-&gt;&gt;&gt;
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def dumps(self):
-    &#34;&#34;&#34;
-    ** Transforme cet objet en binaire. **
-
-    Examples
-    --------
-    &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
-    &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
-    &gt;&gt;&gt;
-    &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-    &gt;&gt;&gt; type(l.dumps())
-    &lt;class &#39;bytes&#39;&gt;
-    &gt;&gt;&gt;
-    &#34;&#34;&#34;
-    return cloudpickle.dumps(
-        {
-            &#34;args&#34;: self.args,
-            &#34;expr&#34;: self.expr,
-        }
-    )</code></pre>
-</details>
-</dd>
-<dt id="laue.utilities.lambdify.Lambdify.loads"><code class="name flex">
-<span>def <span class="ident">loads</span></span>(<span>data)</span>
-</code></dt>
-<dd>
-<div class="desc"><p><strong> Recre un objet a partir du binaire. </strong></p>
-<h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
-&gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
-&gt;&gt;&gt;
-&gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-&gt;&gt;&gt; data = l.dumps()
-&gt;&gt;&gt; type(data)
-&lt;class 'bytes'&gt;
-&gt;&gt;&gt; type(Lambdify.loads(data))
-&lt;class 'laue.utilities.lambdify.Lambdify'&gt;
-&gt;&gt;&gt; Lambdify.loads(data)()
-x + y + cos(x + y)
-&gt;&gt;&gt;
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def loads(data):
-    &#34;&#34;&#34;
-    ** Recre un objet a partir du binaire. **
-
-    Examples
-    --------
-    &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
-    &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
-    &gt;&gt;&gt;
-    &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-    &gt;&gt;&gt; data = l.dumps()
-    &gt;&gt;&gt; type(data)
-    &lt;class &#39;bytes&#39;&gt;
-    &gt;&gt;&gt; type(Lambdify.loads(data))
-    &lt;class &#39;laue.utilities.lambdify.Lambdify&#39;&gt;
-    &gt;&gt;&gt; Lambdify.loads(data)()
-    x + y + cos(x + y)
-    &gt;&gt;&gt;
-    &#34;&#34;&#34;
-    attr = cloudpickle.loads(data)
-    return Lambdify(attr[&#34;args&#34;], attr[&#34;expr&#34;], _simplify=False)</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 </dl>
 </section>
@@ -816,10 +712,6 @@ x + y + cos(x + y)
 <ul>
 <li>
 <h4><code><a title="laue.utilities.lambdify.Lambdify" href="#laue.utilities.lambdify.Lambdify">Lambdify</a></code></h4>
-<ul class="">
-<li><code><a title="laue.utilities.lambdify.Lambdify.dumps" href="#laue.utilities.lambdify.Lambdify.dumps">dumps</a></code></li>
-<li><code><a title="laue.utilities.lambdify.Lambdify.loads" href="#laue.utilities.lambdify.Lambdify.loads">loads</a></code></li>
-</ul>
 </li>
 </ul>
 </li>

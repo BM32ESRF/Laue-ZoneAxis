@@ -54,12 +54,26 @@ from laue.utilities.serialization import SpotPickleable
 __pdoc__ = {&#34;Spot.__hash__&#34;: True,
             &#34;Spot.__sub__&#34;: True}
 
+&#34;&#34;&#34;
+&gt;&gt;&gt; from sympy import symbols, acos
+&gt;&gt;&gt; theta1, chi1 = symbols(&#34;theta_1 chi_1&#34;, real=True)
+&gt;&gt;&gt; theta2, chi2 = symbols(&#34;theta_2 chi_2&#34;, real=True)
+&gt;&gt;&gt; uf_1 = tran.get_expr_thetachi_to_uf(theta1, chi1)
+&gt;&gt;&gt; uf_2 = tran.get_expr_thetachi_to_uf(theta2, chi2)
+&gt;&gt;&gt; acos(uf_1.dot(uf_2))
+&#34;&#34;&#34;
 
 def distance(spot1, spot2, *, space=&#34;camera&#34;):
-    &#34;&#34;&#34;
+    r&#34;&#34;&#34;
     ** Calcul la distance entre plusieur spots. **
 
     C&#39;est une generalisation de la methode ``Spot.__sub__``.
+
+    Les formules de calcul des distances sont les suivantes:
+    \[ distance\_camera = \sqrt{(pxl\_spot1_x - pxl\_spot2_x)^2 - (pxl\_spot1_y - pxl\_spot2_y)^2} \]
+    \[ distance\_gnomonic = \sqrt{(gnom\_spot1_x - gnom\_spot2_x)^2 - (gnom\_spot1_y - gnom\_spot2_y} \]
+    \[ distance\_cosine = \arccos{(\sin{(\chi_{1})} \sin{(\chi_{2})} \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} + \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} \cos{(\chi_{1})} \cos{(\chi_{2})} + \cos{(2 \theta_{1})} \cos{(2 \theta_{2})})} \]
+
 
     Parameters
     ----------
@@ -696,6 +710,10 @@ class Spot(SpotPickleable):
 <dd>
 <div class="desc"><p><strong> Calcul la distance entre plusieur spots. </strong></p>
 <p>C'est une generalisation de la methode <code><a title="laue.spot.Spot.__sub__" href="#laue.spot.Spot.__sub__">Spot.__sub__()</a></code>.</p>
+<p>Les formules de calcul des distances sont les suivantes:
+<span><span class="MathJax_Preview"> distance\_camera = \sqrt{(pxl\_spot1_x - pxl\_spot2_x)^2 - (pxl\_spot1_y - pxl\_spot2_y)^2} </span><script type="math/tex; mode=display"> distance\_camera = \sqrt{(pxl\_spot1_x - pxl\_spot2_x)^2 - (pxl\_spot1_y - pxl\_spot2_y)^2} </script></span>
+<span><span class="MathJax_Preview"> distance\_gnomonic = \sqrt{(gnom\_spot1_x - gnom\_spot2_x)^2 - (gnom\_spot1_y - gnom\_spot2_y} </span><script type="math/tex; mode=display"> distance\_gnomonic = \sqrt{(gnom\_spot1_x - gnom\_spot2_x)^2 - (gnom\_spot1_y - gnom\_spot2_y} </script></span>
+<span><span class="MathJax_Preview"> distance\_cosine = \arccos{(\sin{(\chi_{1})} \sin{(\chi_{2})} \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} + \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} \cos{(\chi_{1})} \cos{(\chi_{2})} + \cos{(2 \theta_{1})} \cos{(2 \theta_{2})})} </span><script type="math/tex; mode=display"> distance\_cosine = \arccos{(\sin{(\chi_{1})} \sin{(\chi_{2})} \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} + \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} \cos{(\chi_{1})} \cos{(\chi_{2})} + \cos{(2 \theta_{1})} \cos{(2 \theta_{2})})} </script></span></p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>spot1</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="#laue.spot.Spot">Spot</a>, tuple, list, np.ndarray</code></dt>
@@ -758,10 +776,16 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def distance(spot1, spot2, *, space=&#34;camera&#34;):
-    &#34;&#34;&#34;
+    r&#34;&#34;&#34;
     ** Calcul la distance entre plusieur spots. **
 
     C&#39;est une generalisation de la methode ``Spot.__sub__``.
+
+    Les formules de calcul des distances sont les suivantes:
+    \[ distance\_camera = \sqrt{(pxl\_spot1_x - pxl\_spot2_x)^2 - (pxl\_spot1_y - pxl\_spot2_y)^2} \]
+    \[ distance\_gnomonic = \sqrt{(gnom\_spot1_x - gnom\_spot2_x)^2 - (gnom\_spot1_y - gnom\_spot2_y} \]
+    \[ distance\_cosine = \arccos{(\sin{(\chi_{1})} \sin{(\chi_{2})} \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} + \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} \cos{(\chi_{1})} \cos{(\chi_{2})} + \cos{(2 \theta_{1})} \cos{(2 \theta_{2})})} \]
+
 
     Parameters
     ----------

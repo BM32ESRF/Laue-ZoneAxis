@@ -41,8 +41,8 @@ import hashlib
 import inspect
 import numbers
 import os
+import pickle
 
-import cloudpickle
 import numpy as np
 import sympy
 
@@ -654,16 +654,14 @@ class Compilator(Equations):
         Deverse les expressions dans le dictionaire: ``globals()[&#34;compiled_expressions&#34;]``.
         &#34;&#34;&#34;
         dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.data&#34;)
+        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
         
         if os.path.exists(file):
             with open(file, &#34;rb&#34;) as f:
                 try:
-                    content = cloudpickle.load(f)
-                except ValueError: # Si c&#39;est pas le bon protocol
+                    content = pickle.load(f)
+                except (ValueError, EOFError): # Si c&#39;est pas le bon protocol
                     content = {&#34;hash&#34;: None}
-                else:
-                    content[&#34;expr&#34;] = {name: lambdify.Lambdify.loads(data) for name, data in content[&#34;expr&#34;].items()}
             if content[&#34;hash&#34;] == self._hash(): # Si les donnees sont a jour.
                 globals()[&#34;compiled_expressions&#34;] = {**globals()[&#34;compiled_expressions&#34;], **content[&#34;expr&#34;]}
         return globals()[&#34;compiled_expressions&#34;]
@@ -676,16 +674,14 @@ class Compilator(Equations):
         N&#39;ecrase pas l&#39;ancien contenu.
         &#34;&#34;&#34;
         dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.data&#34;)
+        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
         self.load() # Recuperation du contenu du fichier.
         content = {
             &#34;hash&#34;: self._hash(),
-            &#34;expr&#34;: {name: l.dumps()
-                for name, l in globals()[&#34;compiled_expressions&#34;].items()
-                }
+            &#34;expr&#34;: globals()[&#34;compiled_expressions&#34;]
             }
         with open(file, &#34;wb&#34;) as f:
-            cloudpickle.dump(content, f)</code></pre>
+            pickle.dump(content, f)</code></pre>
 </details>
 </section>
 <section>
@@ -956,16 +952,14 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         Deverse les expressions dans le dictionaire: ``globals()[&#34;compiled_expressions&#34;]``.
         &#34;&#34;&#34;
         dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.data&#34;)
+        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
         
         if os.path.exists(file):
             with open(file, &#34;rb&#34;) as f:
                 try:
-                    content = cloudpickle.load(f)
-                except ValueError: # Si c&#39;est pas le bon protocol
+                    content = pickle.load(f)
+                except (ValueError, EOFError): # Si c&#39;est pas le bon protocol
                     content = {&#34;hash&#34;: None}
-                else:
-                    content[&#34;expr&#34;] = {name: lambdify.Lambdify.loads(data) for name, data in content[&#34;expr&#34;].items()}
             if content[&#34;hash&#34;] == self._hash(): # Si les donnees sont a jour.
                 globals()[&#34;compiled_expressions&#34;] = {**globals()[&#34;compiled_expressions&#34;], **content[&#34;expr&#34;]}
         return globals()[&#34;compiled_expressions&#34;]
@@ -978,16 +972,14 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         N&#39;ecrase pas l&#39;ancien contenu.
         &#34;&#34;&#34;
         dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.data&#34;)
+        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
         self.load() # Recuperation du contenu du fichier.
         content = {
             &#34;hash&#34;: self._hash(),
-            &#34;expr&#34;: {name: l.dumps()
-                for name, l in globals()[&#34;compiled_expressions&#34;].items()
-                }
+            &#34;expr&#34;: globals()[&#34;compiled_expressions&#34;]
             }
         with open(file, &#34;wb&#34;) as f:
-            cloudpickle.dump(content, f)</code></pre>
+            pickle.dump(content, f)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1326,16 +1318,14 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
     Deverse les expressions dans le dictionaire: ``globals()[&#34;compiled_expressions&#34;]``.
     &#34;&#34;&#34;
     dirname = os.path.dirname(os.path.abspath(laue.__file__))
-    file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.data&#34;)
+    file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
     
     if os.path.exists(file):
         with open(file, &#34;rb&#34;) as f:
             try:
-                content = cloudpickle.load(f)
-            except ValueError: # Si c&#39;est pas le bon protocol
+                content = pickle.load(f)
+            except (ValueError, EOFError): # Si c&#39;est pas le bon protocol
                 content = {&#34;hash&#34;: None}
-            else:
-                content[&#34;expr&#34;] = {name: lambdify.Lambdify.loads(data) for name, data in content[&#34;expr&#34;].items()}
         if content[&#34;hash&#34;] == self._hash(): # Si les donnees sont a jour.
             globals()[&#34;compiled_expressions&#34;] = {**globals()[&#34;compiled_expressions&#34;], **content[&#34;expr&#34;]}
     return globals()[&#34;compiled_expressions&#34;]</code></pre>
@@ -1360,16 +1350,14 @@ N'ecrase pas l'ancien contenu.</p></div>
     N&#39;ecrase pas l&#39;ancien contenu.
     &#34;&#34;&#34;
     dirname = os.path.dirname(os.path.abspath(laue.__file__))
-    file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.data&#34;)
+    file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
     self.load() # Recuperation du contenu du fichier.
     content = {
         &#34;hash&#34;: self._hash(),
-        &#34;expr&#34;: {name: l.dumps()
-            for name, l in globals()[&#34;compiled_expressions&#34;].items()
-            }
+        &#34;expr&#34;: globals()[&#34;compiled_expressions&#34;]
         }
     with open(file, &#34;wb&#34;) as f:
-        cloudpickle.dump(content, f)</code></pre>
+        pickle.dump(content, f)</code></pre>
 </details>
 </dd>
 </dl>
