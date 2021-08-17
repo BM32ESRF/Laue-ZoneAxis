@@ -9,8 +9,8 @@ import hashlib
 import inspect
 import numbers
 import os
+import pickle
 
-import cloudpickle
 import numpy as np
 import sympy
 
@@ -622,16 +622,14 @@ class Compilator(Equations):
         Deverse les expressions dans le dictionaire: ``globals()["compiled_expressions"]``.
         """
         dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, "data", "geometry.data")
+        file = os.path.join(dirname, "data", "geometry.pickle")
         
         if os.path.exists(file):
             with open(file, "rb") as f:
                 try:
-                    content = cloudpickle.load(f)
-                except ValueError: # Si c'est pas le bon protocol
+                    content = pickle.load(f)
+                except (ValueError, EOFError): # Si c'est pas le bon protocol
                     content = {"hash": None}
-                else:
-                    content["expr"] = {name: lambdify.Lambdify.loads(data) for name, data in content["expr"].items()}
             if content["hash"] == self._hash(): # Si les donnees sont a jour.
                 globals()["compiled_expressions"] = {**globals()["compiled_expressions"], **content["expr"]}
         return globals()["compiled_expressions"]
@@ -644,13 +642,11 @@ class Compilator(Equations):
         N'ecrase pas l'ancien contenu.
         """
         dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, "data", "geometry.data")
+        file = os.path.join(dirname, "data", "geometry.pickle")
         self.load() # Recuperation du contenu du fichier.
         content = {
             "hash": self._hash(),
-            "expr": {name: l.dumps()
-                for name, l in globals()["compiled_expressions"].items()
-                }
+            "expr": globals()["compiled_expressions"]
             }
         with open(file, "wb") as f:
-            cloudpickle.dump(content, f)
+            pickle.dump(content, f)

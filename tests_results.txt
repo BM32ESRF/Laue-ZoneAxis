@@ -1,7 +1,10 @@
-DATE: Thu Aug 12 23:18:12 2021
-NCPU: 2
+DATE: Tue Aug 17 10:08:24 2021
+NCPU: 8
 ============ TEST GEOMETRY DTYPE =============
 cam_to_gnomonic:
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -11,10 +14,10 @@ cam_to_gnomonic:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 gnomonic_to_cam:
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -24,10 +27,10 @@ gnomonic_to_cam:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 cam_to_thetachi:
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -37,10 +40,10 @@ cam_to_thetachi:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 thetachi_to_cam:
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -50,10 +53,10 @@ thetachi_to_cam:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 thetachi_to_gnomonic:
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -63,10 +66,10 @@ thetachi_to_gnomonic:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 gnomonic_to_thetachi:
+	boucle 0: float32->float32
+	boucle 1: float32->float32
+	boucle 2: float32->float32
 	boucle 0: float16->float16
 	boucle 1: float16->float16
 	boucle 2: float16->float16
@@ -76,28 +79,25 @@ gnomonic_to_thetachi:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
-	boucle 0: float32->float32
-	boucle 1: float32->float32
-	boucle 2: float32->float32
 dist_line:
+	float32->float32
 	float16->float16
 	float128->float128
 	float64->float64
-	float32->float32
 hough:
+	float32->float32
 	float16->float16
 	float128->float128
 	float64->float64
-	float32->float32
 hough_reduce:
+	float32->float32
 	float16->float16
 	float64->float64
-	float32->float32
 inter_lines:
+	float32->float32
 	float16->float16
 	float128->float128
 	float64->float64
-	float32->float32
 =============== TEST BIJECTION ===============
 cam <=> uf: fail formel, ok numerical
 uf <=> uq: ok formel
@@ -206,42 +206,10 @@ hough(...).shape -> (2, 36)
 inter_lines(...).shape -> (2, 36)
 ============== TEST READ IMAGES ==============
 ============== TEST READ IMAGES ==============
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 images: 9.416 s
-/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 images: 14.225 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 images: 4.455 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 images: 5.081 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 images: 9.307 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 images: 9.706 s
-/home/robin/images/zbb1_roi1/*.mccd 1681 images: 835.984 s
-============= TEST FIND DIAGRAMS =============
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 diagrams: 13.561 s
-/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 diagrams: 14.718 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 diagrams: 6.339 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 diagrams: 7.050 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 diagrams: 12.212 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 diagrams: 12.659 s
-/home/robin/images/zbb1_roi1/*.mccd 1681 diagrams: 1008.496 s
-============== TEST CALIBRATION ==============
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 326.325 s
-/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 1013.456 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 2585.304 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 1274.017 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 1935.019 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 1099.252 s
-/home/robin/images/zbb1_roi1/*.mccd 1470.873 s
-=============== TEST ZONE AXES ===============
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 diagrams (126 axes): 29.745 s
-/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 diagrams (1037 axes): 58.152 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 diagrams (446 axes): 32.647 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 diagrams (635 axes): 37.018 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 diagrams (772 axes): 65.078 s
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 diagrams (1383 axes): 144.152 s
-/home/robin/images/zbb1_roi1/*.mccd 1681 diagrams (100432 axes): 3651.996 s
-=========== TEST GRAIN SEPARATION ============
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 diagrams: 60.482 s, 100.00% of results.
-/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 diagrams: 64.406 s, 91.30% of results.
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 diagrams: 32.463 s, 90.00% of results.
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 diagrams: 35.624 s, 100.00% of results.
-/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 diagrams: 52.022 s, 95.24% of results.
-/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 diagrams: 49.943 s, 90.48% of results.
-/home/robin/images/zbb1_roi1/*.mccd 1681 diagrams: 4642.323 s, 97.03% of results.
+/home/robin/documents/stages/esrf/data/32_02_765/Z70S/*.mccd 23 images: 2.549 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBB2/*.mccd 21 images: 2.397 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA1/*.mccd 10 images: 1.086 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA3/*.mccd 12 images: 1.239 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBA2/*.mccd 21 images: 2.205 s
+/home/robin/documents/stages/esrf/data/32_02_765/ZBB3/*.mccd 15 images: 1.554 s
+/home/robin/images/zbb1_roi1/*.mccd 

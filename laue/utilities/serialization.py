@@ -87,6 +87,7 @@ class ZoneAxisPickleable:
 
         Examples
         --------
+        >>> import pickle
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
@@ -134,7 +135,7 @@ class DiagramPickleable:
         >>> import pickle
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)
+        >>> diag = laue.Experiment(image)[0]
         >>> diag
         LaueDiagram(name='laue/examples/ge_blanc.mccd')
         >>> pickle.loads(pickle.dumps(diag))

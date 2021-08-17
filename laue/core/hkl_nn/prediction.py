@@ -62,9 +62,9 @@ class Predictor:
         self.model_directory = model_directory
         
         # File search.
-        (material_1,), classhkl_path = select(r"^classhkl_data_(?P<material>\w+)\.pickle$")
+        (material_1,), hkl_data_path = select(r"^hkl_data_(?P<material>\w+)\.pickle$")
         (material_2,), weights_path = select(r"^my_model_(?P<material>\w+)\.h5$")
-        _, angbin_path = select(r"^MOD_grain_classhkl_angbin.npz$")
+        _, angbin_path = select(r"^MOD_grain_hkl_data_angbin.npz$")
 
         if material_1 != material_2:
             raise ValueError("Il y a ambiguite. "
@@ -72,11 +72,11 @@ class Predictor:
         self.material = material_1
 
         # Load data.
-        with open(classhkl_path, "rb") as classhkl_file:
-            self.hkl_all_class = pickle.load(classhkl_file)[5]
+        with open(hkl_data_path, "rb") as hkl_data_file:
+            self.hkl_all_class = pickle.load(hkl_data_file)[5]
         self.wb = self._read_hdf5(weights_path)
         self.temp_key = list(self.wb.keys())
-        self.classhkl = np.load(angbin_path)["arr_0"]
+        self.hkl_data = np.load(angbin_path)["arr_0"]
         self.angbins = np.load(angbin_path)["arr_1"]
 
     def _read_hdf5(self, path):
@@ -147,6 +147,6 @@ class Predictor:
         prediction = self._predict(codebars)
         max_pred = np.max(prediction, axis=1)
         class_predicted = np.argmax(prediction, axis=1)
-        predicted_hkl = self.classhkl[class_predicted]
+        predicted_hkl = self.hkl_data[class_predicted]
         ## return predicted HKL and their softmax confidence
         return predicted_hkl, max_pred

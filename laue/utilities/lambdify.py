@@ -15,7 +15,6 @@ Si le module ``numexpr`` est installe, certaines optimisations pourront etre fai
 import numbers
 import time
 
-import cloudpickle
 import numpy as np
 import sympy
 
@@ -392,37 +391,27 @@ class Lambdify:
         >>>
         >>> l = Lambdify([x, y], cos(x + y) + x + y)
         >>> l.__getstate__()
+        {'args': [x, y], 'expr': x + y + cos(x + y)}
         >>>
         """
-        return {
-                "args": self.args,
-                "expr": self.expr,
-            }
-        # return cloudpickle.dumps(
-        #     {
-        #         "args": self.args,
-        #         "expr": self.expr,
-        #     }
-        # )
+        return {"args": self.args,
+                "expr": self.expr}
 
-    def loads(data):
+    def __setstate__(self, state):
         """
-        ** Recre un objet a partir du binaire. **
+        ** Instancie l'objet a partir de l'etat. **
 
         Examples
         --------
+        >>> import pickle
         >>> from sympy.abc import x, y; from sympy import cos
         >>> from laue.utilities.lambdify import Lambdify
         >>>
         >>> l = Lambdify([x, y], cos(x + y) + x + y)
-        >>> data = l.dumps()
-        >>> type(data)
-        <class 'bytes'>
-        >>> type(Lambdify.loads(data))
-        <class 'laue.utilities.lambdify.Lambdify'>
-        >>> Lambdify.loads(data)()
-        x + y + cos(x + y)
+        >>> l
+        Lambdify([x, y], x + y + cos(x + y))
+        >>> pickle.loads(pickle.dumps(l))
+        Lambdify([x, y], x + y + cos(x + y))
         >>>
         """
-        attr = cloudpickle.loads(data)
-        return Lambdify(attr["args"], attr["expr"], _simplify=False)
+        self.__init__(state["args"], state["expr"], _simplify=False)
