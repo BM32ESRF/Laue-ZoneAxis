@@ -31,19 +31,6 @@ class SpotPickleable:
         ** Extrait le contenu d'un spot. **
 
         Enregistre l'etat courant, ne fait pas de zele.
-
-        Examples
-        --------
-        >>> import laue
-        >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image)[0][0]
-        >>> spot.__getstate__()
-        {'bbox': (1368, 1873, 6, 5), 'spot_im': array([[  8,  10,  16,  16,   8,   5],
-               [ 11,  17,  67,  76,  13,   9],
-               [  7,  19, 184, 229,  14,   6],
-               [  9,   6,  12,  19,   8,   4],
-               [  5,   3,   3,   9,  14,   7]], dtype=uint16), 'dis': 0.8471580534997302, 'id': 0}
-        >>>
         """
         state = {}
         state["bbox"] = self.get_bbox()
@@ -57,6 +44,18 @@ class SpotPickleable:
     def __setstate__(self, state):
         """
         ** Initialisateur pour pickle. **
+
+        Examples
+        --------
+        >>> import pickle
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> spot = laue.Experiment(image)[0][0]
+        >>> spot
+        Spot(position=(1370.52, 1874.78), quality=0.573)
+        >>> pickle.loads(pickle.dumps(spot))
+        Spot(position=(1370.52, 1874.78), quality=0.573)
+        >>>
         """
         self.__init__(
             bbox=state["bbox"],
@@ -85,6 +84,18 @@ class ZoneAxisPickleable:
     def __setstate__(self, state):
         """
         ** Initialisateur pour pickle. **
+
+        Examples
+        --------
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
+        >>> axis
+        ZoneAxis(spots_ind=(9, 31, 44, 46, 55, 60, 66), identifier=4, phi=-2.6836, mu=0.1541)
+        >>> pickle.loads(pickle.dumps(axis))
+        ZoneAxis(spots_ind=(9, 31, 44, 46, 55, 60, 66), identifier=4, phi=-2.6836, mu=0.1541)
+        >>>
         """
         self.diagram = None
         self.spots = collections.OrderedDict(
@@ -117,6 +128,18 @@ class DiagramPickleable:
     def __setstate__(self, state):
         """
         ** Initialisateur pour pickle. **
+
+        Examples
+        --------
+        >>> import pickle
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> diag = laue.Experiment(image)
+        >>> diag
+        LaueDiagram(name='laue/examples/ge_blanc.mccd')
+        >>> pickle.loads(pickle.dumps(diag))
+        LaueDiagram(name='laue/examples/ge_blanc.mccd')
+        >>>
         """
         from laue.spot import Spot as Spot_
         from laue.zone_axis import ZoneAxis as ZoneAxis_

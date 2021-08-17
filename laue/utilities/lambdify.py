@@ -381,9 +381,9 @@ class Lambdify:
             return self.fct_numexpr(*args)
         return self.fct(*args)
 
-    def dumps(self):
+    def __getstate__(self):
         """
-        ** Transforme cet objet en binaire. **
+        ** Extrait l'information serialisable. **
 
         Examples
         --------
@@ -391,16 +391,19 @@ class Lambdify:
         >>> from laue.utilities.lambdify import Lambdify
         >>>
         >>> l = Lambdify([x, y], cos(x + y) + x + y)
-        >>> type(l.dumps())
-        <class 'bytes'>
+        >>> l.__getstate__()
         >>>
         """
-        return cloudpickle.dumps(
-            {
+        return {
                 "args": self.args,
                 "expr": self.expr,
             }
-        )
+        # return cloudpickle.dumps(
+        #     {
+        #         "args": self.args,
+        #         "expr": self.expr,
+        #     }
+        # )
 
     def loads(data):
         """
