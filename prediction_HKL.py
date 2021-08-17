@@ -164,4 +164,58 @@ class predictionHKL:
         max_ind = np.argmax(mr)
 
         return rot_mat[max_ind], mr[max_ind]
-    
+
+    def generate_orientation(self, s_tth, s_chi, predicted_hkl, spot1_ind, spot2_ind, emax=23):
+
+        spots_in_center = np.arange(0,len(s_tth))
+
+        dist = GT.calculdist_from_thetachi(np.array([s_tth[spots_in_center]/2., s_chi[spots_in_center]]).T,
+                np.array([s_tth[spots_in_center]/2., s_chi[spots_in_center]]).T)
+
+        dist_ = dist[spot1_ind, spot2_ind]
+
+        lattice_params = dictLT.dict_Materials[self.material_][1]
+        B = CP.calc_B_RR(lattice_params)
+
+        Gstar_metric = CP.Gstar_from_directlatticeparams(lattice_params[0],lattice_params[1],\
+                                                         lattice_params[2],lattice_params[3],\
+                                                             lattice_params[4],lattice_params[5])
+
+        ## list of equivalent HKL
+        hkl1_list = self.hkl_all_class[str(predicted_hkl[spot1_ind])]
+        hkl2_list = self.hkl_all_class[str(predicted_hkl[spot2_ind])]
+        tth_chi_spot1 = np.array([s_tth[spots_in_center[spot1_ind]], s_chi[spots_in_center[spot1_ind]]])
+        tth_chi_spot2 = np.array([s_tth[spots_in_center[spot2_ind]], s_chi[spots_in_center[spot2_ind]]])
+        ## generate LUT to remove possibilities of HKL
+        hkl_all = np.vstack((hkl1_list, hkl2_list))
+        LUT = FindO.GenerateLookUpTable(hkl_all, Gstar_metric)
+        hkls = FindO.PlanePairs_2(dist_, 0.5, LUT, onlyclosest=1)
+
+        if np.all(hkls == None):
+            print("Nothing found")
+            return np.zeros((3,3)), 0.0
+
+        rot_mat = []
+        mr = []
+        for ii in range(len(hkls)):
+        # ii = 0
+            rot_mat1 = FindO.OrientMatrix_from_2hkl(hkls[ii][0], tth_chi_spot1, \
+                                                    hkls[ii][1], tth_chi_spot2,
+                                                    B)
+
+            AngRes = Angular_residues_np(rot_mat1, s_tth, s_chi,
+                                                key_material=self.material_,
+                                                emax=emax,
+                                                ResolutionAngstrom=False,
+                                                ang_tol=0.5,
+                                                detectorparameters=self.dict_dp,
+                                                dictmaterials=dictLT.dict_Materials)
+
+            (allres, , nbclose, nballres, , _) = AngRes
+            match_rate = nbclose/nballres
+            rot_mat.append(rot_mat1)
+            mr.append(match_rate)
+
+        max_ind = np.argmax(mr)
+
+        return rot_mat[max_ind], mr[max_ind]

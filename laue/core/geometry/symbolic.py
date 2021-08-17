@@ -410,6 +410,7 @@ class Compilator(Equations):
             "thetachi_to_cam",
             "thetachi_to_gnomonic",
             "gnomonic_to_thetachi",
+            "cosine_dist",
             "dist_line",
             "hough",
             "inter_line"]
@@ -456,7 +457,29 @@ class Compilator(Equations):
 
     def get_fct_cosine_dist(self):
         """
-        ** Equation de la cosine distance des vecteur uq. **
+        ** Equation de la cosine distance des vecteurs uq. **
+
+        def calculdist_from_thetachi(listpoints1, listpoints2):
+            data1 = np.array(listpoints1)
+            data2 = np.array(listpoints2)
+            # print "data1",data1
+            # print "data2",data2
+            longdata1 = data1[:, 0] * DEG  # theta
+            latdata1 = data1[:, 1] * DEG  # chi
+
+            longdata2 = data2[:, 0] * DEG  # theta
+            latdata2 = data2[:, 1] * DEG  # chi
+
+            deltalat = latdata1 - np.reshape(latdata2, (len(latdata2), 1))
+            longdata2new = np.reshape(longdata2, (len(longdata2), 1))
+            prodcos = np.cos(longdata1) * np.cos(longdata2new)
+            prodsin = np.sin(longdata1) * np.sin(longdata2new)
+
+            arccos_arg = np.around(prodsin + prodcos * np.cos(deltalat), decimals=9)
+
+            tab_angulardist = (1.0 / DEG) * np.arccos(arccos_arg)
+
+            return tab_angulardist
         """
         if "fct_cosine_dist" in globals()["compiled_expressions"]:
             return globals["compiled_expressions"]["fct_cosine_dist"]
