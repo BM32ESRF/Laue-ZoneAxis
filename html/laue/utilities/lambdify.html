@@ -60,7 +60,10 @@ __pdoc__ = {&#34;cse_minimize_memory&#34;: False,
             &#34;cse_homogeneous&#34;: False,
             &#34;evalf&#34;: False,
             &#34;simplify&#34;: False,
-            &#34;subs&#34;: False}
+            &#34;subs&#34;: False,
+            &#34;Lambdify.__getstate__&#34;: True,
+            &#34;Lambdify.__setstate__&#34;: True,
+            &#34;Lambdify.__call__&#34;: True}
 
 
 def cse_minimize_memory(r, e):
@@ -685,6 +688,204 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
         &#34;&#34;&#34;
         self.__init__(state[&#34;args&#34;], state[&#34;expr&#34;], _simplify=False)</code></pre>
 </details>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.utilities.lambdify.Lambdify.__call__"><code class="name flex">
+<span>def <span class="ident">__call__</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Evalue la fonction. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>*args</code></strong></dt>
+<dd>Les parametres ordonnes de la fonction.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Les parametres nomes de la fonction. Ils
+ont le dessus sur les args en cas d'ambiguite.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="python-repl">&gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+&gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
+&gt;&gt;&gt; l = Lambdify([x, y], x + y + cos(x + y))
+</code></pre>
+<p>Les cas symboliques.</p>
+<pre><code class="python-repl">&gt;&gt;&gt; l() # Retourne l'expression sympy.
+x + y + cos(x + y)
+&gt;&gt;&gt; l(x) # Complete la suite en rajoutant 'y'.
+x + y + cos(x + y)
+&gt;&gt;&gt; l(y) # Complete aussi en rajoutant 'y'.
+2*y + cos(2*y)
+&gt;&gt;&gt; l(x, y) # Retourne une copie de l'expression sympy.
+x + y + cos(x + y)
+&gt;&gt;&gt; l(1, y=2*y) # Il est possible de faire un melange symbolique / numerique.
+2*y + cos(2*y + 1) + 1
+&gt;&gt;&gt;
+</code></pre>
+<p>Les cas purement numeriques.</p>
+<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; l(-1, 1)
+1.0
+&gt;&gt;&gt; l(x=-1, y=1)
+1.0
+&gt;&gt;&gt; np.round(l(0, np.linspace(-1, 1, 5)), 2)
+array([-0.46,  0.38,  1.  ,  1.38,  1.54])
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __call__(self, *args, **kwargs):
+    &#34;&#34;&#34;
+    ** Evalue la fonction. **
+
+    Parameters
+    ----------
+    *args
+        Les parametres ordonnes de la fonction.
+    **kwargs
+        Les parametres nomes de la fonction. Ils
+        ont le dessus sur les args en cas d&#39;ambiguite.
+
+    Examples
+    --------
+    &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+    &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
+    &gt;&gt;&gt; l = Lambdify([x, y], x + y + cos(x + y))
+
+    Les cas symboliques.
+    &gt;&gt;&gt; l() # Retourne l&#39;expression sympy.
+    x + y + cos(x + y)
+    &gt;&gt;&gt; l(x) # Complete la suite en rajoutant &#39;y&#39;.
+    x + y + cos(x + y)
+    &gt;&gt;&gt; l(y) # Complete aussi en rajoutant &#39;y&#39;.
+    2*y + cos(2*y)
+    &gt;&gt;&gt; l(x, y) # Retourne une copie de l&#39;expression sympy.
+    x + y + cos(x + y)
+    &gt;&gt;&gt; l(1, y=2*y) # Il est possible de faire un melange symbolique / numerique.
+    2*y + cos(2*y + 1) + 1
+    &gt;&gt;&gt;
+
+    Les cas purement numeriques.
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; l(-1, 1)
+    1.0
+    &gt;&gt;&gt; l(x=-1, y=1)
+    1.0
+    &gt;&gt;&gt; np.round(l(0, np.linspace(-1, 1, 5)), 2)
+    array([-0.46,  0.38,  1.  ,  1.38,  1.54])
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    # Cas patologiques.
+    if not args and not kwargs:
+        return self.expr
+    if len(args) &gt; len(self.args):
+        raise IndexError(f&#34;La fonction ne prend que {len(self.args)} arguments. &#34;
+            f&#34;Or vous en avez fournis {len(args)}.&#34;)
+    
+    # Recuperation des arguments complets.
+    args = list(args)
+    args += self.args[len(args):]
+    if kwargs:
+        if set(kwargs) - set(self.args_position):
+            raise NameError(f&#34;Les parametres {set(kwargs) - set(self.args_position)} &#34;
+                f&#34;ne sont pas admissible, seul {set(self.args_position)} sont admissibles.&#34;)
+        for arg, value in kwargs.items():
+            args[self.args_position[arg]] = value
+
+    # Cas symbolique.
+    if any(isinstance(a, sympy.Basic) for a in args):
+        sub = {arg: value for arg, value in zip(self.args, args)}
+        return subs(self.expr, sub)
+
+    # Cas numerique.
+    if (
+            (self.fct_numexpr is not None)
+            and (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) &gt;= 157741)
+            and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
+        ):
+        return self.fct_numexpr(*args)
+    return self.fct(*args)</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.lambdify.Lambdify.__getstate__"><code class="name flex">
+<span>def <span class="ident">__getstate__</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Extrait l'information serialisable. </strong></p>
+<h2 id="examples">Examples</h2>
+<pre><code class="python-repl">&gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+&gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
+&gt;&gt;&gt;
+&gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+&gt;&gt;&gt; l.__getstate__()
+{'args': [x, y], 'expr': x + y + cos(x + y)}
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __getstate__(self):
+    &#34;&#34;&#34;
+    ** Extrait l&#39;information serialisable. **
+
+    Examples
+    --------
+    &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+    &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+    &gt;&gt;&gt; l.__getstate__()
+    {&#39;args&#39;: [x, y], &#39;expr&#39;: x + y + cos(x + y)}
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    return {&#34;args&#34;: self.args,
+            &#34;expr&#34;: self.expr}</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.lambdify.Lambdify.__setstate__"><code class="name flex">
+<span>def <span class="ident">__setstate__</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Instancie l'objet a partir de l'etat. </strong></p>
+<h2 id="examples">Examples</h2>
+<pre><code class="python-repl">&gt;&gt;&gt; import pickle
+&gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+&gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
+&gt;&gt;&gt;
+&gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+&gt;&gt;&gt; l
+Lambdify([x, y], x + y + cos(x + y))
+&gt;&gt;&gt; pickle.loads(pickle.dumps(l))
+Lambdify([x, y], x + y + cos(x + y))
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __setstate__(self, state):
+    &#34;&#34;&#34;
+    ** Instancie l&#39;objet a partir de l&#39;etat. **
+
+    Examples
+    --------
+    &gt;&gt;&gt; import pickle
+    &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
+    &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
+    &gt;&gt;&gt; l
+    Lambdify([x, y], x + y + cos(x + y))
+    &gt;&gt;&gt; pickle.loads(pickle.dumps(l))
+    Lambdify([x, y], x + y + cos(x + y))
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    self.__init__(state[&#34;args&#34;], state[&#34;expr&#34;], _simplify=False)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -712,6 +913,11 @@ le temps de calcul plutot que l'elegence de l'expression.</p></div>
 <ul>
 <li>
 <h4><code><a title="laue.utilities.lambdify.Lambdify" href="#laue.utilities.lambdify.Lambdify">Lambdify</a></code></h4>
+<ul class="">
+<li><code><a title="laue.utilities.lambdify.Lambdify.__call__" href="#laue.utilities.lambdify.Lambdify.__call__">__call__</a></code></li>
+<li><code><a title="laue.utilities.lambdify.Lambdify.__getstate__" href="#laue.utilities.lambdify.Lambdify.__getstate__">__getstate__</a></code></li>
+<li><code><a title="laue.utilities.lambdify.Lambdify.__setstate__" href="#laue.utilities.lambdify.Lambdify.__setstate__">__setstate__</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

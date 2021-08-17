@@ -442,6 +442,8 @@ class Compilator(Equations):
             &#34;thetachi_to_cam&#34;,
             &#34;thetachi_to_gnomonic&#34;,
             &#34;gnomonic_to_thetachi&#34;,
+            &#34;dist_cosine&#34;,
+            &#34;dist_euclidian&#34;,
             &#34;dist_line&#34;,
             &#34;hough&#34;,
             &#34;inter_line&#34;]
@@ -485,6 +487,61 @@ class Compilator(Equations):
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
+
+    def get_fct_dist_cosine(self):
+        &#34;&#34;&#34;
+        ** Equation de la cosine distance des vecteurs uq. **
+
+        theta et chi sont exprimes en degres
+
+        def calculdist_from_thetachi(listpoints1, listpoints2):
+            data1 = np.array(listpoints1)
+            data2 = np.array(listpoints2)
+            # print &#34;data1&#34;,data1
+            # print &#34;data2&#34;,data2
+            longdata1 = data1[:, 0] * DEG  # theta
+            latdata1 = data1[:, 1] * DEG  # chi
+
+            longdata2 = data2[:, 0] * DEG  # theta
+            latdata2 = data2[:, 1] * DEG  # chi
+
+            deltalat = latdata1 - np.reshape(latdata2, (len(latdata2), 1))
+            longdata2new = np.reshape(longdata2, (len(longdata2), 1))
+            prodcos = np.cos(longdata1) * np.cos(longdata2new)
+            prodsin = np.sin(longdata1) * np.sin(longdata2new)
+
+            arccos_arg = np.around(prodsin + prodcos * np.cos(deltalat), decimals=9)
+
+            tab_angulardist = (1.0 / DEG) * np.arccos(arccos_arg)
+
+            return tab_angulardist
+        &#34;&#34;&#34;
+        if &#34;fct_dist_cosine&#34; in globals()[&#34;compiled_expressions&#34;]:
+            return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]
+
+        theta1, chi1 = sympy.symbols(&#34;theta_1 chi_1&#34;, real=True)
+        theta2, chi2 = sympy.symbols(&#34;theta_2 chi_2&#34;, real=True)
+        uq_1 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta1*np.pi/180, chi1*np.pi/180))
+        uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta2*np.pi/180, chi2*np.pi/180))
+        dist_expr = sympy.acos(uq_1.dot(uq_2)/(uq_1.norm()*uq_2.norm()))*180/np.pi # Cosine distance.
+
+        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;] = lambdify.Lambdify(
+            [theta1, chi1, theta2, chi2], dist_expr)
+        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]
+
+    def get_fct_dist_euclidian(self):
+        &#34;&#34;&#34;
+        ** Simple norme euclidiene en 2d. **
+        &#34;&#34;&#34;
+        if &#34;fct_dist_euclidian&#34; in globals()[&#34;compiled_expressions&#34;]:
+            return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]
+
+        x, y = sympy.symbols(&#34;x y&#34;, real=True)
+        dist_expr = sympy.sqrt(x**2 + y**2)
+
+        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;] = lambdify.Lambdify(
+            [x, y], dist_expr)
+        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]
 
     def get_fct_dist_line(self):
         &#34;&#34;&#34;
@@ -740,6 +797,8 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
             &#34;thetachi_to_cam&#34;,
             &#34;thetachi_to_gnomonic&#34;,
             &#34;gnomonic_to_thetachi&#34;,
+            &#34;dist_cosine&#34;,
+            &#34;dist_euclidian&#34;,
             &#34;dist_line&#34;,
             &#34;hough&#34;,
             &#34;inter_line&#34;]
@@ -783,6 +842,61 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
         return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
+
+    def get_fct_dist_cosine(self):
+        &#34;&#34;&#34;
+        ** Equation de la cosine distance des vecteurs uq. **
+
+        theta et chi sont exprimes en degres
+
+        def calculdist_from_thetachi(listpoints1, listpoints2):
+            data1 = np.array(listpoints1)
+            data2 = np.array(listpoints2)
+            # print &#34;data1&#34;,data1
+            # print &#34;data2&#34;,data2
+            longdata1 = data1[:, 0] * DEG  # theta
+            latdata1 = data1[:, 1] * DEG  # chi
+
+            longdata2 = data2[:, 0] * DEG  # theta
+            latdata2 = data2[:, 1] * DEG  # chi
+
+            deltalat = latdata1 - np.reshape(latdata2, (len(latdata2), 1))
+            longdata2new = np.reshape(longdata2, (len(longdata2), 1))
+            prodcos = np.cos(longdata1) * np.cos(longdata2new)
+            prodsin = np.sin(longdata1) * np.sin(longdata2new)
+
+            arccos_arg = np.around(prodsin + prodcos * np.cos(deltalat), decimals=9)
+
+            tab_angulardist = (1.0 / DEG) * np.arccos(arccos_arg)
+
+            return tab_angulardist
+        &#34;&#34;&#34;
+        if &#34;fct_dist_cosine&#34; in globals()[&#34;compiled_expressions&#34;]:
+            return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]
+
+        theta1, chi1 = sympy.symbols(&#34;theta_1 chi_1&#34;, real=True)
+        theta2, chi2 = sympy.symbols(&#34;theta_2 chi_2&#34;, real=True)
+        uq_1 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta1*np.pi/180, chi1*np.pi/180))
+        uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta2*np.pi/180, chi2*np.pi/180))
+        dist_expr = sympy.acos(uq_1.dot(uq_2)/(uq_1.norm()*uq_2.norm()))*180/np.pi # Cosine distance.
+
+        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;] = lambdify.Lambdify(
+            [theta1, chi1, theta2, chi2], dist_expr)
+        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]
+
+    def get_fct_dist_euclidian(self):
+        &#34;&#34;&#34;
+        ** Simple norme euclidiene en 2d. **
+        &#34;&#34;&#34;
+        if &#34;fct_dist_euclidian&#34; in globals()[&#34;compiled_expressions&#34;]:
+            return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]
+
+        x, y = sympy.symbols(&#34;x y&#34;, real=True)
+        dist_expr = sympy.sqrt(x**2 + y**2)
+
+        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;] = lambdify.Lambdify(
+            [x, y], dist_expr)
+        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]
 
     def get_fct_dist_line(self):
         &#34;&#34;&#34;
@@ -1011,6 +1125,8 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         &#34;thetachi_to_cam&#34;,
         &#34;thetachi_to_gnomonic&#34;,
         &#34;gnomonic_to_thetachi&#34;,
+        &#34;dist_cosine&#34;,
+        &#34;dist_euclidian&#34;,
         &#34;dist_line&#34;,
         &#34;hough&#34;,
         &#34;inter_line&#34;]
@@ -1075,6 +1191,105 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
         expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
     return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]</code></pre>
+</details>
+</dd>
+<dt id="laue.core.geometry.symbolic.Compilator.get_fct_dist_cosine"><code class="name flex">
+<span>def <span class="ident">get_fct_dist_cosine</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Equation de la cosine distance des vecteurs uq. </strong></p>
+<p>theta et chi sont exprimes en degres</p>
+<p>def calculdist_from_thetachi(listpoints1, listpoints2):
+data1 = np.array(listpoints1)
+data2 = np.array(listpoints2)
+# print "data1",data1
+# print "data2",data2
+longdata1 = data1[:, 0] * DEG
+# theta
+latdata1 = data1[:, 1] * DEG
+# chi</p>
+<pre><code>longdata2 = data2[:, 0] * DEG  # theta
+latdata2 = data2[:, 1] * DEG  # chi
+
+deltalat = latdata1 - np.reshape(latdata2, (len(latdata2), 1))
+longdata2new = np.reshape(longdata2, (len(longdata2), 1))
+prodcos = np.cos(longdata1) * np.cos(longdata2new)
+prodsin = np.sin(longdata1) * np.sin(longdata2new)
+
+arccos_arg = np.around(prodsin + prodcos * np.cos(deltalat), decimals=9)
+
+tab_angulardist = (1.0 / DEG) * np.arccos(arccos_arg)
+
+return tab_angulardist
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_fct_dist_cosine(self):
+    &#34;&#34;&#34;
+    ** Equation de la cosine distance des vecteurs uq. **
+
+    theta et chi sont exprimes en degres
+
+    def calculdist_from_thetachi(listpoints1, listpoints2):
+        data1 = np.array(listpoints1)
+        data2 = np.array(listpoints2)
+        # print &#34;data1&#34;,data1
+        # print &#34;data2&#34;,data2
+        longdata1 = data1[:, 0] * DEG  # theta
+        latdata1 = data1[:, 1] * DEG  # chi
+
+        longdata2 = data2[:, 0] * DEG  # theta
+        latdata2 = data2[:, 1] * DEG  # chi
+
+        deltalat = latdata1 - np.reshape(latdata2, (len(latdata2), 1))
+        longdata2new = np.reshape(longdata2, (len(longdata2), 1))
+        prodcos = np.cos(longdata1) * np.cos(longdata2new)
+        prodsin = np.sin(longdata1) * np.sin(longdata2new)
+
+        arccos_arg = np.around(prodsin + prodcos * np.cos(deltalat), decimals=9)
+
+        tab_angulardist = (1.0 / DEG) * np.arccos(arccos_arg)
+
+        return tab_angulardist
+    &#34;&#34;&#34;
+    if &#34;fct_dist_cosine&#34; in globals()[&#34;compiled_expressions&#34;]:
+        return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]
+
+    theta1, chi1 = sympy.symbols(&#34;theta_1 chi_1&#34;, real=True)
+    theta2, chi2 = sympy.symbols(&#34;theta_2 chi_2&#34;, real=True)
+    uq_1 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta1*np.pi/180, chi1*np.pi/180))
+    uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta2*np.pi/180, chi2*np.pi/180))
+    dist_expr = sympy.acos(uq_1.dot(uq_2)/(uq_1.norm()*uq_2.norm()))*180/np.pi # Cosine distance.
+
+    globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;] = lambdify.Lambdify(
+        [theta1, chi1, theta2, chi2], dist_expr)
+    return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]</code></pre>
+</details>
+</dd>
+<dt id="laue.core.geometry.symbolic.Compilator.get_fct_dist_euclidian"><code class="name flex">
+<span>def <span class="ident">get_fct_dist_euclidian</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Simple norme euclidiene en 2d. </strong></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_fct_dist_euclidian(self):
+    &#34;&#34;&#34;
+    ** Simple norme euclidiene en 2d. **
+    &#34;&#34;&#34;
+    if &#34;fct_dist_euclidian&#34; in globals()[&#34;compiled_expressions&#34;]:
+        return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]
+
+    x, y = sympy.symbols(&#34;x y&#34;, real=True)
+    dist_expr = sympy.sqrt(x**2 + y**2)
+
+    globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;] = lambdify.Lambdify(
+        [x, y], dist_expr)
+    return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_dist_line"><code class="name flex">
@@ -2384,6 +2599,8 @@ Matrix([
 <li><code><a title="laue.core.geometry.symbolic.Compilator.compile" href="#laue.core.geometry.symbolic.Compilator.compile">compile</a></code></li>
 <li><code><a title="laue.core.geometry.symbolic.Compilator.get_fct_cam_to_gnomonic" href="#laue.core.geometry.symbolic.Compilator.get_fct_cam_to_gnomonic">get_fct_cam_to_gnomonic</a></code></li>
 <li><code><a title="laue.core.geometry.symbolic.Compilator.get_fct_cam_to_thetachi" href="#laue.core.geometry.symbolic.Compilator.get_fct_cam_to_thetachi">get_fct_cam_to_thetachi</a></code></li>
+<li><code><a title="laue.core.geometry.symbolic.Compilator.get_fct_dist_cosine" href="#laue.core.geometry.symbolic.Compilator.get_fct_dist_cosine">get_fct_dist_cosine</a></code></li>
+<li><code><a title="laue.core.geometry.symbolic.Compilator.get_fct_dist_euclidian" href="#laue.core.geometry.symbolic.Compilator.get_fct_dist_euclidian">get_fct_dist_euclidian</a></code></li>
 <li><code><a title="laue.core.geometry.symbolic.Compilator.get_fct_dist_line" href="#laue.core.geometry.symbolic.Compilator.get_fct_dist_line">get_fct_dist_line</a></code></li>
 <li><code><a title="laue.core.geometry.symbolic.Compilator.get_fct_gnomonic_to_cam" href="#laue.core.geometry.symbolic.Compilator.get_fct_gnomonic_to_cam">get_fct_gnomonic_to_cam</a></code></li>
 <li><code><a title="laue.core.geometry.symbolic.Compilator.get_fct_gnomonic_to_thetachi" href="#laue.core.geometry.symbolic.Compilator.get_fct_gnomonic_to_thetachi">get_fct_gnomonic_to_thetachi</a></code></li>

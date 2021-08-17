@@ -381,7 +381,7 @@ class Equations:
 class Compilator(Equations):
     """
     Extrait et enregistre les equations brutes.
-    Combine les blocs elementaire afin
+    Combine les blocs elementaires.
 
     Notes
     -----
@@ -410,7 +410,8 @@ class Compilator(Equations):
             "thetachi_to_cam",
             "thetachi_to_gnomonic",
             "gnomonic_to_thetachi",
-            "cosine_dist",
+            "dist_cosine",
+            "dist_euclidian",
             "dist_line",
             "hough",
             "inter_line"]
@@ -455,9 +456,11 @@ class Compilator(Equations):
             expr=[theta_deg, chi_deg]) # On l'enregistre une bonne fois pour toutes.
         return globals()["compiled_expressions"]["fct_cam_to_thetachi"]
 
-    def get_fct_cosine_dist(self):
+    def get_fct_dist_cosine(self):
         """
         ** Equation de la cosine distance des vecteurs uq. **
+
+        theta et chi sont exprimes en degres
 
         def calculdist_from_thetachi(listpoints1, listpoints2):
             data1 = np.array(listpoints1)
@@ -481,18 +484,32 @@ class Compilator(Equations):
 
             return tab_angulardist
         """
-        if "fct_cosine_dist" in globals()["compiled_expressions"]:
-            return globals["compiled_expressions"]["fct_cosine_dist"]
+        if "fct_dist_cosine" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_dist_cosine"]
 
         theta1, chi1 = sympy.symbols("theta_1 chi_1", real=True)
         theta2, chi2 = sympy.symbols("theta_2 chi_2", real=True)
-        uq_1 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta1, chi1))
-        uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta2, chi2))
-        dist_expr = sympy.acos(uq_1.dot(uq_2)/(uq_1.norm()*uq_2.norm())) # Cosine distance.
+        uq_1 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta1*np.pi/180, chi1*np.pi/180))
+        uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta2*np.pi/180, chi2*np.pi/180))
+        dist_expr = sympy.acos(uq_1.dot(uq_2)/(uq_1.norm()*uq_2.norm()))*180/np.pi # Cosine distance.
 
-        globals()["compiled_expressions"]["fct_cosine_dist"] = lambdify.Lambdify(
+        globals()["compiled_expressions"]["fct_dist_cosine"] = lambdify.Lambdify(
             [theta1, chi1, theta2, chi2], dist_expr)
-        return globals()["compiled_expressions"]["fct_cosine_dist"]
+        return globals()["compiled_expressions"]["fct_dist_cosine"]
+
+    def get_fct_dist_euclidian(self):
+        """
+        ** Simple norme euclidiene en 2d. **
+        """
+        if "fct_dist_euclidian" in globals()["compiled_expressions"]:
+            return globals()["compiled_expressions"]["fct_dist_euclidian"]
+
+        x, y = sympy.symbols("x y", real=True)
+        dist_expr = sympy.sqrt(x**2 + y**2)
+
+        globals()["compiled_expressions"]["fct_dist_euclidian"] = lambdify.Lambdify(
+            [x, y], dist_expr)
+        return globals()["compiled_expressions"]["fct_dist_euclidian"]
 
     def get_fct_dist_line(self):
         """

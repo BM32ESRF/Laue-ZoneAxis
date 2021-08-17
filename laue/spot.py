@@ -117,27 +117,10 @@ def distance(spot1, spot2, *, space="camera"):
             np.array([spot2]),
             space=space)[:, 0]
 
-    try:
-        import numexpr
-    except ImportError:
-        numexpr = None
-
     # Cas ou l'on doit calculer une matrice de distances.
     if space == "cosine":
-        from sympy import symbols, acos
-        from laue.utilities.lambdify import Lambdify
-        from laue import Transformer
-        tran = Transformer()
-        theta1, chi1 = symbols("theta_1 chi_1", real=True)
-        theta2, chi2 = symbols("theta_2 chi_2", real=True)
-        uq_1 = tran.get_expr_uf_to_uq(*tran.get_expr_thetachi_to_uf(theta1, chi1))
-        uq_2 = tran.get_expr_uf_to_uq(*tran.get_expr_thetachi_to_uf(theta2, chi2))
-        uq_1, uq_2 = uq_1.normalized(), uq_2.normalized()
-        dist_expr = acos(uq_1.dot(uq_2))
-        dist_func = Lambdify([theta1, chi1, theta2, chi2], dist_expr)
-        return dist_func
-
-    if space == "camera":
+        meth = lambda spot: spot.get_theta_chi() if isinstance(spot, Spot) else spot
+    elif space == "camera":
         meth = lambda spot: spot.get_position() if isinstance(spot, Spot) else spot
     elif space == "gnomonic":
         meth = lambda spot: spot.get_gnomonic() if isinstance(spot, Spot) else spot
@@ -146,9 +129,17 @@ def distance(spot1, spot2, *, space="camera"):
     x1, x2 = np.meshgrid(x1, x2, indexing="ij", copy=False)
     y1, y2 = np.meshgrid(y1, y2, indexing="ij", copy=False)
 
-    if numexpr is not None:
+    if space == "cosine":
+        from laue import Transformer
+        return Transformer().get_fct_dist_cosine()(x1, y1, x2, y2)
+
+    try:
+        import numexpr
+    except ImportError:
+        return np.sqrt((x1-x2)**2 + (y1-y2)**2)
+    else:
         return numexpr.evaluate("sqrt((x1-x2)**2 + (y1-y2)**2)")
-    return np.sqrt((x1-x2)**2 + (y1-y2)**2)
+
 
 
 class Spot(SpotPickleable):
