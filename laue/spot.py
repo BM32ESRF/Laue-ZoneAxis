@@ -30,7 +30,7 @@ def distance(spot1, spot2, *, space="camera"):
     Les formules de calcul des distances sont les suivantes:
     \[ distance\_camera = \sqrt{(pxl\_spot1_x - pxl\_spot2_x)^2 - (pxl\_spot1_y - pxl\_spot2_y)^2} \]
     \[ distance\_gnomonic = \sqrt{(gnom\_spot1_x - gnom\_spot2_x)^2 - (gnom\_spot1_y - gnom\_spot2_y)^2} \]
-    \[ distance\_cosine = \arccos{(\sin{(\chi_{1})} \sin{(\chi_{2})} \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} + \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} \cos{(\chi_{1})} \cos{(\chi_{2})} + \cos{(2 \theta_{1})} \cos{(2 \theta_{2})})} \]
+    \[ distance\_cosine = \arccos{\left(\frac{\vec{u_q}(spot_1).\vec{u_q}(spot_2)}{\left\|\vec{u_q}(spot_1)\right\|.\left\|\vec{u_q}(spot_2)\right\|}\right)} \]
 
     Parameters
     ----------
@@ -66,13 +66,18 @@ def distance(spot1, spot2, *, space="camera"):
     >>> import laue
     >>> from laue.spot import distance
     >>> image = "laue/examples/ge_blanc.mccd"
-    >>> diag = laue.Experiment(image)[0]
+    >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
     >>> spot1, spot2 = diag[:2]
     >>> spot1.get_position(), spot2.get_position()
     ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
     >>>
     >>> distance(spot1, spot2)
     93.99273
+    >>> distance(spot1, spot2, space="gnomonic")
+    0.07062176
+    >>> distance(spot1, spot2, space="cosine")
+    3.3375366
+    >>>
     >>> distance(spot1, diag[:5])
     array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
           dtype=float32)
@@ -129,17 +134,10 @@ def distance(spot1, spot2, *, space="camera"):
     x1, x2 = np.meshgrid(x1, x2, indexing="ij", copy=False)
     y1, y2 = np.meshgrid(y1, y2, indexing="ij", copy=False)
 
+    from laue import Transformer
     if space == "cosine":
-        from laue import Transformer
         return Transformer().get_fct_dist_cosine()(x1, y1, x2, y2)
-
-    try:
-        import numexpr
-    except ImportError:
-        return np.sqrt((x1-x2)**2 + (y1-y2)**2)
-    else:
-        return numexpr.evaluate("sqrt((x1-x2)**2 + (y1-y2)**2)")
-
+    return Transformer().get_fct_dist_euclidian()(x1, y1, x2, y2)
 
 
 class Spot(SpotPickleable):

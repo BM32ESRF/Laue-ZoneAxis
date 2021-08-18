@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>laue.diagram API documentation</title>
 <meta name="description" content="** Permet de manipuler un diagramme de Laue unique. **
 …" />
@@ -2244,7 +2244,7 @@ si il est present ou pas. Ou bien l'index de ce spot.</dd>
 <dd>True si le spot est present dans ce diagramme, False sinon.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt;
@@ -2357,7 +2357,7 @@ l'intervalle fournit. Comme si <code><a title="laue.diagram.LaueDiagram" href="#
 <dd>Si les arguments fournis ne sont pas du bon type.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
@@ -2481,7 +2481,7 @@ Seul les pointeurs sont cedes, ce qui implique que toute
 modification d'un spot sera globale.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; for spot in diag:
@@ -2525,7 +2525,7 @@ modification d'un spot sera globale.</dd>
 <dd>
 <div class="desc"><p><strong> Renvoi le nombre de spots. </strong></p>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; len(diag)
@@ -2583,7 +2583,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
 <dd>La liste des axes de zone de type <code><a title="laue.zone_axis.ZoneAxis" href="zone_axis.html#laue.zone_axis.ZoneAxis">ZoneAxis</a></code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; type(diag.find_zone_axes())
@@ -2715,7 +2715,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
 En general l'un des parametres de set_calibration.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
@@ -2793,7 +2793,7 @@ d'acces au fichier image qui a permis de constituer le diagramme.</li>
 <li>Si le chemin d'acces est inconnu, un nom par defaut unique est genere.</li>
 </ul>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_id()
@@ -2845,7 +2845,7 @@ un appel a la fonction <code><a title="laue.experiment.base_experiment.Experimen
 <dd>Si il manque des infos pour satisfaire cette demande.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.get_image_gnomonic()
@@ -2935,7 +2935,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
 <dd>Si l'image est introuvable.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_image_xy()
@@ -3050,7 +3050,7 @@ Le premier element peut etre le spot de reference si il existe.</dd>
 <dd>Si l'un des type est absurde.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; spot, = diag.select_spots(n=1, sort=&quot;intensity&quot;)
@@ -3228,7 +3228,7 @@ True
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
@@ -3299,7 +3299,7 @@ array([[ 622.,  932., 1243., 1276.],
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = (&quot;laue/examples/ge_blanc.mccd&quot;, &quot;laue/examples/roi1_0001.mccd&quot;)
 &gt;&gt;&gt; diag1, diag2 = laue.Experiment(images)[:2]
 &gt;&gt;&gt;
@@ -3384,7 +3384,7 @@ quality: 0.5153
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
@@ -3465,7 +3465,7 @@ array([[ 29.,  40.,  29.,  58.],
 <dd>La figure matplotlib completee.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.plot_all(display=False)
@@ -3535,18 +3535,18 @@ array([[ 29.,  40.,  29.,  58.],
 <dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt;
 </code></pre>
 <p>Sans preciser l'axe.</p>
-<pre><code class="python-repl">&gt;&gt;&gt; diag.plot_gnomonic(display=False)
+<pre><code class="language-python-repl">&gt;&gt;&gt; diag.plot_gnomonic(display=False)
 &lt;AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'&gt;
 &gt;&gt;&gt;
 </code></pre>
 <p>En precisant l'axe.</p>
-<pre><code class="python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
+<pre><code class="language-python-repl">&gt;&gt;&gt; import matplotlib.pyplot as plt
 &gt;&gt;&gt; fig = plt.figure()
 &gt;&gt;&gt; axe = fig.add_subplot()
 &gt;&gt;&gt; diag.plot_gnomonic(axe, display=False)
@@ -3646,7 +3646,7 @@ array([[ 29.,  40.,  29.,  58.],
 <dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt;
@@ -3735,7 +3735,7 @@ L'extension doit etre comprise dans le nom du fichier.
 Si un fichier du meme nom existe deja, il est ecrase.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import os, tempfile
+<pre><code class="language-python-repl">&gt;&gt;&gt; import os, tempfile
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
@@ -3835,7 +3835,7 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 <dd>La liste des spots. Chaque element est de type <code><a title="laue.spot.Spot" href="spot.html#laue.spot.Spot">Spot</a></code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; diag.select_spots(n=2, sort=&quot;intensity&quot;)
@@ -3989,7 +3989,7 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

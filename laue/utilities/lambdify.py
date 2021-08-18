@@ -190,7 +190,7 @@ def evalf(x, n=15):
     except AttributeError:
         return x
 
-def simplify(x, **kwargs):
+def simplify(x, measure=sympy.count_ops, **kwargs):
     """
     ** Alias vers ``sympy.simplify``. **
 
@@ -203,13 +203,16 @@ def simplify(x, **kwargs):
     """
     for _ in range(2):
         try:
-            new_x = sympy.simplify(sympy.factor(x, deep=True, fraction=False), **kwargs)
+            x1 = sympy.simplify(sympy.factor(x, deep=True, fraction=False), measure=measure, **kwargs)
+            x2 = sympy.simplify(x, measure=measure, **kwargs)
+            new_x = x1 if measure(x1) <= measure(x2) else x2
         except AttributeError:
             if isinstance(x, (tuple, list, set)):
-                new_x = type(x)([simplify(e, **kwargs) for e in x])
+                new_x = type(x)([simplify(e, measure=measure, **kwargs) for e in x])
             else:
-                new_x = type(x)(*(simplify(e, **kwargs) for e in x.args))
+                new_x = type(x)(*(simplify(e, measure=measure, **kwargs) for e in x.args))
 
+        new_x = new_x if measure(new_x) < measure(x) else x
         if str(new_x) == str(x):
             break
         x = new_x
@@ -244,7 +247,7 @@ class Lambdify:
     """
     ** Permet de manipuler plus simplement une fonction. **
     """
-    def __init__(self, args, expr, *, _simplify=True):
+    def __init__(self, args, expr, *, _simp_expr=None):
         """
         ** Prepare la fonction. **
 
@@ -262,8 +265,9 @@ class Lambdify:
         self.expr = expr
 
         # Preparation vectoriele.
-        if _simplify:
-            self.expr = evalf(
+        self._simp_expr = _simp_expr
+        if self._simp_expr is None:
+            self._simp_expr = evalf(
                 simplify(
                     self.expr,
                     measure=time_cost,
@@ -272,13 +276,13 @@ class Lambdify:
                 ),
                 n=30
             )
-        self.fct = lambdify(self.args, self.expr, cse=True, modules="numpy")
+        self.fct = lambdify(self.args, self._simp_expr, cse=True, modules="numpy")
         try:
-            self.fct_numexpr = lambdify(self.args, evalf(self.expr, n=15), cse=True, modules="numexpr")
+            self.fct_numexpr = lambdify(self.args, evalf(self._simp_expr, n=15), cse=True, modules="numexpr")
         except (ImportError, TypeError, RuntimeError):
             self.fct_numexpr = None
 
-    def __str__(self, name="lambdifygenerated"):
+    def __str__(self, *, name="lambdifygenerated", bloc="main"):
         '''
         ** Offre une representation explicite de la fonction. **
 
@@ -286,6 +290,8 @@ class Lambdify:
         ----------
         name : str
             Le nom a donner a la fonction.
+        bloc : str
+            La partie du code a impromer. Permet de selectionner la fonction.
 
         Examples
         --------
@@ -293,33 +299,6 @@ class Lambdify:
         >>> from laue.utilities.lambdify import Lambdify
         >>>
         >>> print(Lambdify([x, y], pi*cos(x + y) + x + y), end="")
-        def _lambdifygenerated_numexpr(x, y):
-            """Perform calculations in float64 using the numexpr module."""
-            from numexpr import evaluate
-            x0 = evaluate('x + y', truediv=True)
-            _0 = evaluate('x0 + 3.14159265358979*cos(x0)', truediv=True)
-            return _0
-        <BLANKLINE>
-        def _lambdifygenerated_numpy(x, y):
-            """Perform calculations in small float using the numpy module."""
-            from numpy import *
-            x0 = x + y
-            _0 = x0 + 3.14159265358979*cos(x0)
-            return _0
-        <BLANKLINE>
-        def _lambdifygenerated_numpy128(x, y):
-            """Perform calculations in float128 using the numpy module."""
-            from numpy import *
-            x0 = x + y
-            _0 = x0 + float128('3.14159265358979323846264338328')*cos(x0)
-            return _0
-        <BLANKLINE>
-        def _lambdifygenerated_sympy():
-            """Returns the tree of the sympy expression."""
-            from sympy import *
-            x, y = symbols('x y')
-            return x + y + 3.14159265358979323846264338328*cos(x + y)
-        <BLANKLINE>
         def lambdifygenerated(*args, **kwargs):
             """
             ** Choose the most suitable function according to
@@ -335,8 +314,8 @@ class Lambdify:
             """
             assert len(args) <= 2, f'The function cannot take {len(args)} arguments.'
             assert not set(kwargs) - {'x', 'y'}, f'You cannot provide {kwargs}.'
-            import sympy
             if not args and not kwargs:
+                from sympy_lambdify import _lambdifygenerated_sympy
                 return _lambdifygenerated_sympy()
             args = list(args)
             if len(args) < 2:
@@ -347,109 +326,123 @@ class Lambdify:
             if any(isinstance(a, sympy.Basic) for a in args):
                 sub = {arg: value for arg, value in zip(['x', 'y'], args)}
                 from laue.utilities.lambdify import subs
+                from sympy_lambdify import _lambdifygenerated_sympy
                 return subs(_lambdifygenerated_sympy(), sub)
             if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
+                from numpy128_lambdify import _lambdifygenerated_numpy128
                 return _lambdifygenerated_numpy128(*args)
-            import numpy as np
             if (
                     (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
                     and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
                 ):
+                from numexpr_lambdify import _lambdifygenerated_numexpr
                 return _lambdifygenerated_numexpr(*args)
+            from numpy_lambdify import _lambdifygenerated_numpy
             return _lambdifygenerated_numpy(*args)
         >>>
         '''
         assert isinstance(name, str), f"'name' has to be str, not {type(name).__name__}."
+        assert bloc in {"main", "numpy", "numpy128", "numexpr", "sympy"}
         import re
 
         # Code numexpr.
-        if self.fct_numexpr is not None:
-            code = self.fct_numexpr.__doc__.split("\n")
-            code[0] = code[0].replace("_lambdifygenerated", f"_{name}_numexpr")
-            code.insert(1, '    """Perform calculations in float64 using the numexpr module."""')
-            code.insert(2, "    from numexpr import evaluate")
-        else:
-            code = []
+        if bloc == "numexpr":
+            if self.fct_numexpr is not None:
+                code = self.fct_numexpr.__doc__.split("\n")
+                code[0] = code[0].replace("_lambdifygenerated", f"_{name}_numexpr")
+                code.insert(1, '    """Perform calculations in float64 using the numexpr module."""')
+            else:
+                code = []
 
         # Code < float 64
-        new_code = lambdify(self.args, evalf(self.expr, n=15), cse=True, modules="numpy").__doc__.split("\n")
-        new_code[0] = new_code[0].replace("_lambdifygenerated", f"_{name}_numpy")
-        new_code.insert(1, '    """Perform calculations in small float using the numpy module."""')
-        new_code.insert(2, "    from numpy import *")
-        code.extend(new_code)
+        elif bloc == "numpy":
+            code = lambdify(self.args, evalf(self._simp_expr, n=15),
+                cse=True, modules="numpy").__doc__.split("\n")
+            code[0] = code[0].replace("_lambdifygenerated", f"_{name}_numpy")
+            code.insert(1, '    """Perform calculations in small float using the numpy module."""')
 
         # Code float 128
-        f_mod = re.compile(r"""(?:[+-]*
-            (?:
-              \. [0-9]+ (?:_[0-9]+)*
-              (?: e [+-]? [0-9]+ (?:_[0-9]+)* )?
-            | [0-9]+ (?:_[0-9]+)* \. (?: [0-9]+ (?:_[0-9]+)* )?
-              (?: e [+-]? [0-9]+ (?:_[0-9]+)* )?
-            | [0-9]+ (?:_[0-9]+)*
-              e [+-]? [0-9]+ (?:_[0-9]+)*
-            ))""", re.VERBOSE | re.IGNORECASE) # Model d'un flottant.
-        new_code_str = self.fct.__doc__
-        new_code_str = re.sub(f_mod, lambda m: f"float128({repr(m.group())})", new_code_str)
-        new_code = new_code_str.split("\n")
-        new_code[0] = new_code[0].replace("_lambdifygenerated", f"_{name}_numpy128")
-        new_code.insert(1, '    """Perform calculations in float128 using the numpy module."""')
-        new_code.insert(2, "    from numpy import *")
-        code.extend(new_code)
+        elif bloc == "numpy128":
+            f_mod = re.compile(r"""(?:[+-]*
+                (?:
+                  \. [0-9]+ (?:_[0-9]+)*
+                  (?: e [+-]? [0-9]+ (?:_[0-9]+)* )?
+                | [0-9]+ (?:_[0-9]+)* \. (?: [0-9]+ (?:_[0-9]+)* )?
+                  (?: e [+-]? [0-9]+ (?:_[0-9]+)* )?
+                | [0-9]+ (?:_[0-9]+)*
+                  e [+-]? [0-9]+ (?:_[0-9]+)*
+                ))""", re.VERBOSE | re.IGNORECASE) # Model d'un flottant.
+            code_str = self.fct.__doc__
+            code_str = re.sub(f_mod,
+                lambda m: (f"float128({repr(m.group())})" if len(m.group()) >= 15 else m.group()),
+                code_str)
+            code = code_str.split("\n")
+            code[0] = code[0].replace("_lambdifygenerated", f"_{name}_numpy128")
+            code.insert(1, '    """Perform calculations in float128 using the numpy module."""')
 
         # Expression formelle
-        code.append(f"def _{name}_sympy():")
-        code.append( '    """Returns the tree of the sympy expression."""')
-        code.append( "    from sympy import *")
-        code.append(f"    {', '.join(self.args_name)} = symbols('{' '.join(self.args_name)}')")
-        code.append(f"    return {self.expr}")
-        code.append( "")
+        elif bloc == "sympy":
+            code = []
+            code.append(f"def _{name}_sympy():")
+            code.append( '    """Returns the tree of the sympy expression."""')
+            code.append(f"    {', '.join(self.args_name)} = symbols('{' '.join(self.args_name)}')")
+            code.append(f"    return {self.expr}")
+            code.append( "")
 
         # Fonction principale Equivalent as self.__call__.
-        code.append(f"def {name}(*args, **kwargs):")
-        code.append( '    """')
-        code.append( "    ** Choose the most suitable function according to")
-        code.append( "    the type and size of the input data. **")
-        code.append( "")
-        code.append( "    Parameters")
-        code.append( "    ----------")
-        code.append( "    *args")
-        code.append( "        Les parametres ordonnes de la fonction.")
-        code.append( "    **kwargs")
-        code.append( "        Les parametres nomes de la fonction. Ils")
-        code.append( "        ont le dessus sur les args en cas d'ambiguite.")
-        code.append( '    """')
+        elif bloc == "main":
+            code = []
+            code.append(f"def {name}(*args, **kwargs):")
+            code.append( '    """')
+            code.append( "    ** Choose the most suitable function according to")
+            code.append( "    the type and size of the input data. **")
+            code.append( "")
+            code.append( "    Parameters")
+            code.append( "    ----------")
+            code.append( "    *args")
+            code.append( "        Les parametres ordonnes de la fonction.")
+            code.append( "    **kwargs")
+            code.append( "        Les parametres nomes de la fonction. Ils")
+            code.append( "        ont le dessus sur les args en cas d'ambiguite.")
+            code.append( '    """')
 
-        code.append( "    assert len(args) <= %d, f'The function cannot take {len(args)} arguments.'" % len(self.args))
-        code.append( "    assert not set(kwargs) - {%s}, f'You cannot provide {kwargs}.'" % ", ".join(self.args_position))
-        code.append( "    import sympy")
-        code.append( "    if not args and not kwargs:")
-        code.append(f"        return _{name}_sympy()")
+            code.append( "    assert len(args) <= %d, f'The function cannot take {len(args)} arguments.'"
+                                                % len(self.args))
+            code.append( "    assert not set(kwargs) - {%s}, f'You cannot provide {kwargs}.'"
+                                                      % ", ".join(repr(a) for a in self.args_name))
+            code.append( "    if not args and not kwargs:")
+            code.append(f"        from sympy_lambdify import _{name}_sympy")
+            code.append(f"        return _{name}_sympy()")
 
-        code.append( "    args = list(args)")
-        code.append(f"    if len(args) < {len(self.args)}:")
-        code.append(f"        args += sympy.symbols(' '.join({self.args_name}[len(args):]))")
-        code.append( "    if kwargs:")
-        code.append( "        for arg, value in kwargs.items():")
-        code.append(f"            args[{self.args_position}[arg]] = value")
+            code.append( "    args = list(args)")
+            code.append(f"    if len(args) < {len(self.args)}:")
+            code.append(f"        args += sympy.symbols(' '.join({self.args_name}[len(args):]))")
+            code.append( "    if kwargs:")
+            code.append( "        for arg, value in kwargs.items():")
+            code.append(f"            args[{self.args_position}[arg]] = value")
 
-        code.append( "    if any(isinstance(a, sympy.Basic) for a in args):")
-        code.append( "        sub = {arg: value for arg, value in zip(%s, args)}" % self.args_name)
-        code.append( "        from laue.utilities.lambdify import subs")
-        code.append(f"        return subs(_{name}_sympy(), sub)")
+            code.append( "    if any(isinstance(a, sympy.Basic) for a in args):")
+            code.append( "        sub = {arg: value for arg, value in zip(%s, args)}" % self.args_name)
+            code.append( "        from laue.utilities.lambdify import subs")
+            code.append(f"        from sympy_lambdify import _{name}_sympy")
+            code.append(f"        return subs(_{name}_sympy(), sub)")
 
-        if hasattr(np, "float128"):
-            if self.fct_numexpr is None:
-                code.append( "    import numpy as np")
-            code.append( "    if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):")
-            code.append(f"        return _{name}_numpy128(*args)")
-        if self.fct_numexpr is not None:
-            code.append( "    import numpy as np")
-            code.append( "    if (")
-            code.append( "            (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)")
-            code.append( "            and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))")
-            code.append( "        ):")
-            code.append(f"        return _{name}_numexpr(*args)")
-        code.append(f"    return _{name}_numpy(*args)")
+            if hasattr(np, "float128"):
+                code.append( "    if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):")
+                code.append(f"        from numpy128_lambdify import _{name}_numpy128")
+                code.append(f"        return _{name}_numpy128(*args)")
+            if self.fct_numexpr is not None:
+                code.append( "    if (")
+                code.append( "            (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)")
+                code.append( "            and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))")
+                code.append( "        ):")
+                code.append(f"        from numexpr_lambdify import _{name}_numexpr")
+                code.append(f"        return _{name}_numexpr(*args)")
+            code.append(f"    from numpy_lambdify import _{name}_numpy")
+            code.append(f"    return _{name}_numpy(*args)")
+
+        else:
+            raise KeyError
 
         code.append( "")
         return "\n".join(code)
@@ -552,11 +545,12 @@ class Lambdify:
         >>>
         >>> l = Lambdify([x, y], cos(x + y) + x + y)
         >>> l.__getstate__()
-        {'args': [x, y], 'expr': x + y + cos(x + y)}
+        ([x, y], x + y + cos(x + y))
         >>>
         """
-        return {"args": self.args,
-                "expr": self.expr}
+        if self.expr == self._simp_expr:
+            return (self.args, self.expr)
+        return (self.args, self.expr, self._simp_expr)
 
     def __setstate__(self, state):
         """
@@ -575,4 +569,4 @@ class Lambdify:
         Lambdify([x, y], x + y + cos(x + y))
         >>>
         """
-        self.__init__(state["args"], state["expr"], _simplify=False)
+        self.__init__(state[0], state[1], _simp_expr=state[-1])

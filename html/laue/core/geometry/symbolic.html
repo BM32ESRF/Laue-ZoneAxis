@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>laue.core.geometry.symbolic API documentation</title>
 <meta name="description" content="Recherche les equations symboliques qui expriment
 les transformations geometriques." />
@@ -38,6 +38,7 @@ les transformations geometriques.
 &#34;&#34;&#34;
 
 import hashlib
+import importlib.util
 import inspect
 import numbers
 import os
@@ -413,11 +414,11 @@ class Equations:
 class Compilator(Equations):
     &#34;&#34;&#34;
     Extrait et enregistre les equations brutes.
-    Combine les blocs elementaire afin
+    Combine les blocs elementaires.
 
     Notes
     -----
-    Les equations sont enregistrees de facon globale
+    Les equations sont enregistrees de facon globales
     de sorte a eviter la recompilation entre chaque objet,
     et permet aussi d&#39;alleger la serialisation de ``Transformer``.
     &#34;&#34;&#34;
@@ -427,15 +428,8 @@ class Compilator(Equations):
         &#34;&#34;&#34;
         Equations.__init__(self)
 
-        if &#34;compiled_expressions&#34; not in globals():
-            globals()[&#34;compiled_expressions&#34;] = {}
-        self.load()
-
-    def compile(self):
-        &#34;&#34;&#34;
-        ** Precalcule toutes les equations. **
-        &#34;&#34;&#34;
-        names = [
+        self.compiled_expressions = {}
+        self.names = [
             &#34;cam_to_gnomonic&#34;,
             &#34;gnomonic_to_cam&#34;,
             &#34;cam_to_thetachi&#34;,
@@ -447,7 +441,13 @@ class Compilator(Equations):
             &#34;dist_line&#34;,
             &#34;hough&#34;,
             &#34;inter_line&#34;]
-        names = [n for n in names if n not in globals()[&#34;compiled_expressions&#34;]]
+        self.load()
+
+    def compile(self):
+        &#34;&#34;&#34;
+        ** Precalcule toutes les equations. **
+        &#34;&#34;&#34;
+        names = [n for n in self.names if n not in self.compiled_expressions]
         for name in names:
             getattr(self, f&#34;get_fct_{name}&#34;)()
 
@@ -458,17 +458,17 @@ class Compilator(Equations):
         &#34;&#34;&#34;
         ** Equation permetant de passer de la camera au plan gnomonic. **
         &#34;&#34;&#34;
-        if &#34;fct_cam_to_gnomonic&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_gnomonic&#34;]
+        if &#34;cam_to_gnomonic&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;cam_to_gnomonic&#34;]
 
         u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
         u_q = self.get_expr_uf_to_uq(*u_f)
         x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_gnomonic&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;cam_to_gnomonic&#34;] = lambdify.Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[x_gnom, y_gnom]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_gnomonic&#34;]
+        return self.compiled_expressions[&#34;cam_to_gnomonic&#34;]
 
     def get_fct_cam_to_thetachi(self):
         &#34;&#34;&#34;
@@ -476,17 +476,17 @@ class Compilator(Equations):
 
         theta et chi sont exprimes en degres
         &#34;&#34;&#34;
-        if &#34;fct_cam_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
+        if &#34;cam_to_thetachi&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;cam_to_thetachi&#34;]
 
         u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
         theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
         theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;cam_to_thetachi&#34;] = lambdify.Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
+        return self.compiled_expressions[&#34;cam_to_thetachi&#34;]
 
     def get_fct_dist_cosine(self):
         &#34;&#34;&#34;
@@ -516,8 +516,8 @@ class Compilator(Equations):
 
             return tab_angulardist
         &#34;&#34;&#34;
-        if &#34;fct_dist_cosine&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]
+        if &#34;dist_cosine&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;dist_cosine&#34;]
 
         theta1, chi1 = sympy.symbols(&#34;theta_1 chi_1&#34;, real=True)
         theta2, chi2 = sympy.symbols(&#34;theta_2 chi_2&#34;, real=True)
@@ -525,30 +525,30 @@ class Compilator(Equations):
         uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta2*np.pi/180, chi2*np.pi/180))
         dist_expr = sympy.acos(uq_1.dot(uq_2)/(uq_1.norm()*uq_2.norm()))*180/np.pi # Cosine distance.
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;dist_cosine&#34;] = lambdify.Lambdify(
             [theta1, chi1, theta2, chi2], dist_expr)
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]
+        return self.compiled_expressions[&#34;dist_cosine&#34;]
 
     def get_fct_dist_euclidian(self):
         &#34;&#34;&#34;
         ** Simple norme euclidiene en 2d. **
         &#34;&#34;&#34;
-        if &#34;fct_dist_euclidian&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]
+        if &#34;dist_euclidian&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;dist_euclidian&#34;]
 
-        x, y = sympy.symbols(&#34;x y&#34;, real=True)
-        dist_expr = sympy.sqrt(x**2 + y**2)
+        x1, y1, x2, y2 = sympy.symbols(&#34;x1 y1, x2, y2&#34;, real=True)
+        dist_expr = sympy.sqrt((x1-x2)**2 + (y1-y2)**2)
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;] = lambdify.Lambdify(
-            [x, y], dist_expr)
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]
+        self.compiled_expressions[&#34;dist_euclidian&#34;] = lambdify.Lambdify(
+            [x1, y1, x2, y2], dist_expr)
+        return self.compiled_expressions[&#34;dist_euclidian&#34;]
 
     def get_fct_dist_line(self):
         &#34;&#34;&#34;
         ** Equation de projection de points sur une droite. **
         &#34;&#34;&#34;
-        if &#34;fct_dist_line&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;]
+        if &#34;dist_line&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;dist_line&#34;]
 
         # Creation de la droite.
         phi, mu, x, y = sympy.symbols(&#34;phi mu x y&#34;, real=True)
@@ -563,24 +563,24 @@ class Compilator(Equations):
         distance = sympy.trigsimp(distance) # Permet un gain de 2.90
 
         # Vectorisation de l&#39;expression.
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;] = lambdify.Lambdify([phi, mu, x, y], distance)
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;]
+        self.compiled_expressions[&#34;dist_line&#34;] = lambdify.Lambdify([phi, mu, x, y], distance)
+        return self.compiled_expressions[&#34;dist_line&#34;]
 
     def get_fct_gnomonic_to_cam(self):
         &#34;&#34;&#34;
         ** Equation permetant de passer de l&#39;espace gnomonic a celui de la camera. **
         &#34;&#34;&#34;
-        if &#34;fct_gnomonic_to_cam&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_cam&#34;]
+        if &#34;gnomonic_to_cam&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;gnomonic_to_cam&#34;]
 
         u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
         u_f = self.get_expr_uq_to_uf(*u_q)
         x_c, y_c = self.get_expr_uf_to_cam(*u_f)
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_cam&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;gnomonic_to_cam&#34;] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[x_c, y_c]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_cam&#34;]
+        return self.compiled_expressions[&#34;gnomonic_to_cam&#34;]
 
     def get_fct_gnomonic_to_thetachi(self):
         &#34;&#34;&#34;
@@ -588,25 +588,25 @@ class Compilator(Equations):
 
         theta et chi sont exprimes en degres
         &#34;&#34;&#34;
-        if &#34;fct_gnomonic_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]
+        if &#34;gnomonic_to_thetachi&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;gnomonic_to_thetachi&#34;]
 
         u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
         u_f = self.get_expr_uq_to_uf(*u_q)
         theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
         theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;gnomonic_to_thetachi&#34;] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom],
             expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]
+        return self.compiled_expressions[&#34;gnomonic_to_thetachi&#34;]
 
     def get_fct_hough(self):
         &#34;&#34;&#34;
         ** Equation pour la transformee de hough. **
         &#34;&#34;&#34;
-        if &#34;fct_hough&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;]
+        if &#34;hough&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;hough&#34;]
 
         xa, ya, xb, yb = sympy.symbols(&#34;x_a y_a x_b y_b&#34;, real=True)
         u = sympy.Matrix([xa-xb, ya-yb]).normalized()
@@ -627,15 +627,15 @@ class Compilator(Equations):
         mu = sympy.trigsimp(sympy.cancel(mu)) # Permet un gain de 1.40
 
         # Vectorisation des expressions.
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;] = lambdify.Lambdify([xa, ya, xb, yb], [phi, mu])
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;]
+        self.compiled_expressions[&#34;hough&#34;] = lambdify.Lambdify([xa, ya, xb, yb], [phi, mu])
+        return self.compiled_expressions[&#34;hough&#34;]
 
     def get_fct_inter_line(self):
         &#34;&#34;&#34;
         ** Equation d&#39;intersection entre 2 droites. **
         &#34;&#34;&#34;
-        if &#34;fct_inter_line&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;]
+        if &#34;inter_line&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;inter_line&#34;]
 
         # Creation des 2 droites.
         phi_1, mu_1, phi_2, mu_2 = sympy.symbols(&#34;phi_1, mu_1, phi_2, mu_2&#34;, real=True)
@@ -655,9 +655,9 @@ class Compilator(Equations):
         # Il n&#39;y en a pas car les expressions sont deja tres simples.
 
         # Vectorisation des expressions.
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;inter_line&#34;] = lambdify.Lambdify(
             [phi_1, mu_1, phi_2, mu_2], [inter_x, inter_y])
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;]
+        return self.compiled_expressions[&#34;inter_line&#34;]
 
     def get_fct_thetachi_to_gnomonic(self):
         &#34;&#34;&#34;
@@ -665,17 +665,17 @@ class Compilator(Equations):
 
         theta et chi doivent etre donnes en degres.
         &#34;&#34;&#34;
-        if &#34;fct_thetachi_to_gnomonic&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;]
+        if &#34;thetachi_to_gnomonic&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;thetachi_to_gnomonic&#34;]
 
         u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
         u_q = self.get_expr_uf_to_uq(*u_f)
         x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;thetachi_to_gnomonic&#34;] = lambdify.Lambdify(
             args=[self.theta, self.chi],
             expr=[x_gnom, y_gnom]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;]
+        return self.compiled_expressions[&#34;thetachi_to_gnomonic&#34;]
 
     def get_fct_thetachi_to_cam(self):
         &#34;&#34;&#34;
@@ -683,16 +683,16 @@ class Compilator(Equations):
 
         theta et chi doivent etre donnes en degres.
         &#34;&#34;&#34;
-        if &#34;fct_thetachi_to_cam&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;]
+        if &#34;thetachi_to_cam&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;thetachi_to_cam&#34;]
 
         u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
         x_c, y_c = self.get_expr_uf_to_cam(*u_f)
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;thetachi_to_cam&#34;] = lambdify.Lambdify(
             args=[self.theta, self.chi, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[x_c, y_c]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;]
+        return self.compiled_expressions[&#34;thetachi_to_cam&#34;]
 
     def _hash(self):
         &#34;&#34;&#34;
@@ -708,37 +708,80 @@ class Compilator(Equations):
         &#34;&#34;&#34;
         ** Charge si il existe, le fichier contenant les expressions. **
 
-        Deverse les expressions dans le dictionaire: ``globals()[&#34;compiled_expressions&#34;]``.
+        Deverse les expressions dans le dictionaire: ``self.compiled_expressions``.
         &#34;&#34;&#34;
+        def path_import(absolute_path):
+            spec = importlib.util.spec_from_file_location(absolute_path, absolute_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+
         dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
-        
-        if os.path.exists(file):
-            with open(file, &#34;rb&#34;) as f:
-                try:
-                    content = pickle.load(f)
-                except (ValueError, EOFError): # Si c&#39;est pas le bon protocol
-                    content = {&#34;hash&#34;: None}
-            if content[&#34;hash&#34;] == self._hash(): # Si les donnees sont a jour.
-                globals()[&#34;compiled_expressions&#34;] = {**globals()[&#34;compiled_expressions&#34;], **content[&#34;expr&#34;]}
-        return globals()[&#34;compiled_expressions&#34;]
+        file = os.path.join(dirname, &#34;data&#34;, &#34;lambdifygenerated.py&#34;)
+        try:
+            lambdifygenerated = path_import(file)
+        except FileNotFoundError:
+            return self.compiled_expressions
+        else:
+            if lambdifygenerated.HASH != self._hash():
+                return self.compiled_expressions
+            for name in self.names:
+                if name in self.compiled_expressions:
+                    continue
+                self.compiled_expressions[name] = getattr(lambdifygenerated, name)
 
     def save(self):
         &#34;&#34;&#34;
-        ** Enregistre un fichier contenant les expressions. **
+        ** Enregistre un module contenant les expressions. **
 
-        Enregistre seulement ce qui est present dans ``globals()[&#34;compiled_expressions&#34;]``.
+        Enregistre seulement ce qui est present dans ``self.compiled_expressions``.
         N&#39;ecrase pas l&#39;ancien contenu.
         &#34;&#34;&#34;
-        dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
+        import time
+        dirname = os.path.join(os.path.dirname(os.path.abspath(laue.__file__)), &#34;data&#34;)
         self.load() # Recuperation du contenu du fichier.
-        content = {
-            &#34;hash&#34;: self._hash(),
-            &#34;expr&#34;: globals()[&#34;compiled_expressions&#34;]
-            }
-        with open(file, &#34;wb&#34;) as f:
-            pickle.dump(content, f)</code></pre>
+
+        # Ecriture du module principal.
+        with open(os.path.join(dirname, &#34;lambdifygenerated.py&#34;), &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+            f.write( &#34;#!/usr/bin/env python3\n&#34;)
+            f.write( &#34;\n&#34;)
+            f.write( &#39;&#34;&#34;&#34;\n&#39;)
+            f.write(f&#34;This code was automatically generated on {time.ctime()}.\n&#34;)
+            f.write( &#39;&#34;&#34;&#34;\n&#39;)
+            f.write( &#34;\n&#34;)
+            f.write( &#34;import sympy\n&#34;)
+            f.write( &#34;import numpy as np\n&#34;)
+            f.write( &#34;\n&#34;)
+            f.write(f&#34;HASH = {repr(self._hash())}\n&#34;)
+            f.write( &#34;\n&#34;)
+            for func_name, lamb in self.compiled_expressions.items():
+                if not isinstance(lamb, lambdify.Lambdify): # C&#39;est juste de la prevention,
+                    del self.compiled_expressions[func_name] # ce n&#39;est pas cence servir.
+                    getattr(self, f&#34;get_fct_{func_name}&#34;)()
+                f.write(lamb.__str__(name=func_name, bloc=&#34;main&#34;))
+                f.write(&#34;\n&#34;)
+
+        # Ecriture des modules secondaires.
+        from sympy.utilities.lambdify import MODULES
+        for mod in [&#34;numpy&#34;, &#34;numpy128&#34;, &#34;numexpr&#34;, &#34;sympy&#34;]:
+            header = (
+                &#34;\n&#34;.join(MODULES[mod if mod != &#34;numpy128&#34; else &#34;numpy&#34;][-1])
+                if mod != &#34;numexpr&#34; else &#34;from numexpr import evaluate&#34;)
+            header += &#34;\n&#34;
+            if mod == &#34;sympy&#34;:
+                header += &#34;from sympy import symbols\n&#34;
+
+            with open(os.path.join(dirname, f&#34;{mod}_lambdify.py&#34;), &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+                f.write(&#34;#!/usr/bin/env python3\n&#34;)
+                f.write(&#34;\n&#34;)
+                f.write(&#39;&#34;&#34;&#34;\n&#39;)
+                f.write(&#34;This code was automatically generated.\n&#34;)
+                f.write(&#39;&#34;&#34;&#34;\n&#39;)
+                f.write(&#34;\n&#34;)
+                f.write(header)
+                f.write(&#34;\n\n&#34;)
+                for func_name, lamb in self.compiled_expressions.items():
+                    f.write(lamb.__str__(name=func_name, bloc=mod))</code></pre>
 </details>
 </section>
 <section>
@@ -755,9 +798,9 @@ class Compilator(Equations):
 </code></dt>
 <dd>
 <div class="desc"><p>Extrait et enregistre les equations brutes.
-Combine les blocs elementaire afin</p>
+Combine les blocs elementaires.</p>
 <h2 id="notes">Notes</h2>
-<p>Les equations sont enregistrees de facon globale
+<p>Les equations sont enregistrees de facon globales
 de sorte a eviter la recompilation entre chaque objet,
 et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <p>Genere le dictionaire a protee globale.</p></div>
@@ -768,11 +811,11 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 <pre><code class="python">class Compilator(Equations):
     &#34;&#34;&#34;
     Extrait et enregistre les equations brutes.
-    Combine les blocs elementaire afin
+    Combine les blocs elementaires.
 
     Notes
     -----
-    Les equations sont enregistrees de facon globale
+    Les equations sont enregistrees de facon globales
     de sorte a eviter la recompilation entre chaque objet,
     et permet aussi d&#39;alleger la serialisation de ``Transformer``.
     &#34;&#34;&#34;
@@ -782,15 +825,8 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         &#34;&#34;&#34;
         Equations.__init__(self)
 
-        if &#34;compiled_expressions&#34; not in globals():
-            globals()[&#34;compiled_expressions&#34;] = {}
-        self.load()
-
-    def compile(self):
-        &#34;&#34;&#34;
-        ** Precalcule toutes les equations. **
-        &#34;&#34;&#34;
-        names = [
+        self.compiled_expressions = {}
+        self.names = [
             &#34;cam_to_gnomonic&#34;,
             &#34;gnomonic_to_cam&#34;,
             &#34;cam_to_thetachi&#34;,
@@ -802,7 +838,13 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
             &#34;dist_line&#34;,
             &#34;hough&#34;,
             &#34;inter_line&#34;]
-        names = [n for n in names if n not in globals()[&#34;compiled_expressions&#34;]]
+        self.load()
+
+    def compile(self):
+        &#34;&#34;&#34;
+        ** Precalcule toutes les equations. **
+        &#34;&#34;&#34;
+        names = [n for n in self.names if n not in self.compiled_expressions]
         for name in names:
             getattr(self, f&#34;get_fct_{name}&#34;)()
 
@@ -813,17 +855,17 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         &#34;&#34;&#34;
         ** Equation permetant de passer de la camera au plan gnomonic. **
         &#34;&#34;&#34;
-        if &#34;fct_cam_to_gnomonic&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_gnomonic&#34;]
+        if &#34;cam_to_gnomonic&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;cam_to_gnomonic&#34;]
 
         u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
         u_q = self.get_expr_uf_to_uq(*u_f)
         x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_gnomonic&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;cam_to_gnomonic&#34;] = lambdify.Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[x_gnom, y_gnom]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_gnomonic&#34;]
+        return self.compiled_expressions[&#34;cam_to_gnomonic&#34;]
 
     def get_fct_cam_to_thetachi(self):
         &#34;&#34;&#34;
@@ -831,17 +873,17 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 
         theta et chi sont exprimes en degres
         &#34;&#34;&#34;
-        if &#34;fct_cam_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
+        if &#34;cam_to_thetachi&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;cam_to_thetachi&#34;]
 
         u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
         theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
         theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;cam_to_thetachi&#34;] = lambdify.Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
+        return self.compiled_expressions[&#34;cam_to_thetachi&#34;]
 
     def get_fct_dist_cosine(self):
         &#34;&#34;&#34;
@@ -871,8 +913,8 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 
             return tab_angulardist
         &#34;&#34;&#34;
-        if &#34;fct_dist_cosine&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]
+        if &#34;dist_cosine&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;dist_cosine&#34;]
 
         theta1, chi1 = sympy.symbols(&#34;theta_1 chi_1&#34;, real=True)
         theta2, chi2 = sympy.symbols(&#34;theta_2 chi_2&#34;, real=True)
@@ -880,30 +922,30 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta2*np.pi/180, chi2*np.pi/180))
         dist_expr = sympy.acos(uq_1.dot(uq_2)/(uq_1.norm()*uq_2.norm()))*180/np.pi # Cosine distance.
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;dist_cosine&#34;] = lambdify.Lambdify(
             [theta1, chi1, theta2, chi2], dist_expr)
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]
+        return self.compiled_expressions[&#34;dist_cosine&#34;]
 
     def get_fct_dist_euclidian(self):
         &#34;&#34;&#34;
         ** Simple norme euclidiene en 2d. **
         &#34;&#34;&#34;
-        if &#34;fct_dist_euclidian&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]
+        if &#34;dist_euclidian&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;dist_euclidian&#34;]
 
-        x, y = sympy.symbols(&#34;x y&#34;, real=True)
-        dist_expr = sympy.sqrt(x**2 + y**2)
+        x1, y1, x2, y2 = sympy.symbols(&#34;x1 y1, x2, y2&#34;, real=True)
+        dist_expr = sympy.sqrt((x1-x2)**2 + (y1-y2)**2)
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;] = lambdify.Lambdify(
-            [x, y], dist_expr)
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]
+        self.compiled_expressions[&#34;dist_euclidian&#34;] = lambdify.Lambdify(
+            [x1, y1, x2, y2], dist_expr)
+        return self.compiled_expressions[&#34;dist_euclidian&#34;]
 
     def get_fct_dist_line(self):
         &#34;&#34;&#34;
         ** Equation de projection de points sur une droite. **
         &#34;&#34;&#34;
-        if &#34;fct_dist_line&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;]
+        if &#34;dist_line&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;dist_line&#34;]
 
         # Creation de la droite.
         phi, mu, x, y = sympy.symbols(&#34;phi mu x y&#34;, real=True)
@@ -918,24 +960,24 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         distance = sympy.trigsimp(distance) # Permet un gain de 2.90
 
         # Vectorisation de l&#39;expression.
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;] = lambdify.Lambdify([phi, mu, x, y], distance)
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;]
+        self.compiled_expressions[&#34;dist_line&#34;] = lambdify.Lambdify([phi, mu, x, y], distance)
+        return self.compiled_expressions[&#34;dist_line&#34;]
 
     def get_fct_gnomonic_to_cam(self):
         &#34;&#34;&#34;
         ** Equation permetant de passer de l&#39;espace gnomonic a celui de la camera. **
         &#34;&#34;&#34;
-        if &#34;fct_gnomonic_to_cam&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_cam&#34;]
+        if &#34;gnomonic_to_cam&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;gnomonic_to_cam&#34;]
 
         u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
         u_f = self.get_expr_uq_to_uf(*u_q)
         x_c, y_c = self.get_expr_uf_to_cam(*u_f)
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_cam&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;gnomonic_to_cam&#34;] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[x_c, y_c]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_cam&#34;]
+        return self.compiled_expressions[&#34;gnomonic_to_cam&#34;]
 
     def get_fct_gnomonic_to_thetachi(self):
         &#34;&#34;&#34;
@@ -943,25 +985,25 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 
         theta et chi sont exprimes en degres
         &#34;&#34;&#34;
-        if &#34;fct_gnomonic_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]
+        if &#34;gnomonic_to_thetachi&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;gnomonic_to_thetachi&#34;]
 
         u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
         u_f = self.get_expr_uq_to_uf(*u_q)
         theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
         theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;gnomonic_to_thetachi&#34;] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom],
             expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]
+        return self.compiled_expressions[&#34;gnomonic_to_thetachi&#34;]
 
     def get_fct_hough(self):
         &#34;&#34;&#34;
         ** Equation pour la transformee de hough. **
         &#34;&#34;&#34;
-        if &#34;fct_hough&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;]
+        if &#34;hough&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;hough&#34;]
 
         xa, ya, xb, yb = sympy.symbols(&#34;x_a y_a x_b y_b&#34;, real=True)
         u = sympy.Matrix([xa-xb, ya-yb]).normalized()
@@ -982,15 +1024,15 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         mu = sympy.trigsimp(sympy.cancel(mu)) # Permet un gain de 1.40
 
         # Vectorisation des expressions.
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;] = lambdify.Lambdify([xa, ya, xb, yb], [phi, mu])
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;]
+        self.compiled_expressions[&#34;hough&#34;] = lambdify.Lambdify([xa, ya, xb, yb], [phi, mu])
+        return self.compiled_expressions[&#34;hough&#34;]
 
     def get_fct_inter_line(self):
         &#34;&#34;&#34;
         ** Equation d&#39;intersection entre 2 droites. **
         &#34;&#34;&#34;
-        if &#34;fct_inter_line&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;]
+        if &#34;inter_line&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;inter_line&#34;]
 
         # Creation des 2 droites.
         phi_1, mu_1, phi_2, mu_2 = sympy.symbols(&#34;phi_1, mu_1, phi_2, mu_2&#34;, real=True)
@@ -1010,9 +1052,9 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         # Il n&#39;y en a pas car les expressions sont deja tres simples.
 
         # Vectorisation des expressions.
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;inter_line&#34;] = lambdify.Lambdify(
             [phi_1, mu_1, phi_2, mu_2], [inter_x, inter_y])
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;]
+        return self.compiled_expressions[&#34;inter_line&#34;]
 
     def get_fct_thetachi_to_gnomonic(self):
         &#34;&#34;&#34;
@@ -1020,17 +1062,17 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 
         theta et chi doivent etre donnes en degres.
         &#34;&#34;&#34;
-        if &#34;fct_thetachi_to_gnomonic&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;]
+        if &#34;thetachi_to_gnomonic&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;thetachi_to_gnomonic&#34;]
 
         u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
         u_q = self.get_expr_uf_to_uq(*u_f)
         x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;thetachi_to_gnomonic&#34;] = lambdify.Lambdify(
             args=[self.theta, self.chi],
             expr=[x_gnom, y_gnom]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;]
+        return self.compiled_expressions[&#34;thetachi_to_gnomonic&#34;]
 
     def get_fct_thetachi_to_cam(self):
         &#34;&#34;&#34;
@@ -1038,16 +1080,16 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 
         theta et chi doivent etre donnes en degres.
         &#34;&#34;&#34;
-        if &#34;fct_thetachi_to_cam&#34; in globals()[&#34;compiled_expressions&#34;]:
-            return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;]
+        if &#34;thetachi_to_cam&#34; in self.compiled_expressions:
+            return self.compiled_expressions[&#34;thetachi_to_cam&#34;]
 
         u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
         x_c, y_c = self.get_expr_uf_to_cam(*u_f)
 
-        globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;] = lambdify.Lambdify(
+        self.compiled_expressions[&#34;thetachi_to_cam&#34;] = lambdify.Lambdify(
             args=[self.theta, self.chi, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
             expr=[x_c, y_c]) # On l&#39;enregistre une bonne fois pour toutes.
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;]
+        return self.compiled_expressions[&#34;thetachi_to_cam&#34;]
 
     def _hash(self):
         &#34;&#34;&#34;
@@ -1063,37 +1105,80 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
         &#34;&#34;&#34;
         ** Charge si il existe, le fichier contenant les expressions. **
 
-        Deverse les expressions dans le dictionaire: ``globals()[&#34;compiled_expressions&#34;]``.
+        Deverse les expressions dans le dictionaire: ``self.compiled_expressions``.
         &#34;&#34;&#34;
+        def path_import(absolute_path):
+            spec = importlib.util.spec_from_file_location(absolute_path, absolute_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+
         dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
-        
-        if os.path.exists(file):
-            with open(file, &#34;rb&#34;) as f:
-                try:
-                    content = pickle.load(f)
-                except (ValueError, EOFError): # Si c&#39;est pas le bon protocol
-                    content = {&#34;hash&#34;: None}
-            if content[&#34;hash&#34;] == self._hash(): # Si les donnees sont a jour.
-                globals()[&#34;compiled_expressions&#34;] = {**globals()[&#34;compiled_expressions&#34;], **content[&#34;expr&#34;]}
-        return globals()[&#34;compiled_expressions&#34;]
+        file = os.path.join(dirname, &#34;data&#34;, &#34;lambdifygenerated.py&#34;)
+        try:
+            lambdifygenerated = path_import(file)
+        except FileNotFoundError:
+            return self.compiled_expressions
+        else:
+            if lambdifygenerated.HASH != self._hash():
+                return self.compiled_expressions
+            for name in self.names:
+                if name in self.compiled_expressions:
+                    continue
+                self.compiled_expressions[name] = getattr(lambdifygenerated, name)
 
     def save(self):
         &#34;&#34;&#34;
-        ** Enregistre un fichier contenant les expressions. **
+        ** Enregistre un module contenant les expressions. **
 
-        Enregistre seulement ce qui est present dans ``globals()[&#34;compiled_expressions&#34;]``.
+        Enregistre seulement ce qui est present dans ``self.compiled_expressions``.
         N&#39;ecrase pas l&#39;ancien contenu.
         &#34;&#34;&#34;
-        dirname = os.path.dirname(os.path.abspath(laue.__file__))
-        file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
+        import time
+        dirname = os.path.join(os.path.dirname(os.path.abspath(laue.__file__)), &#34;data&#34;)
         self.load() # Recuperation du contenu du fichier.
-        content = {
-            &#34;hash&#34;: self._hash(),
-            &#34;expr&#34;: globals()[&#34;compiled_expressions&#34;]
-            }
-        with open(file, &#34;wb&#34;) as f:
-            pickle.dump(content, f)</code></pre>
+
+        # Ecriture du module principal.
+        with open(os.path.join(dirname, &#34;lambdifygenerated.py&#34;), &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+            f.write( &#34;#!/usr/bin/env python3\n&#34;)
+            f.write( &#34;\n&#34;)
+            f.write( &#39;&#34;&#34;&#34;\n&#39;)
+            f.write(f&#34;This code was automatically generated on {time.ctime()}.\n&#34;)
+            f.write( &#39;&#34;&#34;&#34;\n&#39;)
+            f.write( &#34;\n&#34;)
+            f.write( &#34;import sympy\n&#34;)
+            f.write( &#34;import numpy as np\n&#34;)
+            f.write( &#34;\n&#34;)
+            f.write(f&#34;HASH = {repr(self._hash())}\n&#34;)
+            f.write( &#34;\n&#34;)
+            for func_name, lamb in self.compiled_expressions.items():
+                if not isinstance(lamb, lambdify.Lambdify): # C&#39;est juste de la prevention,
+                    del self.compiled_expressions[func_name] # ce n&#39;est pas cence servir.
+                    getattr(self, f&#34;get_fct_{func_name}&#34;)()
+                f.write(lamb.__str__(name=func_name, bloc=&#34;main&#34;))
+                f.write(&#34;\n&#34;)
+
+        # Ecriture des modules secondaires.
+        from sympy.utilities.lambdify import MODULES
+        for mod in [&#34;numpy&#34;, &#34;numpy128&#34;, &#34;numexpr&#34;, &#34;sympy&#34;]:
+            header = (
+                &#34;\n&#34;.join(MODULES[mod if mod != &#34;numpy128&#34; else &#34;numpy&#34;][-1])
+                if mod != &#34;numexpr&#34; else &#34;from numexpr import evaluate&#34;)
+            header += &#34;\n&#34;
+            if mod == &#34;sympy&#34;:
+                header += &#34;from sympy import symbols\n&#34;
+
+            with open(os.path.join(dirname, f&#34;{mod}_lambdify.py&#34;), &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+                f.write(&#34;#!/usr/bin/env python3\n&#34;)
+                f.write(&#34;\n&#34;)
+                f.write(&#39;&#34;&#34;&#34;\n&#39;)
+                f.write(&#34;This code was automatically generated.\n&#34;)
+                f.write(&#39;&#34;&#34;&#34;\n&#39;)
+                f.write(&#34;\n&#34;)
+                f.write(header)
+                f.write(&#34;\n\n&#34;)
+                for func_name, lamb in self.compiled_expressions.items():
+                    f.write(lamb.__str__(name=func_name, bloc=mod))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1118,19 +1203,7 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
     &#34;&#34;&#34;
     ** Precalcule toutes les equations. **
     &#34;&#34;&#34;
-    names = [
-        &#34;cam_to_gnomonic&#34;,
-        &#34;gnomonic_to_cam&#34;,
-        &#34;cam_to_thetachi&#34;,
-        &#34;thetachi_to_cam&#34;,
-        &#34;thetachi_to_gnomonic&#34;,
-        &#34;gnomonic_to_thetachi&#34;,
-        &#34;dist_cosine&#34;,
-        &#34;dist_euclidian&#34;,
-        &#34;dist_line&#34;,
-        &#34;hough&#34;,
-        &#34;inter_line&#34;]
-    names = [n for n in names if n not in globals()[&#34;compiled_expressions&#34;]]
+    names = [n for n in self.names if n not in self.compiled_expressions]
     for name in names:
         getattr(self, f&#34;get_fct_{name}&#34;)()
 
@@ -1151,17 +1224,17 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
     &#34;&#34;&#34;
     ** Equation permetant de passer de la camera au plan gnomonic. **
     &#34;&#34;&#34;
-    if &#34;fct_cam_to_gnomonic&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_gnomonic&#34;]
+    if &#34;cam_to_gnomonic&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;cam_to_gnomonic&#34;]
 
     u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
     u_q = self.get_expr_uf_to_uq(*u_f)
     x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
 
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_gnomonic&#34;] = lambdify.Lambdify(
+    self.compiled_expressions[&#34;cam_to_gnomonic&#34;] = lambdify.Lambdify(
         args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
         expr=[x_gnom, y_gnom]) # On l&#39;enregistre une bonne fois pour toutes.
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_gnomonic&#34;]</code></pre>
+    return self.compiled_expressions[&#34;cam_to_gnomonic&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_cam_to_thetachi"><code class="name flex">
@@ -1180,17 +1253,17 @@ et permet aussi d'alleger la serialisation de <code>Transformer</code>.</p>
 
     theta et chi sont exprimes en degres
     &#34;&#34;&#34;
-    if &#34;fct_cam_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]
+    if &#34;cam_to_thetachi&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;cam_to_thetachi&#34;]
 
     u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
     theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
     theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;] = lambdify.Lambdify(
+    self.compiled_expressions[&#34;cam_to_thetachi&#34;] = lambdify.Lambdify(
         args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
         expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_cam_to_thetachi&#34;]</code></pre>
+    return self.compiled_expressions[&#34;cam_to_thetachi&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_dist_cosine"><code class="name flex">
@@ -1254,8 +1327,8 @@ return tab_angulardist
 
         return tab_angulardist
     &#34;&#34;&#34;
-    if &#34;fct_dist_cosine&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]
+    if &#34;dist_cosine&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;dist_cosine&#34;]
 
     theta1, chi1 = sympy.symbols(&#34;theta_1 chi_1&#34;, real=True)
     theta2, chi2 = sympy.symbols(&#34;theta_2 chi_2&#34;, real=True)
@@ -1263,9 +1336,9 @@ return tab_angulardist
     uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta2*np.pi/180, chi2*np.pi/180))
     dist_expr = sympy.acos(uq_1.dot(uq_2)/(uq_1.norm()*uq_2.norm()))*180/np.pi # Cosine distance.
 
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;] = lambdify.Lambdify(
+    self.compiled_expressions[&#34;dist_cosine&#34;] = lambdify.Lambdify(
         [theta1, chi1, theta2, chi2], dist_expr)
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_cosine&#34;]</code></pre>
+    return self.compiled_expressions[&#34;dist_cosine&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_dist_euclidian"><code class="name flex">
@@ -1281,15 +1354,15 @@ return tab_angulardist
     &#34;&#34;&#34;
     ** Simple norme euclidiene en 2d. **
     &#34;&#34;&#34;
-    if &#34;fct_dist_euclidian&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]
+    if &#34;dist_euclidian&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;dist_euclidian&#34;]
 
-    x, y = sympy.symbols(&#34;x y&#34;, real=True)
-    dist_expr = sympy.sqrt(x**2 + y**2)
+    x1, y1, x2, y2 = sympy.symbols(&#34;x1 y1, x2, y2&#34;, real=True)
+    dist_expr = sympy.sqrt((x1-x2)**2 + (y1-y2)**2)
 
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;] = lambdify.Lambdify(
-        [x, y], dist_expr)
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_euclidian&#34;]</code></pre>
+    self.compiled_expressions[&#34;dist_euclidian&#34;] = lambdify.Lambdify(
+        [x1, y1, x2, y2], dist_expr)
+    return self.compiled_expressions[&#34;dist_euclidian&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_dist_line"><code class="name flex">
@@ -1305,8 +1378,8 @@ return tab_angulardist
     &#34;&#34;&#34;
     ** Equation de projection de points sur une droite. **
     &#34;&#34;&#34;
-    if &#34;fct_dist_line&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;]
+    if &#34;dist_line&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;dist_line&#34;]
 
     # Creation de la droite.
     phi, mu, x, y = sympy.symbols(&#34;phi mu x y&#34;, real=True)
@@ -1321,8 +1394,8 @@ return tab_angulardist
     distance = sympy.trigsimp(distance) # Permet un gain de 2.90
 
     # Vectorisation de l&#39;expression.
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;] = lambdify.Lambdify([phi, mu, x, y], distance)
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_dist_line&#34;]</code></pre>
+    self.compiled_expressions[&#34;dist_line&#34;] = lambdify.Lambdify([phi, mu, x, y], distance)
+    return self.compiled_expressions[&#34;dist_line&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_gnomonic_to_cam"><code class="name flex">
@@ -1338,17 +1411,17 @@ return tab_angulardist
     &#34;&#34;&#34;
     ** Equation permetant de passer de l&#39;espace gnomonic a celui de la camera. **
     &#34;&#34;&#34;
-    if &#34;fct_gnomonic_to_cam&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_cam&#34;]
+    if &#34;gnomonic_to_cam&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;gnomonic_to_cam&#34;]
 
     u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
     u_f = self.get_expr_uq_to_uf(*u_q)
     x_c, y_c = self.get_expr_uf_to_cam(*u_f)
 
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_cam&#34;] = lambdify.Lambdify(
+    self.compiled_expressions[&#34;gnomonic_to_cam&#34;] = lambdify.Lambdify(
         args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
         expr=[x_c, y_c]) # On l&#39;enregistre une bonne fois pour toutes.
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_cam&#34;]</code></pre>
+    return self.compiled_expressions[&#34;gnomonic_to_cam&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_gnomonic_to_thetachi"><code class="name flex">
@@ -1367,18 +1440,18 @@ return tab_angulardist
 
     theta et chi sont exprimes en degres
     &#34;&#34;&#34;
-    if &#34;fct_gnomonic_to_thetachi&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]
+    if &#34;gnomonic_to_thetachi&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;gnomonic_to_thetachi&#34;]
 
     u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
     u_f = self.get_expr_uq_to_uf(*u_q)
     theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
     theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
 
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;] = lambdify.Lambdify(
+    self.compiled_expressions[&#34;gnomonic_to_thetachi&#34;] = lambdify.Lambdify(
         args=[self.x_gnom, self.y_gnom],
         expr=[theta_deg, chi_deg]) # On l&#39;enregistre une bonne fois pour toutes.
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_gnomonic_to_thetachi&#34;]</code></pre>
+    return self.compiled_expressions[&#34;gnomonic_to_thetachi&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_hough"><code class="name flex">
@@ -1394,8 +1467,8 @@ return tab_angulardist
     &#34;&#34;&#34;
     ** Equation pour la transformee de hough. **
     &#34;&#34;&#34;
-    if &#34;fct_hough&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;]
+    if &#34;hough&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;hough&#34;]
 
     xa, ya, xb, yb = sympy.symbols(&#34;x_a y_a x_b y_b&#34;, real=True)
     u = sympy.Matrix([xa-xb, ya-yb]).normalized()
@@ -1416,8 +1489,8 @@ return tab_angulardist
     mu = sympy.trigsimp(sympy.cancel(mu)) # Permet un gain de 1.40
 
     # Vectorisation des expressions.
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;] = lambdify.Lambdify([xa, ya, xb, yb], [phi, mu])
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_hough&#34;]</code></pre>
+    self.compiled_expressions[&#34;hough&#34;] = lambdify.Lambdify([xa, ya, xb, yb], [phi, mu])
+    return self.compiled_expressions[&#34;hough&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_inter_line"><code class="name flex">
@@ -1433,8 +1506,8 @@ return tab_angulardist
     &#34;&#34;&#34;
     ** Equation d&#39;intersection entre 2 droites. **
     &#34;&#34;&#34;
-    if &#34;fct_inter_line&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;]
+    if &#34;inter_line&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;inter_line&#34;]
 
     # Creation des 2 droites.
     phi_1, mu_1, phi_2, mu_2 = sympy.symbols(&#34;phi_1, mu_1, phi_2, mu_2&#34;, real=True)
@@ -1454,9 +1527,9 @@ return tab_angulardist
     # Il n&#39;y en a pas car les expressions sont deja tres simples.
 
     # Vectorisation des expressions.
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;] = lambdify.Lambdify(
+    self.compiled_expressions[&#34;inter_line&#34;] = lambdify.Lambdify(
         [phi_1, mu_1, phi_2, mu_2], [inter_x, inter_y])
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_inter_line&#34;]</code></pre>
+    return self.compiled_expressions[&#34;inter_line&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_thetachi_to_cam"><code class="name flex">
@@ -1475,16 +1548,16 @@ return tab_angulardist
 
     theta et chi doivent etre donnes en degres.
     &#34;&#34;&#34;
-    if &#34;fct_thetachi_to_cam&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;]
+    if &#34;thetachi_to_cam&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;thetachi_to_cam&#34;]
 
     u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
     x_c, y_c = self.get_expr_uf_to_cam(*u_f)
 
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;] = lambdify.Lambdify(
+    self.compiled_expressions[&#34;thetachi_to_cam&#34;] = lambdify.Lambdify(
         args=[self.theta, self.chi, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
         expr=[x_c, y_c]) # On l&#39;enregistre une bonne fois pour toutes.
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_cam&#34;]</code></pre>
+    return self.compiled_expressions[&#34;thetachi_to_cam&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.get_fct_thetachi_to_gnomonic"><code class="name flex">
@@ -1503,17 +1576,17 @@ return tab_angulardist
 
     theta et chi doivent etre donnes en degres.
     &#34;&#34;&#34;
-    if &#34;fct_thetachi_to_gnomonic&#34; in globals()[&#34;compiled_expressions&#34;]:
-        return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;]
+    if &#34;thetachi_to_gnomonic&#34; in self.compiled_expressions:
+        return self.compiled_expressions[&#34;thetachi_to_gnomonic&#34;]
 
     u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
     u_q = self.get_expr_uf_to_uq(*u_f)
     x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
 
-    globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;] = lambdify.Lambdify(
+    self.compiled_expressions[&#34;thetachi_to_gnomonic&#34;] = lambdify.Lambdify(
         args=[self.theta, self.chi],
         expr=[x_gnom, y_gnom]) # On l&#39;enregistre une bonne fois pour toutes.
-    return globals()[&#34;compiled_expressions&#34;][&#34;fct_thetachi_to_gnomonic&#34;]</code></pre>
+    return self.compiled_expressions[&#34;thetachi_to_gnomonic&#34;]</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.load"><code class="name flex">
@@ -1521,7 +1594,7 @@ return tab_angulardist
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Charge si il existe, le fichier contenant les expressions. </strong></p>
-<p>Deverse les expressions dans le dictionaire: <code>globals()["compiled_expressions"]</code>.</p></div>
+<p>Deverse les expressions dans le dictionaire: <code>self.compiled_expressions</code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1530,28 +1603,35 @@ return tab_angulardist
     &#34;&#34;&#34;
     ** Charge si il existe, le fichier contenant les expressions. **
 
-    Deverse les expressions dans le dictionaire: ``globals()[&#34;compiled_expressions&#34;]``.
+    Deverse les expressions dans le dictionaire: ``self.compiled_expressions``.
     &#34;&#34;&#34;
+    def path_import(absolute_path):
+        spec = importlib.util.spec_from_file_location(absolute_path, absolute_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
     dirname = os.path.dirname(os.path.abspath(laue.__file__))
-    file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
-    
-    if os.path.exists(file):
-        with open(file, &#34;rb&#34;) as f:
-            try:
-                content = pickle.load(f)
-            except (ValueError, EOFError): # Si c&#39;est pas le bon protocol
-                content = {&#34;hash&#34;: None}
-        if content[&#34;hash&#34;] == self._hash(): # Si les donnees sont a jour.
-            globals()[&#34;compiled_expressions&#34;] = {**globals()[&#34;compiled_expressions&#34;], **content[&#34;expr&#34;]}
-    return globals()[&#34;compiled_expressions&#34;]</code></pre>
+    file = os.path.join(dirname, &#34;data&#34;, &#34;lambdifygenerated.py&#34;)
+    try:
+        lambdifygenerated = path_import(file)
+    except FileNotFoundError:
+        return self.compiled_expressions
+    else:
+        if lambdifygenerated.HASH != self._hash():
+            return self.compiled_expressions
+        for name in self.names:
+            if name in self.compiled_expressions:
+                continue
+            self.compiled_expressions[name] = getattr(lambdifygenerated, name)</code></pre>
 </details>
 </dd>
 <dt id="laue.core.geometry.symbolic.Compilator.save"><code class="name flex">
 <span>def <span class="ident">save</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p><strong> Enregistre un fichier contenant les expressions. </strong></p>
-<p>Enregistre seulement ce qui est present dans <code>globals()["compiled_expressions"]</code>.
+<div class="desc"><p><strong> Enregistre un module contenant les expressions. </strong></p>
+<p>Enregistre seulement ce qui est present dans <code>self.compiled_expressions</code>.
 N'ecrase pas l'ancien contenu.</p></div>
 <details class="source">
 <summary>
@@ -1559,20 +1639,56 @@ N'ecrase pas l'ancien contenu.</p></div>
 </summary>
 <pre><code class="python">def save(self):
     &#34;&#34;&#34;
-    ** Enregistre un fichier contenant les expressions. **
+    ** Enregistre un module contenant les expressions. **
 
-    Enregistre seulement ce qui est present dans ``globals()[&#34;compiled_expressions&#34;]``.
+    Enregistre seulement ce qui est present dans ``self.compiled_expressions``.
     N&#39;ecrase pas l&#39;ancien contenu.
     &#34;&#34;&#34;
-    dirname = os.path.dirname(os.path.abspath(laue.__file__))
-    file = os.path.join(dirname, &#34;data&#34;, &#34;geometry.pickle&#34;)
+    import time
+    dirname = os.path.join(os.path.dirname(os.path.abspath(laue.__file__)), &#34;data&#34;)
     self.load() # Recuperation du contenu du fichier.
-    content = {
-        &#34;hash&#34;: self._hash(),
-        &#34;expr&#34;: globals()[&#34;compiled_expressions&#34;]
-        }
-    with open(file, &#34;wb&#34;) as f:
-        pickle.dump(content, f)</code></pre>
+
+    # Ecriture du module principal.
+    with open(os.path.join(dirname, &#34;lambdifygenerated.py&#34;), &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+        f.write( &#34;#!/usr/bin/env python3\n&#34;)
+        f.write( &#34;\n&#34;)
+        f.write( &#39;&#34;&#34;&#34;\n&#39;)
+        f.write(f&#34;This code was automatically generated on {time.ctime()}.\n&#34;)
+        f.write( &#39;&#34;&#34;&#34;\n&#39;)
+        f.write( &#34;\n&#34;)
+        f.write( &#34;import sympy\n&#34;)
+        f.write( &#34;import numpy as np\n&#34;)
+        f.write( &#34;\n&#34;)
+        f.write(f&#34;HASH = {repr(self._hash())}\n&#34;)
+        f.write( &#34;\n&#34;)
+        for func_name, lamb in self.compiled_expressions.items():
+            if not isinstance(lamb, lambdify.Lambdify): # C&#39;est juste de la prevention,
+                del self.compiled_expressions[func_name] # ce n&#39;est pas cence servir.
+                getattr(self, f&#34;get_fct_{func_name}&#34;)()
+            f.write(lamb.__str__(name=func_name, bloc=&#34;main&#34;))
+            f.write(&#34;\n&#34;)
+
+    # Ecriture des modules secondaires.
+    from sympy.utilities.lambdify import MODULES
+    for mod in [&#34;numpy&#34;, &#34;numpy128&#34;, &#34;numexpr&#34;, &#34;sympy&#34;]:
+        header = (
+            &#34;\n&#34;.join(MODULES[mod if mod != &#34;numpy128&#34; else &#34;numpy&#34;][-1])
+            if mod != &#34;numexpr&#34; else &#34;from numexpr import evaluate&#34;)
+        header += &#34;\n&#34;
+        if mod == &#34;sympy&#34;:
+            header += &#34;from sympy import symbols\n&#34;
+
+        with open(os.path.join(dirname, f&#34;{mod}_lambdify.py&#34;), &#34;w&#34;, encoding=&#34;utf-8&#34;) as f:
+            f.write(&#34;#!/usr/bin/env python3\n&#34;)
+            f.write(&#34;\n&#34;)
+            f.write(&#39;&#34;&#34;&#34;\n&#39;)
+            f.write(&#34;This code was automatically generated.\n&#34;)
+            f.write(&#39;&#34;&#34;&#34;\n&#39;)
+            f.write(&#34;\n&#34;)
+            f.write(header)
+            f.write(&#34;\n\n&#34;)
+            for func_name, lamb in self.compiled_expressions.items():
+                f.write(lamb.__str__(name=func_name, bloc=mod))</code></pre>
 </details>
 </dd>
 </dl>
@@ -1989,7 +2105,7 @@ N'ecrase pas l'ancien contenu.</p></div>
 le vecteur uf dans le repere principal.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from sympy import symbols
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy import symbols
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; x_cam, y_cam = symbols(&quot;x y&quot;)
@@ -2065,7 +2181,7 @@ Matrix([
 le vecteur uq dans le repere principal.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from sympy import symbols
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy import symbols
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; x_gnom, y_gnom = symbols(&quot;x y&quot;)
@@ -2140,7 +2256,7 @@ raisons de simplifications symbolique.</p>
 le vecteur uf dans le repere principal.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from sympy import symbols
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy import symbols
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; theta, chi = symbols(&quot;theta chi&quot;)
@@ -2218,7 +2334,7 @@ de la camera. (selon l'axe x ou Ci)</dd>
 <dd>Comme <code>x_camera</code> selon l'axe y ou Cj.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from sympy import symbols
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy import symbols
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; uf_x, uf_y, uf_z = symbols(&quot;uf_x, uf_y, uf_z&quot;)
@@ -2304,7 +2420,7 @@ en degres a ce stade car ca gene la simplification.</p>
 <dt><strong><code>chi</code></strong> :&ensp;<code>sympy.Basic</code></dt>
 <dd>La moitier de l'angle de rotation du plan christalin autour de -y.</dd>
 </dl>
-<pre><code class="python-repl">&gt;&gt;&gt; from sympy import symbols
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy import symbols
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; uf_x, uf_y, uf_z = symbols(&quot;uf_x, uf_y, uf_z&quot;, real=True)
@@ -2377,7 +2493,7 @@ asin(uf_y/sqrt(uf_y**2 + uf_z**2))
 le vecteur uq dans le repere principal.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from sympy import symbols
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy import symbols
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; uf_x, uf_y, uf_z = symbols(&quot;uf_x, uf_y, uf_z&quot;)
@@ -2445,7 +2561,7 @@ du plan gnomonic. (selon l'axe x ou Gi)</dd>
 <dd>Comme <code>x_gnomonic</code> selon l'axe y ou Gj.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from sympy import symbols
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy import symbols
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; uq_x, uq_y, uq_z = symbols(&quot;uq_x, uq_y, uq_z&quot;)
@@ -2526,7 +2642,7 @@ du plan gnomonic. (selon l'axe x ou Gi)</dd>
 le vecteur uf dans le repere principal.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from sympy import symbols
+<pre><code class="language-python-repl">&gt;&gt;&gt; from sympy import symbols
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; uq_x, uq_y, uq_z = symbols(&quot;uq_x, uq_y, uq_z&quot;)
@@ -2631,7 +2747,7 @@ Matrix([
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

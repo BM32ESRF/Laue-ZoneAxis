@@ -35,12 +35,12 @@ recuperation des diagrammes
 ...
 <class 'laue.diagram.LaueDiagram'>
 >>>
-
 """
 
 __all__ = ["Experiment", "OrderedExperiment", "Transformer",
            "atomic_pic_search", "atomic_find_zone_axes", "atomic_find_subsets"]
 __pdoc__ = {"tests": False,
+            "data": False,
             "Experiment.__getitem__": True,
             "Experiment.__iter__": True,
             "Experiment.__len__": True,

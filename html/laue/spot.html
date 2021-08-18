@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>laue.spot API documentation</title>
 <meta name="description" content="** Represente un spot dans un diagramme de Laue. **
 …" />
@@ -64,7 +64,7 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
     Les formules de calcul des distances sont les suivantes:
     \[ distance\_camera = \sqrt{(pxl\_spot1_x - pxl\_spot2_x)^2 - (pxl\_spot1_y - pxl\_spot2_y)^2} \]
     \[ distance\_gnomonic = \sqrt{(gnom\_spot1_x - gnom\_spot2_x)^2 - (gnom\_spot1_y - gnom\_spot2_y)^2} \]
-    \[ distance\_cosine = \arccos{(\sin{(\chi_{1})} \sin{(\chi_{2})} \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} + \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} \cos{(\chi_{1})} \cos{(\chi_{2})} + \cos{(2 \theta_{1})} \cos{(2 \theta_{2})})} \]
+    \[ distance\_cosine = \arccos{\left(\frac{\vec{u_q}(spot_1).\vec{u_q}(spot_2)}{\left\|\vec{u_q}(spot_1)\right\|.\left\|\vec{u_q}(spot_2)\right\|}\right)} \]
 
     Parameters
     ----------
@@ -100,13 +100,18 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; from laue.spot import distance
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; spot1, spot2 = diag[:2]
     &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
     ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
     &gt;&gt;&gt;
     &gt;&gt;&gt; distance(spot1, spot2)
     93.99273
+    &gt;&gt;&gt; distance(spot1, spot2, space=&#34;gnomonic&#34;)
+    ...
+    &gt;&gt;&gt; distance(spot1, spot2, space=&#34;cosine&#34;)
+    ...
+    &gt;&gt;&gt;
     &gt;&gt;&gt; distance(spot1, diag[:5])
     array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
           dtype=float32)
@@ -163,17 +168,10 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
     x1, x2 = np.meshgrid(x1, x2, indexing=&#34;ij&#34;, copy=False)
     y1, y2 = np.meshgrid(y1, y2, indexing=&#34;ij&#34;, copy=False)
 
+    from laue import Transformer
     if space == &#34;cosine&#34;:
-        from laue import Transformer
         return Transformer().get_fct_dist_cosine()(x1, y1, x2, y2)
-
-    try:
-        import numexpr
-    except ImportError:
-        return np.sqrt((x1-x2)**2 + (y1-y2)**2)
-    else:
-        return numexpr.evaluate(&#34;sqrt((x1-x2)**2 + (y1-y2)**2)&#34;)
-
+    return Transformer().get_fct_dist_euclidian()(x1, y1, x2, y2)
 
 
 class Spot(SpotPickleable):
@@ -706,7 +704,7 @@ class Spot(SpotPickleable):
 <p>Les formules de calcul des distances sont les suivantes:
 <span><span class="MathJax_Preview"> distance\_camera = \sqrt{(pxl\_spot1_x - pxl\_spot2_x)^2 - (pxl\_spot1_y - pxl\_spot2_y)^2} </span><script type="math/tex; mode=display"> distance\_camera = \sqrt{(pxl\_spot1_x - pxl\_spot2_x)^2 - (pxl\_spot1_y - pxl\_spot2_y)^2} </script></span>
 <span><span class="MathJax_Preview"> distance\_gnomonic = \sqrt{(gnom\_spot1_x - gnom\_spot2_x)^2 - (gnom\_spot1_y - gnom\_spot2_y)^2} </span><script type="math/tex; mode=display"> distance\_gnomonic = \sqrt{(gnom\_spot1_x - gnom\_spot2_x)^2 - (gnom\_spot1_y - gnom\_spot2_y)^2} </script></span>
-<span><span class="MathJax_Preview"> distance\_cosine = \arccos{(\sin{(\chi_{1})} \sin{(\chi_{2})} \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} + \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} \cos{(\chi_{1})} \cos{(\chi_{2})} + \cos{(2 \theta_{1})} \cos{(2 \theta_{2})})} </span><script type="math/tex; mode=display"> distance\_cosine = \arccos{(\sin{(\chi_{1})} \sin{(\chi_{2})} \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} + \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} \cos{(\chi_{1})} \cos{(\chi_{2})} + \cos{(2 \theta_{1})} \cos{(2 \theta_{2})})} </script></span></p>
+<span><span class="MathJax_Preview"> distance\_cosine = \arccos{\left(\frac{\vec{u_q}(spot_1).\vec{u_q}(spot_2)}{\left\|\vec{u_q}(spot_1)\right\|.\left\|\vec{u_q}(spot_2)\right\|}\right)} </span><script type="math/tex; mode=display"> distance\_cosine = \arccos{\left(\frac{\vec{u_q}(spot_1).\vec{u_q}(spot_2)}{\left\|\vec{u_q}(spot_1)\right\|.\left\|\vec{u_q}(spot_2)\right\|}\right)} </script></span></p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>spot1</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="#laue.spot.Spot">Spot</a>, tuple, list, np.ndarray</code></dt>
@@ -747,16 +745,21 @@ la liste des distance qui separe ce spot unique a tous les autres.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; from laue.spot import distance
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; spot1, spot2 = diag[:2]
 &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
 ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
 &gt;&gt;&gt;
 &gt;&gt;&gt; distance(spot1, spot2)
 93.99273
+&gt;&gt;&gt; distance(spot1, spot2, space=&quot;gnomonic&quot;)
+...
+&gt;&gt;&gt; distance(spot1, spot2, space=&quot;cosine&quot;)
+...
+&gt;&gt;&gt;
 &gt;&gt;&gt; distance(spot1, diag[:5])
 array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
       dtype=float32)
@@ -777,7 +780,7 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
     Les formules de calcul des distances sont les suivantes:
     \[ distance\_camera = \sqrt{(pxl\_spot1_x - pxl\_spot2_x)^2 - (pxl\_spot1_y - pxl\_spot2_y)^2} \]
     \[ distance\_gnomonic = \sqrt{(gnom\_spot1_x - gnom\_spot2_x)^2 - (gnom\_spot1_y - gnom\_spot2_y)^2} \]
-    \[ distance\_cosine = \arccos{(\sin{(\chi_{1})} \sin{(\chi_{2})} \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} + \sin{(2 \theta_{1})} \sin{(2 \theta_{2})} \cos{(\chi_{1})} \cos{(\chi_{2})} + \cos{(2 \theta_{1})} \cos{(2 \theta_{2})})} \]
+    \[ distance\_cosine = \arccos{\left(\frac{\vec{u_q}(spot_1).\vec{u_q}(spot_2)}{\left\|\vec{u_q}(spot_1)\right\|.\left\|\vec{u_q}(spot_2)\right\|}\right)} \]
 
     Parameters
     ----------
@@ -813,13 +816,18 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; from laue.spot import distance
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; spot1, spot2 = diag[:2]
     &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
     ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
     &gt;&gt;&gt;
     &gt;&gt;&gt; distance(spot1, spot2)
     93.99273
+    &gt;&gt;&gt; distance(spot1, spot2, space=&#34;gnomonic&#34;)
+    ...
+    &gt;&gt;&gt; distance(spot1, spot2, space=&#34;cosine&#34;)
+    ...
+    &gt;&gt;&gt;
     &gt;&gt;&gt; distance(spot1, diag[:5])
     array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
           dtype=float32)
@@ -876,16 +884,10 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
     x1, x2 = np.meshgrid(x1, x2, indexing=&#34;ij&#34;, copy=False)
     y1, y2 = np.meshgrid(y1, y2, indexing=&#34;ij&#34;, copy=False)
 
+    from laue import Transformer
     if space == &#34;cosine&#34;:
-        from laue import Transformer
         return Transformer().get_fct_dist_cosine()(x1, y1, x2, y2)
-
-    try:
-        import numexpr
-    except ImportError:
-        return np.sqrt((x1-x2)**2 + (y1-y2)**2)
-    else:
-        return numexpr.evaluate(&#34;sqrt((x1-x2)**2 + (y1-y2)**2)&#34;)</code></pre>
+    return Transformer().get_fct_dist_euclidian()(x1, y1, x2, y2)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1490,7 +1492,7 @@ des distances avec <code>np.meshgrid</code>.</li>
 <dd>La distance en mm.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; spot1, spot2 = diag[:2]
@@ -1546,7 +1548,7 @@ Si ce spot est a l'intersection de plusieurs axes,
 l'ensemble contiendra plusieurs elements.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; spot = diag.select_spots(n=1, sort=&quot;quality&quot;).pop()
@@ -1603,7 +1605,7 @@ l'ensemble contiendra plusieurs elements.</dd>
 <dd>x, y, w, h</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
@@ -1654,7 +1656,7 @@ Spot(position=(1370.52, 1874.78), quality=0.573)
 0.0 =&gt; Tache biscornue.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
@@ -1704,7 +1706,7 @@ Spot(position=(1370.52, 1874.78), quality=0.573)
 <dd>Les coordonnees x, y de la tache dans le plan gnomonic (en mm). de type (float, float)</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0][0]
@@ -1759,7 +1761,7 @@ array([ 0.314 , -0.4397])
 <div class="desc"><p><strong> Renvoi le numero de ce spot. </strong></p>
 <p>Au sein d'un diagrame, chaque numero de spot est unique.</p>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image)[0]
 &gt;&gt;&gt; all(spot.get_id() == i for i, spot in enumerate(diag))
@@ -1801,7 +1803,7 @@ est presente le spot. Seule la valeur des pixels presents
 au dessus du fond sont renvoyees. Le type est uint16.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot.get_image()
@@ -1856,7 +1858,7 @@ array([[  8,  10,  16,  16,   8,   5],
 Seules les valeurs au dessus du fond diffus sont considerees.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
@@ -1910,7 +1912,7 @@ Spot(position=(1370.52, 1874.78), quality=0.573)
 <dd>Les coordonnees x, y du centre de gravite de la tache (en pxl). de type (float, float).</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
@@ -1975,7 +1977,7 @@ array([1370.5172, 1874.7801])
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
 &gt;&gt;&gt; spot
@@ -2040,7 +2042,7 @@ projection sur le plan <code>(x, y)</code> de l'axe du rayon reflechit. (en deg)
 <code>(y, z)</code> de l'axe du rayon reflechit. (en deg)</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0][0]
@@ -2105,7 +2107,7 @@ array([ 25., -25.])
 <dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0][0]
 &gt;&gt;&gt;
@@ -2179,7 +2181,7 @@ array([ 25., -25.])
 <dd>Si True, affiche a l'ecran en faisant appel a <code>plt.show()</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; spot = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0][0]
 &gt;&gt;&gt;
@@ -2344,7 +2346,7 @@ trouves sont correctes.</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

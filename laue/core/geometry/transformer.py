@@ -22,6 +22,7 @@ try:
 except ImportError:
     numexpr = None
 
+from laue.utilities.serialization import TransformerPickleable
 from laue.core.geometry.symbolic import Compilator
 import laue.utilities.lambdify as lambdify
 
@@ -29,7 +30,7 @@ import laue.utilities.lambdify as lambdify
 __all__ = ["Transformer", "comb2ind", "ind2comb"]
 
 
-class Transformer(Compilator):
+class Transformer(TransformerPickleable, Compilator):
     """
     Permet d'effectuer des transformations geometrique comme jongler
     entre l'espace de la camera et l'espace gnomonique ou encore
@@ -42,7 +43,7 @@ class Transformer(Compilator):
         self._fcts_cam_to_gnomonic = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_cam, y_cam), les parametres sont deja remplaces.
         self._fcts_gnomonic_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_gnom, y_gnom), les parametres sont deja remplaces.
         self._fcts_cam_to_thetachi = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_cam, y_cam), les parametres sont deja remplaces.
-        self._fcts_thetachi_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(theta, chi), les paremetres sont deja remplaces.
+        self._fcts_thetachi_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(theta, chi), les parametres sont deja remplaces.
         self._parameters_memory = {} # Permet d'eviter de relire le dictionaire des parametres a chaque fois.
 
     def compile(self, parameters=None, *, transform=None):
@@ -61,8 +62,6 @@ class Transformer(Compilator):
             Peut prendre les valeurs: ``"cam_to_gnomonic"``, ``"gnomonic_to_cam"``,
             ``"cam_to_thetachi"`` ou ``"thetachi_to_cam"``.
         """
-        super().compile()
-
         if parameters is not None:
             assert isinstance(parameters, dict), ("Les parametres doivent founis "
                 f"dans un dictionaire, pas dans un {type(parameters).__name__}")

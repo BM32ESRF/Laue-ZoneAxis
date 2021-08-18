@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>laue API documentation</title>
 <meta name="description" content="** Permet de manipuler un lot de diagrammes de laue. **
 …" />
@@ -41,11 +41,11 @@ Il faut ensuite saisir la commande suivante:<ul>
 </ul>
 <h2 id="examples">Examples</h2>
 <p>preparation</p>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt;
 </code></pre>
 <p>creation d'une experience</p>
-<pre><code class="python-repl">&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+<pre><code class="language-python-repl">&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(image)
 &gt;&gt;&gt;
 &gt;&gt;&gt; experiment
@@ -53,7 +53,7 @@ Experiment('laue/examples')
 &gt;&gt;&gt;
 </code></pre>
 <p>recuperation des diagrammes</p>
-<pre><code class="python-repl">&gt;&gt;&gt; for diag in experiment:
+<pre><code class="language-python-repl">&gt;&gt;&gt; for diag in experiment:
 ...     print(type(diag))
 ...
 &lt;class 'laue.diagram.LaueDiagram'&gt;
@@ -100,12 +100,12 @@ recuperation des diagrammes
 ...
 &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
 &gt;&gt;&gt;
-
 &#34;&#34;&#34;
 
 __all__ = [&#34;Experiment&#34;, &#34;OrderedExperiment&#34;, &#34;Transformer&#34;,
            &#34;atomic_pic_search&#34;, &#34;atomic_find_zone_axes&#34;, &#34;atomic_find_subsets&#34;]
 __pdoc__ = {&#34;tests&#34;: False,
+            &#34;data&#34;: False,
             &#34;Experiment.__getitem__&#34;: True,
             &#34;Experiment.__iter__&#34;: True,
             &#34;Experiment.__len__&#34;: True,
@@ -190,7 +190,7 @@ qui y sont raccrochees. Il doit prendre la forme suivante:
 <dd>Chaque element est un ensemble d'indice de spot appartenant au meme grain.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; spots_dict = {0: {'gnom': (0.3136510725564478, -0.44091934214920697), 'axes': set()},
 ...               1: {'gnom': (0.3092269223801162, -0.3703963974694111), 'axes': {0}},
 ...               2: {'gnom': (0.29464954430652696, 0.39670741889986955), 'axes': {1}},
@@ -564,7 +564,7 @@ On a <code>len(axes_spots_ind) == nbr_d_axe_de_zones</code>.</dd>
 On a <code>len(spots_axes_ind) == nbr_de_spots</code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
@@ -899,7 +899,7 @@ sur l'image binarisee afin d'aglomerer les grains proches.</dd>
 Les element sont des dictionaires</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import cv2
+<pre><code class="language-python-repl">&gt;&gt;&gt; import cv2
 &gt;&gt;&gt; from laue import atomic_pic_search
 &gt;&gt;&gt; from laue.utilities.image import read_image
 &gt;&gt;&gt; image_path = &quot;laue/examples/ge_blanc.mccd&quot;
@@ -2356,7 +2356,7 @@ liste de diagrames ordones dans l'ordre de generation des images.</li>
 <dd>Si la clef n'est pas correcte.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt;
 &gt;&gt;&gt; type(laue.Experiment(images)[0])
@@ -2478,7 +2478,7 @@ la methode <code><a title="laue.experiment.base_experiment.Experiment.get_diagra
 <dd>Chaque diagramme contenus dans l'experience.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(image)
 &gt;&gt;&gt;
@@ -2595,7 +2595,7 @@ Se sont aussi ceux de la fonction <code><a title="laue.diagram.LaueDiagram.find_
 <dd>Pour chaque diagramme de cette experience, cede une estimation des grains.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&quot;laue/examples/ge_blanc.det&quot;)
 &gt;&gt;&gt;
@@ -2754,7 +2754,7 @@ des axes de zones du diagramme. Les elements de l'ensemble
 sont de type <code><a title="laue.zone_axis.ZoneAxis" href="zone_axis.html#laue.zone_axis.ZoneAxis">ZoneAxis</a></code>.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&quot;laue/examples/ge_blanc.det&quot;)
 &gt;&gt;&gt;
@@ -2934,7 +2934,7 @@ soient lues afin de tout renvoyer en meme temps.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(images)
 &gt;&gt;&gt;
@@ -3219,7 +3219,7 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
 <dd>Si les images ne sont pas de la meme taille.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt; for image in laue.Experiment(images):
 ...     pass
@@ -3374,7 +3374,7 @@ L'extension doit etre comprise dans le nom du fichier.
 Si un fichier du meme nom existe deja, il est ecrase.</dd>
 </dl>
 <h2 id="example">Example</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import os, tempfile
+<pre><code class="language-python-repl">&gt;&gt;&gt; import os, tempfile
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt;
 &gt;&gt;&gt; images = [&quot;laue/examples/ge_blanc.mccd&quot;]
@@ -3471,7 +3471,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
 <dd>Si il y a des incoherences dans les parametres.</dd>
 </dl>
 <h2 id="example">Example</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
 &gt;&gt;&gt; parameters = experiment.set_calibration()
@@ -4032,7 +4032,7 @@ numpy dimension 3 est renvoyee.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = (np.zeros(shape=(2, 2), dtype=np.uint16)
 ...     for _ in range(120)) # Image generator.
@@ -4044,7 +4044,7 @@ numpy dimension 3 est renvoyee.</li>
 &gt;&gt;&gt;
 </code></pre>
 <p>Acces directe simple.</p>
-<pre><code class="python-repl">&gt;&gt;&gt; experiment[0]
+<pre><code class="language-python-repl">&gt;&gt;&gt; experiment[0]
 LaueDiagram(name='image_0')
 &gt;&gt;&gt; experiment[1]
 LaueDiagram(name='image_1')
@@ -4052,14 +4052,14 @@ LaueDiagram(name='image_1')
 [LaueDiagram(name='image_1'), LaueDiagram(name='image_4'), LaueDiagram(name='image_7')]
 </code></pre>
 <p>Acces directe organise.</p>
-<pre><code class="python-repl">&gt;&gt;&gt; experiment[0, 0, 0]
+<pre><code class="language-python-repl">&gt;&gt;&gt; experiment[0, 0, 0]
 LaueDiagram(name='image_0')
 &gt;&gt;&gt; experiment[2, 3, 0]
 LaueDiagram(name='image_11')
 &gt;&gt;&gt;
 </code></pre>
 <p>Acces slice</p>
-<pre><code class="python-repl">&gt;&gt;&gt; experiment[:2, 1:3, 0]
+<pre><code class="language-python-repl">&gt;&gt;&gt; experiment[:2, 1:3, 0]
 array([[[LaueDiagram(name='image_1')],
         [LaueDiagram(name='image_2')]],
 &lt;BLANKLINE&gt;
@@ -4217,10 +4217,10 @@ array([[[LaueDiagram(name='image_116')],
 A couple de rang (x, y) associ le rang 'ravel' du diagrame.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 </code></pre>
 <p>Cas balayage.</p>
-<pre><code class="python-repl">&gt;&gt;&gt; def get_position(i):
+<pre><code class="language-python-repl">&gt;&gt;&gt; def get_position(i):
 ...     i_mod = i % 12
 ...     return divmod(i_mod, 4)
 ...
@@ -4232,7 +4232,7 @@ array([[ 0,  1,  2,  3],
 &gt;&gt;&gt;
 </code></pre>
 <p>Cas non conventionel</p>
-<pre><code class="python-repl">&gt;&gt;&gt; def get_position(i):
+<pre><code class="language-python-repl">&gt;&gt;&gt; def get_position(i):
 ...     x = [0, 1, 1, 2, 2, 0, 2, 1, 0, 1, 0, 2]
 ...     y = [0, 2, 3, 1, 0, 2, 2, 0, 1, 1, 3, 3]
 ...     return x[i%12], y[i%12]
@@ -4328,7 +4328,7 @@ array([[ 0,  8,  5, 10],
 <dd>Le nombre de diagrames pris selon l'axe y.</dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; def get_positions(i):
 ...     i_mod = i % 3362
 ...     return divmod(i_mod, 82)
@@ -4422,7 +4422,7 @@ s'ammuser avec la transformee de Hough.</p>
         self._fcts_cam_to_gnomonic = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_cam, y_cam), les parametres sont deja remplaces.
         self._fcts_gnomonic_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_gnom, y_gnom), les parametres sont deja remplaces.
         self._fcts_cam_to_thetachi = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_cam, y_cam), les parametres sont deja remplaces.
-        self._fcts_thetachi_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(theta, chi), les paremetres sont deja remplaces.
+        self._fcts_thetachi_to_cam = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(theta, chi), les parametres sont deja remplaces.
         self._parameters_memory = {} # Permet d&#39;eviter de relire le dictionaire des parametres a chaque fois.
 
     def compile(self, parameters=None, *, transform=None):
@@ -5357,7 +5357,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -5366,7 +5366,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
+<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.cam_to_gnomonic(x_cam, y_cam, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.cam_to_gnomonic(x_cam, y_cam, parameters), 2)
 array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
@@ -5377,7 +5377,7 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="python-repl">&gt;&gt;&gt; transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
+<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.cam_to_gnomonic(0.0, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
 ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
@@ -5475,7 +5475,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -5484,7 +5484,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
+<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.cam_to_thetachi(x_cam, y_cam, parameters))
 array([[ 64.,  60.,  51.,  39.,  30.,  26.],
@@ -5495,7 +5495,7 @@ array([[ 64.,  60.,  51.,  39.,  30.,  26.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="python-repl">&gt;&gt;&gt; transformer.cam_to_thetachi(0.0, 0.0, parameters).shape
+<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.cam_to_thetachi(0.0, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(0, 2048, size=(1, 2, 3)),
 ...                 np.random.uniform(0, 2048, size=(1, 2, 3)))
@@ -5677,7 +5677,7 @@ risque d'y avoir des arrondis qui engendrent:
 shape = <code>(*nbr_droites, *nbr_points)</code></dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -5818,7 +5818,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -5830,7 +5830,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
+<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.gnomonic_to_cam(x_gnom, y_gnom, parameters))
 array([[   3.,  412.,  821., 1230., 1639., 2048.],
@@ -5841,7 +5841,7 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="python-repl">&gt;&gt;&gt; transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
+<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.gnomonic_to_cam(0.0, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
 ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
@@ -5940,7 +5940,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
@@ -5950,7 +5950,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
+<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.gnomonic_to_thetachi(x_gnom, y_gnom))
 array([[ 64.,  60.,  51.,  39.,  30.,  26.],
@@ -5961,7 +5961,7 @@ array([[ 64.,  60.,  51.,  39.,  30.,  26.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="python-repl">&gt;&gt;&gt; transformer.gnomonic_to_thetachi(0.0, 0.0).shape
+<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.gnomonic_to_thetachi(0.0, 0.0).shape
 (2,)
 &gt;&gt;&gt; x_cam, y_cam = (np.random.uniform(-.1, .1, size=(1, 2, 3)),
 ...                 np.random.uniform(-.1, .1, size=(1, 2, 3)))
@@ -6076,7 +6076,7 @@ soit la plus petite possible.</li>
 </dl>
 <p>shape = <code>(2, *over_dims, n*(n-1)/2)</code></p>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue.core.geometry import transformer
 &gt;&gt;&gt; transformer = transformer.Transformer()
 &gt;&gt;&gt; x, y = np.random.normal(size=(2, 6))
@@ -6231,12 +6231,12 @@ de l'appel de cette fonction sur le nuage de points unique correspondant.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue.core.geometry import transformer
 &gt;&gt;&gt; transformer = transformer.Transformer()
 </code></pre>
 <p>Type de retour <code>float</code> vs <code>object</code>.</p>
-<pre><code class="python-repl">&gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
+<pre><code class="language-python-repl">&gt;&gt;&gt; x, y = (np.array([ 1.,  2.,  3.,  0., -1.]),
 ...         np.array([ 0.,  1.,  1., -1.,  1.]))
 &gt;&gt;&gt; phi, mu = transformer.hough(x, y)
 &gt;&gt;&gt; np.round(transformer.hough_reduce(phi, mu, nbr=3), 2)
@@ -6253,7 +6253,7 @@ array([[-0.79,  1.57],
 &gt;&gt;&gt;
 </code></pre>
 <p>Les dimensions de retour.</p>
-<pre><code class="python-repl">&gt;&gt;&gt; x, y = (np.random.normal(size=(6, 5, 4)),
+<pre><code class="language-python-repl">&gt;&gt;&gt; x, y = (np.random.normal(size=(6, 5, 4)),
 ...         np.random.normal(size=(6, 5, 4)))
 &gt;&gt;&gt; phi, mu = transformer.hough(x, y)
 &gt;&gt;&gt; transformer.hough_reduce(phi, mu).shape
@@ -6455,7 +6455,7 @@ La shape du tenseur final est donc: <strong> shape = <code>(2, *over_dims, n*(n-
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; np.random.seed(0)
@@ -6576,7 +6576,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; from laue.utilities.parsing import extract_parameters
 &gt;&gt;&gt; parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
@@ -6586,7 +6586,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_cam(theta, chi, parameters))
+<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_cam(theta, chi, parameters))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.thetachi_to_cam(theta, chi, parameters))
 array([[   3.,  412.,  821., 1230., 1639., 2048.],
@@ -6597,7 +6597,7 @@ array([[   3.,  412.,  821., 1230., 1639., 2048.],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="python-repl">&gt;&gt;&gt; transformer.thetachi_to_cam(np.pi/4, 0.0, parameters).shape
+<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.thetachi_to_cam(np.pi/4, 0.0, parameters).shape
 (2,)
 &gt;&gt;&gt; theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
 ...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
@@ -6694,7 +6694,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; import numpy as np
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; from laue import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; theta, chi = np.array([[ 63.605,  59.91 ,  51.367,  38.546,  30.05 ,  26.378],
@@ -6702,7 +6702,7 @@ mais peu precis. Pour la presision il faut utiliser <code>np.float64</code> ou <
 &gt;&gt;&gt;
 </code></pre>
 <p>Output type</p>
-<pre><code class="python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_gnomonic(theta, chi))
+<pre><code class="language-python-repl">&gt;&gt;&gt; type(transformer.thetachi_to_gnomonic(theta, chi))
 &lt;class 'numpy.ndarray'&gt;
 &gt;&gt;&gt; np.round(transformer.thetachi_to_gnomonic(theta, chi), 2)
 array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
@@ -6713,7 +6713,7 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
 &gt;&gt;&gt;
 </code></pre>
 <p>Output shape</p>
-<pre><code class="python-repl">&gt;&gt;&gt; transformer.thetachi_to_gnomonic(np.pi/4, 0.0).shape
+<pre><code class="language-python-repl">&gt;&gt;&gt; transformer.thetachi_to_gnomonic(np.pi/4, 0.0).shape
 (2,)
 &gt;&gt;&gt; theta, chi = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
 ...               np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
@@ -6887,7 +6887,7 @@ array([[-0.51, -0.36, -0.12,  0.1 ,  0.17,  0.13],
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

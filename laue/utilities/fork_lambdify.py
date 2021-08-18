@@ -511,7 +511,7 @@ class _EvaluatorPrinter:
                 else:
                     funcbody.append("del {}".format(s))
 
-        str_expr = '{}'.format(expr)
+        str_expr = '{}'.format(expr if cses else self._exprrepr(expr))
         if '\n' in str_expr:
             str_expr = '({})'.format(str_expr)
         funcbody.append('return {}'.format(str_expr))

@@ -19,7 +19,9 @@ __pdoc__ = {"SpotPickelable.__getstate__": True,
             "ZoneAxisPickleable.__getstate__": True,
             "ZoneAxisPickleable.__setstate__": True,
             "DiagramPickleable.__getstate__": True,
-            "DiagramPickleable.__setstate__": True}
+            "DiagramPickleable.__setstate__": True,
+            "TransformerPickleable.__getstate__": True,
+            "TransformerPickleable.__setstate__": True}
 
 
 class SpotPickleable:
@@ -173,6 +175,54 @@ class DiagramPickleable:
                 axis.diagram = self
                 axis.spots = collections.OrderedDict(
                     ((ind, self[ind]) for ind in axis.spots.keys()))
+
+class TransformerPickleable:
+    """
+    ** Interface pour serialiser le gestionaire de transformation geometriques. **
+    """
+    def __getstate__(self):
+        """
+        ** Recupere les fonction vecirisee et symplifiees. **
+        """
+        state = {}
+        if self._fcts_cam_to_gnomonic:
+            state["c2g"] = {k: v for k, v in self._fcts_cam_to_gnomonic.items()}
+        if self._fcts_gnomonic_to_cam:
+            state["g2c"] = {k: v for k, v in self._fcts_gnomonic_to_cam.items()}
+        if self._fcts_cam_to_thetachi:
+            state["c2t"] = {k: v for k, v in self._fcts_cam_to_thetachi.items()}
+        if self._fcts_thetachi_to_cam:
+            state["t2c"] = {k: v for k, v in self._fcts_thetachi_to_cam.items()}
+        if self._parameters_memory:
+            state["mem"] = self._parameters_memory
+        return state
+
+    def __setstate__(self, state):
+        """
+        * Initialisateur pour pickle. **
+
+        Examples
+        --------
+        >>> import pickle
+        >>> import laue
+        >>> trans = pickle.loads(pickle.dumps(laue.Transformer()))
+        >>>
+        """
+        self.__init__()
+        if "c2g" in state:
+            for k, v in state["c2g"].items():
+                self._fcts_cam_to_gnomonic[k] = v
+        if "g2c" in state:
+            for k, v in state["g2c"].items():
+                self._fcts_gnomonic_to_cam[k] = v
+        if "c2t" in state:
+            for k, v in state["c2t"].items():
+                self._fcts_cam_to_thetachi[k] = v
+        if "t2c" in state:
+            for k, v in state["t2c"].items():
+                self._fcts_thetachi_to_cam[k] = v
+        if "mem" in state:
+            self._parameters_memory = state["mem"]
 
 class ExperimentPickleable:
     """
