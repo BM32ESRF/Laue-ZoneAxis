@@ -1,4 +1,5 @@
 resultats/
+laue/data/
 laue/__pycache__/
 laue/experiment/__pycache__/
 laue/core/__pycache__/
