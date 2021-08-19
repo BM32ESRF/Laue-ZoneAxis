@@ -20,6 +20,8 @@ from fast_histogram import histogram1d
 import h5py
 import numpy as np
 
+from laue.spot import distance
+
 
 __pdoc__ = {"Predictor.__call__": True}
 
@@ -94,7 +96,6 @@ class Predictor:
         self.dict_dp['detectordiameter'] = 0.079856*2048
         self.dict_dp['pixelsize'] = 0.079856
         self.dict_dp['dim'] = 2048
-
 
     def _read_hdf5(self, path):
         """Read a specific hdf5 file."""
@@ -202,50 +203,28 @@ class Predictor:
         array([0.99544195, 0.99634276, 0.99950142, 0.99998127, 0.99999844])
         >>>
         """
-        from laue.spot import distance
-
+        # Compute the signature.
         spots = theta_chi.transpose() # The list of pair (theta, chi).
         codebars = np.array([
-            codebar / codebar.max() # normalize the same way as training data
+            codebar / codebar.max() # Normalize the same way as training data.
             for codebar in (
                 histogram1d(
                     distance(
                         tuple(spot),
-                        np.delete(spots, i, axis=0), # removing the self distance
+                        np.delete(spots, i, axis=0), # Removing the self distance.
                         space="cosine"),
                     range=self._hist_range,
                     bins=len(self.angbins)-1)
                 for i, spot in enumerate(spots))],
             dtype=float)
 
-
-        # sorted_data = theta_chi.transpose()
-
-        # from laue.spot import distance
-        # tabledistancerandom = distance(sorted_data, sorted_data, space="cosine")
-
-        # codebars_all = []
-        # spots_in_center = np.arange(0, len(sorted_data))
-
-        # for i in spots_in_center:
-        #     spotangles = tabledistancerandom[i]
-        #     spotangles = np.delete(spotangles, i) # removing the self distance
-        #     # codebars = np.histogram(spotangles, bins=angbins)[0]
-        #     codebars = histogram1d(spotangles, range=[min(self.angbins), max(self.angbins)], bins=len(self.angbins)-1)
-        #     ## normalize the same way as training data
-        #     max_codebars = np.max(codebars)
-        #     codebars = codebars / max_codebars
-        #     codebars_all.append(codebars)
-        # ## reshape for the model to predict all spots at once
-        # codebars = np.array(codebars_all)
-
-
-        ## Do prediction of all spots at once
+        # Prediction of all spots at once.
         prediction = self._predict(codebars)
-        max_pred = np.max(prediction, axis=1)
+        max_pred = prediction.max(axis=1)
         class_predicted = np.argmax(prediction, axis=1)
         predicted_hkl = self.hkl_data[class_predicted]
-        ## return predicted HKL and their softmax confidence
+
+        # Returns predicted HKL and their softmax confidence.
         return predicted_hkl, max_pred
 
     def generate_orientation(self, s_tth, s_chi, predicted_hkl, spot1_ind, spot2_ind, emax=23):
@@ -255,9 +234,16 @@ class Predictor:
         s_tth : np.ndarray
             The 2*theta vector array.
         s_chi : np.ndarray
-            The chi cetor array.
+            The chi vector array.
         predicted_hkl : np.array.
             Premiere sortie de self.__call__
+
+        Returns
+        -------
+        matrix : np.ndarray
+            The rotation matrix.
+        truc
+            Un machin.
 
         Examples
         --------
@@ -307,46 +293,54 @@ class Predictor:
         >>> predicted_hkl, _ = pred(np.array([.5*s_tth, s_chi]))
         >>> spot1_ind, spot2_ind = 76, 54
         >>> pred.generate_orientation(s_tth, s_chi, predicted_hkl, spot1_ind, spot2_ind)
+        -- OK! You are using python 3
+        -- warning: module Image or PIL is not installed, but only used for templateimagematching
+        Missing library libtiff, Please install: pylibtiff if you need open some tiff images
+        <BLANKLINE>
+        there is no angle close to 8.30 within 0.50 deg
+        Nearest angle found is 37.67 deg
+        <BLANKLINE>
+        Nothing found
+        (array([[0., 0., 0.],
+               [0., 0., 0.],
+               [0., 0., 0.]]), 0.0)
         >>>
         """
-        # spots_in_center = np.arange(0, len(s_tth))
-        import LaueTools.generaltools as GT
         import LaueTools.CrystalParameters as CP
         import LaueTools.findorient as FindO
         from LaueTools.matchingrate import Angular_residues_np
         import LaueTools.dict_LaueTools as dictLT
 
-        dist = GT.calculdist_from_thetachi(np.array([.5*s_tth, s_chi]).T,
-                np.array([.5*s_tth, s_chi]).T)
+        dist = distance(
+            (.5*s_tth[spot1_ind], s_chi[spot1_ind]),
+            (.5*s_tth[spot2_ind], s_chi[spot2_ind]),
+            space="cosine")
 
-        dist_ = dist[spot1_ind, spot2_ind]
 
         lattice_params = dictLT.dict_Materials[self.material][1]
         B = CP.calc_B_RR(lattice_params)
 
-        Gstar_metric = CP.Gstar_from_directlatticeparams(lattice_params[0],lattice_params[1],\
-                                                         lattice_params[2],lattice_params[3],\
-                                                         lattice_params[4],lattice_params[5])
+        Gstar_metric = CP.Gstar_from_directlatticeparams(*lattice_params[:6])
 
         ## list of equivalent HKL
-        hkl1_list = self.hkl_all_class[tuple(predicted_hkl[spot1_ind])]
-        hkl2_list = self.hkl_all_class[tuple(predicted_hkl[spot2_ind])]
+        hkl1_list = self.hkl_all_class[str(predicted_hkl[spot1_ind])] # TODO: replace str by tuple.
+        hkl2_list = self.hkl_all_class[str(predicted_hkl[spot2_ind])] # TODO: replace str by tuple.
         tth_chi_spot1 = np.array([s_tth[spot1_ind], s_chi[spot1_ind]])
         tth_chi_spot2 = np.array([s_tth[spot2_ind], s_chi[spot2_ind]])
         ## generate LUT to remove possibilities of HKL
         hkl_all = np.vstack((hkl1_list, hkl2_list))
         LUT = FindO.GenerateLookUpTable(hkl_all, Gstar_metric)
-        hkls = FindO.PlanePairs_2(dist_, 0.5, LUT, onlyclosest=1)
+        hkls = FindO.PlanePairs_2(dist, 0.5, LUT, onlyclosest=1)
 
         if np.all(hkls == None):
             print("Nothing found")
-            return np.zeros((3,3)), 0.0
+            return np.zeros((3, 3)), 0.0
 
         rot_mat = []
         mr = []
         for ii in range(len(hkls)):
         # ii = 0
-            rot_mat1 = FindO.OrientMatrix_from_2hkl(hkls[ii][0], tth_chi_spot1, \
+            rot_mat1 = FindO.OrientMatrix_from_2hkl(hkls[ii][0], tth_chi_spot1,
                                                     hkls[ii][1], tth_chi_spot2,
                                                     B)
 

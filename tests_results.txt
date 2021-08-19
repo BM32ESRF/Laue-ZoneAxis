@@ -1,4 +1,4 @@
-DATE: Thu Aug 19 12:05:33 2021
+DATE: Thu Aug 19 14:50:23 2021
 NCPU: 8
 ============ TEST GEOMETRY DTYPE =============
 cam_to_gnomonic:
@@ -206,18 +206,18 @@ hough(...).shape -> (2, 36)
 inter_lines(...).shape -> (2, 36)
 ============== TEST READ IMAGES ==============
 ============== TEST READ IMAGES ==============
-/home/robin/documents/stages/esrf/images/32_02_765/Z70S/*.mccd 23 images: 2.304 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBB2/*.mccd 21 images: 2.073 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA1/*.mccd 10 images: 1.066 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA3/*.mccd 12 images: 1.185 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA2/*.mccd 21 images: 2.096 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBB3/*.mccd 15 images: 1.635 s
-/home/robin/images/zbb1_roi1/*.mccd 1681 images: 124.885 s
+/home/robin/documents/stages/esrf/images/32_02_765/Z70S/*.mccd 23 images: 2.411 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBB2/*.mccd 21 images: 2.206 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA1/*.mccd 10 images: 1.080 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA3/*.mccd 12 images: 1.258 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA2/*.mccd 21 images: 2.192 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBB3/*.mccd 15 images: 1.611 s
+/home/robin/images/zbb1_roi1/*.mccd 1681 images: 136.828 s
 ============= TEST FIND DIAGRAMS =============
-/home/robin/documents/stages/esrf/images/32_02_765/Z70S/*.mccd 23 diagrams: 2.481 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBB2/*.mccd 21 diagrams: 2.289 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA1/*.mccd 10 diagrams: 1.355 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA3/*.mccd 12 diagrams: 1.554 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA2/*.mccd 21 diagrams: 2.292 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBB3/*.mccd 15 diagrams: 1.750 s
+/home/robin/documents/stages/esrf/images/32_02_765/Z70S/*.mccd 23 diagrams: 2.489 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBB2/*.mccd 21 diagrams: 2.316 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA1/*.mccd 10 diagrams: 1.227 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA3/*.mccd 12 diagrams: 1.576 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA2/*.mccd 21 diagrams: 2.243 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBB3/*.mccd 15 diagrams: 2.012 s
 /home/robin/images/zbb1_roi1/*.mccd 
