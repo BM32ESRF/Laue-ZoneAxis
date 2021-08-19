@@ -28,7 +28,7 @@ def _cam_to_gnomonic_numexpr(x_cam, y_cam, dd, xcen, ycen, beta, gamma, pixelsiz
     del x9, x8, x6, x4
     x14 = evaluate('dd*x3 - pixelsize*(-x1*x10 + x1*x7)', truediv=True)
     del x7, x3, x10, x1
-    x15 = evaluate('x14 - (pixelsize**2*x13**2 + x12**2 + x14**2)**0.5', truediv=True)
+    x15 = evaluate('x14 - sqrt(pixelsize**2*x13**2 + x12**2 + x14**2)', truediv=True)
     del x14
     x16 = evaluate('1/(-x11 + x15 - x2)', truediv=True)
     del x2, x11
@@ -42,7 +42,7 @@ def _gnomonic_to_cam_numexpr(x_gnom, y_gnom, dd, xcen, ycen, beta, gamma, pixels
     x0 = evaluate('0.0174532925199433*gamma', truediv=True)
     x1 = evaluate('dd*cos(x0)', truediv=True)
     x2 = evaluate('0.707106781186548*x_gnom', truediv=True)
-    x3 = evaluate('2.0*x2 - 1.4142135623731', truediv=True)
+    x3 = evaluate('2*x2 - 1.4142135623731', truediv=True)
     x4 = evaluate('x3*y_gnom', truediv=True)
     x5 = evaluate('0.0174532925199433*beta', truediv=True)
     x6 = evaluate('cos(x5)', truediv=True)
@@ -56,7 +56,7 @@ def _gnomonic_to_cam_numexpr(x_gnom, y_gnom, dd, xcen, ycen, beta, gamma, pixels
     del x5
     x12 = evaluate('x11*x7', truediv=True)
     del x7
-    x13 = evaluate('y_gnom**2 - 0.5*(x_gnom - 1.0)**2 + 0.5*(x_gnom + 1.0)**2', truediv=True)
+    x13 = evaluate('y_gnom**2 - 0.5*(x_gnom - 1)**2 + 0.5*(x_gnom + 1)**2', truediv=True)
     x14 = evaluate('x11*x13', truediv=True)
     del x11
     x15 = evaluate('pixelsize*x14', truediv=True)
@@ -87,9 +87,9 @@ def _cam_to_thetachi_numexpr(x_cam, y_cam, dd, xcen, ycen, beta, gamma, pixelsiz
     del x8, x7, x5, x3
     x12 = evaluate('pixelsize**2*x11**2 + (dd*x2 + pixelsize*(x1*x6 - x1*x9))**2', truediv=True)
     del x9, x6, x2, x1
-    _0 = evaluate('28.6478897565412*arccos(x10*(x10**2 + x12)**(-0.5))', truediv=True)
+    _0 = evaluate('28.6478897565412*arccos(x10/sqrt(x10**2 + x12))', truediv=True)
     del x10
-    _1 = evaluate('-57.2957795130823*arcsin(pixelsize*x11*x12**(-0.5))', truediv=True)
+    _1 = evaluate('-57.2957795130823*arcsin(pixelsize*x11/sqrt(x12))', truediv=True)
     return [_0, _1]
 
 def _thetachi_to_cam_numexpr(theta, chi, dd, xcen, ycen, beta, gamma, pixelsize):
@@ -129,8 +129,8 @@ def _thetachi_to_gnomonic_numexpr(theta, chi):
     del x0
     x3 = evaluate('0.0174532925199433*chi', truediv=True)
     x4 = evaluate('x2*cos(x3)', truediv=True)
-    x5 = evaluate('1/(-x1 + x4 + 1.0)', truediv=True)
-    _0 = evaluate('x5*(x1 + x4 - 1.0)', truediv=True)
+    x5 = evaluate('1/(-x1 + x4 + 1)', truediv=True)
+    _0 = evaluate('x5*(x1 + x4 - 1)', truediv=True)
     del x4, x1
     _1 = evaluate('1.4142135623731*x2*x5*sin(x3)', truediv=True)
     return [_0, _1]
@@ -138,34 +138,34 @@ def _thetachi_to_gnomonic_numexpr(theta, chi):
 def _gnomonic_to_thetachi_numexpr(x_gnom, y_gnom):
     """Perform calculations in float64 using the numexpr module."""
     x0 = evaluate('y_gnom**2', truediv=True)
-    x1 = evaluate('x_gnom - 1.0', truediv=True)
-    _1 = evaluate('-57.2957795130823*arcsin(1.0*x1*y_gnom*(x0 + 0.5*(x_gnom + 1.0)**2)**(-0.5)/abs(x1))', truediv=True)
+    x1 = evaluate('x_gnom - 1', truediv=True)
+    _1 = evaluate('-57.2957795130823*arcsin(x1*y_gnom/(sqrt(x0 + 0.5*(x_gnom + 1)**2)*abs(x1)))', truediv=True)
     del x1
-    _0 = evaluate('28.6478897565412*arccos((x0 + 2.0*x_gnom)/(x0 + x_gnom**2 + 1.0))', truediv=True)
+    _0 = evaluate('28.6478897565412*arccos((x0 + 2*x_gnom)/(x0 + x_gnom**2 + 1))', truediv=True)
     return [_0, _1]
 
 def _dist_cosine_numexpr(theta_1, chi_1, theta_2, chi_2):
     """Perform calculations in float64 using the numexpr module."""
     x0 = evaluate('0.0349065850398866*theta_1', truediv=True)
     x1 = evaluate('cos(x0)', truediv=True)
-    x2 = evaluate('1.0 - x1', truediv=True)
+    x2 = evaluate('1 - x1', truediv=True)
     x3 = evaluate('0.0349065850398866*theta_2', truediv=True)
     x4 = evaluate('cos(x3)', truediv=True)
     x5 = evaluate('-x4', truediv=True)
-    _0 = evaluate('57.2957795130823*arccos(0.5*x2**(-0.5)*(x5 + 1.0)**(-0.5)*(x1*x4 + x2 + x5 + sin(x0)*sin(x3)*cos(0.0174532925199433*chi_1 - 0.0174532925199433*chi_2)))', truediv=True)
+    _0 = evaluate('57.2957795130823*arccos(0.5*(x1*x4 + x2 + x5 + sin(x0)*sin(x3)*cos(0.0174532925199433*chi_1 - 0.0174532925199433*chi_2))/(sqrt(x2)*sqrt(x5 + 1)))', truediv=True)
     return _0
 
 def _dist_euclidian_numexpr(x1, y1, x2, y2):
     """Perform calculations in float64 using the numexpr module."""
-    return evaluate('((x1 - x2)**2 + (y1 - y2)**2)**0.5', truediv=True)
+    return evaluate('sqrt((x1 - x2)**2 + (y1 - y2)**2)', truediv=True)
 
 def _dist_line_numexpr(phi, mu, x, y):
     """Perform calculations in float64 using the numexpr module."""
     x0 = evaluate('0.25*x**2', truediv=True)
     x1 = evaluate('0.25*y**2', truediv=True)
-    x2 = evaluate('2.0*phi', truediv=True)
+    x2 = evaluate('2*phi', truediv=True)
     x3 = evaluate('cos(x2)', truediv=True)
-    _0 = evaluate('1.4142135623731*(0.5*mu**2 - mu*x*cos(phi) - mu*y*sin(phi) + 0.5*x*y*sin(x2) + x0*x3 + x0 - x1*x3 + x1)**0.5', truediv=True)
+    _0 = evaluate('1.4142135623731*sqrt(0.5*mu**2 - mu*x*cos(phi) - mu*y*sin(phi) + 0.5*x*y*sin(x2) + x0*x3 + x0 - x1*x3 + x1)', truediv=True)
     return _0
 
 def _hough_numexpr(x_a, y_a, x_b, y_b):
@@ -178,7 +178,7 @@ def _hough_numexpr(x_a, y_a, x_b, y_b):
     del x0
     x5 = evaluate('-x1*x3 + x2*y_a', truediv=True)
     del x3, x2, x1
-    x6 = evaluate('(x4**2 + x5**2)**(-0.5)', truediv=True)
+    x6 = evaluate('1/sqrt(x4**2 + x5**2)', truediv=True)
     x7 = evaluate('x_a*x_b', truediv=True)
     x8 = evaluate('y_a*y_b', truediv=True)
     x9 = evaluate('x_a**2', truediv=True)
@@ -187,7 +187,7 @@ def _hough_numexpr(x_a, y_a, x_b, y_b):
     x12 = evaluate('y_b**2', truediv=True)
     _0 = evaluate('arccos(x4*x6)*(0.0 if x5*x6 == 0 else copysign(1, x5*x6))', truediv=True)
     del x6, x5, x4
-    _1 = evaluate('1.4142135623731*(0.5*x10 + 0.5*x11 + 0.5*x12 - x7 - x8 + 0.5*x9)**0.5*abs((x_a*y_b - x_b*y_a)/(x10 + x11 + x12 - 2.0*x7 - 2.0*x8 + x9))', truediv=True)
+    _1 = evaluate('1.4142135623731*sqrt(0.5*x10 + 0.5*x11 + 0.5*x12 - x7 - x8 + 0.5*x9)*abs((x_a*y_b - x_b*y_a)/(x10 + x11 + x12 - 2*x7 - 2*x8 + x9))', truediv=True)
     return [_0, _1]
 
 def _inter_line_numexpr(phi_1, mu_1, phi_2, mu_2):

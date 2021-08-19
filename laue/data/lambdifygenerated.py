@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 """
-This code was automatically generated on Thu Aug 19 00:10:29 2021.
+This code was automatically generated on Thu Aug 19 11:18:08 2021.
 """
 
 import sympy
 import numpy as np
 
-HASH = '61fd130d13f54ec87cb53ade5fa2d667'
+HASH = '0215f6428de42728b5053941b1147d5c'
 
 def cam_to_gnomonic(*args, **kwargs):
     """
@@ -25,7 +25,7 @@ def cam_to_gnomonic(*args, **kwargs):
     assert len(args) <= 8, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'x_cam', 'y_cam', 'dd', 'xcen', 'ycen', 'beta', 'gamma', 'pixelsize'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _cam_to_gnomonic_sympy
+        from laue.data.sympy_lambdify import _cam_to_gnomonic_sympy
         return _cam_to_gnomonic_sympy()
     args = list(args)
     if len(args) < 8:
@@ -36,18 +36,18 @@ def cam_to_gnomonic(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['x_cam', 'y_cam', 'dd', 'xcen', 'ycen', 'beta', 'gamma', 'pixelsize'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _cam_to_gnomonic_sympy
+        from laue.data.sympy_lambdify import _cam_to_gnomonic_sympy
         return subs(_cam_to_gnomonic_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _cam_to_gnomonic_numpy128
+        from laue.data.numpy128_lambdify import _cam_to_gnomonic_numpy128
         return _cam_to_gnomonic_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _cam_to_gnomonic_numexpr
+        from laue.data.numexpr_lambdify import _cam_to_gnomonic_numexpr
         return _cam_to_gnomonic_numexpr(*args)
-    from numpy_lambdify import _cam_to_gnomonic_numpy
+    from laue.data.numpy_lambdify import _cam_to_gnomonic_numpy
     return _cam_to_gnomonic_numpy(*args)
 
 def gnomonic_to_cam(*args, **kwargs):
@@ -66,7 +66,7 @@ def gnomonic_to_cam(*args, **kwargs):
     assert len(args) <= 8, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'x_gnom', 'y_gnom', 'dd', 'xcen', 'ycen', 'beta', 'gamma', 'pixelsize'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _gnomonic_to_cam_sympy
+        from laue.data.sympy_lambdify import _gnomonic_to_cam_sympy
         return _gnomonic_to_cam_sympy()
     args = list(args)
     if len(args) < 8:
@@ -77,18 +77,18 @@ def gnomonic_to_cam(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['x_gnom', 'y_gnom', 'dd', 'xcen', 'ycen', 'beta', 'gamma', 'pixelsize'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _gnomonic_to_cam_sympy
+        from laue.data.sympy_lambdify import _gnomonic_to_cam_sympy
         return subs(_gnomonic_to_cam_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _gnomonic_to_cam_numpy128
+        from laue.data.numpy128_lambdify import _gnomonic_to_cam_numpy128
         return _gnomonic_to_cam_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _gnomonic_to_cam_numexpr
+        from laue.data.numexpr_lambdify import _gnomonic_to_cam_numexpr
         return _gnomonic_to_cam_numexpr(*args)
-    from numpy_lambdify import _gnomonic_to_cam_numpy
+    from laue.data.numpy_lambdify import _gnomonic_to_cam_numpy
     return _gnomonic_to_cam_numpy(*args)
 
 def cam_to_thetachi(*args, **kwargs):
@@ -107,7 +107,7 @@ def cam_to_thetachi(*args, **kwargs):
     assert len(args) <= 8, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'x_cam', 'y_cam', 'dd', 'xcen', 'ycen', 'beta', 'gamma', 'pixelsize'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _cam_to_thetachi_sympy
+        from laue.data.sympy_lambdify import _cam_to_thetachi_sympy
         return _cam_to_thetachi_sympy()
     args = list(args)
     if len(args) < 8:
@@ -118,18 +118,18 @@ def cam_to_thetachi(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['x_cam', 'y_cam', 'dd', 'xcen', 'ycen', 'beta', 'gamma', 'pixelsize'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _cam_to_thetachi_sympy
+        from laue.data.sympy_lambdify import _cam_to_thetachi_sympy
         return subs(_cam_to_thetachi_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _cam_to_thetachi_numpy128
+        from laue.data.numpy128_lambdify import _cam_to_thetachi_numpy128
         return _cam_to_thetachi_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _cam_to_thetachi_numexpr
+        from laue.data.numexpr_lambdify import _cam_to_thetachi_numexpr
         return _cam_to_thetachi_numexpr(*args)
-    from numpy_lambdify import _cam_to_thetachi_numpy
+    from laue.data.numpy_lambdify import _cam_to_thetachi_numpy
     return _cam_to_thetachi_numpy(*args)
 
 def thetachi_to_cam(*args, **kwargs):
@@ -148,7 +148,7 @@ def thetachi_to_cam(*args, **kwargs):
     assert len(args) <= 8, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'theta', 'chi', 'dd', 'xcen', 'ycen', 'beta', 'gamma', 'pixelsize'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _thetachi_to_cam_sympy
+        from laue.data.sympy_lambdify import _thetachi_to_cam_sympy
         return _thetachi_to_cam_sympy()
     args = list(args)
     if len(args) < 8:
@@ -159,18 +159,18 @@ def thetachi_to_cam(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['theta', 'chi', 'dd', 'xcen', 'ycen', 'beta', 'gamma', 'pixelsize'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _thetachi_to_cam_sympy
+        from laue.data.sympy_lambdify import _thetachi_to_cam_sympy
         return subs(_thetachi_to_cam_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _thetachi_to_cam_numpy128
+        from laue.data.numpy128_lambdify import _thetachi_to_cam_numpy128
         return _thetachi_to_cam_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _thetachi_to_cam_numexpr
+        from laue.data.numexpr_lambdify import _thetachi_to_cam_numexpr
         return _thetachi_to_cam_numexpr(*args)
-    from numpy_lambdify import _thetachi_to_cam_numpy
+    from laue.data.numpy_lambdify import _thetachi_to_cam_numpy
     return _thetachi_to_cam_numpy(*args)
 
 def thetachi_to_gnomonic(*args, **kwargs):
@@ -189,7 +189,7 @@ def thetachi_to_gnomonic(*args, **kwargs):
     assert len(args) <= 2, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'theta', 'chi'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _thetachi_to_gnomonic_sympy
+        from laue.data.sympy_lambdify import _thetachi_to_gnomonic_sympy
         return _thetachi_to_gnomonic_sympy()
     args = list(args)
     if len(args) < 2:
@@ -200,18 +200,18 @@ def thetachi_to_gnomonic(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['theta', 'chi'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _thetachi_to_gnomonic_sympy
+        from laue.data.sympy_lambdify import _thetachi_to_gnomonic_sympy
         return subs(_thetachi_to_gnomonic_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _thetachi_to_gnomonic_numpy128
+        from laue.data.numpy128_lambdify import _thetachi_to_gnomonic_numpy128
         return _thetachi_to_gnomonic_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _thetachi_to_gnomonic_numexpr
+        from laue.data.numexpr_lambdify import _thetachi_to_gnomonic_numexpr
         return _thetachi_to_gnomonic_numexpr(*args)
-    from numpy_lambdify import _thetachi_to_gnomonic_numpy
+    from laue.data.numpy_lambdify import _thetachi_to_gnomonic_numpy
     return _thetachi_to_gnomonic_numpy(*args)
 
 def gnomonic_to_thetachi(*args, **kwargs):
@@ -230,7 +230,7 @@ def gnomonic_to_thetachi(*args, **kwargs):
     assert len(args) <= 2, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'x_gnom', 'y_gnom'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _gnomonic_to_thetachi_sympy
+        from laue.data.sympy_lambdify import _gnomonic_to_thetachi_sympy
         return _gnomonic_to_thetachi_sympy()
     args = list(args)
     if len(args) < 2:
@@ -241,18 +241,18 @@ def gnomonic_to_thetachi(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['x_gnom', 'y_gnom'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _gnomonic_to_thetachi_sympy
+        from laue.data.sympy_lambdify import _gnomonic_to_thetachi_sympy
         return subs(_gnomonic_to_thetachi_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _gnomonic_to_thetachi_numpy128
+        from laue.data.numpy128_lambdify import _gnomonic_to_thetachi_numpy128
         return _gnomonic_to_thetachi_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _gnomonic_to_thetachi_numexpr
+        from laue.data.numexpr_lambdify import _gnomonic_to_thetachi_numexpr
         return _gnomonic_to_thetachi_numexpr(*args)
-    from numpy_lambdify import _gnomonic_to_thetachi_numpy
+    from laue.data.numpy_lambdify import _gnomonic_to_thetachi_numpy
     return _gnomonic_to_thetachi_numpy(*args)
 
 def dist_cosine(*args, **kwargs):
@@ -271,7 +271,7 @@ def dist_cosine(*args, **kwargs):
     assert len(args) <= 4, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'theta_1', 'chi_1', 'theta_2', 'chi_2'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _dist_cosine_sympy
+        from laue.data.sympy_lambdify import _dist_cosine_sympy
         return _dist_cosine_sympy()
     args = list(args)
     if len(args) < 4:
@@ -282,18 +282,18 @@ def dist_cosine(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['theta_1', 'chi_1', 'theta_2', 'chi_2'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _dist_cosine_sympy
+        from laue.data.sympy_lambdify import _dist_cosine_sympy
         return subs(_dist_cosine_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _dist_cosine_numpy128
+        from laue.data.numpy128_lambdify import _dist_cosine_numpy128
         return _dist_cosine_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _dist_cosine_numexpr
+        from laue.data.numexpr_lambdify import _dist_cosine_numexpr
         return _dist_cosine_numexpr(*args)
-    from numpy_lambdify import _dist_cosine_numpy
+    from laue.data.numpy_lambdify import _dist_cosine_numpy
     return _dist_cosine_numpy(*args)
 
 def dist_euclidian(*args, **kwargs):
@@ -312,7 +312,7 @@ def dist_euclidian(*args, **kwargs):
     assert len(args) <= 4, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'x1', 'y1', 'x2', 'y2'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _dist_euclidian_sympy
+        from laue.data.sympy_lambdify import _dist_euclidian_sympy
         return _dist_euclidian_sympy()
     args = list(args)
     if len(args) < 4:
@@ -323,18 +323,18 @@ def dist_euclidian(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['x1', 'y1', 'x2', 'y2'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _dist_euclidian_sympy
+        from laue.data.sympy_lambdify import _dist_euclidian_sympy
         return subs(_dist_euclidian_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _dist_euclidian_numpy128
+        from laue.data.numpy128_lambdify import _dist_euclidian_numpy128
         return _dist_euclidian_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _dist_euclidian_numexpr
+        from laue.data.numexpr_lambdify import _dist_euclidian_numexpr
         return _dist_euclidian_numexpr(*args)
-    from numpy_lambdify import _dist_euclidian_numpy
+    from laue.data.numpy_lambdify import _dist_euclidian_numpy
     return _dist_euclidian_numpy(*args)
 
 def dist_line(*args, **kwargs):
@@ -353,7 +353,7 @@ def dist_line(*args, **kwargs):
     assert len(args) <= 4, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'phi', 'mu', 'x', 'y'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _dist_line_sympy
+        from laue.data.sympy_lambdify import _dist_line_sympy
         return _dist_line_sympy()
     args = list(args)
     if len(args) < 4:
@@ -364,18 +364,18 @@ def dist_line(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['phi', 'mu', 'x', 'y'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _dist_line_sympy
+        from laue.data.sympy_lambdify import _dist_line_sympy
         return subs(_dist_line_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _dist_line_numpy128
+        from laue.data.numpy128_lambdify import _dist_line_numpy128
         return _dist_line_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _dist_line_numexpr
+        from laue.data.numexpr_lambdify import _dist_line_numexpr
         return _dist_line_numexpr(*args)
-    from numpy_lambdify import _dist_line_numpy
+    from laue.data.numpy_lambdify import _dist_line_numpy
     return _dist_line_numpy(*args)
 
 def hough(*args, **kwargs):
@@ -394,7 +394,7 @@ def hough(*args, **kwargs):
     assert len(args) <= 4, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'x_a', 'y_a', 'x_b', 'y_b'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _hough_sympy
+        from laue.data.sympy_lambdify import _hough_sympy
         return _hough_sympy()
     args = list(args)
     if len(args) < 4:
@@ -405,18 +405,18 @@ def hough(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['x_a', 'y_a', 'x_b', 'y_b'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _hough_sympy
+        from laue.data.sympy_lambdify import _hough_sympy
         return subs(_hough_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _hough_numpy128
+        from laue.data.numpy128_lambdify import _hough_numpy128
         return _hough_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _hough_numexpr
+        from laue.data.numexpr_lambdify import _hough_numexpr
         return _hough_numexpr(*args)
-    from numpy_lambdify import _hough_numpy
+    from laue.data.numpy_lambdify import _hough_numpy
     return _hough_numpy(*args)
 
 def inter_line(*args, **kwargs):
@@ -435,7 +435,7 @@ def inter_line(*args, **kwargs):
     assert len(args) <= 4, f'The function cannot take {len(args)} arguments.'
     assert not set(kwargs) - {'phi_1', 'mu_1', 'phi_2', 'mu_2'}, f'You cannot provide {kwargs}.'
     if not args and not kwargs:
-        from sympy_lambdify import _inter_line_sympy
+        from laue.data.sympy_lambdify import _inter_line_sympy
         return _inter_line_sympy()
     args = list(args)
     if len(args) < 4:
@@ -446,17 +446,17 @@ def inter_line(*args, **kwargs):
     if any(isinstance(a, sympy.Basic) for a in args):
         sub = {arg: value for arg, value in zip(['phi_1', 'mu_1', 'phi_2', 'mu_2'], args)}
         from laue.utilities.lambdify import subs
-        from sympy_lambdify import _inter_line_sympy
+        from laue.data.sympy_lambdify import _inter_line_sympy
         return subs(_inter_line_sympy(), sub)
     if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-        from numpy128_lambdify import _inter_line_numpy128
+        from laue.data.numpy128_lambdify import _inter_line_numpy128
         return _inter_line_numpy128(*args)
     if (
             (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
             and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
         ):
-        from numexpr_lambdify import _inter_line_numexpr
+        from laue.data.numexpr_lambdify import _inter_line_numexpr
         return _inter_line_numexpr(*args)
-    from numpy_lambdify import _inter_line_numpy
+    from laue.data.numpy_lambdify import _inter_line_numpy
     return _inter_line_numpy(*args)
 

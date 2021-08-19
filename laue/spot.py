@@ -76,7 +76,7 @@ def distance(spot1, spot2, *, space="camera"):
     >>> distance(spot1, spot2, space="gnomonic")
     0.07062176
     >>> distance(spot1, spot2, space="cosine")
-    3.3375366
+    3.337595
     >>>
     >>> distance(spot1, diag[:5])
     array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],

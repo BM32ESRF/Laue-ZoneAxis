@@ -172,23 +172,40 @@ def evalf(x, n=15):
     Gere recursivement les objets qui n'ont pas
     de methodes ``evalf``.
     """
-    if isinstance(x, (sympy.Atom, numbers.Number)):
-        if str(x) == "pi":
-            return sympy.pi.evalf(n=n)
-        if str(x) == "E":
-            return sympy.E.evalf(n=n)
-        return x
-    try:
-        if isinstance(x, (tuple, list, set)):
-            x = type(x)([evalf(e, n=n) for e in x])
-        else:
-            x = type(x)(*(evalf(e, n=n) for e in x.args))
-    except AttributeError:
-        pass
-    try:
-        return sympy.N(x, n=n)
-    except AttributeError:
-        return x
+    def basic_evalf(x, n):
+        """Alias recursif ver evalf natif de sympy. int -> float"""
+        if isinstance(x, (sympy.Atom, numbers.Number)):
+            if str(x) == "pi":
+                return sympy.pi.evalf(n=n)
+            if str(x) == "E":
+                return sympy.E.evalf(n=n)
+            return x
+        try:
+            x = type(x)(*(basic_evalf(e, n=n) for e in x.args))
+        except AttributeError:
+            pass
+        try:
+            return sympy.N(x, n=n)
+        except AttributeError:
+            return x
+
+    if isinstance(x, (tuple, list, set)):
+        return type(x)([evalf(e, n=n) for e in x])
+
+    x = basic_evalf(x, n=n)
+
+    # Remplacement des flotants etants des entiers par de vrai entiers.
+    repl = {f: int(round(f)) for f in x.atoms(sympy.Float) if round(f) == round(f, 5)}
+    x = subs(x, repl)
+    # Remplacement des flotants de puissance par les rationels.
+    repl = True
+    while repl:
+        cand_pow = [p for p in x.atoms(sympy.Pow) if isinstance(p.exp, sympy.Float)]
+        cand_rat = [sympy.Rational(p.exp).limit_denominator(10) for p in cand_pow]
+        repl = {p: sympy.Pow(p.base, r) for p, r in zip(cand_pow, cand_rat) if round(p.exp, 5) == round(r, 5)}
+        x = subs(x, repl)
+
+    return x
 
 def simplify(x, measure=sympy.count_ops, **kwargs):
     """
@@ -282,7 +299,7 @@ class Lambdify:
         except (ImportError, TypeError, RuntimeError):
             self.fct_numexpr = None
 
-    def __str__(self, *, name="lambdifygenerated", bloc="main"):
+    def __str__(self, *, name="lambdifygenerated", bloc="numpy"):
         '''
         ** Offre une representation explicite de la fonction. **
 
@@ -299,46 +316,11 @@ class Lambdify:
         >>> from laue.utilities.lambdify import Lambdify
         >>>
         >>> print(Lambdify([x, y], pi*cos(x + y) + x + y), end="")
-        def lambdifygenerated(*args, **kwargs):
-            """
-            ** Choose the most suitable function according to
-            the type and size of the input data. **
-        <BLANKLINE>
-            Parameters
-            ----------
-            *args
-                Les parametres ordonnes de la fonction.
-            **kwargs
-                Les parametres nomes de la fonction. Ils
-                ont le dessus sur les args en cas d'ambiguite.
-            """
-            assert len(args) <= 2, f'The function cannot take {len(args)} arguments.'
-            assert not set(kwargs) - {'x', 'y'}, f'You cannot provide {kwargs}.'
-            if not args and not kwargs:
-                from sympy_lambdify import _lambdifygenerated_sympy
-                return _lambdifygenerated_sympy()
-            args = list(args)
-            if len(args) < 2:
-                args += sympy.symbols(' '.join(['x', 'y'][len(args):]))
-            if kwargs:
-                for arg, value in kwargs.items():
-                    args[{'x': 0, 'y': 1}[arg]] = value
-            if any(isinstance(a, sympy.Basic) for a in args):
-                sub = {arg: value for arg, value in zip(['x', 'y'], args)}
-                from laue.utilities.lambdify import subs
-                from sympy_lambdify import _lambdifygenerated_sympy
-                return subs(_lambdifygenerated_sympy(), sub)
-            if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):
-                from numpy128_lambdify import _lambdifygenerated_numpy128
-                return _lambdifygenerated_numpy128(*args)
-            if (
-                    (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)
-                    and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))
-                ):
-                from numexpr_lambdify import _lambdifygenerated_numexpr
-                return _lambdifygenerated_numexpr(*args)
-            from numpy_lambdify import _lambdifygenerated_numpy
-            return _lambdifygenerated_numpy(*args)
+        def _lambdifygenerated_numpy(x, y):
+            """Perform calculations in small float using the numpy module."""
+            x0 = x + y
+            _0 = x0 + 3.14159265358979*cos(x0)
+            return _0
         >>>
         '''
         assert isinstance(name, str), f"'name' has to be str, not {type(name).__name__}."
@@ -411,7 +393,7 @@ class Lambdify:
             code.append( "    assert not set(kwargs) - {%s}, f'You cannot provide {kwargs}.'"
                                                       % ", ".join(repr(a) for a in self.args_name))
             code.append( "    if not args and not kwargs:")
-            code.append(f"        from sympy_lambdify import _{name}_sympy")
+            code.append(f"        from laue.data.sympy_lambdify import _{name}_sympy")
             code.append(f"        return _{name}_sympy()")
 
             code.append( "    args = list(args)")
@@ -424,27 +406,27 @@ class Lambdify:
             code.append( "    if any(isinstance(a, sympy.Basic) for a in args):")
             code.append( "        sub = {arg: value for arg, value in zip(%s, args)}" % self.args_name)
             code.append( "        from laue.utilities.lambdify import subs")
-            code.append(f"        from sympy_lambdify import _{name}_sympy")
+            code.append(f"        from laue.data.sympy_lambdify import _{name}_sympy")
             code.append(f"        return subs(_{name}_sympy(), sub)")
 
             if hasattr(np, "float128"):
                 code.append( "    if any(a.dtype == np.float128 for a in args if isinstance(a, np.ndarray)):")
-                code.append(f"        from numpy128_lambdify import _{name}_numpy128")
+                code.append(f"        from laue.data.numpy128_lambdify import _{name}_numpy128")
                 code.append(f"        return _{name}_numpy128(*args)")
             if self.fct_numexpr is not None:
                 code.append( "    if (")
                 code.append( "            (max((a.size for a in args if isinstance(a, np.ndarray)), default=0) >= 157741)")
                 code.append( "            and all(a.dtype == np.float64 for a in args if isinstance(a, np.ndarray))")
                 code.append( "        ):")
-                code.append(f"        from numexpr_lambdify import _{name}_numexpr")
+                code.append(f"        from laue.data.numexpr_lambdify import _{name}_numexpr")
                 code.append(f"        return _{name}_numexpr(*args)")
-            code.append(f"    from numpy_lambdify import _{name}_numpy")
+            code.append(f"    from laue.data.numpy_lambdify import _{name}_numpy")
             code.append(f"    return _{name}_numpy(*args)")
+            code.append( "")
 
         else:
             raise KeyError
 
-        code.append( "")
         return "\n".join(code)
 
     def __repr__(self):
