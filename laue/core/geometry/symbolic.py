@@ -722,14 +722,15 @@ class Compilator(Equations):
             f.write( "import sympy\n")
             f.write( "import numpy as np\n")
             f.write( "\n")
+            f.write( "\n")
             f.write(f"HASH = {repr(self._hash())}\n")
             f.write( "\n")
             for func_name, lamb in self.compiled_expressions.items():
                 if not isinstance(lamb, lambdify.Lambdify): # C'est juste de la prevention,
                     del self.compiled_expressions[func_name] # ce n'est pas cence servir.
                     getattr(self, f"get_fct_{func_name}")()
-                f.write(lamb.__str__(name=func_name, bloc="main"))
                 f.write("\n")
+                f.write(lamb.__str__(name=func_name, bloc="main"))
 
         # Ecriture des modules secondaires.
         from sympy.utilities.lambdify import MODULES
@@ -749,6 +750,7 @@ class Compilator(Equations):
                 f.write('"""\n')
                 f.write("\n")
                 f.write(header)
-                f.write("\n\n")
+                f.write("\n")
                 for func_name, lamb in self.compiled_expressions.items():
+                    f.write("\n")
                     f.write(lamb.__str__(name=func_name, bloc=mod))

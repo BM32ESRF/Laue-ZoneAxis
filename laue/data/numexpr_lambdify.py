@@ -161,12 +161,7 @@ def _dist_euclidian_numexpr(x1, y1, x2, y2):
 
 def _dist_line_numexpr(phi, mu, x, y):
     """Perform calculations in float64 using the numexpr module."""
-    x0 = evaluate('0.25*x**2', truediv=True)
-    x1 = evaluate('0.25*y**2', truediv=True)
-    x2 = evaluate('2*phi', truediv=True)
-    x3 = evaluate('cos(x2)', truediv=True)
-    _0 = evaluate('1.4142135623731*sqrt(0.5*mu**2 - mu*x*cos(phi) - mu*y*sin(phi) + 0.5*x*y*sin(x2) + x0*x3 + x0 - x1*x3 + x1)', truediv=True)
-    return _0
+    return evaluate('abs(-mu + x*cos(phi) + y*sin(phi))', truediv=True)
 
 def _hough_numexpr(x_a, y_a, x_b, y_b):
     """Perform calculations in float64 using the numexpr module."""
@@ -196,4 +191,3 @@ def _inter_line_numexpr(phi_1, mu_1, phi_2, mu_2):
     _0 = evaluate('x0*(-mu_1*sin(phi_2) + mu_2*sin(phi_1))', truediv=True)
     _1 = evaluate('x0*(mu_1*cos(phi_2) - mu_2*cos(phi_1))', truediv=True)
     return [_0, _1]
-

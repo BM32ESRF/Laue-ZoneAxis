@@ -21,7 +21,7 @@ __pdoc__ = {"Spot.__hash__": True,
             "Spot.__sub__": True}
 
 
-def distance(spot1, spot2, *, space="camera"):
+def distance(spot1, spot2, *, space="camera", dtype=np.float64):
     r"""
     ** Calcul la distance entre plusieur spots. **
 
@@ -49,6 +49,9 @@ def distance(spot1, spot2, *, space="camera"):
         * "camera" => Distance euclidienne (en pixel) dans le plan de la camera.
         * "gnomonic" => Distance euclidienne (en mm) dans le plan gnomonic.
         * "cosine" => Cosine distance (en degre) entre les vecteurs ``uq`` (axe de reflexion).
+    dtype : type, optional
+        La representation machine des nombres. Par defaut ``np.float64`` permet des calculs
+        plutot precis. Il est possible de travailler en ``np.float32`` ou ``np.float128``.
 
     Returns
     -------
@@ -63,6 +66,7 @@ def distance(spot1, spot2, *, space="camera"):
 
     Examples
     -------
+    >>> import numpy as np
     >>> import laue
     >>> from laue.spot import distance
     >>> image = "laue/examples/ge_blanc.mccd"
@@ -72,15 +76,15 @@ def distance(spot1, spot2, *, space="camera"):
     ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
     >>>
     >>> distance(spot1, spot2)
-    93.99273
+    93.99267654837415
     >>> distance(spot1, spot2, space="gnomonic")
-    0.07062176
+    0.07062177234461128
     >>> distance(spot1, spot2, space="cosine")
-    3.337595
+    3.337448977380975
     >>>
     >>> distance(spot1, diag[:5])
-    array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
-          dtype=float32)
+    array([  0.        ,  93.99267655, 811.10892214, 484.83288558,
+           248.53369448])
     >>> distance(diag[:5], diag[:10]).shape
     (5, 10)
     >>>
@@ -104,6 +108,9 @@ def distance(spot1, spot2, *, space="camera"):
         assert len(spot2) == 2, f"Il ne doit y avoir que 2 coordonnees, pas {len(spot2)}."
         assert all(isinstance(c, numbers.Number) for c in spot2)
     assert space in {"camera", "gnomonic", "cosine"}, f"'space' can not be {repr(space)}."
+    assert dtype in {np.float16, np.float32, np.float64,
+        (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
+        f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
 
     # Simplification du probleme.
     if isinstance(spot1, (Spot, tuple)) and isinstance(spot2, (Spot, tuple)):
@@ -129,8 +136,8 @@ def distance(spot1, spot2, *, space="camera"):
         meth = lambda spot: spot.get_position() if isinstance(spot, Spot) else spot
     elif space == "gnomonic":
         meth = lambda spot: spot.get_gnomonic() if isinstance(spot, Spot) else spot
-    x1, y1 = np.array([meth(spot) for spot in spot1], dtype=np.float32).transpose()
-    x2, y2 = np.array([meth(spot) for spot in spot2], dtype=np.float32).transpose()
+    x1, y1 = np.array([meth(spot) for spot in spot1], dtype=dtype).transpose()
+    x2, y2 = np.array([meth(spot) for spot in spot2], dtype=dtype).transpose()
     x1, x2 = np.meshgrid(x1, x2, indexing="ij", copy=False)
     y1, y2 = np.meshgrid(y1, y2, indexing="ij", copy=False)
 

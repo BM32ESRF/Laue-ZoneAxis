@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 """
-This code was automatically generated on Thu Aug 19 11:18:08 2021.
+This code was automatically generated on Thu Aug 19 13:43:40 2021.
 """
 
 import sympy
 import numpy as np
 
-HASH = '0215f6428de42728b5053941b1147d5c'
+
+HASH = 'c1036f15f83a9afabc9608a57f898e42'
+
 
 def cam_to_gnomonic(*args, **kwargs):
     """
@@ -459,4 +461,3 @@ def inter_line(*args, **kwargs):
         return _inter_line_numexpr(*args)
     from laue.data.numpy_lambdify import _inter_line_numpy
     return _inter_line_numpy(*args)
-

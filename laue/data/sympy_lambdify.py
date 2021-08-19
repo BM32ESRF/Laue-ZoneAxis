@@ -53,7 +53,7 @@ def _dist_euclidian_sympy():
 def _dist_line_sympy():
     """Returns the tree of the sympy expression."""
     phi, mu, x, y = symbols('phi mu x y')
-    return sqrt(mu**2 - 2*mu*x*cos(phi) - 2*mu*y*sin(phi) + x**2*cos(2*phi)/2 + x**2/2 + x*y*sin(2*phi) - y**2*cos(2*phi)/2 + y**2/2)
+    return Abs(-mu + x*cos(phi) + y*sin(phi))
 
 def _hough_sympy():
     """Returns the tree of the sympy expression."""
@@ -64,4 +64,3 @@ def _inter_line_sympy():
     """Returns the tree of the sympy expression."""
     phi_1, mu_1, phi_2, mu_2 = symbols('phi_1 mu_1 phi_2 mu_2')
     return [(-mu_1*sin(phi_2) + mu_2*sin(phi_1))/sin(phi_1 - phi_2), (mu_1*cos(phi_2) - mu_2*cos(phi_1))/sin(phi_1 - phi_2)]
-

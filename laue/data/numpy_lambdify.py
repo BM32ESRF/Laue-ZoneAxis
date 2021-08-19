@@ -161,12 +161,7 @@ def _dist_euclidian_numpy(x1, y1, x2, y2):
 
 def _dist_line_numpy(phi, mu, x, y):
     """Perform calculations in small float using the numpy module."""
-    x0 = 0.25*x**2
-    x1 = 0.25*y**2
-    x2 = 2*phi
-    x3 = cos(x2)
-    _0 = 1.4142135623731*sqrt(0.5*mu**2 - mu*x*cos(phi) - mu*y*sin(phi) + 0.5*x*y*sin(x2) + x0*x3 + x0 - x1*x3 + x1)
-    return _0
+    return abs(-mu + x*cos(phi) + y*sin(phi))
 
 def _hough_numpy(x_a, y_a, x_b, y_b):
     """Perform calculations in small float using the numpy module."""
@@ -196,4 +191,3 @@ def _inter_line_numpy(phi_1, mu_1, phi_2, mu_2):
     _0 = x0*(-mu_1*sin(phi_2) + mu_2*sin(phi_1))
     _1 = x0*(mu_1*cos(phi_2) - mu_2*cos(phi_1))
     return [_0, _1]
-
