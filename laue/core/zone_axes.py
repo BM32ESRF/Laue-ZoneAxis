@@ -74,7 +74,7 @@ def atomic_find_zone_axes(transformer, gnomonics, dmax, nbr, tol):
     --------
     >>> import numpy as np
     >>> import laue
-    >>> from laue import Transformer
+    >>> from laue.core.geometry.transformer import Transformer
     >>> transformer = Transformer()
     >>> gnomonics = np.array(
     ... [[ 3.13651353e-01,  3.09226930e-01,  2.94649661e-01,  3.01913261e-01,

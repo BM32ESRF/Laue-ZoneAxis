@@ -36,8 +36,9 @@ class Transformer(TransformerPickleable, Compilator):
     entre l'espace de la camera et l'espace gnomonique ou encore
     s'ammuser avec la transformee de Hough.
     """
-    def __init__(self):
-        Compilator.__init__(self) # Globalisation des expressions.
+    def __init__(self, verbose=False):
+        Compilator.__init__(self, verbose=verbose) # Globalisation des expressions.
+        self.verbose = verbose
 
         # Les memoires tampon.
         self._fcts_cam_to_gnomonic = collections.defaultdict(lambda: 0) # Fonctions vectorisees avec seulement f(x_cam, y_cam), les parametres sont deja remplaces.
@@ -127,7 +128,7 @@ class Transformer(TransformerPickleable, Compilator):
         Examples
         -------
         >>> import numpy as np
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> from laue.utilities.parsing import extract_parameters
         >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
@@ -183,7 +184,7 @@ class Transformer(TransformerPickleable, Compilator):
         Examples
         -------
         >>> import numpy as np
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> from laue.utilities.parsing import extract_parameters
         >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
@@ -213,13 +214,173 @@ class Transformer(TransformerPickleable, Compilator):
         return self._generic_transformation("cam_to_thetachi", pxl_x, pxl_y,
             parameters=parameters, dtype=dtype)
 
+    def dist_cosine(self, theta_1, chi_1, theta_2, chi_2, *, dtype=np.float64):
+        r"""
+        ** Calcul les cosine-distances entre les familles de spot 1 et 2. **
+
+        La distance entre 2 vecteurs est definie de la facon suivante:
+        \[ \arccos{\left(\frac{\vec{u_1}.\vec{u_1}}{\left\|\vec{u_1}\right\|.\left\|\vec{u_2}\right\|}\right)} \]
+
+        Parameters
+        ----------
+        theta_1 : np.ndarray
+            Les angles theta des spots de la premiere famille. (en degre)
+            shape = ``(*shape_fam_1)``
+        chi_1 : np.ndarray
+            Les angles chi des spots de la premiere famille. (en degre)
+            shape = ``(*shape_fam_1)``
+        theta_2 : np.ndarray
+            Les angles theta des spots de la second famille. (en degre)
+            shape = ``(*shape_fam_2)``
+        chi_2 : np.ndarray
+            Les angles chi des spots de la seconde famille. (en degre)
+            shape = ``(*shape_fam_2)``
+        dtype : type, optional
+            La representation machine des nombres.
+            Attention pour les calculs en float32, les arrondis
+            risquent d'etre importants.
+
+        Returns
+        -------
+        np.ndarray
+            Les cosine-distances entre les 2 familles de vecteurs. (en degre)
+            shape = ``(*shape_fam_1, *shape_fam_2)``
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from laue.core.geometry.transformer import Transformer
+        >>> transformer = Transformer()
+        >>>
+        >>> theta, chi = np.array([[ 63.605,  59.91 ,  51.367,  38.546,  30.05 ],
+        ...                        [ 49.403,  34.97 ,  13.062, -13.248, -35.102]])
+        >>> np.round(transformer.dist_cosine(theta, chi, theta, chi), 5)
+        array([[ 0.     ,  7.74103, 22.58762, 44.11754, 60.96129],
+               [ 7.74103,  0.     , 14.91692, 36.82838, 54.46589],
+               [22.58762, 14.91692,  0.     , 22.40912, 41.26854],
+               [44.11754, 36.82838, 22.40912,  0.     , 19.88537],
+               [60.96129, 54.46589, 41.26854, 19.88537,  0.     ]])
+        >>> transformer.dist_cosine(theta, chi, theta, chi, dtype=np.float16).dtype
+        dtype('float16')
+        >>>
+        >>> theta_1, chi_1 = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(1, 2, 3)),
+        ...                   np.random.uniform(-np.pi/4, np.pi/4, size=(1, 2, 3)))
+        >>> theta_2, chi_2 = (np.random.uniform(np.pi/8, 3*np.pi/8, size=(3, 4, 5)),
+        ...                   np.random.uniform(-np.pi/4, np.pi/4, size=(3, 4, 5)))
+        >>> transformer.dist_cosine(theta_1, chi_1, theta_2, chi_2).shape
+        (1, 2, 3, 3, 4, 5)
+        >>>
+        """
+        assert isinstance(theta_1, np.ndarray), \
+            f"'theta_1' has to be of type np.ndarray, not {type(theta_1).__name__}."
+        assert isinstance(chi_1, np.ndarray), \
+            f"'chi_1' has to be of type np.ndarray, not {type(chi_1).__name__}."
+        assert theta_1.shape == chi_1.shape, \
+            f"Les 2 parametres de droite doivent avoir la meme taille: {theta_1.shape} vs {chi_1.shape}."
+        assert isinstance(theta_2, np.ndarray), \
+            f"'theta_2' has to be of type np.ndarray, not {type(theta_2).__name__}."
+        assert isinstance(chi_2, np.ndarray), \
+            f"'chi_2' has to be of type np.ndarray, not {type(chi_2).__name__}."
+        assert theta_2.shape == chi_2.shape, \
+            f"Les 2 coordonnees des points doivent avoir la meme shape: {theta_2.shape} vs {chi_2.shape}."
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
+            f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
+
+        shape1, shape2 = theta_1.shape, theta_2.shape
+        theta_1, theta_2 = np.meshgrid(theta_1.astype(dtype, copy=False), theta_2.astype(dtype, copy=False), indexing="ij", copy=False)
+        chi_1, chi_2 = np.meshgrid(chi_1.astype(dtype, copy=False), chi_2.astype(dtype, copy=False), indexing="ij", copy=False)
+        theta_1, chi_1 = theta_1.reshape((*shape1, *shape2)), chi_1.reshape((*shape1, *shape2))
+        theta_2, chi_2 = theta_2.reshape((*shape1, *shape2)), chi_2.reshape((*shape1, *shape2))
+
+        func = self.get_fct_dist_cosine()
+        return np.nan_to_num(func(theta_1, chi_1, theta_2, chi_2), copy=False, nan=0.0)
+
+    def dist_euclidian(self, x1, y1, x2, y2, *, dtype=np.float32):
+        r"""
+        ** Calcul les distances euclidiennes entre les familles de vecteur 1 et 2. **
+
+        La distance entre 2 vecteurs est definie de la facon suivante:
+        \[ \left\|\vec{u_1} - \vec{u_2}\right\| \]
+
+        Parameters
+        ----------
+        x1 : np.ndarray
+            Les coordonnees x des vecteurs de la premiere famille.
+            shape = ``(*shape_fam_1)``
+        y1 : np.ndarray
+            Les coordonnees y des vecteurs de la premiere famille.
+            shape = ``(*shape_fam_1)``
+        x2 : np.ndarray
+            Les coordonnees x des vecteurs de la seconde famille.
+            shape = ``(*shape_fam_2)``
+        y2 : np.ndarray
+            Les coordonnees y des vecteurs de la seconde famille.
+            shape = ``(*shape_fam_2)``
+        dtype : type, optional
+            La representation machine des nombres. Comme le calcul
+            est simple et n'engendre pas de gros arrondi, faire
+            les calculs en float32 n'est pas delirant.
+
+        Returns
+        -------
+        np.ndarray
+            Les distances entre les 2 familles de vecteurs.
+            shape = ``(*shape_fam_1, *shape_fam_2)``
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from laue.core.geometry.transformer import Transformer
+        >>> transformer = Transformer()
+        >>>
+        >>> x, y = np.linspace(-1, 1, 5), np.linspace(-1, 1, 5)
+        >>> transformer.dist_euclidian(x, y, x, y)
+        array([[0.        , 0.70710677, 1.4142135 , 2.1213202 , 2.828427  ],
+               [0.70710677, 0.        , 0.70710677, 1.4142135 , 2.1213202 ],
+               [1.4142135 , 0.70710677, 0.        , 0.70710677, 1.4142135 ],
+               [2.1213202 , 1.4142135 , 0.70710677, 0.        , 0.70710677],
+               [2.828427  , 2.1213202 , 1.4142135 , 0.70710677, 0.        ]],
+              dtype=float32)
+        >>> transformer.dist_euclidian(x, y, x, y, dtype=np.float16)
+        array([[0.   , 0.707, 1.414, 2.121, 2.828],
+               [0.707, 0.   , 0.707, 1.414, 2.121],
+               [1.414, 0.707, 0.   , 0.707, 1.414],
+               [2.121, 1.414, 0.707, 0.   , 0.707],
+               [2.828, 2.121, 1.414, 0.707, 0.   ]], dtype=float16)
+        >>>
+        >>> x1, y1 = np.random.normal(size=(1, 2, 3)), np.random.normal(size=(1, 2, 3))
+        >>> x2, y2 = np.random.normal(size=(3, 4, 5)), np.random.normal(size=(3, 4, 5))
+        >>> transformer.dist_euclidian(x1, y1, x2, y2).shape
+        (1, 2, 3, 3, 4, 5)
+        >>>
+        """
+        assert isinstance(x1, np.ndarray), \
+            f"'x1' has to be of type np.ndarray, not {type(x1).__name__}."
+        assert isinstance(y1, np.ndarray), \
+            f"'y1' has to be of type np.ndarray, not {type(y1).__name__}."
+        assert x1.shape == y1.shape, \
+            f"Les 2 parametres de droite doivent avoir la meme taille: {x1.shape} vs {y1.shape}."
+        assert isinstance(x2, np.ndarray), \
+            f"'x2' has to be of type np.ndarray, not {type(x2).__name__}."
+        assert isinstance(y2, np.ndarray), \
+            f"'y2' has to be of type np.ndarray, not {type(y2).__name__}."
+        assert x2.shape == y2.shape, \
+            f"Les 2 coordonnees des points doivent avoir la meme shape: {x2.shape} vs {y2.shape}."
+        assert dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}, \
+            f"Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}."
+
+        shape1, shape2 = x1.shape, x2.shape
+        x1, x2 = np.meshgrid(x1.astype(dtype, copy=False), x2.astype(dtype, copy=False), indexing="ij", copy=False)
+        y1, y2 = np.meshgrid(y1.astype(dtype, copy=False), y2.astype(dtype, copy=False), indexing="ij", copy=False)
+        x1, y1 = x1.reshape((*shape1, *shape2)), y1.reshape((*shape1, *shape2))
+        x2, y2 = x2.reshape((*shape1, *shape2)), y2.reshape((*shape1, *shape2))
+
+        func = self.get_fct_dist_euclidian()
+        return func(x1, y1, x2, y2)
+
     def dist_line(self, phi_vect, mu_vect, x_vect, y_vect, *, dtype=np.float64):
         """
         ** Calcul les distances projetees des points sur une droite. **
-
-        Notes
-        -----
-        Pour des raisons de performances, travail avec des float32.
 
         Parameters
         ----------
@@ -237,7 +398,7 @@ class Transformer(TransformerPickleable, Compilator):
             shape = ``(*nbr_points)``
         dtype : type, optional
             La representation machine des nombres.
-            Attention pour les calcul en float32 et moins
+            Attention pour les calculs en float32 et moins
             risque d'y avoir des arrondis qui engendrent:
             ``RuntimeWarning: invalid value encountered in sqrt``.
 
@@ -250,7 +411,7 @@ class Transformer(TransformerPickleable, Compilator):
         Examples
         --------
         >>> import numpy as np
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> from laue.utilities.parsing import extract_parameters
         >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
@@ -325,7 +486,7 @@ class Transformer(TransformerPickleable, Compilator):
         Examples
         -------
         >>> import numpy as np
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> from laue.utilities.parsing import extract_parameters
         >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
@@ -382,7 +543,7 @@ class Transformer(TransformerPickleable, Compilator):
         Examples
         -------
         >>> import numpy as np
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> x_gnom, y_gnom = np.array([[-0.51176567, -0.35608186, -0.1245152 ,
         ...                              0.09978235,  0.17156848,  0.13417314 ],
@@ -672,7 +833,7 @@ class Transformer(TransformerPickleable, Compilator):
         Examples
         -------
         >>> import numpy as np
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> np.random.seed(0)
         >>> x, y = np.random.normal(size=(2, 4, 5, 6))
@@ -731,7 +892,7 @@ class Transformer(TransformerPickleable, Compilator):
         Examples
         -------
         >>> import numpy as np
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> from laue.utilities.parsing import extract_parameters
         >>> parameters = extract_parameters(dd=70, bet=.0, gam=.0, size=.08, x0=1024, y0=1024)
         >>> transformer = Transformer()
@@ -786,7 +947,7 @@ class Transformer(TransformerPickleable, Compilator):
         Examples
         -------
         >>> import numpy as np
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> theta, chi = np.array([[ 63.605,  59.91 ,  51.367,  38.546,  30.05 ,  26.378],
         ...                        [ 49.403,  34.97 ,  13.062, -13.248, -35.102, -49.486]])

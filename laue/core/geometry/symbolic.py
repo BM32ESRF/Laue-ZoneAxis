@@ -44,7 +44,7 @@ class Equations:
 
         self.u_i = self.rx # Le rayon de lumiere incident norme parallele a l'axe X dans le repere du cristal.
 
-        self.rot_camera = sympy.rot_axis2(-self.xbet*sympy.pi/180) @ sympy.rot_axis3(self.xgam*sympy.pi/180) # Rotation globale de la camera par rapport au cristal.
+        self.rot_camera = sympy.rot_axis2(sympy.rad(-self.xbet)) @ sympy.rot_axis3(sympy.rad(self.xgam)) # Rotation globale de la camera par rapport au cristal.
         self.ci = self.rot_camera @ -self.ry # Vecteur Xcamera.
         self.cj = self.rot_camera @ self.rx # Vecteur Ycamera.
         self.ck = self.rot_camera @ self.rz # Vecteur Zcamera normal au plan de la camera.
@@ -78,7 +78,7 @@ class Equations:
         Examples
         --------
         >>> from sympy import symbols
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> x_cam, y_cam = symbols("x y")
         >>> transformer.get_expr_cam_to_uf(x_cam, y_cam)
@@ -115,7 +115,7 @@ class Equations:
         Examples
         --------
         >>> from sympy import symbols
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> uf_x, uf_y, uf_z = symbols("uf_x, uf_y, uf_z")
         >>> x_cam, y_cam = transformer.get_expr_uf_to_cam(uf_x, uf_y, uf_z)
@@ -163,7 +163,7 @@ class Equations:
         Examples
         --------
         >>> from sympy import symbols
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> uf_x, uf_y, uf_z = symbols("uf_x, uf_y, uf_z")
         >>> transformer.get_expr_uf_to_uq(uf_x, uf_y, uf_z)
@@ -196,7 +196,7 @@ class Equations:
         Examples
         --------
         >>> from sympy import symbols
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> uq_x, uq_y, uq_z = symbols("uq_x, uq_y, uq_z")
         >>> transformer.get_expr_uq_to_uf(uq_x, uq_y, uq_z)
@@ -231,7 +231,7 @@ class Equations:
         Examples
         --------
         >>> from sympy import symbols
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> uq_x, uq_y, uq_z = symbols("uq_x, uq_y, uq_z")
         >>> x_gnom, y_gnom = transformer.get_expr_uq_to_gnomonic(uq_x, uq_y, uq_z)
@@ -279,7 +279,7 @@ class Equations:
         Examples
         --------
         >>> from sympy import symbols
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> x_gnom, y_gnom = symbols("x y")
         >>> transformer.get_expr_gnomonic_to_uq(x_gnom, y_gnom)
@@ -318,7 +318,7 @@ class Equations:
             La moitier de l'angle de rotation du plan christalin autour de -y.
 
         >>> from sympy import symbols
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> uf_x, uf_y, uf_z = symbols("uf_x, uf_y, uf_z", real=True)
         >>> theta, chi = transformer.get_expr_uf_to_thetachi(uf_x, uf_y, uf_z)
@@ -361,7 +361,7 @@ class Equations:
         Examples
         --------
         >>> from sympy import symbols
-        >>> from laue import Transformer
+        >>> from laue.core.geometry.transformer import Transformer
         >>> transformer = Transformer()
         >>> theta, chi = symbols("theta chi")
         >>> transformer.get_expr_thetachi_to_uf(theta, chi)
@@ -390,12 +390,13 @@ class Compilator(Equations):
     de sorte a eviter la recompilation entre chaque objet,
     et permet aussi d'alleger la serialisation de ``Transformer``.
     """
-    def __init__(self):
+    def __init__(self, verbose):
         """
         Genere le dictionaire a protee globale.
         """
         Equations.__init__(self)
 
+        self.verbose = verbose
         self.compiled_expressions = {}
         self.names = [
             "cam_to_gnomonic",
@@ -436,7 +437,8 @@ class Compilator(Equations):
 
         self.compiled_expressions["cam_to_gnomonic"] = lambdify.Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[x_gnom, y_gnom]) # On l'enregistre une bonne fois pour toutes.
+            expr=[x_gnom, y_gnom],
+            verbose=self.verbose) # On l'enregistre une bonne fois pour toutes.
         return self.compiled_expressions["cam_to_gnomonic"]
 
     def get_fct_cam_to_thetachi(self):
@@ -450,11 +452,12 @@ class Compilator(Equations):
 
         u_f = self.get_expr_cam_to_uf(self.x_cam, self.y_cam)
         theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
-        theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
+        theta_deg, chi_deg = sympy.deg(theta_rad), sympy.deg(chi_rad)
 
         self.compiled_expressions["cam_to_thetachi"] = lambdify.Lambdify(
             args=[self.x_cam, self.y_cam, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[theta_deg, chi_deg]) # On l'enregistre une bonne fois pour toutes.
+            expr=[theta_deg, chi_deg],
+            verbose=self.verbose) # On l'enregistre une bonne fois pour toutes.
         return self.compiled_expressions["cam_to_thetachi"]
 
     def get_fct_dist_cosine(self):
@@ -462,40 +465,25 @@ class Compilator(Equations):
         ** Equation de la cosine distance des vecteurs uq. **
 
         theta et chi sont exprimes en degres
-
-        def calculdist_from_thetachi(listpoints1, listpoints2):
-            data1 = np.array(listpoints1)
-            data2 = np.array(listpoints2)
-            # print "data1",data1
-            # print "data2",data2
-            longdata1 = data1[:, 0] * DEG  # theta
-            latdata1 = data1[:, 1] * DEG  # chi
-
-            longdata2 = data2[:, 0] * DEG  # theta
-            latdata2 = data2[:, 1] * DEG  # chi
-
-            deltalat = latdata1 - np.reshape(latdata2, (len(latdata2), 1))
-            longdata2new = np.reshape(longdata2, (len(longdata2), 1))
-            prodcos = np.cos(longdata1) * np.cos(longdata2new)
-            prodsin = np.sin(longdata1) * np.sin(longdata2new)
-
-            arccos_arg = np.around(prodsin + prodcos * np.cos(deltalat), decimals=9)
-
-            tab_angulardist = (1.0 / DEG) * np.arccos(arccos_arg)
-
-            return tab_angulardist
         """
         if "dist_cosine" in self.compiled_expressions:
             return self.compiled_expressions["dist_cosine"]
 
         theta1, chi1 = sympy.symbols("theta_1 chi_1", real=True)
         theta2, chi2 = sympy.symbols("theta_2 chi_2", real=True)
-        uq_1 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta1*np.pi/180, chi1*np.pi/180))
-        uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(theta2*np.pi/180, chi2*np.pi/180))
-        dist_expr = sympy.acos(uq_1.dot(uq_2)/(uq_1.norm()*uq_2.norm()))*180/np.pi # Cosine distance.
+        uq_1 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(sympy.rad(theta1), sympy.rad(chi1)))
+        uq_2 = self.get_expr_uf_to_uq(*self.get_expr_thetachi_to_uf(sympy.rad(theta2), sympy.rad(chi2)))
+
+        scal = uq_1.dot(uq_2)
+        norm = uq_1.norm()*uq_2.norm()
+
+        scal = sympy.trigsimp(scal)
+        norm = sympy.powsimp(sympy.trigsimp(norm), force=True)
+
+        dist_expr = sympy.deg(sympy.acos(scal/norm)) # Cosine distance.
 
         self.compiled_expressions["dist_cosine"] = lambdify.Lambdify(
-            [theta1, chi1, theta2, chi2], dist_expr)
+            [theta1, chi1, theta2, chi2], dist_expr, verbose=self.verbose)
         return self.compiled_expressions["dist_cosine"]
 
     def get_fct_dist_euclidian(self):
@@ -509,7 +497,7 @@ class Compilator(Equations):
         dist_expr = sympy.sqrt((x1-x2)**2 + (y1-y2)**2)
 
         self.compiled_expressions["dist_euclidian"] = lambdify.Lambdify(
-            [x1, y1, x2, y2], dist_expr)
+            [x1, y1, x2, y2], dist_expr, verbose=self.verbose)
         return self.compiled_expressions["dist_euclidian"]
 
     def get_fct_dist_line(self):
@@ -532,7 +520,7 @@ class Compilator(Equations):
         distance = sympy.trigsimp(distance) # Permet un gain de 2.90
 
         # Vectorisation de l'expression.
-        self.compiled_expressions["dist_line"] = lambdify.Lambdify([phi, mu, x, y], distance)
+        self.compiled_expressions["dist_line"] = lambdify.Lambdify([phi, mu, x, y], distance, verbose=self.verbose)
         return self.compiled_expressions["dist_line"]
 
     def get_fct_gnomonic_to_cam(self):
@@ -548,7 +536,7 @@ class Compilator(Equations):
 
         self.compiled_expressions["gnomonic_to_cam"] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
+            expr=[x_c, y_c], verbose=self.verbose) # On l'enregistre une bonne fois pour toutes.
         return self.compiled_expressions["gnomonic_to_cam"]
 
     def get_fct_gnomonic_to_thetachi(self):
@@ -563,11 +551,11 @@ class Compilator(Equations):
         u_q = self.get_expr_gnomonic_to_uq(self.x_gnom, self.y_gnom)
         u_f = self.get_expr_uq_to_uf(*u_q)
         theta_rad, chi_rad = self.get_expr_uf_to_thetachi(*u_f)
-        theta_deg, chi_deg = theta_rad*180/np.pi, chi_rad*180/np.pi
+        theta_deg, chi_deg = sympy.deg(theta_rad), sympy.deg(chi_rad)
 
         self.compiled_expressions["gnomonic_to_thetachi"] = lambdify.Lambdify(
             args=[self.x_gnom, self.y_gnom],
-            expr=[theta_deg, chi_deg]) # On l'enregistre une bonne fois pour toutes.
+            expr=[theta_deg, chi_deg], verbose=self.verbose) # On l'enregistre une bonne fois pour toutes.
         return self.compiled_expressions["gnomonic_to_thetachi"]
 
     def get_fct_hough(self):
@@ -596,7 +584,7 @@ class Compilator(Equations):
         mu = sympy.trigsimp(sympy.cancel(mu)) # Permet un gain de 1.40
 
         # Vectorisation des expressions.
-        self.compiled_expressions["hough"] = lambdify.Lambdify([xa, ya, xb, yb], [phi, mu])
+        self.compiled_expressions["hough"] = lambdify.Lambdify([xa, ya, xb, yb], [phi, mu], verbose=self.verbose)
         return self.compiled_expressions["hough"]
 
     def get_fct_inter_line(self):
@@ -625,7 +613,7 @@ class Compilator(Equations):
 
         # Vectorisation des expressions.
         self.compiled_expressions["inter_line"] = lambdify.Lambdify(
-            [phi_1, mu_1, phi_2, mu_2], [inter_x, inter_y])
+            [phi_1, mu_1, phi_2, mu_2], [inter_x, inter_y], verbose=self.verbose)
         return self.compiled_expressions["inter_line"]
 
     def get_fct_thetachi_to_gnomonic(self):
@@ -637,13 +625,13 @@ class Compilator(Equations):
         if "thetachi_to_gnomonic" in self.compiled_expressions:
             return self.compiled_expressions["thetachi_to_gnomonic"]
 
-        u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
+        u_f = self.get_expr_thetachi_to_uf(sympy.rad(self.theta), sympy.rad(self.chi))
         u_q = self.get_expr_uf_to_uq(*u_f)
         x_gnom, y_gnom = self.get_expr_uq_to_gnomonic(*u_q)
 
         self.compiled_expressions["thetachi_to_gnomonic"] = lambdify.Lambdify(
             args=[self.theta, self.chi],
-            expr=[x_gnom, y_gnom]) # On l'enregistre une bonne fois pour toutes.
+            expr=[x_gnom, y_gnom], verbose=self.verbose) # On l'enregistre une bonne fois pour toutes.
         return self.compiled_expressions["thetachi_to_gnomonic"]
 
     def get_fct_thetachi_to_cam(self):
@@ -655,12 +643,12 @@ class Compilator(Equations):
         if "thetachi_to_cam" in self.compiled_expressions:
             return self.compiled_expressions["thetachi_to_cam"]
 
-        u_f = self.get_expr_thetachi_to_uf(self.theta*np.pi/180, self.chi*np.pi/180)
+        u_f = self.get_expr_thetachi_to_uf(sympy.rad(self.theta), sympy.rad(self.chi))
         x_c, y_c = self.get_expr_uf_to_cam(*u_f)
 
         self.compiled_expressions["thetachi_to_cam"] = lambdify.Lambdify(
             args=[self.theta, self.chi, self.dd, self.xcen, self.ycen, self.xbet, self.xgam, self.pixelsize],
-            expr=[x_c, y_c]) # On l'enregistre une bonne fois pour toutes.
+            expr=[x_c, y_c], verbose=self.verbose) # On l'enregistre une bonne fois pour toutes.
         return self.compiled_expressions["thetachi_to_cam"]
 
     def _hash(self):

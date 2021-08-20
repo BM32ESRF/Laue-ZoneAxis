@@ -42,6 +42,7 @@ Notes
 Si le module ``psutil`` est installe, la memoire sera mieux geree.
 &#34;&#34;&#34;
 
+import hashlib
 import math
 import numbers
 import os
@@ -97,6 +98,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         self._sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
         self._axes = {} # Les axes de zones.
         self._spots_set = None # L&#39;ensemble des spots pour une recherche plus rapide.
+        self._hkl = {} # Les prediction des indices hkl
 
     def _set_spots(self, spots):
         &#34;&#34;&#34;
@@ -807,6 +809,36 @@ class LaueDiagram(Splitable, DiagramPickleable):
             plt.show()
 
         return axe_pyplot
+
+    def predict_hkl(self, *args, **kwds):
+        &#34;&#34;&#34;
+        ** Predit tous les indices hkl des spots avec un reseau de neurones. **
+
+        Parameters
+        ----------
+        *args
+            Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+        **kwds
+            Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+
+        Returns
+        -------
+        hkl_vect : np.ndarray
+            La &#39;liste&#39; des indice de miller associes a chaque spot de ce diagrame.
+            ``shape = (len(self), 3)``
+        score : np.ndarray
+            Le vecteurs des fiablilites des predictions entre 0 et 1.
+            Un score &gt; 95% assure que les indices de miller
+            trouves sont correctes.
+            ``shape = (len(self),)``
+        &#34;&#34;&#34;
+        key = hashlib.md5(repr(args) + repr(sorted(kwds.items()))).hexdigest()
+        if key not in self._hkl:
+            if key not in self.experiment._predictors:
+                from laue.core.hkl_nn.prediction import Predictor
+                self.experiment._predictors[key] = Predictor(*args, **kwds)
+            self._hkl[key] = self.experiment._predictors[key](self.get_theta_chi())
+        return self._hkl[key]
 
     def save_file(self, filename):
         &#34;&#34;&#34;
@@ -1193,6 +1225,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         self._sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
         self._axes = {} # Les axes de zones.
         self._spots_set = None # L&#39;ensemble des spots pour une recherche plus rapide.
+        self._hkl = {} # Les prediction des indices hkl
 
     def _set_spots(self, spots):
         &#34;&#34;&#34;
@@ -1903,6 +1936,36 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             plt.show()
 
         return axe_pyplot
+
+    def predict_hkl(self, *args, **kwds):
+        &#34;&#34;&#34;
+        ** Predit tous les indices hkl des spots avec un reseau de neurones. **
+
+        Parameters
+        ----------
+        *args
+            Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+        **kwds
+            Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+
+        Returns
+        -------
+        hkl_vect : np.ndarray
+            La &#39;liste&#39; des indice de miller associes a chaque spot de ce diagrame.
+            ``shape = (len(self), 3)``
+        score : np.ndarray
+            Le vecteurs des fiablilites des predictions entre 0 et 1.
+            Un score &gt; 95% assure que les indices de miller
+            trouves sont correctes.
+            ``shape = (len(self),)``
+        &#34;&#34;&#34;
+        key = hashlib.md5(repr(args) + repr(sorted(kwds.items()))).hexdigest()
+        if key not in self._hkl:
+            if key not in self.experiment._predictors:
+                from laue.core.hkl_nn.prediction import Predictor
+                self.experiment._predictors[key] = Predictor(*args, **kwds)
+            self._hkl[key] = self.experiment._predictors[key](self.get_theta_chi())
+        return self._hkl[key]
 
     def save_file(self, filename):
         &#34;&#34;&#34;
@@ -3719,6 +3782,64 @@ array([[ 29.,  40.,  29.,  58.],
     return axe_pyplot</code></pre>
 </details>
 </dd>
+<dt id="laue.diagram.LaueDiagram.predict_hkl"><code class="name flex">
+<span>def <span class="ident">predict_hkl</span></span>(<span>self, *args, **kwds)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Predit tous les indices hkl des spots avec un reseau de neurones. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>*args</code></strong></dt>
+<dd>Same parameters as <code><a title="laue.core.hkl_nn.prediction.Predictor" href="core/hkl_nn/prediction.html#laue.core.hkl_nn.prediction.Predictor">Predictor</a></code>.</dd>
+<dt><strong><code>**kwds</code></strong></dt>
+<dd>Same parameters as <code><a title="laue.core.hkl_nn.prediction.Predictor" href="core/hkl_nn/prediction.html#laue.core.hkl_nn.prediction.Predictor">Predictor</a></code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>hkl_vect</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>La 'liste' des indice de miller associes a chaque spot de ce diagrame.
+<code>shape = (len(self), 3)</code></dd>
+<dt><strong><code>score</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Le vecteurs des fiablilites des predictions entre 0 et 1.
+Un score &gt; 95% assure que les indices de miller
+trouves sont correctes.
+<code>shape = (len(self),)</code></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_hkl(self, *args, **kwds):
+    &#34;&#34;&#34;
+    ** Predit tous les indices hkl des spots avec un reseau de neurones. **
+
+    Parameters
+    ----------
+    *args
+        Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+    **kwds
+        Same parameters as ``laue.core.hkl_nn.prediction.Predictor.__init__``.
+
+    Returns
+    -------
+    hkl_vect : np.ndarray
+        La &#39;liste&#39; des indice de miller associes a chaque spot de ce diagrame.
+        ``shape = (len(self), 3)``
+    score : np.ndarray
+        Le vecteurs des fiablilites des predictions entre 0 et 1.
+        Un score &gt; 95% assure que les indices de miller
+        trouves sont correctes.
+        ``shape = (len(self),)``
+    &#34;&#34;&#34;
+    key = hashlib.md5(repr(args) + repr(sorted(kwds.items()))).hexdigest()
+    if key not in self._hkl:
+        if key not in self.experiment._predictors:
+            from laue.core.hkl_nn.prediction import Predictor
+            self.experiment._predictors[key] = Predictor(*args, **kwds)
+        self._hkl[key] = self.experiment._predictors[key](self.get_theta_chi())
+    return self._hkl[key]</code></pre>
+</details>
+</dd>
 <dt id="laue.diagram.LaueDiagram.save_file"><code class="name flex">
 <span>def <span class="ident">save_file</span></span>(<span>self, filename)</span>
 </code></dt>
@@ -3979,6 +4100,7 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 <li><code><a title="laue.diagram.LaueDiagram.plot_all" href="#laue.diagram.LaueDiagram.plot_all">plot_all</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.plot_gnomonic" href="#laue.diagram.LaueDiagram.plot_gnomonic">plot_gnomonic</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.plot_xy" href="#laue.diagram.LaueDiagram.plot_xy">plot_xy</a></code></li>
+<li><code><a title="laue.diagram.LaueDiagram.predict_hkl" href="#laue.diagram.LaueDiagram.predict_hkl">predict_hkl</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.save_file" href="#laue.diagram.LaueDiagram.save_file">save_file</a></code></li>
 <li><code><a title="laue.diagram.LaueDiagram.select_spots" href="#laue.diagram.LaueDiagram.select_spots">select_spots</a></code></li>
 </ul>

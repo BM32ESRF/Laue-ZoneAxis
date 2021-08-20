@@ -139,8 +139,8 @@ class Experiment:
         # Precalul des constantes.
         self.kernel_font = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.font_size, self.font_size))
         self.kernel_dilate = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.max_space, self.max_space))
-        self.transformer = transformer.Transformer() # Outil permetant de faire les transformations geometriques.
-        self.predictor = None # Predicteur base sur un reseau de neurones.
+        self.transformer = transformer.Transformer(verbose=self.verbose) # Outil permetant de faire les transformations geometriques.
+        self._predictors = {} # Predicteurs bases sur un reseau de neurones.
 
         # Declaration des attributs interne de memoire.
         self._len = None # Nombre de diagrames lues.

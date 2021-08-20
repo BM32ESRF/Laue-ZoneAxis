@@ -1,5 +1,5 @@
 resultats/
-laue/data/
+laue/data/Zr02/
 laue/__pycache__/
 laue/experiment/__pycache__/
 laue/core/__pycache__/

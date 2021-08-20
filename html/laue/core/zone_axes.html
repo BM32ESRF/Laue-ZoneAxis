@@ -106,7 +106,7 @@ def atomic_find_zone_axes(transformer, gnomonics, dmax, nbr, tol):
     --------
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
-    &gt;&gt;&gt; from laue import Transformer
+    &gt;&gt;&gt; from laue.core.geometry.transformer import Transformer
     &gt;&gt;&gt; transformer = Transformer()
     &gt;&gt;&gt; gnomonics = np.array(
     ... [[ 3.13651353e-01,  3.09226930e-01,  2.94649661e-01,  3.01913261e-01,
@@ -353,7 +353,7 @@ On a <code>len(spots_axes_ind) == nbr_de_spots</code>.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
-&gt;&gt;&gt; from laue import Transformer
+&gt;&gt;&gt; from laue.core.geometry.transformer import Transformer
 &gt;&gt;&gt; transformer = Transformer()
 &gt;&gt;&gt; gnomonics = np.array(
 ... [[ 3.13651353e-01,  3.09226930e-01,  2.94649661e-01,  3.01913261e-01,
@@ -486,7 +486,7 @@ set()
     --------
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
-    &gt;&gt;&gt; from laue import Transformer
+    &gt;&gt;&gt; from laue.core.geometry.transformer import Transformer
     &gt;&gt;&gt; transformer = Transformer()
     &gt;&gt;&gt; gnomonics = np.array(
     ... [[ 3.13651353e-01,  3.09226930e-01,  2.94649661e-01,  3.01913261e-01,

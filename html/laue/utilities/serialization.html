@@ -54,7 +54,9 @@ __pdoc__ = {&#34;SpotPickelable.__getstate__&#34;: True,
             &#34;ZoneAxisPickleable.__getstate__&#34;: True,
             &#34;ZoneAxisPickleable.__setstate__&#34;: True,
             &#34;DiagramPickleable.__getstate__&#34;: True,
-            &#34;DiagramPickleable.__setstate__&#34;: True}
+            &#34;DiagramPickleable.__setstate__&#34;: True,
+            &#34;TransformerPickleable.__getstate__&#34;: True,
+            &#34;TransformerPickleable.__setstate__&#34;: True}
 
 
 class SpotPickleable:
@@ -72,8 +74,6 @@ class SpotPickleable:
         state[&#34;im&#34;] = self.get_image()
         state[&#34;dis&#34;] = self.get_distortion()
         state[&#34;id&#34;] = self.get_id()
-        if self.hkl is not None:
-            state[&#34;hkl&#34;] = self.hkl
         return state
 
     def __setstate__(self, state):
@@ -98,7 +98,6 @@ class SpotPickleable:
             distortion=state[&#34;dis&#34;],
             diagram=None,
             identifier=state[&#34;id&#34;])
-        self.hkl = state.get(&#34;hkl&#34;, None)
 
 class ZoneAxisPickleable:
     &#34;&#34;&#34;
@@ -159,6 +158,8 @@ class DiagramPickleable:
         if self._axes:
             state[&#34;axes&#34;] = {key: [axis.__getstate__() for axis in axes]
                 for key, axes in self._axes.items()}
+        if self._hkl:
+            state[&#34;hkl&#34;] = self._hkl
         return state
 
     def __setstate__(self, state):
@@ -209,6 +210,57 @@ class DiagramPickleable:
                 axis.spots = collections.OrderedDict(
                     ((ind, self[ind]) for ind in axis.spots.keys()))
 
+        self._hkl = state.get(&#34;hkl&#34;, {})
+
+class TransformerPickleable:
+    &#34;&#34;&#34;
+    ** Interface pour serialiser le gestionaire de transformation geometriques. **
+    &#34;&#34;&#34;
+    def __getstate__(self):
+        &#34;&#34;&#34;
+        ** Recupere les fonction vecirisee et symplifiees. **
+        &#34;&#34;&#34;
+        state = {}
+        state[&#34;verbose&#34;] = self.verbose
+        if self._fcts_cam_to_gnomonic:
+            state[&#34;c2g&#34;] = {k: v for k, v in self._fcts_cam_to_gnomonic.items()}
+        if self._fcts_gnomonic_to_cam:
+            state[&#34;g2c&#34;] = {k: v for k, v in self._fcts_gnomonic_to_cam.items()}
+        if self._fcts_cam_to_thetachi:
+            state[&#34;c2t&#34;] = {k: v for k, v in self._fcts_cam_to_thetachi.items()}
+        if self._fcts_thetachi_to_cam:
+            state[&#34;t2c&#34;] = {k: v for k, v in self._fcts_thetachi_to_cam.items()}
+        if self._parameters_memory:
+            state[&#34;mem&#34;] = self._parameters_memory
+        return state
+
+    def __setstate__(self, state):
+        &#34;&#34;&#34;
+        * Initialisateur pour pickle. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; import pickle
+        &gt;&gt;&gt; from laue.core.geometry.transformer import Transformer
+        &gt;&gt;&gt; trans = pickle.loads(pickle.dumps(Transformer()))
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        self.__init__(state[&#34;verbose&#34;])
+        if &#34;c2g&#34; in state:
+            for k, v in state[&#34;c2g&#34;].items():
+                self._fcts_cam_to_gnomonic[k] = v
+        if &#34;g2c&#34; in state:
+            for k, v in state[&#34;g2c&#34;].items():
+                self._fcts_gnomonic_to_cam[k] = v
+        if &#34;c2t&#34; in state:
+            for k, v in state[&#34;c2t&#34;].items():
+                self._fcts_cam_to_thetachi[k] = v
+        if &#34;t2c&#34; in state:
+            for k, v in state[&#34;t2c&#34;].items():
+                self._fcts_thetachi_to_cam[k] = v
+        if &#34;mem&#34; in state:
+            self._parameters_memory = state[&#34;mem&#34;]
+
 class ExperimentPickleable:
     &#34;&#34;&#34;
     ** Interface pour serialiser une experience. **
@@ -253,6 +305,8 @@ class ExperimentPickleable:
         if self._axes:
             state[&#34;axes&#34;] = {key: [axis.__getstate__() for axis in axes]
                 for key, axes in self._axes.items()}
+        if self._hkl:
+            state[&#34;hkl&#34;] = self._hkl
         return state
 
     def __setstate__(self, state):
@@ -301,7 +355,9 @@ class ExperimentPickleable:
             for axis in axes:
                 axis.diagram = self
                 axis.spots = collections.OrderedDict(
-                    ((ind, self[ind]) for ind in axis.spots.keys()))</code></pre>
+                    ((ind, self[ind]) for ind in axis.spots.keys()))
+
+        self._hkl = state.get(&#34;hkl&#34;, {})</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -334,6 +390,8 @@ class ExperimentPickleable:
     if self._axes:
         state[&#34;axes&#34;] = {key: [axis.__getstate__() for axis in axes]
             for key, axes in self._axes.items()}
+    if self._hkl:
+        state[&#34;hkl&#34;] = self._hkl
     return state</code></pre>
 </details>
 </dd>
@@ -403,7 +461,9 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         for axis in axes:
             axis.diagram = self
             axis.spots = collections.OrderedDict(
-                ((ind, self[ind]) for ind in axis.spots.keys()))</code></pre>
+                ((ind, self[ind]) for ind in axis.spots.keys()))
+
+    self._hkl = state.get(&#34;hkl&#34;, {})</code></pre>
 </details>
 </dd>
 </dl>
@@ -448,8 +508,6 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         state[&#34;im&#34;] = self.get_image()
         state[&#34;dis&#34;] = self.get_distortion()
         state[&#34;id&#34;] = self.get_id()
-        if self.hkl is not None:
-            state[&#34;hkl&#34;] = self.hkl
         return state
 
     def __setstate__(self, state):
@@ -473,13 +531,151 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
             spot_im=state[&#34;im&#34;],
             distortion=state[&#34;dis&#34;],
             diagram=None,
-            identifier=state[&#34;id&#34;])
-        self.hkl = state.get(&#34;hkl&#34;, None)</code></pre>
+            identifier=state[&#34;id&#34;])</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="laue.spot.Spot" href="../spot.html#laue.spot.Spot">Spot</a></li>
 </ul>
+</dd>
+<dt id="laue.utilities.serialization.TransformerPickleable"><code class="flex name class">
+<span>class <span class="ident">TransformerPickleable</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Interface pour serialiser le gestionaire de transformation geometriques. </strong></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TransformerPickleable:
+    &#34;&#34;&#34;
+    ** Interface pour serialiser le gestionaire de transformation geometriques. **
+    &#34;&#34;&#34;
+    def __getstate__(self):
+        &#34;&#34;&#34;
+        ** Recupere les fonction vecirisee et symplifiees. **
+        &#34;&#34;&#34;
+        state = {}
+        state[&#34;verbose&#34;] = self.verbose
+        if self._fcts_cam_to_gnomonic:
+            state[&#34;c2g&#34;] = {k: v for k, v in self._fcts_cam_to_gnomonic.items()}
+        if self._fcts_gnomonic_to_cam:
+            state[&#34;g2c&#34;] = {k: v for k, v in self._fcts_gnomonic_to_cam.items()}
+        if self._fcts_cam_to_thetachi:
+            state[&#34;c2t&#34;] = {k: v for k, v in self._fcts_cam_to_thetachi.items()}
+        if self._fcts_thetachi_to_cam:
+            state[&#34;t2c&#34;] = {k: v for k, v in self._fcts_thetachi_to_cam.items()}
+        if self._parameters_memory:
+            state[&#34;mem&#34;] = self._parameters_memory
+        return state
+
+    def __setstate__(self, state):
+        &#34;&#34;&#34;
+        * Initialisateur pour pickle. **
+
+        Examples
+        --------
+        &gt;&gt;&gt; import pickle
+        &gt;&gt;&gt; from laue.core.geometry.transformer import Transformer
+        &gt;&gt;&gt; trans = pickle.loads(pickle.dumps(Transformer()))
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        self.__init__(state[&#34;verbose&#34;])
+        if &#34;c2g&#34; in state:
+            for k, v in state[&#34;c2g&#34;].items():
+                self._fcts_cam_to_gnomonic[k] = v
+        if &#34;g2c&#34; in state:
+            for k, v in state[&#34;g2c&#34;].items():
+                self._fcts_gnomonic_to_cam[k] = v
+        if &#34;c2t&#34; in state:
+            for k, v in state[&#34;c2t&#34;].items():
+                self._fcts_cam_to_thetachi[k] = v
+        if &#34;t2c&#34; in state:
+            for k, v in state[&#34;t2c&#34;].items():
+                self._fcts_thetachi_to_cam[k] = v
+        if &#34;mem&#34; in state:
+            self._parameters_memory = state[&#34;mem&#34;]</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="laue.core.geometry.transformer.Transformer" href="../core/geometry/transformer.html#laue.core.geometry.transformer.Transformer">Transformer</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.utilities.serialization.TransformerPickleable.__getstate__"><code class="name flex">
+<span>def <span class="ident">__getstate__</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere les fonction vecirisee et symplifiees. </strong></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __getstate__(self):
+    &#34;&#34;&#34;
+    ** Recupere les fonction vecirisee et symplifiees. **
+    &#34;&#34;&#34;
+    state = {}
+    state[&#34;verbose&#34;] = self.verbose
+    if self._fcts_cam_to_gnomonic:
+        state[&#34;c2g&#34;] = {k: v for k, v in self._fcts_cam_to_gnomonic.items()}
+    if self._fcts_gnomonic_to_cam:
+        state[&#34;g2c&#34;] = {k: v for k, v in self._fcts_gnomonic_to_cam.items()}
+    if self._fcts_cam_to_thetachi:
+        state[&#34;c2t&#34;] = {k: v for k, v in self._fcts_cam_to_thetachi.items()}
+    if self._fcts_thetachi_to_cam:
+        state[&#34;t2c&#34;] = {k: v for k, v in self._fcts_thetachi_to_cam.items()}
+    if self._parameters_memory:
+        state[&#34;mem&#34;] = self._parameters_memory
+    return state</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.serialization.TransformerPickleable.__setstate__"><code class="name flex">
+<span>def <span class="ident">__setstate__</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<div class="desc"><ul>
+<li>Initialisateur pour pickle. **</li>
+</ul>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import pickle
+&gt;&gt;&gt; from laue.core.geometry.transformer import Transformer
+&gt;&gt;&gt; trans = pickle.loads(pickle.dumps(Transformer()))
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __setstate__(self, state):
+    &#34;&#34;&#34;
+    * Initialisateur pour pickle. **
+
+    Examples
+    --------
+    &gt;&gt;&gt; import pickle
+    &gt;&gt;&gt; from laue.core.geometry.transformer import Transformer
+    &gt;&gt;&gt; trans = pickle.loads(pickle.dumps(Transformer()))
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    self.__init__(state[&#34;verbose&#34;])
+    if &#34;c2g&#34; in state:
+        for k, v in state[&#34;c2g&#34;].items():
+            self._fcts_cam_to_gnomonic[k] = v
+    if &#34;g2c&#34; in state:
+        for k, v in state[&#34;g2c&#34;].items():
+            self._fcts_gnomonic_to_cam[k] = v
+    if &#34;c2t&#34; in state:
+        for k, v in state[&#34;c2t&#34;].items():
+            self._fcts_cam_to_thetachi[k] = v
+    if &#34;t2c&#34; in state:
+        for k, v in state[&#34;t2c&#34;].items():
+            self._fcts_thetachi_to_cam[k] = v
+    if &#34;mem&#34; in state:
+        self._parameters_memory = state[&#34;mem&#34;]</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="laue.utilities.serialization.ZoneAxisPickleable"><code class="flex name class">
 <span>class <span class="ident">ZoneAxisPickleable</span></span>
@@ -637,6 +833,13 @@ ZoneAxis(spots_ind=(9, 31, 44, 46, 55, 60, 66), identifier=4, phi=-2.6836, mu=0.
 </li>
 <li>
 <h4><code><a title="laue.utilities.serialization.SpotPickleable" href="#laue.utilities.serialization.SpotPickleable">SpotPickleable</a></code></h4>
+</li>
+<li>
+<h4><code><a title="laue.utilities.serialization.TransformerPickleable" href="#laue.utilities.serialization.TransformerPickleable">TransformerPickleable</a></code></h4>
+<ul class="">
+<li><code><a title="laue.utilities.serialization.TransformerPickleable.__getstate__" href="#laue.utilities.serialization.TransformerPickleable.__getstate__">__getstate__</a></code></li>
+<li><code><a title="laue.utilities.serialization.TransformerPickleable.__setstate__" href="#laue.utilities.serialization.TransformerPickleable.__setstate__">__setstate__</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="laue.utilities.serialization.ZoneAxisPickleable" href="#laue.utilities.serialization.ZoneAxisPickleable">ZoneAxisPickleable</a></code></h4>

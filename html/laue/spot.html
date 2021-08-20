@@ -55,7 +55,7 @@ __pdoc__ = {&#34;Spot.__hash__&#34;: True,
             &#34;Spot.__sub__&#34;: True}
 
 
-def distance(spot1, spot2, *, space=&#34;camera&#34;):
+def distance(spot1, spot2, *, space=&#34;camera&#34;, dtype=np.float64):
     r&#34;&#34;&#34;
     ** Calcul la distance entre plusieur spots. **
 
@@ -68,13 +68,13 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
 
     Parameters
     ----------
-    spot1 : Spot, tuple, list, np.ndarray
+    spot1 : Spot, tuple, np.ndarray
         Un spot ou une liste de spots. Cette fonction accepte une liste
         de spots pour pouvoir faire tous les calculs d&#39;un seul coup et gagner
         grandement en temps de calcul.
         Un spot peu etre representer par un tuple a 2 elements, chaque element
         etant la premiere et la seconde coordonnees du spot dans l&#39;espace considere.
-    spot2 : Spot, tuple, list, np.ndarray
+    spot2 : Spot, tuple, np.ndarray
         Un spot ou une autre liste de spots. Les distances calculees seront les distances
         entre toutes les combinaison possible de spots entre ``spot1`` et ``spot2``.
         Un spot peu etre representer par un tuple a 2 elements, chaque element
@@ -83,6 +83,9 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
         * &#34;camera&#34; =&gt; Distance euclidienne (en pixel) dans le plan de la camera.
         * &#34;gnomonic&#34; =&gt; Distance euclidienne (en mm) dans le plan gnomonic.
         * &#34;cosine&#34; =&gt; Cosine distance (en degre) entre les vecteurs ``uq`` (axe de reflexion).
+    dtype : type, optional
+        La representation machine des nombres. Par defaut ``np.float64`` permet des calculs
+        plutot precis. Il est possible de travailler en ``np.float32`` ou ``np.float128``.
 
     Returns
     -------
@@ -97,24 +100,37 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
 
     Examples
     -------
+    &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; from laue.spot import distance
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; spot1, spot2 = diag[:2]
+    &gt;&gt;&gt; spot1, spot2
+    (Spot(position=(1370.52, 1874.78), quality=0.573), Spot(position=(1303.63, 1808.74), quality=0.579))
+    &gt;&gt;&gt; distance(*_)
+    93.99267654837415
     &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
     ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
+    &gt;&gt;&gt; distance(*_)
+    93.99267654837415
     &gt;&gt;&gt;
-    &gt;&gt;&gt; distance(spot1, spot2)
-    93.99273
+    &gt;&gt;&gt; distance(spot1, spot2, space=&#34;camera&#34;)
+    93.99267654837415
     &gt;&gt;&gt; distance(spot1, spot2, space=&#34;gnomonic&#34;)
-    ...
+    0.07062177234461128
     &gt;&gt;&gt; distance(spot1, spot2, space=&#34;cosine&#34;)
-    ...
+    3.337448977380975
     &gt;&gt;&gt;
-    &gt;&gt;&gt; distance(spot1, diag[:5])
-    array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
-          dtype=float32)
+    &gt;&gt;&gt; distance(spot1, spot2, dtype=np.float16).dtype
+    dtype(&#39;float16&#39;)
+    &gt;&gt;&gt; distance(spot1, spot2, dtype=np.float32).dtype
+    dtype(&#39;float32&#39;)
+    &gt;&gt;&gt; distance(spot1, spot2, dtype=np.float64).dtype
+    dtype(&#39;float64&#39;)
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; distance(spot1, diag[:4])
+    array([  0.        ,  93.99267655, 811.10892214, 484.83288558])
     &gt;&gt;&gt; distance(diag[:5], diag[:10]).shape
     (5, 10)
     &gt;&gt;&gt;
@@ -138,23 +154,26 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
         assert len(spot2) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(spot2)}.&#34;
         assert all(isinstance(c, numbers.Number) for c in spot2)
     assert space in {&#34;camera&#34;, &#34;gnomonic&#34;, &#34;cosine&#34;}, f&#34;&#39;space&#39; can not be {repr(space)}.&#34;
+    assert dtype in {np.float16, np.float32, np.float64,
+        (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
     # Simplification du probleme.
     if isinstance(spot1, (Spot, tuple)) and isinstance(spot2, (Spot, tuple)):
         return distance(
             np.array([spot1]),
             np.array([spot2]),
-            space=space)[0, 0]
+            space=space, dtype=dtype)[0, 0]
     if isinstance(spot1, (Spot, tuple)):
         return distance(
             np.array([spot1]),
             spot2,
-            space=space)[0, :]
+            space=space, dtype=dtype)[0, :]
     if isinstance(spot2, (Spot, tuple)):
         return distance(
             spot1,
             np.array([spot2]),
-            space=space)[:, 0]
+            space=space, dtype=dtype)[:, 0]
 
     # Cas ou l&#39;on doit calculer une matrice de distances.
     if space == &#34;cosine&#34;:
@@ -163,15 +182,13 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;):
         meth = lambda spot: spot.get_position() if isinstance(spot, Spot) else spot
     elif space == &#34;gnomonic&#34;:
         meth = lambda spot: spot.get_gnomonic() if isinstance(spot, Spot) else spot
-    x1, y1 = np.array([meth(spot) for spot in spot1], dtype=np.float32).transpose()
-    x2, y2 = np.array([meth(spot) for spot in spot2], dtype=np.float32).transpose()
-    x1, x2 = np.meshgrid(x1, x2, indexing=&#34;ij&#34;, copy=False)
-    y1, y2 = np.meshgrid(y1, y2, indexing=&#34;ij&#34;, copy=False)
+    x1, y1 = np.array([meth(spot) for spot in spot1], dtype=dtype).transpose()
+    x2, y2 = np.array([meth(spot) for spot in spot2], dtype=dtype).transpose()
 
-    from laue import Transformer
+    import laue
     if space == &#34;cosine&#34;:
-        return Transformer().get_fct_dist_cosine()(x1, y1, x2, y2)
-    return Transformer().get_fct_dist_euclidian()(x1, y1, x2, y2)
+        return laue.geometry.dist_cosine(x1, y1, x2, y2, dtype=dtype)
+    return laue.geometry.dist_euclidian(x1, y1, x2, y2, dtype=dtype)
 
 
 class Spot(SpotPickleable):
@@ -218,7 +235,6 @@ class Spot(SpotPickleable):
         self._gnomonic = None # Coordonnees x, y du baricentre projete dans le plan gnomonic.
         self._thetachi = None # Angles du rayon diffractes ayant engendre ce point.
         self._quality = None # Beautee du point.
-        self.hkl = None # Les 3 indices de Miller h, k et l.
 
     def get_bbox(self):
         &#34;&#34;&#34;
@@ -594,7 +610,7 @@ class Spot(SpotPickleable):
 
     def predict_hkl(self, *args, **kwds):
         &#34;&#34;&#34;
-        ** Predit les indices hkl avec une reseau de neurones. **
+        ** Predit les indices hkl de ce spot avec un reseau de neurones. **
 
         Parameters
         ----------
@@ -612,7 +628,8 @@ class Spot(SpotPickleable):
             Un score &gt; 95% assure que les indices de miller
             trouves sont correctes.
         &#34;&#34;&#34;
-        raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
+        hkls, scores = self.diagram.predict_hkl(*args, **kwds)
+        return tuple(hkls[self.get_id()]), scores[self.get_id()]
 
     def _clean(self):
         &#34;&#34;&#34;
@@ -696,7 +713,7 @@ class Spot(SpotPickleable):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="laue.spot.distance"><code class="name flex">
-<span>def <span class="ident">distance</span></span>(<span>spot1, spot2, *, space='camera')</span>
+<span>def <span class="ident">distance</span></span>(<span>spot1, spot2, *, space='camera', dtype=numpy.float64)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Calcul la distance entre plusieur spots. </strong></p>
@@ -707,13 +724,13 @@ class Spot(SpotPickleable):
 <span><span class="MathJax_Preview"> distance\_cosine = \arccos{\left(\frac{\vec{u_q}(spot_1).\vec{u_q}(spot_2)}{\left\|\vec{u_q}(spot_1)\right\|.\left\|\vec{u_q}(spot_2)\right\|}\right)} </span><script type="math/tex; mode=display"> distance\_cosine = \arccos{\left(\frac{\vec{u_q}(spot_1).\vec{u_q}(spot_2)}{\left\|\vec{u_q}(spot_1)\right\|.\left\|\vec{u_q}(spot_2)\right\|}\right)} </script></span></p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>spot1</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="#laue.spot.Spot">Spot</a>, tuple, list, np.ndarray</code></dt>
+<dt><strong><code>spot1</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="#laue.spot.Spot">Spot</a>, tuple, np.ndarray</code></dt>
 <dd>Un spot ou une liste de spots. Cette fonction accepte une liste
 de spots pour pouvoir faire tous les calculs d'un seul coup et gagner
 grandement en temps de calcul.
 Un spot peu etre representer par un tuple a 2 elements, chaque element
 etant la premiere et la seconde coordonnees du spot dans l'espace considere.</dd>
-<dt><strong><code>spot2</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="#laue.spot.Spot">Spot</a>, tuple, list, np.ndarray</code></dt>
+<dt><strong><code>spot2</code></strong> :&ensp;<code><a title="laue.spot.Spot" href="#laue.spot.Spot">Spot</a>, tuple, np.ndarray</code></dt>
 <dd>Un spot ou une autre liste de spots. Les distances calculees seront les distances
 entre toutes les combinaison possible de spots entre <code>spot1</code> et <code>spot2</code>.
 Un spot peu etre representer par un tuple a 2 elements, chaque element
@@ -726,6 +743,9 @@ etant la premiere et la seconde coordonnees du spot dans l'espace considere.</dd
 <li>"cosine" =&gt; Cosine distance (en degre) entre les vecteurs <code>uq</code> (axe de reflexion).</li>
 </ul>
 </dd>
+<dt><strong><code>dtype</code></strong> :&ensp;<code>type</code>, optional</dt>
+<dd>La representation machine des nombres. Par defaut <code>np.float64</code> permet des calculs
+plutot precis. Il est possible de travailler en <code>np.float32</code> ou <code>np.float128</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -745,24 +765,37 @@ la liste des distance qui separe ce spot unique a tous les autres.</li>
 </dd>
 </dl>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import laue
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; import laue
 &gt;&gt;&gt; from laue.spot import distance
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; spot1, spot2 = diag[:2]
+&gt;&gt;&gt; spot1, spot2
+(Spot(position=(1370.52, 1874.78), quality=0.573), Spot(position=(1303.63, 1808.74), quality=0.579))
+&gt;&gt;&gt; distance(*_)
+93.99267654837415
 &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
 ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
+&gt;&gt;&gt; distance(*_)
+93.99267654837415
 &gt;&gt;&gt;
-&gt;&gt;&gt; distance(spot1, spot2)
-93.99273
+&gt;&gt;&gt; distance(spot1, spot2, space=&quot;camera&quot;)
+93.99267654837415
 &gt;&gt;&gt; distance(spot1, spot2, space=&quot;gnomonic&quot;)
-...
+0.07062177234461128
 &gt;&gt;&gt; distance(spot1, spot2, space=&quot;cosine&quot;)
-...
+3.337448977380975
 &gt;&gt;&gt;
-&gt;&gt;&gt; distance(spot1, diag[:5])
-array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
-      dtype=float32)
+&gt;&gt;&gt; distance(spot1, spot2, dtype=np.float16).dtype
+dtype('float16')
+&gt;&gt;&gt; distance(spot1, spot2, dtype=np.float32).dtype
+dtype('float32')
+&gt;&gt;&gt; distance(spot1, spot2, dtype=np.float64).dtype
+dtype('float64')
+&gt;&gt;&gt;
+&gt;&gt;&gt; distance(spot1, diag[:4])
+array([  0.        ,  93.99267655, 811.10892214, 484.83288558])
 &gt;&gt;&gt; distance(diag[:5], diag[:10]).shape
 (5, 10)
 &gt;&gt;&gt;
@@ -771,7 +804,7 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def distance(spot1, spot2, *, space=&#34;camera&#34;):
+<pre><code class="python">def distance(spot1, spot2, *, space=&#34;camera&#34;, dtype=np.float64):
     r&#34;&#34;&#34;
     ** Calcul la distance entre plusieur spots. **
 
@@ -784,13 +817,13 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
 
     Parameters
     ----------
-    spot1 : Spot, tuple, list, np.ndarray
+    spot1 : Spot, tuple, np.ndarray
         Un spot ou une liste de spots. Cette fonction accepte une liste
         de spots pour pouvoir faire tous les calculs d&#39;un seul coup et gagner
         grandement en temps de calcul.
         Un spot peu etre representer par un tuple a 2 elements, chaque element
         etant la premiere et la seconde coordonnees du spot dans l&#39;espace considere.
-    spot2 : Spot, tuple, list, np.ndarray
+    spot2 : Spot, tuple, np.ndarray
         Un spot ou une autre liste de spots. Les distances calculees seront les distances
         entre toutes les combinaison possible de spots entre ``spot1`` et ``spot2``.
         Un spot peu etre representer par un tuple a 2 elements, chaque element
@@ -799,6 +832,9 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
         * &#34;camera&#34; =&gt; Distance euclidienne (en pixel) dans le plan de la camera.
         * &#34;gnomonic&#34; =&gt; Distance euclidienne (en mm) dans le plan gnomonic.
         * &#34;cosine&#34; =&gt; Cosine distance (en degre) entre les vecteurs ``uq`` (axe de reflexion).
+    dtype : type, optional
+        La representation machine des nombres. Par defaut ``np.float64`` permet des calculs
+        plutot precis. Il est possible de travailler en ``np.float32`` ou ``np.float128``.
 
     Returns
     -------
@@ -813,24 +849,37 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
 
     Examples
     -------
+    &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; from laue.spot import distance
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; spot1, spot2 = diag[:2]
+    &gt;&gt;&gt; spot1, spot2
+    (Spot(position=(1370.52, 1874.78), quality=0.573), Spot(position=(1303.63, 1808.74), quality=0.579))
+    &gt;&gt;&gt; distance(*_)
+    93.99267654837415
     &gt;&gt;&gt; spot1.get_position(), spot2.get_position()
     ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
+    &gt;&gt;&gt; distance(*_)
+    93.99267654837415
     &gt;&gt;&gt;
-    &gt;&gt;&gt; distance(spot1, spot2)
-    93.99273
+    &gt;&gt;&gt; distance(spot1, spot2, space=&#34;camera&#34;)
+    93.99267654837415
     &gt;&gt;&gt; distance(spot1, spot2, space=&#34;gnomonic&#34;)
-    ...
+    0.07062177234461128
     &gt;&gt;&gt; distance(spot1, spot2, space=&#34;cosine&#34;)
-    ...
+    3.337448977380975
     &gt;&gt;&gt;
-    &gt;&gt;&gt; distance(spot1, diag[:5])
-    array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
-          dtype=float32)
+    &gt;&gt;&gt; distance(spot1, spot2, dtype=np.float16).dtype
+    dtype(&#39;float16&#39;)
+    &gt;&gt;&gt; distance(spot1, spot2, dtype=np.float32).dtype
+    dtype(&#39;float32&#39;)
+    &gt;&gt;&gt; distance(spot1, spot2, dtype=np.float64).dtype
+    dtype(&#39;float64&#39;)
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; distance(spot1, diag[:4])
+    array([  0.        ,  93.99267655, 811.10892214, 484.83288558])
     &gt;&gt;&gt; distance(diag[:5], diag[:10]).shape
     (5, 10)
     &gt;&gt;&gt;
@@ -854,23 +903,26 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
         assert len(spot2) == 2, f&#34;Il ne doit y avoir que 2 coordonnees, pas {len(spot2)}.&#34;
         assert all(isinstance(c, numbers.Number) for c in spot2)
     assert space in {&#34;camera&#34;, &#34;gnomonic&#34;, &#34;cosine&#34;}, f&#34;&#39;space&#39; can not be {repr(space)}.&#34;
+    assert dtype in {np.float16, np.float32, np.float64,
+        (getattr(np, &#34;float128&#34;) if hasattr(np, &#34;float128&#34;) else np.float64)}, \
+        f&#34;Les types ne peuvent etre que np.float16, np.float32, np.float64, np.float128. Pas {dtype}.&#34;
 
     # Simplification du probleme.
     if isinstance(spot1, (Spot, tuple)) and isinstance(spot2, (Spot, tuple)):
         return distance(
             np.array([spot1]),
             np.array([spot2]),
-            space=space)[0, 0]
+            space=space, dtype=dtype)[0, 0]
     if isinstance(spot1, (Spot, tuple)):
         return distance(
             np.array([spot1]),
             spot2,
-            space=space)[0, :]
+            space=space, dtype=dtype)[0, :]
     if isinstance(spot2, (Spot, tuple)):
         return distance(
             spot1,
             np.array([spot2]),
-            space=space)[:, 0]
+            space=space, dtype=dtype)[:, 0]
 
     # Cas ou l&#39;on doit calculer une matrice de distances.
     if space == &#34;cosine&#34;:
@@ -879,15 +931,13 @@ array([  0.     ,  93.99273, 811.10895, 484.83295, 248.53378],
         meth = lambda spot: spot.get_position() if isinstance(spot, Spot) else spot
     elif space == &#34;gnomonic&#34;:
         meth = lambda spot: spot.get_gnomonic() if isinstance(spot, Spot) else spot
-    x1, y1 = np.array([meth(spot) for spot in spot1], dtype=np.float32).transpose()
-    x2, y2 = np.array([meth(spot) for spot in spot2], dtype=np.float32).transpose()
-    x1, x2 = np.meshgrid(x1, x2, indexing=&#34;ij&#34;, copy=False)
-    y1, y2 = np.meshgrid(y1, y2, indexing=&#34;ij&#34;, copy=False)
+    x1, y1 = np.array([meth(spot) for spot in spot1], dtype=dtype).transpose()
+    x2, y2 = np.array([meth(spot) for spot in spot2], dtype=dtype).transpose()
 
-    from laue import Transformer
+    import laue
     if space == &#34;cosine&#34;:
-        return Transformer().get_fct_dist_cosine()(x1, y1, x2, y2)
-    return Transformer().get_fct_dist_euclidian()(x1, y1, x2, y2)</code></pre>
+        return laue.geometry.dist_cosine(x1, y1, x2, y2, dtype=dtype)
+    return laue.geometry.dist_euclidian(x1, y1, x2, y2, dtype=dtype)</code></pre>
 </details>
 </dd>
 </dl>
@@ -973,7 +1023,6 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
         self._gnomonic = None # Coordonnees x, y du baricentre projete dans le plan gnomonic.
         self._thetachi = None # Angles du rayon diffractes ayant engendre ce point.
         self._quality = None # Beautee du point.
-        self.hkl = None # Les 3 indices de Miller h, k et l.
 
     def get_bbox(self):
         &#34;&#34;&#34;
@@ -1349,7 +1398,7 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
 
     def predict_hkl(self, *args, **kwds):
         &#34;&#34;&#34;
-        ** Predit les indices hkl avec une reseau de neurones. **
+        ** Predit les indices hkl de ce spot avec un reseau de neurones. **
 
         Parameters
         ----------
@@ -1367,7 +1416,8 @@ Le fond diffus doit etre deja enleve de l'image.</dd>
             Un score &gt; 95% assure que les indices de miller
             trouves sont correctes.
         &#34;&#34;&#34;
-        raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)
+        hkls, scores = self.diagram.predict_hkl(*args, **kwds)
+        return tuple(hkls[self.get_id()]), scores[self.get_id()]
 
     def _clean(self):
         &#34;&#34;&#34;
@@ -2251,7 +2301,7 @@ array([ 25., -25.])
 <span>def <span class="ident">predict_hkl</span></span>(<span>self, *args, **kwds)</span>
 </code></dt>
 <dd>
-<div class="desc"><p><strong> Predit les indices hkl avec une reseau de neurones. </strong></p>
+<div class="desc"><p><strong> Predit les indices hkl de ce spot avec un reseau de neurones. </strong></p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>*args</code></strong></dt>
@@ -2274,7 +2324,7 @@ trouves sont correctes.</dd>
 </summary>
 <pre><code class="python">def predict_hkl(self, *args, **kwds):
     &#34;&#34;&#34;
-    ** Predit les indices hkl avec une reseau de neurones. **
+    ** Predit les indices hkl de ce spot avec un reseau de neurones. **
 
     Parameters
     ----------
@@ -2292,7 +2342,8 @@ trouves sont correctes.</dd>
         Un score &gt; 95% assure que les indices de miller
         trouves sont correctes.
     &#34;&#34;&#34;
-    raise NotImplementedError(&#34;Demandez a Ravis, il sera ravis de vous repondre!&#34;)</code></pre>
+    hkls, scores = self.diagram.predict_hkl(*args, **kwds)
+    return tuple(hkls[self.get_id()]), scores[self.get_id()]</code></pre>
 </details>
 </dd>
 </dl>

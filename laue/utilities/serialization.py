@@ -39,8 +39,6 @@ class SpotPickleable:
         state["im"] = self.get_image()
         state["dis"] = self.get_distortion()
         state["id"] = self.get_id()
-        if self.hkl is not None:
-            state["hkl"] = self.hkl
         return state
 
     def __setstate__(self, state):
@@ -65,7 +63,6 @@ class SpotPickleable:
             distortion=state["dis"],
             diagram=None,
             identifier=state["id"])
-        self.hkl = state.get("hkl", None)
 
 class ZoneAxisPickleable:
     """
@@ -126,6 +123,8 @@ class DiagramPickleable:
         if self._axes:
             state["axes"] = {key: [axis.__getstate__() for axis in axes]
                 for key, axes in self._axes.items()}
+        if self._hkl:
+            state["hkl"] = self._hkl
         return state
 
     def __setstate__(self, state):
@@ -176,6 +175,8 @@ class DiagramPickleable:
                 axis.spots = collections.OrderedDict(
                     ((ind, self[ind]) for ind in axis.spots.keys()))
 
+        self._hkl = state.get("hkl", {})
+
 class TransformerPickleable:
     """
     ** Interface pour serialiser le gestionaire de transformation geometriques. **
@@ -185,6 +186,7 @@ class TransformerPickleable:
         ** Recupere les fonction vecirisee et symplifiees. **
         """
         state = {}
+        state["verbose"] = self.verbose
         if self._fcts_cam_to_gnomonic:
             state["c2g"] = {k: v for k, v in self._fcts_cam_to_gnomonic.items()}
         if self._fcts_gnomonic_to_cam:
@@ -204,11 +206,11 @@ class TransformerPickleable:
         Examples
         --------
         >>> import pickle
-        >>> import laue
-        >>> trans = pickle.loads(pickle.dumps(laue.Transformer()))
+        >>> from laue.core.geometry.transformer import Transformer
+        >>> trans = pickle.loads(pickle.dumps(Transformer()))
         >>>
         """
-        self.__init__()
+        self.__init__(state["verbose"])
         if "c2g" in state:
             for k, v in state["c2g"].items():
                 self._fcts_cam_to_gnomonic[k] = v

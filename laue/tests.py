@@ -105,18 +105,17 @@ def test_geometry_dtype():
     """
     _print("============ TEST GEOMETRY DTYPE =============")
     with CWDasRoot():
-        from laue import Transformer
+        import laue
         from laue.utilities.parsing import extract_parameters
     parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
-    transformer = Transformer()
 
     for func in [
-            transformer.cam_to_gnomonic,
-            transformer.gnomonic_to_cam,
-            transformer.cam_to_thetachi,
-            transformer.thetachi_to_cam,
-            transformer.thetachi_to_gnomonic,
-            transformer.gnomonic_to_thetachi]:
+            laue.geometry.cam_to_gnomonic,
+            laue.geometry.gnomonic_to_cam,
+            laue.geometry.cam_to_thetachi,
+            laue.geometry.thetachi_to_cam,
+            laue.geometry.thetachi_to_gnomonic,
+            laue.geometry.gnomonic_to_thetachi]:
         _print(f"{func.__name__}:")
         for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
             for boucle in range(3):
@@ -127,9 +126,27 @@ def test_geometry_dtype():
                 _print(f"\tboucle {boucle}: {dtype.__name__}->{rtype.__name__}")
                 assert rtype == dtype
 
+    _print("dist_cosine:")
+    for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
+        rtype = laue.geometry.dist_cosine(
+            np.array([63.605, 59.91]), np.array([51.367, 38.546]),
+            np.array([63.605, 59.91]), np.array([51.367, 38.546]),
+            dtype=dtype).dtype.type
+        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        assert rtype == dtype
+
+    _print("dist_euclidian:")
+    for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
+        rtype = laue.geometry.dist_euclidian(
+            np.array([0, 1]), np.array([0, 1]),
+            np.array([0, 1]), np.array([1, 1]),
+            dtype=dtype).dtype.type
+        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        assert rtype == dtype
+
     _print("dist_line:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = transformer.dist_line(
+        rtype = laue.geometry.dist_line(
             np.array([0, np.pi/2]), np.array([1, 1]),
             np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]),
             dtype=dtype).dtype.type
@@ -138,7 +155,7 @@ def test_geometry_dtype():
 
     _print("hough:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = transformer.hough(
+        rtype = laue.geometry.hough(
             np.array([0, 1, 2]), np.array([2, 1, 0]),
             dtype=dtype).dtype.type
         _print(f"\t{dtype.__name__}->{rtype.__name__}")
@@ -146,8 +163,8 @@ def test_geometry_dtype():
 
     _print("hough_reduce:")
     for dtype in {np.float16, np.float32, np.float64}:
-        rtype = transformer.hough_reduce(
-            *transformer.hough(
+        rtype = laue.geometry.hough_reduce(
+            *laue.geometry.hough(
                 np.array([0, 1, 2]), np.array([2, -1, 0]),
                 dtype=dtype
             ),
@@ -158,7 +175,7 @@ def test_geometry_dtype():
 
     _print("inter_lines:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = transformer.inter_lines(
+        rtype = laue.geometry.inter_lines(
             np.array([0, np.pi/2]), np.array([1, 1]),
             dtype=dtype).dtype.type
         _print(f"\t{dtype.__name__}->{rtype.__name__}")
@@ -174,7 +191,7 @@ def test_geometry_bij():
     import sympy
     from sympy.vector import CoordSys3D
     with CWDasRoot():
-        from laue import Transformer
+        from laue.core.geometry.transformer import Transformer
 
     # Declaration des variables.
     N = CoordSys3D('N')
@@ -284,22 +301,21 @@ def test_geometry_shape():
     """
     _print("============ TEST GEOMETRY SHAPE =============")
     with CWDasRoot():
-        from laue import Transformer
+        import laue
         from laue.utilities.parsing import extract_parameters
     parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
-    transformer = Transformer()
 
     for rand in _new_seed():
         shape = tuple(rand.randint(2, 10, size=rand.randint(1, 5)))
         _print(f"shape: {shape}")
 
         for func in [
-                transformer.cam_to_gnomonic,
-                transformer.gnomonic_to_cam,
-                transformer.cam_to_thetachi,
-                transformer.thetachi_to_cam,
-                transformer.thetachi_to_gnomonic,
-                transformer.gnomonic_to_thetachi]:
+                laue.geometry.cam_to_gnomonic,
+                laue.geometry.gnomonic_to_cam,
+                laue.geometry.cam_to_thetachi,
+                laue.geometry.thetachi_to_cam,
+                laue.geometry.thetachi_to_gnomonic,
+                laue.geometry.gnomonic_to_thetachi]:
             try:
                 res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape), parameters)
             except TypeError:
@@ -307,18 +323,22 @@ def test_geometry_shape():
             _print(f"{func.__name__}(...).shape -> {res.shape}")
             assert res.shape == (2,) + shape
 
-        res = transformer.dist_line(
-            np.ones(shape=shape), np.ones(shape=shape),
-            np.zeros(shape=shape), np.zeros(shape=shape))
-        _print(f"dist_line(...).shape -> {res.shape}")
-        assert res.shape == (*shape, *shape)
+        for func in [
+                laue.geometry.dist_cosine,
+                laue.geometry.dist_euclidian,
+                laue.geometry.dist_line]:
+            res = func(
+                np.ones(shape=shape), np.ones(shape=shape),
+                np.zeros(shape=shape), np.zeros(shape=shape))
+            _print(f"{func.__name__}(...).shape -> {res.shape}")
+            assert res.shape == (*shape, *shape)
 
-        res = transformer.hough(
+        res = laue.geometry.hough(
             rand.normal(size=shape), rand.normal(size=shape))
         _print(f"hough(...).shape -> {res.shape}")
         assert res.shape == (2,) + shape[:-1] + ((shape[-1]*(shape[-1]-1))//2,)
 
-        res = transformer.inter_lines(
+        res = laue.geometry.inter_lines(
             rand.uniform(-np.pi, np.pi, size=shape),
             rand.uniform(0, 2, size=shape))
         _print(f"inter_lines(...).shape -> {res.shape}")

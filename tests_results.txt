@@ -1,4 +1,4 @@
-DATE: Thu Aug 19 14:50:23 2021
+DATE: Thu Aug 19 19:16:49 2021
 NCPU: 8
 ============ TEST GEOMETRY DTYPE =============
 cam_to_gnomonic:
@@ -79,6 +79,16 @@ gnomonic_to_thetachi:
 	boucle 0: float64->float64
 	boucle 1: float64->float64
 	boucle 2: float64->float64
+dist_cosine:
+	float32->float32
+	float16->float16
+	float128->float128
+	float64->float64
+dist_euclidian:
+	float32->float32
+	float16->float16
+	float128->float128
+	float64->float64
 dist_line:
 	float32->float32
 	float16->float16
@@ -111,6 +121,8 @@ cam_to_thetachi(...).shape -> (2, 3)
 thetachi_to_cam(...).shape -> (2, 3)
 thetachi_to_gnomonic(...).shape -> (2, 3)
 gnomonic_to_thetachi(...).shape -> (2, 3)
+dist_cosine(...).shape -> (3, 3)
+dist_euclidian(...).shape -> (3, 3)
 dist_line(...).shape -> (3, 3)
 hough(...).shape -> (2, 3)
 inter_lines(...).shape -> (2, 3)
@@ -121,6 +133,8 @@ cam_to_thetachi(...).shape -> (2, 4, 6)
 thetachi_to_cam(...).shape -> (2, 4, 6)
 thetachi_to_gnomonic(...).shape -> (2, 4, 6)
 gnomonic_to_thetachi(...).shape -> (2, 4, 6)
+dist_cosine(...).shape -> (4, 6, 4, 6)
+dist_euclidian(...).shape -> (4, 6, 4, 6)
 dist_line(...).shape -> (4, 6, 4, 6)
 hough(...).shape -> (2, 4, 15)
 inter_lines(...).shape -> (2, 4, 15)
@@ -131,6 +145,8 @@ cam_to_thetachi(...).shape -> (2, 2, 4)
 thetachi_to_cam(...).shape -> (2, 2, 4)
 thetachi_to_gnomonic(...).shape -> (2, 2, 4)
 gnomonic_to_thetachi(...).shape -> (2, 2, 4)
+dist_cosine(...).shape -> (2, 4, 2, 4)
+dist_euclidian(...).shape -> (2, 4, 2, 4)
 dist_line(...).shape -> (2, 4, 2, 4)
 hough(...).shape -> (2, 2, 6)
 inter_lines(...).shape -> (2, 2, 6)
@@ -141,6 +157,8 @@ cam_to_thetachi(...).shape -> (2, 8)
 thetachi_to_cam(...).shape -> (2, 8)
 thetachi_to_gnomonic(...).shape -> (2, 8)
 gnomonic_to_thetachi(...).shape -> (2, 8)
+dist_cosine(...).shape -> (8, 8)
+dist_euclidian(...).shape -> (8, 8)
 dist_line(...).shape -> (8, 8)
 hough(...).shape -> (2, 28)
 inter_lines(...).shape -> (2, 28)
@@ -151,6 +169,8 @@ cam_to_thetachi(...).shape -> (2, 4, 5, 7)
 thetachi_to_cam(...).shape -> (2, 4, 5, 7)
 thetachi_to_gnomonic(...).shape -> (2, 4, 5, 7)
 gnomonic_to_thetachi(...).shape -> (2, 4, 5, 7)
+dist_cosine(...).shape -> (4, 5, 7, 4, 5, 7)
+dist_euclidian(...).shape -> (4, 5, 7, 4, 5, 7)
 dist_line(...).shape -> (4, 5, 7, 4, 5, 7)
 hough(...).shape -> (2, 4, 5, 21)
 inter_lines(...).shape -> (2, 4, 5, 21)
@@ -161,6 +181,8 @@ cam_to_thetachi(...).shape -> (2, 3)
 thetachi_to_cam(...).shape -> (2, 3)
 thetachi_to_gnomonic(...).shape -> (2, 3)
 gnomonic_to_thetachi(...).shape -> (2, 3)
+dist_cosine(...).shape -> (3, 3)
+dist_euclidian(...).shape -> (3, 3)
 dist_line(...).shape -> (3, 3)
 hough(...).shape -> (2, 3)
 inter_lines(...).shape -> (2, 3)
@@ -171,6 +193,8 @@ cam_to_thetachi(...).shape -> (2, 7, 4, 3)
 thetachi_to_cam(...).shape -> (2, 7, 4, 3)
 thetachi_to_gnomonic(...).shape -> (2, 7, 4, 3)
 gnomonic_to_thetachi(...).shape -> (2, 7, 4, 3)
+dist_cosine(...).shape -> (7, 4, 3, 7, 4, 3)
+dist_euclidian(...).shape -> (7, 4, 3, 7, 4, 3)
 dist_line(...).shape -> (7, 4, 3, 7, 4, 3)
 hough(...).shape -> (2, 7, 4, 3)
 inter_lines(...).shape -> (2, 7, 4, 3)
@@ -181,6 +205,8 @@ cam_to_thetachi(...).shape -> (2, 4, 2, 9, 8)
 thetachi_to_cam(...).shape -> (2, 4, 2, 9, 8)
 thetachi_to_gnomonic(...).shape -> (2, 4, 2, 9, 8)
 gnomonic_to_thetachi(...).shape -> (2, 4, 2, 9, 8)
+dist_cosine(...).shape -> (4, 2, 9, 8, 4, 2, 9, 8)
+dist_euclidian(...).shape -> (4, 2, 9, 8, 4, 2, 9, 8)
 dist_line(...).shape -> (4, 2, 9, 8, 4, 2, 9, 8)
 hough(...).shape -> (2, 4, 2, 9, 28)
 inter_lines(...).shape -> (2, 4, 2, 9, 28)
@@ -191,6 +217,8 @@ cam_to_thetachi(...).shape -> (2, 8, 7, 4)
 thetachi_to_cam(...).shape -> (2, 8, 7, 4)
 thetachi_to_gnomonic(...).shape -> (2, 8, 7, 4)
 gnomonic_to_thetachi(...).shape -> (2, 8, 7, 4)
+dist_cosine(...).shape -> (8, 7, 4, 8, 7, 4)
+dist_euclidian(...).shape -> (8, 7, 4, 8, 7, 4)
 dist_line(...).shape -> (8, 7, 4, 8, 7, 4)
 hough(...).shape -> (2, 8, 7, 6)
 inter_lines(...).shape -> (2, 8, 7, 6)
@@ -201,23 +229,25 @@ cam_to_thetachi(...).shape -> (2, 9)
 thetachi_to_cam(...).shape -> (2, 9)
 thetachi_to_gnomonic(...).shape -> (2, 9)
 gnomonic_to_thetachi(...).shape -> (2, 9)
+dist_cosine(...).shape -> (9, 9)
+dist_euclidian(...).shape -> (9, 9)
 dist_line(...).shape -> (9, 9)
 hough(...).shape -> (2, 36)
 inter_lines(...).shape -> (2, 36)
 ============== TEST READ IMAGES ==============
 ============== TEST READ IMAGES ==============
-/home/robin/documents/stages/esrf/images/32_02_765/Z70S/*.mccd 23 images: 2.411 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBB2/*.mccd 21 images: 2.206 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA1/*.mccd 10 images: 1.080 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA3/*.mccd 12 images: 1.258 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA2/*.mccd 21 images: 2.192 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBB3/*.mccd 15 images: 1.611 s
-/home/robin/images/zbb1_roi1/*.mccd 1681 images: 136.828 s
+/home/robin/documents/stages/esrf/images/32_02_765/Z70S/*.mccd 23 images: 2.370 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBB2/*.mccd 21 images: 2.181 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA1/*.mccd 10 images: 1.058 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA3/*.mccd 12 images: 1.217 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA2/*.mccd 21 images: 2.275 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBB3/*.mccd 15 images: 1.691 s
+/home/robin/images/zbb1_roi1/*.mccd 1681 images: 135.864 s
 ============= TEST FIND DIAGRAMS =============
-/home/robin/documents/stages/esrf/images/32_02_765/Z70S/*.mccd 23 diagrams: 2.489 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBB2/*.mccd 21 diagrams: 2.316 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA1/*.mccd 10 diagrams: 1.227 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA3/*.mccd 12 diagrams: 1.576 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBA2/*.mccd 21 diagrams: 2.243 s
-/home/robin/documents/stages/esrf/images/32_02_765/ZBB3/*.mccd 15 diagrams: 2.012 s
+/home/robin/documents/stages/esrf/images/32_02_765/Z70S/*.mccd 23 diagrams: 2.494 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBB2/*.mccd 21 diagrams: 2.344 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA1/*.mccd 10 diagrams: 1.427 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA3/*.mccd 12 diagrams: 1.651 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBA2/*.mccd 21 diagrams: 2.335 s
+/home/robin/documents/stages/esrf/images/32_02_765/ZBB3/*.mccd 15 diagrams: 1.707 s
 /home/robin/images/zbb1_roi1/*.mccd 

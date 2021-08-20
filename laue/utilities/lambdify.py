@@ -12,24 +12,132 @@ Notes
 Si le module ``numexpr`` est installe, certaines optimisations pouront etre faites.
 """
 
+import itertools
+import multiprocessing
 import numbers
-import time
+import os
+import pickle
+import timeit
 
 import numpy as np
 import sympy
 
+import laue
 from laue.utilities.fork_lambdify import lambdify
+from laue.utilities.multi_core import NestablePool as Pool
 
 
-__pdoc__ = {"cse_minimize_memory": False,
-            "cse_homogeneous": False,
-            "evalf": False,
-            "simplify": False,
-            "subs": False,
-            "Lambdify.__getstate__": True,
+__pdoc__ = {"Lambdify.__getstate__": True,
             "Lambdify.__setstate__": True,
             "Lambdify.__call__": True,
-            "Lambdify.__str__": True}
+            "Lambdify.__str__": True,
+            "evalf": False,
+            "subs": False}
+
+
+def _generalize(f):
+    def f_bis(x, *args, **kwargs):
+        try:
+            return f(x, *args, **kwargs)
+        except AttributeError:
+            if isinstance(x, (tuple, list, set)):
+                return type(x)([f(e, *args, **kwargs) for e in x])
+            else:
+                return type(x)(*(f(e, *args, **kwargs) for e in x.args))
+    return f_bis
+
+@_generalize
+def _sub_float_rat(x):
+    """Remplace certain flotants par des rationels."""
+    repl = {f: int(round(f)) for f in x.atoms(sympy.Float) if round(f) == round(f, 5)}
+    x = subs(x, repl)
+    repl = True
+    while repl:
+        cand_pow = [p for p in x.atoms(sympy.Pow) if isinstance(p.exp, sympy.Float)]
+        cand_rat = [sympy.Rational(p.exp).limit_denominator(10) for p in cand_pow]
+        repl = {p: sympy.Pow(p.base, r) for p, r in zip(cand_pow, cand_rat) if round(p.exp, 5) == round(r, 5)}
+        x = subs(x, repl)
+    return x
+
+def _branch_simplify(x, measure):
+    """Simplifie une simple expression sympy."""
+    def main_(x, measure):
+        cand = {x, x.rewrite(sympy.Piecewise)}
+        new_cand = set()
+        for _ in range(4):
+            with Pool() as pool:
+                proc = []
+                for x_ in cand:
+                    proc.append(pool.apply_async(sympy.cancel, args=(x_,)))
+                    proc.append(pool.apply_async(sympy.factor, args=(x_,), kwds={"deep":True, "fraction":False}))
+                    proc.append(pool.apply_async(sympy.factor, args=(x_,), kwds={"deep":True, "fraction":False, "gaussian":True}))
+                    proc.append(pool.apply_async(sympy.logcombine, args=(x_,), kwds={"force":True}))
+                    proc.append(pool.apply_async(sympy.powsimp, args=(x_,), kwds={"deep":True, "force":True, "measure":measure}))
+                    proc.append(pool.apply_async(sympy.radsimp, args=(x_,), kwds={"max_terms":10}))
+                    proc.append(pool.apply_async(sympy.ratsimp, args=(x_,)))
+                    proc.append(pool.apply_async(sympy.sqrtdenest, args=(x_,), kwds={"max_iter":10}))
+                    proc.append(pool.apply_async(sympy.simplify, args=(x_,), kwds={"measure":measure, "inverse":True, "rational":False}))
+                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={"method":"combined"}))
+                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={"method":"fu"}))
+                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={"method":"groebner"}))
+                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={"method":"matching"}))
+                for p in proc:
+                    try:
+                        new_cand.add(p.get(timeout=10))
+                    except multiprocessing.TimeoutError:
+                        pass
+                    except (ValueError, TypeError, AttributeError, sympy.CoercionFailed, sympy.PolynomialError):
+                        pass
+
+            new_cand = {_select(*(new_cand | cand), measure=measure)}
+            if new_cand == cand:
+                break
+            cand = new_cand
+        return new_cand.pop()
+
+    return _select(_generalize(main_)(x, measure), x, measure=measure)
+
+def _select(*xs, measure):
+    """Selectione la meilleur expression."""
+    if multiprocessing.current_process().name == "MainProcess":
+        with Pool() as pool:
+            costs = pool.map(measure, xs)
+    else:
+        costs = [measure(e) for e in xs]
+    return xs[np.argmin(costs)]
+
+def _cse_simp(x, measure):
+    """Simplifi chaque paquets sous expression de cse"""
+    def build(defs, rvs):
+        for var, e in defs[::-1]:
+            rvs = subs(rvs, {var: e})
+        return rvs
+
+    changed = True
+    while changed:
+        changed = False
+        defs, rvs = cse_homogeneous(x)
+
+        with Pool() as pool:
+            proc = []
+            for _, e in defs:
+                proc.append(pool.apply_async(_branch_simplify, args=(e,), kwds={"measure": measure}))
+            proc.append(pool.apply_async(_branch_simplify, args=(rvs,), kwds={"measure": measure}))
+
+            for i, (var, e) in enumerate(defs.copy()):
+                e_ = proc[i].get()
+                if e_ != e:
+                    changed = True
+                    defs[i] = (var, e_)
+            rvs_ = proc[-1].get()
+            if rvs_ != rvs:
+                changed = True
+                rvs = rvs_
+
+        if changed:
+            x = build(defs, rvs)
+    return x
+
 
 def cse_minimize_memory(r, e):
     """
@@ -193,78 +301,216 @@ def evalf(x, n=15):
         return type(x)([evalf(e, n=n) for e in x])
 
     x = basic_evalf(x, n=n)
+    x = _sub_float_rat(x)
+    return x
 
-    # Remplacement des flotants etants des entiers par de vrai entiers.
-    repl = {f: int(round(f)) for f in x.atoms(sympy.Float) if round(f) == round(f, 5)}
-    x = subs(x, repl)
-    # Remplacement des flotants de puissance par les rationels.
-    repl = True
-    while repl:
-        cand_pow = [p for p in x.atoms(sympy.Pow) if isinstance(p.exp, sympy.Float)]
-        cand_rat = [sympy.Rational(p.exp).limit_denominator(10) for p in cand_pow]
-        repl = {p: sympy.Pow(p.base, r) for p, r in zip(cand_pow, cand_rat) if round(p.exp, 5) == round(r, 5)}
-        x = subs(x, repl)
+def simplify(x, measure, verbose=False):
+    """
+    ** Triture l'expression pour minimiser le temps de calcul. **
+    """
+    if verbose:
+        print(f"simplify: {cse_homogeneous(x)}...")
+        print(f"\tbegin cost: {measure(x)}")
+
+    x = _sub_float_rat(x)
+    if verbose >= 2:
+        print(f"\tafter float to rational: {measure(x)}")
+    x = _cse_simp(x, measure=measure)
+    if verbose >= 2:
+        print(f"\tafter cse_simp: {measure(x)}")
+    x = _branch_simplify(x, measure=measure)
+    if verbose >= 2:
+        print(f"\tafter global simp: {measure(x)}")
+    x = evalf(x, n=35)
+
+    if verbose:
+        print(f"\tfinal cost: {measure(x)}")
+        print(f"\tfinal expr: {cse_homogeneous(x)}...")
 
     return x
 
-def simplify(x, measure=sympy.count_ops, **kwargs):
-    """
-    ** Alias vers ``sympy.simplify``. **
-
-    Gere recursivement les objets qui n'ont pas
-    de methodes pour etre directement simplifiables.
-
-    Ajoute une factorisation recursive afin de privilegier
-    les "*" plutot que les "+" de sorte a reduire les erreurs
-    de calcul.
-    """
-    for _ in range(2):
-        try:
-            x1 = sympy.simplify(sympy.factor(x, deep=True, fraction=False), measure=measure, **kwargs)
-            x2 = sympy.simplify(x, measure=measure, **kwargs)
-            new_x = x1 if measure(x1) <= measure(x2) else x2
-        except AttributeError:
-            if isinstance(x, (tuple, list, set)):
-                new_x = type(x)([simplify(e, measure=measure, **kwargs) for e in x])
-            else:
-                new_x = type(x)(*(simplify(e, measure=measure, **kwargs) for e in x.args))
-
-        new_x = new_x if measure(new_x) < measure(x) else x
-        if str(new_x) == str(x):
-            break
-        x = new_x
-    return new_x
-
+@_generalize
 def subs(x, replacements):
     """
     ** Alias vers ``sympy.subs``. **
 
     Gere recursivement les objets qui n'ont pas de methode ``.subs``.
     """
-    try:
-        return x.subs(replacements)
-    except AttributeError:
-        if isinstance(x, (tuple, list, set)):
-            return type(x)([subs(e, replacements) for e in x])
-        return type(x)(*(subs(e, replacements) for e in x.args))
+    return x.subs(replacements)
 
-def time_cost(x):
+
+class TimeCost:
     """
-    ** Estime la complexite d'une expression. **
-
-    Cela est tres utile pour ``sympy.simplify`` concernant
-    l'argument ``measure``. Cette metrique permet de minimiser
-    le temps de calcul plutot que l'elegence de l'expression.
+    ** Estime le cout d'une expression. **
     """
-    defs, rvs = cse_minimize_memory(*sympy.cse(x))
-    return sum(sympy.count_ops(expr) for var, expr in defs) + len(defs)
+    def __init__(self):
+        self.costs = {}
 
+        self._zero = np.zeros(shape=(1000, 1000))
+        self._one = np.ones(shape=(1000, 1000))
+        self._false = self._zero.astype(bool)
+        self._true = self._one.astype(bool)
+        self._negone = -self._one
+        self._two = 2.0*self._one
+        self._bat = .32267452*self._one
+        self._comp = (1.0 + 1.0j)*self._one
+
+        self._tests = {
+            "Abs": (lambda: np.abs(self._negone)),
+            "Add": (lambda: self._bat + self._bat),
+            "And": (lambda: self._true & self._true),
+            "Equality": (lambda: self._bat == self._bat),
+            "GreaterThan": (lambda: self._one >= self._one),
+            "LessThan": (lambda: self._one <= self._one),
+            "MatAdd": (lambda: self._bat + self._bat),
+            "MatMul": (lambda: self._bat @ self._bat),
+            "MatPow": (lambda: self._bat ** self._bat),
+            "Max": (lambda: np.max(self._one)),
+            "Min": (lambda: np.min(self._one)),
+            "Mod": (lambda: self._one % self._bat),
+            "Mul": (lambda: self._bat * self._bat),
+            "Nand": (lambda: not np.all(self._true)),
+            "Nor": (lambda: not np.any(self._false)),
+            "Not": (lambda: ~ self._true),
+            "Or": (lambda: self._false | self._false),
+            "Piecewise": (lambda: ... if True else ...),
+            "Pow": (lambda: self._two ** self._bat),
+            "StrictGreaterThan": (lambda: self._one > self._one),
+            "StrictLessThan": (lambda: self._one < self._one),
+            "Transpose": (lambda: np.transpose(self._zero)),
+            "Xor": (lambda: (self._false|self._true) & ~(self._false&self._true)),
+            "acos": (lambda: np.arccos(self._bat)),
+            "acosh": (lambda: np.arccosh(self._two)),
+            "arg": (lambda: np.angle(self._comp)),
+            "asin": (lambda: np.arcsin(self._bat)),
+            "asinh": (lambda: np.arcsinh(self._bat)),
+            "atan": (lambda: np.arctan(self._bat)),
+            "atan2": (lambda: np.arctan2(self._bat, self._one)),
+            "atanh": (lambda: np.arctanh(self._bat)),
+            "conjugate": (lambda: np.conjugate(self._comp)),
+            "cos": (lambda: np.cos(self._bat)),
+            "cosh": (lambda: np.cosh(self._bat)),
+            "exp": (lambda: np.exp(self._bat)),
+            "im": (lambda: np.imag(self._comp)),
+            "log": (lambda: np.log(self._bat)),
+            "re": (lambda: np.real(self._comp)),
+            "sign": (lambda: np.sign(self._bat)),
+            "sin": (lambda: np.sin(self._bat)),
+            "sinc": (lambda: np.sinc(self._bat)),
+            "sinh": (lambda: np.sinh(self._bat)),
+            "sqrt": (lambda: np.sqrt(self._bat)),
+            "tan": (lambda: np.tan(self._bat)),
+            "tanh": (lambda: np.tanh(self._bat)),
+            "eval": (lambda: np.float64("0.123456789e+01")),
+            "aloc": (lambda: np.zeros(shape=(1000, 1000))),
+            "div": (lambda: 1/self._bat),
+            "**2": (lambda: self._bat**2),
+        }
+
+        self.load_save()
+
+    def load_save(self):
+        """
+        Charge le fichier qui contient les resultats.
+        """
+        dirname = os.path.join(os.path.dirname(os.path.abspath(laue.__file__)), "data")
+        file = os.path.join("timecost.pickle")
+        if os.path.exists(file):
+            with open(file, "rb") as f:
+                self.__setstate__(pickle.load(f))
+        else:
+            with open(file, "wb") as f:
+                pickle.dump(self.__getstate__(), f)
+
+    def atom_cost(self, key):
+        """
+        Retourne le cout de l'opperateur.
+        """
+        if key in self.costs:
+            return self.costs[key]
+        if hasattr(self, "_tests"):
+            if key in self._tests:
+                self.costs[key] = timeit.timeit(self._tests[key], number=100)
+                return self.costs[key]
+        raise ValueError(f"L'opperation {key} est inconnue.")
+
+    def branch_cost(self, branch):
+        """
+        Le cout brut de l'expression sympy sans cse.
+        """
+        if isinstance(branch, (sympy.Atom, numbers.Number)):
+            return self.atom_cost("eval")
+
+        if isinstance(branch, (sympy.Add, sympy.And, sympy.MatAdd, sympy.MatMul,
+                sympy.MatPow, sympy.Mul, sympy.Nand, sympy.Nor, sympy.Or, sympy.Xor)):
+            op_cost = self.atom_cost(type(branch).__name__) * (len(branch.args)-1)
+            if multiprocessing.current_process().name == "MainProcess":
+                with Pool() as pool:
+                    return sum(pool.map(self.branch_cost, branch.args)) + op_cost
+            else:
+                return sum((self.branch_cost(e) for e in branch.args)) + op_cost
+
+        if isinstance(branch, sympy.Pow):
+            if isinstance(branch.exp, sympy.Number):
+                if round(branch.exp, 5) == 2:
+                    return self.branch_cost(branch.base) + self.atom_cost("**2")
+                if round(branch.exp, 5) == .5:
+                    return self.branch_cost(branch.base) + self.atom_cost("sqrt")
+                if round(branch.exp, 5) == -.5:
+                    return self.branch_cost(branch.base) + self.atom_cost("div") + self.atom_cost("sqrt")
+                if round(branch.exp, 5) == -1:
+                    return self.branch_cost(branch.base) + self.atom_cost("div")
+                if round(branch.exp, 5) == -2:
+                    return self.branch_cost(branch.base) + self.atom_cost("div") + self.atom_cost("**2")
+            return self.branch_cost(branch.base) + self.branch_cost(branch.exp) + self.atom_cost("Pow")
+
+        if isinstance(branch, sympy.Piecewise):
+            op_cost = self.atom_cost("Piecewise") * (len(branch.args)-1)
+            return sum(
+                self.branch_cost(val) + sum(self.branch_cost(a) for a in cond.args)
+                for val, cond in branch.args
+                )/len(branch.args) + op_cost
+
+        if multiprocessing.current_process().name == "MainProcess":
+            with Pool() as pool:
+                return sum(pool.map(self.branch_cost, branch.args)) + self.atom_cost(type(branch).__name__)
+        else:
+            return sum((self.branch_cost(e) for e in branch.args)) + self.atom_cost(type(branch).__name__)
+
+    def __call__(self, expr):
+        """
+        Le cout de l'expression avec cse.
+        """
+        defs, rvs = sympy.cse(expr)
+        if multiprocessing.current_process().name == "MainProcess":
+            with Pool() as pool:
+                cost = sum(pool.map(
+                    self.branch_cost,
+                    itertools.chain(
+                        (e for var, e in defs),
+                        (e for e in rvs))
+                    )) + len(defs)*self.atom_cost("aloc")
+        else:
+            cost = (
+                sum(self.branch_cost(e) for var, e in defs)
+              + sum(self.branch_cost(e) for e in rvs)
+              + len(defs)*self.atom_cost("aloc"))
+        return cost
+
+    def __getstate__(self):
+        if hasattr(self, "_tests"):
+            for key in self._tests:
+                self.atom_cost(key)
+        return self.costs
+
+    def __setstate__(self, state):
+        self.costs = state
 
 class Lambdify:
     """
     ** Permet de manipuler plus simplement une fonction. **
     """
-    def __init__(self, args, expr, *, _simp_expr=None):
+    def __init__(self, args, expr, *, verbose=False, _simp_expr=None):
         """
         ** Prepare la fonction. **
 
@@ -280,19 +526,12 @@ class Lambdify:
         self.args_name = [str(arg) for arg in self.args]
         self.args_position = {arg: i for i, arg in enumerate(self.args_name)}
         self.expr = expr
+        self.verbose = verbose
 
         # Preparation vectoriele.
         self._simp_expr = _simp_expr
         if self._simp_expr is None:
-            self._simp_expr = evalf(
-                simplify(
-                    self.expr,
-                    measure=time_cost,
-                    inverse=True,
-                    rational=False
-                ),
-                n=30
-            )
+            self._simp_expr = simplify(self.expr, measure=TimeCost(), verbose=verbose)
         self.fct = lambdify(self.args, self._simp_expr, cse=True, modules="numpy")
         try:
             self.fct_numexpr = lambdify(self.args, evalf(self._simp_expr, n=15), cse=True, modules="numexpr")
@@ -531,8 +770,8 @@ class Lambdify:
         >>>
         """
         if self.expr == self._simp_expr:
-            return (self.args, self.expr)
-        return (self.args, self.expr, self._simp_expr)
+            return (self.args, self.expr, self.verbose)
+        return (self.args, self.expr, self.verbose, self._simp_expr)
 
     def __setstate__(self, state):
         """
@@ -551,4 +790,4 @@ class Lambdify:
         Lambdify([x, y], x + y + cos(x + y))
         >>>
         """
-        self.__init__(state[0], state[1], _simp_expr=state[-1])
+        self.__init__(state[0], state[1], verbose=state[2], _simp_expr=state[-1])

@@ -34,13 +34,13 @@ def distance(spot1, spot2, *, space="camera", dtype=np.float64):
 
     Parameters
     ----------
-    spot1 : Spot, tuple, list, np.ndarray
+    spot1 : Spot, tuple, np.ndarray
         Un spot ou une liste de spots. Cette fonction accepte une liste
         de spots pour pouvoir faire tous les calculs d'un seul coup et gagner
         grandement en temps de calcul.
         Un spot peu etre representer par un tuple a 2 elements, chaque element
         etant la premiere et la seconde coordonnees du spot dans l'espace considere.
-    spot2 : Spot, tuple, list, np.ndarray
+    spot2 : Spot, tuple, np.ndarray
         Un spot ou une autre liste de spots. Les distances calculees seront les distances
         entre toutes les combinaison possible de spots entre ``spot1`` et ``spot2``.
         Un spot peu etre representer par un tuple a 2 elements, chaque element
@@ -72,19 +72,31 @@ def distance(spot1, spot2, *, space="camera", dtype=np.float64):
     >>> image = "laue/examples/ge_blanc.mccd"
     >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
     >>> spot1, spot2 = diag[:2]
+    >>> spot1, spot2
+    (Spot(position=(1370.52, 1874.78), quality=0.573), Spot(position=(1303.63, 1808.74), quality=0.579))
+    >>> distance(*_)
+    93.99267654837415
     >>> spot1.get_position(), spot2.get_position()
     ((1370.5171990171991, 1874.7800982800984), (1303.6322254335262, 1808.7420520231212))
+    >>> distance(*_)
+    93.99267654837415
     >>>
-    >>> distance(spot1, spot2)
+    >>> distance(spot1, spot2, space="camera")
     93.99267654837415
     >>> distance(spot1, spot2, space="gnomonic")
     0.07062177234461128
     >>> distance(spot1, spot2, space="cosine")
     3.337448977380975
     >>>
-    >>> distance(spot1, diag[:5])
-    array([  0.        ,  93.99267655, 811.10892214, 484.83288558,
-           248.53369448])
+    >>> distance(spot1, spot2, dtype=np.float16).dtype
+    dtype('float16')
+    >>> distance(spot1, spot2, dtype=np.float32).dtype
+    dtype('float32')
+    >>> distance(spot1, spot2, dtype=np.float64).dtype
+    dtype('float64')
+    >>>
+    >>> distance(spot1, diag[:4])
+    array([  0.        ,  93.99267655, 811.10892214, 484.83288558])
     >>> distance(diag[:5], diag[:10]).shape
     (5, 10)
     >>>
@@ -117,17 +129,17 @@ def distance(spot1, spot2, *, space="camera", dtype=np.float64):
         return distance(
             np.array([spot1]),
             np.array([spot2]),
-            space=space)[0, 0]
+            space=space, dtype=dtype)[0, 0]
     if isinstance(spot1, (Spot, tuple)):
         return distance(
             np.array([spot1]),
             spot2,
-            space=space)[0, :]
+            space=space, dtype=dtype)[0, :]
     if isinstance(spot2, (Spot, tuple)):
         return distance(
             spot1,
             np.array([spot2]),
-            space=space)[:, 0]
+            space=space, dtype=dtype)[:, 0]
 
     # Cas ou l'on doit calculer une matrice de distances.
     if space == "cosine":
@@ -138,13 +150,11 @@ def distance(spot1, spot2, *, space="camera", dtype=np.float64):
         meth = lambda spot: spot.get_gnomonic() if isinstance(spot, Spot) else spot
     x1, y1 = np.array([meth(spot) for spot in spot1], dtype=dtype).transpose()
     x2, y2 = np.array([meth(spot) for spot in spot2], dtype=dtype).transpose()
-    x1, x2 = np.meshgrid(x1, x2, indexing="ij", copy=False)
-    y1, y2 = np.meshgrid(y1, y2, indexing="ij", copy=False)
 
-    from laue import Transformer
+    import laue
     if space == "cosine":
-        return Transformer().get_fct_dist_cosine()(x1, y1, x2, y2)
-    return Transformer().get_fct_dist_euclidian()(x1, y1, x2, y2)
+        return laue.geometry.dist_cosine(x1, y1, x2, y2, dtype=dtype)
+    return laue.geometry.dist_euclidian(x1, y1, x2, y2, dtype=dtype)
 
 
 class Spot(SpotPickleable):
@@ -191,7 +201,6 @@ class Spot(SpotPickleable):
         self._gnomonic = None # Coordonnees x, y du baricentre projete dans le plan gnomonic.
         self._thetachi = None # Angles du rayon diffractes ayant engendre ce point.
         self._quality = None # Beautee du point.
-        self.hkl = None # Les 3 indices de Miller h, k et l.
 
     def get_bbox(self):
         """
@@ -567,7 +576,7 @@ class Spot(SpotPickleable):
 
     def predict_hkl(self, *args, **kwds):
         """
-        ** Predit les indices hkl avec une reseau de neurones. **
+        ** Predit les indices hkl de ce spot avec un reseau de neurones. **
 
         Parameters
         ----------
@@ -585,7 +594,8 @@ class Spot(SpotPickleable):
             Un score > 95% assure que les indices de miller
             trouves sont correctes.
         """
-        raise NotImplementedError("Demandez a Ravis, il sera ravis de vous repondre!")
+        hkls, scores = self.diagram.predict_hkl(*args, **kwds)
+        return tuple(hkls[self.get_id()]), scores[self.get_id()]
 
     def _clean(self):
         """
