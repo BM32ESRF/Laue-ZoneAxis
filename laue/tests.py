@@ -57,7 +57,7 @@ def _timer(f):
     def f_bis(*args, **kwargs):
         ti = time.time()
         res = f(*args, **kwargs)
-        print(f"Temps pour {f.__name__} at pid {os.getpid()}: {_ftime(time.time()-ti)} s.")
+        print(f"Temps pour {f.__name__} at pid {os.getpid()}: {_ftime(time.time()-ti)}.")
         return res
     return f_bis
 

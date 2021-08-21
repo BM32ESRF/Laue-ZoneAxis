@@ -47,64 +47,72 @@ def _generalize(f):
     return f_bis
 
 @_generalize
-def _sub_float_rat(x):
+def _sub_float_rat(x, all_=False):
     """Remplace certain flotants par des rationels."""
     repl = {f: int(round(f)) for f in x.atoms(sympy.Float) if round(f) == round(f, 5)}
     x = subs(x, repl)
-    repl = True
-    while repl:
+    if not all_:
         cand_pow = [p for p in x.atoms(sympy.Pow) if isinstance(p.exp, sympy.Float)]
         cand_rat = [sympy.Rational(p.exp).limit_denominator(10) for p in cand_pow]
         repl = {p: sympy.Pow(p.base, r) for p, r in zip(cand_pow, cand_rat) if round(p.exp, 5) == round(r, 5)}
-        x = subs(x, repl)
+    else:
+        repl = {f: sympy.Rational(f).limit_denominator(10) for f in x.atoms(sympy.Float)}
+        repl = {f: v for f, v in repl.items() if round(f, 5) == round(v, 5)}
+    x = subs(x, repl)
     return x
 
 def _branch_simplify(x, measure):
     """Simplifie une simple expression sympy."""
     def main_(x, measure):
-        cand = {x, x.rewrite(sympy.Piecewise)}
-        new_cand = set()
+        if not isinstance(x, sympy.Basic):
+            raise AttributeError("Works only on sympy expr")
+
+        all_cand = {x} # x.rewrite(sympy.Piecewise),  x.expand(basic=True)
+        new_cand = all_cand.copy() # Les expressions qui ne sont pas encore passes dans la moulinette.
         for _ in range(4):
+            # print(f"boucle {_}, nbr={len(new_cand)}")
             with Pool() as pool:
                 proc = []
-                for x_ in cand:
+                for x_ in new_cand:
+                    proc.append(pool.apply_async(sympy.simplify, args=(x_,), kwds={"measure": measure, "inverse": True, "rational": False}))
+                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={"method": "matching"}))
+                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={"method": "fu"}))
+                    proc.append(pool.apply_async(sympy.factor, args=(x_,), kwds={"deep": True, "fraction": False}))
+                    proc.append(pool.apply_async(sympy.radsimp, args=(x_,), kwds={"max_terms": 10}))
+                    proc.append(pool.apply_async(sympy.powsimp, args=(x_,), kwds={"deep": True, "force": True, "measure": measure}))
                     proc.append(pool.apply_async(sympy.cancel, args=(x_,)))
-                    proc.append(pool.apply_async(sympy.factor, args=(x_,), kwds={"deep":True, "fraction":False}))
-                    proc.append(pool.apply_async(sympy.factor, args=(x_,), kwds={"deep":True, "fraction":False, "gaussian":True}))
-                    proc.append(pool.apply_async(sympy.logcombine, args=(x_,), kwds={"force":True}))
-                    proc.append(pool.apply_async(sympy.powsimp, args=(x_,), kwds={"deep":True, "force":True, "measure":measure}))
-                    proc.append(pool.apply_async(sympy.radsimp, args=(x_,), kwds={"max_terms":10}))
+                    proc.append(pool.apply_async(sympy.sqrtdenest, args=(x_,), kwds={"max_iter": 10}))
                     proc.append(pool.apply_async(sympy.ratsimp, args=(x_,)))
-                    proc.append(pool.apply_async(sympy.sqrtdenest, args=(x_,), kwds={"max_iter":10}))
-                    proc.append(pool.apply_async(sympy.simplify, args=(x_,), kwds={"measure":measure, "inverse":True, "rational":False}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={"method":"combined"}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={"method":"fu"}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={"method":"groebner"}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={"method":"matching"}))
+                    proc.append(pool.apply_async(sympy.logcombine, args=(x_,), kwds={"force": True}))
+                moul_cand = set() # Les expressions fraichement sorties de la moulinette.
                 for p in proc:
                     try:
-                        new_cand.add(p.get(timeout=10))
+                        moul_cand.add(p.get(timeout=30))
                     except multiprocessing.TimeoutError:
                         pass
-                    except (ValueError, TypeError, AttributeError, sympy.CoercionFailed, sympy.PolynomialError):
+                    except (TypeError, AttributeError, sympy.CoercionFailed, sympy.PolynomialError):
                         pass
 
-            new_cand = {_select(*(new_cand | cand), measure=measure)}
-            if new_cand == cand:
+            new_cand = moul_cand - all_cand # On isole les expressions nouvelles.
+            if not new_cand:
                 break
-            cand = new_cand
-        return new_cand.pop()
+            if len(new_cand) > 10:
+                new_cand = _select(*new_cand, measure=measure, n=10)
+            all_cand |= moul_cand
+        return _select(*all_cand, measure=measure)
 
     return _select(_generalize(main_)(x, measure), x, measure=measure)
 
-def _select(*xs, measure):
+def _select(*xs, measure, n=1):
     """Selectione la meilleur expression."""
     if multiprocessing.current_process().name == "MainProcess":
         with Pool() as pool:
             costs = pool.map(measure, xs)
     else:
         costs = [measure(e) for e in xs]
-    return xs[np.argmin(costs)]
+    if n == 1:
+        return xs[np.argmin(costs)]
+    return {xs[r] for r in np.argsort(costs)[:n]}
 
 def _cse_simp(x, measure):
     """Simplifi chaque paquets sous expression de cse"""
@@ -125,14 +133,22 @@ def _cse_simp(x, measure):
             proc.append(pool.apply_async(_branch_simplify, args=(rvs,), kwds={"measure": measure}))
 
             for i, (var, e) in enumerate(defs.copy()):
-                e_ = proc[i].get()
-                if e_ != e:
+                try:
+                    e_ = proc[i].get()
+                except multiprocessing.TimeoutError:
+                    continue
+                else:
+                    if measure(e_) < measure(e):
+                        changed = True
+                        defs[i] = (var, e_)
+            try:
+                rvs_ = proc[-1].get()
+            except multiprocessing.TimeoutError:
+                continue
+            else:
+                if measure(rvs_) < measure(rvs):
                     changed = True
-                    defs[i] = (var, e_)
-            rvs_ = proc[-1].get()
-            if rvs_ != rvs:
-                changed = True
-                rvs = rvs_
+                    rvs = rvs_
 
         if changed:
             x = build(defs, rvs)
@@ -312,7 +328,7 @@ def simplify(x, measure, verbose=False):
         print(f"simplify: {cse_homogeneous(x)}...")
         print(f"\tbegin cost: {measure(x)}")
 
-    x = _sub_float_rat(x)
+    x = _sub_float_rat(x, all_=True)
     if verbose >= 2:
         print(f"\tafter float to rational: {measure(x)}")
     x = _cse_simp(x, measure=measure)
@@ -321,7 +337,13 @@ def simplify(x, measure, verbose=False):
     x = _branch_simplify(x, measure=measure)
     if verbose >= 2:
         print(f"\tafter global simp: {measure(x)}")
-    x = evalf(x, n=35)
+    x = _sub_float_rat(evalf(x, n=35), all_=True)
+    if verbose >= 2:
+        print(f"\tafter evalf: {measure(x)}")
+    x = _cse_simp(x, measure=measure)
+    if verbose >= 2:
+        print(f"\tafter cse_simp: {measure(x)}")
+    x = _sub_float_rat(x)
 
     if verbose:
         print(f"\tfinal cost: {measure(x)}")
@@ -414,7 +436,7 @@ class TimeCost:
         Charge le fichier qui contient les resultats.
         """
         dirname = os.path.join(os.path.dirname(os.path.abspath(laue.__file__)), "data")
-        file = os.path.join("timecost.pickle")
+        file = os.path.join(dirname, "timecost.pickle")
         if os.path.exists(file):
             with open(file, "rb") as f:
                 self.__setstate__(pickle.load(f))
@@ -444,11 +466,7 @@ class TimeCost:
         if isinstance(branch, (sympy.Add, sympy.And, sympy.MatAdd, sympy.MatMul,
                 sympy.MatPow, sympy.Mul, sympy.Nand, sympy.Nor, sympy.Or, sympy.Xor)):
             op_cost = self.atom_cost(type(branch).__name__) * (len(branch.args)-1)
-            if multiprocessing.current_process().name == "MainProcess":
-                with Pool() as pool:
-                    return sum(pool.map(self.branch_cost, branch.args)) + op_cost
-            else:
-                return sum((self.branch_cost(e) for e in branch.args)) + op_cost
+            return sum((self.branch_cost(e) for e in branch.args)) + op_cost
 
         if isinstance(branch, sympy.Pow):
             if isinstance(branch.exp, sympy.Number):
@@ -471,31 +489,16 @@ class TimeCost:
                 for val, cond in branch.args
                 )/len(branch.args) + op_cost
 
-        if multiprocessing.current_process().name == "MainProcess":
-            with Pool() as pool:
-                return sum(pool.map(self.branch_cost, branch.args)) + self.atom_cost(type(branch).__name__)
-        else:
-            return sum((self.branch_cost(e) for e in branch.args)) + self.atom_cost(type(branch).__name__)
+        return sum((self.branch_cost(e) for e in branch.args)) + self.atom_cost(type(branch).__name__)
 
     def __call__(self, expr):
         """
         Le cout de l'expression avec cse.
         """
         defs, rvs = sympy.cse(expr)
-        if multiprocessing.current_process().name == "MainProcess":
-            with Pool() as pool:
-                cost = sum(pool.map(
-                    self.branch_cost,
-                    itertools.chain(
-                        (e for var, e in defs),
-                        (e for e in rvs))
-                    )) + len(defs)*self.atom_cost("aloc")
-        else:
-            cost = (
-                sum(self.branch_cost(e) for var, e in defs)
+        return (sum(self.branch_cost(e) for var, e in defs)
               + sum(self.branch_cost(e) for e in rvs)
               + len(defs)*self.atom_cost("aloc"))
-        return cost
 
     def __getstate__(self):
         if hasattr(self, "_tests"):
