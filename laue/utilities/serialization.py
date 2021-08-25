@@ -243,7 +243,7 @@ class ExperimentPickleable:
         state["threshold"] = self.threshold
         state["font_size"] = self.font_size
         state["ignore_errors"] = self.ignore_errors
-        state["kwarg"] = self.kwarg
+        state["kwargs"] = self.kwargs
         state["kernel_font"] = self.kernel_font
         state["threshold"] = self.threshold
         state["kernel_dilate"] = self.kernel_dilate
@@ -292,7 +292,7 @@ class ExperimentPickleable:
         self.font_size = state["font_size"]
         if not hasattr(self, "ignore_errors"):
             self.ignore_errors = state["ignore_errors"]
-        self.kwarg = state["kwarg"]
+        self.kwargs = state["kwargs"]
         self.kernel_font = state["kernel_font"]
         self.kernel_dilate = state["kernel_dilate"]
         self._mean_bg = state["mean_bg"]

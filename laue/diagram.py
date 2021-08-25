@@ -830,8 +830,13 @@ class LaueDiagram(Splitable, DiagramPickleable):
         >>>
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> rep = tempfile.mkdtemp()
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> diag.save_file(os.path.join(rep, "ge_blanc.dat"))
+        >>> diag.save_file(os.path.join(rep, "ge_blanc.jpg"))
+        >>> diag.save_file(os.path.join(rep, "ge_blanc.png"))
+        >>> diag.save_file(os.path.join(rep, "ge_blanc.svg"))
+        >>> diag.save_file(os.path.join(rep, "ge_blanc.pk"))
+        >>> diag.save_file(os.path.join(rep, "ge_blanc.cor"))
         >>>
         """
         EXT_OK = {"dat", "jpg", "jpeg", "svg", "png", "pk", "pickle", "cor"}
@@ -852,14 +857,23 @@ class LaueDiagram(Splitable, DiagramPickleable):
                         y=spot.get_position()[1],
                         i=spot.get_intensity()))
         elif ext in {"jpg", "jpeg", "svg", "png"}:
-            plt = self.show(_return=True)
+            plt = self.plot_all(display=False)
             plt.savefig(filename)
         elif ext in {"pk", "pickle"}:
             import pickle
             with open(filename, "wb") as file:
                 pickle.dump(self, file)
         elif ext == "cor":
-            raise NotImplementedError
+            with open(filename, "w", encoding="utf-8") as file:
+                file.write((" ".join(("{:<20}",)*5) + "\n").format(
+                    "2theta", "chi", "X", "Y", "I"))
+                for spot in self:
+                    file.write((" ".join(("{:<20}",)*5) + "\n").format(
+                        2*spot.get_theta_chi()[0],
+                        spot.get_theta_chi()[1],
+                        spot.get_position()[0],
+                        spot.get_position()[1],
+                        spot.get_intensity()))
 
 
     def select_spots(self, *, n=None, sort=None):
