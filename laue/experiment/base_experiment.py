@@ -26,7 +26,7 @@ from laue.diagram import LaueDiagram
 from laue.core.geometry import transformer
 from laue.spot import Spot
 from laue.utilities.serialization import ExperimentPickleable
-from laue.utilities.data_consistency import Consistency
+from laue.utilities.data_consistency import Recordable
 
 
 __pdoc__ = {"Experiment.__getitem__": True,
@@ -34,7 +34,7 @@ __pdoc__ = {"Experiment.__getitem__": True,
             "Experiment.__len__": True}
 
 
-class Experiment(ExperimentPickleable, Consistency):
+class Experiment(ExperimentPickleable, Recordable):
     """
     ** Permet de travailler sur un lot d'images. **
     """
@@ -105,7 +105,7 @@ class Experiment(ExperimentPickleable, Consistency):
                 ycen : milieu - 150 pxl ; milieu + 150 pxl
         **save_params
             Les parametres fournis a l'initialisateur de gestionaire d'enregistrement.
-            voir ``laue.utilities.data_consistency.Consistency.__init__``.
+            voir ``laue.utilities.data_consistency.Recordable.__init__``.
         """
         assert hasattr(images, "__iter__"), ("'images' must to be iterable. "
             f"It can not be of type {type(images).__name__}.")
@@ -161,7 +161,7 @@ class Experiment(ExperimentPickleable, Consistency):
         self._axes_iterator = None # Iterateur unique qui cede les axes de zonne de chaque diagramme.
         self._subsets_iterator = None # Iterateur unique qui cede les bouts de grains.
 
-        Consistency.__init__(self, **kwargs) # Instancie le gestionaire d'enregistrement.
+        Recordable.__init__(self, **kwargs) # Instancie le gestionaire d'enregistrement.
 
     def set_calibration(self, *diagrams):
         """
@@ -216,7 +216,7 @@ class Experiment(ExperimentPickleable, Consistency):
         if self.verbose:
             print("Calibration...")
             if self.verbose >= 2:
-                print("\tPrise en compte des parametres fournis...")
+                print("    Prise en compte des parametres fournis...")
 
         # Constantes.
         PIXELSIZE_REF = {(2048, 2048): 0.079856, # Taille des pixels fonction de la camera.
@@ -284,13 +284,13 @@ class Experiment(ExperimentPickleable, Consistency):
             self._calibration_parameters = given_parameters
             if self.verbose:
                 if self.verbose >= 2:
-                    print("\t\tOK: Tout est fournis, il n'y a rien a faire.")
-                print(f"\tOK: Calibration terminee: {given_parameters}")
+                    print("        OK: Tout est fournis, il n'y a rien a faire.")
+                print(f"    OK: Calibration terminee: {given_parameters}")
             return self._calibration_parameters
 
         # Extraction d'un diagramme interressant.
         if self.verbose >= 2:
-            print("\tRecuperation des diagrammes interressants...")
+            print("    Recuperation des diagrammes interressants...")
         if not diagrams: # Si l'utilisateur ne nous aide pas a trouver les bons diagrammes.
             diagrams = []
             for i, dia in enumerate(self):
@@ -302,7 +302,7 @@ class Experiment(ExperimentPickleable, Consistency):
             best_diagrams = diagrams # C'est un tuple et non pas une liste mais c'est pas genant.
         if self.verbose >= 2:
             for dia in best_diagrams:
-                print(f"\t\t{dia.get_id()}")
+                print(f"        {dia.get_id()}")
 
         # Vectorisation des donnees pour de bonnes perfs.
         min_size = min(
@@ -320,14 +320,14 @@ class Experiment(ExperimentPickleable, Consistency):
         bounds = [(parameters_min[name], parameters_max[name]) for name in vect_labels] # Les limites des variables.
         args = (given_parameters, vect_labels, spots_position) # Les arguments en plus de la fonction de cout.
         if self.verbose >= 2:
-            print(f"\tcalibration des parametres {vect_labels}")
-            print(f"\tbornes min: {tuple(b_min for b_min, _ in bounds)}")
-            print(f"\tbornes max: {tuple(b_max for _, b_max in bounds)}")
+            print(f"    calibration des parametres {vect_labels}")
+            print(f"    bornes min: {tuple(b_min for b_min, _ in bounds)}")
+            print(f"    bornes max: {tuple(b_max for _, b_max in bounds)}")
         
         # Recherche rapide d'un minimum par descente de gradient.
         from scipy import optimize # On ne l'importe que ici car on est pas sur de s'en servir.
         if self.verbose >= 2:
-            print("\tOptimsation globale, algo genetique...")
+            print("    Optimsation globale, algo genetique...")
         
         if multiprocessing.current_process().name == "MainProcess" and os.cpu_count() > 4:
             attrs = ["transformer", "verbose"]
@@ -353,14 +353,14 @@ class Experiment(ExperimentPickleable, Consistency):
                 workers=1) # Pour ne pas creer de sous processus.
                 # C'est plus rapide de ne pas creer de sous processus que d'en faire... car cloudpickle est lent!
         if self.verbose >= 2:
-            print(f"\t\tOk: cout final = {opt_res['fun']}")
+            print(f"        Ok: cout final = {opt_res['fun']}")
         fit_parameters_vect = opt_res["x"]
         
         # Mise en forme du resultat.
         fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
         self._calibration_parameters = {**given_parameters, **fit_parameters}
         if self.verbose:
-            print(f"\tOK: set_calibration terminee: {self._calibration_parameters}")
+            print(f"    OK: set_calibration terminee: {self._calibration_parameters}")
         return self._calibration_parameters
 
     def _calibration_cost(self, params_as_vect, known_params, vect_labels, spots_position):
@@ -410,8 +410,8 @@ class Experiment(ExperimentPickleable, Consistency):
         cost = projection * scattering**(-4)
 
         if self.verbose >= 3:
-            print(f"\t\tCurrent parameters: {unknown_parameters}")
-            print(f"\t\tCurrent cost: {cost}")
+            print(f"        Current parameters: {unknown_parameters}")
+            print(f"        Current cost: {cost}")
             if self.verbose >= 4:
                 import matplotlib.pyplot as plt
                 plt.clf()
@@ -524,12 +524,12 @@ class Experiment(ExperimentPickleable, Consistency):
 
                 for i, diag in enumerate(func(*func_args, **func_kwargs)):
                     if self.verbose >= 2:
-                        print(f"\tdiagramme num {i} extrait: "
+                        print(f"    diagramme num {i} extrait: "
                               f"(...{diag.get_id()[-20:]}) "
                               f"avec {len(diag)} spots")
                     yield diag
                 if self.verbose:
-                    print("\tOK: Tous les diagrammes sont extraits.")
+                    print("    OK: Tous les diagrammes sont extraits.")
             
             return decorate
 
@@ -643,11 +643,11 @@ class Experiment(ExperimentPickleable, Consistency):
                 
                 for i, groups in enumerate(func(*func_args, **func_kwargs)):
                     if self.verbose >= 2:
-                        print(f"\tgrain du diagramme num {i} estimes: il y a {len(groups)} clusters")
+                        print(f"    grain du diagramme num {i} estimes: il y a {len(groups)} clusters")
                     yield groups
 
                 if self.verbose:
-                    print("\tOK: Tous les clusters de grains sont estimes.")
+                    print("    OK: Tous les clusters de grains sont estimes.")
 
             return decorate
 
@@ -744,11 +744,11 @@ class Experiment(ExperimentPickleable, Consistency):
                 
                 for i, axes in enumerate(func(*func_args, **func_kwargs)):
                     if self.verbose >= 2:
-                        print(f"\taxes du diagramme num {i} trouves: il y en a {len(axes)}")
+                        print(f"    axes du diagramme num {i} trouves: il y en a {len(axes)}")
                     yield axes
 
                 if self.verbose:
-                    print("\tOK: Tous les axes de zone sont extraits.")
+                    print("    OK: Tous les axes de zone sont extraits.")
 
             return decorate
 
@@ -838,7 +838,7 @@ class Experiment(ExperimentPickleable, Consistency):
         # map_x, map_y = map_x.astype(np.float32, copy=False), map_y.astype(np.float32, copy=False) # cv2 en a besoin.
 
         if self.verbose:
-            print("\tOK: La matrice gnomonic est calculee.")
+            print("    OK: La matrice gnomonic est calculee.")
 
         # Sauvegarde
         if psutil is not None and psutil.virtual_memory().percent < 75:
@@ -879,7 +879,7 @@ class Experiment(ExperimentPickleable, Consistency):
         self._mean_bg = mean_array.astype(np.uint16)
 
         if self.verbose:
-            print("\tOK: La moyenne des images est estimee.")
+            print("    OK: La moyenne des images est estimee.")
         return self._mean_bg
 
     def get_images_shape(self):
@@ -987,10 +987,10 @@ class Experiment(ExperimentPickleable, Consistency):
                 for image_info in func(*func_args, **func_kwargs):
                     yield image_info
                     if self.verbose >= 2:
-                        print(f"\timage : (...{str(image_info)[-20:]}) cedee.")
+                        print(f"    image : (...{str(image_info)[-20:]}) cedee.")
 
                 if self.verbose:
-                    print("\tOK: Toutes les images sont lues.")
+                    print("    OK: Toutes les images sont lues.")
 
             return decorate
 
@@ -1087,7 +1087,7 @@ class Experiment(ExperimentPickleable, Consistency):
         for diag in self:
             diag._clean()
         if self.verbose:
-            print("\tOK: Le volume de donnees et minimum.")
+            print("    OK: Le volume de donnees et minimum.")
 
     def __getitem__(self, item):
         """
@@ -1227,15 +1227,15 @@ class Experiment(ExperimentPickleable, Consistency):
         """
         ** Retourne une jolie representation. **
         """
-        addi_kwargs = '\t\t\n'.join(f'{k}={v}' for k, v in self.kwargs.items())
-        addi_print = f"\n\tadditional kwargs: \n\t\t{addi_kwargs}" if addi_kwargs else ""
+        addi_kwargs = '        \n'.join(f'{k}={v}' for k, v in self.kwargs.items())
+        addi_print = f"\n    additional kwargs: \n        {addi_kwargs}" if addi_kwargs else ""
         return ("Basic Experiment:\n"
-                f"\tnbr reading diagrams: {len(self)}\n"
-                f"\tmax_space: {self.max_space} pxl\n"
-                f"\tthreshold: {self.threshold} impact/impact\n"
-                f"\tfont_size: {self.font_size} pxl\n"
-                f"\tignore_errors: {self.ignore_errors}\n"
-                f"\tverbose: {self.verbose}"
+                f"    nbr reading diagrams: {len(self)}\n"
+                f"    max_space: {self.max_space} pxl\n"
+                f"    threshold: {self.threshold} impact/impact\n"
+                f"    font_size: {self.font_size} pxl\n"
+                f"    ignore_errors: {self.ignore_errors}\n"
+                f"    verbose: {self.verbose}"
                 f"{addi_print}")
 
 

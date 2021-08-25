@@ -322,28 +322,28 @@ def simplify(x, measure, verbose=False):
     """
     if verbose:
         print(f"simplify: {cse_homogeneous(x)}...")
-        print(f"\tbegin cost: {measure(x)}")
+        print(f"    begin cost: {measure(x)}")
 
     x = _sub_float_rat(x, all_=True)
     if verbose >= 2:
-        print(f"\tafter float to rational: {measure(x)}")
+        print(f"    after float to rational: {measure(x)}")
     x = _cse_simp(x, measure=measure)
     if verbose >= 2:
-        print(f"\tafter cse_simp: {measure(x)}")
+        print(f"    after cse_simp: {measure(x)}")
     x = _branch_simplify(x, measure=measure)
     if verbose >= 2:
-        print(f"\tafter global simp: {measure(x)}")
+        print(f"    after global simp: {measure(x)}")
     x = _sub_float_rat(evalf(x, n=35), all_=True)
     if verbose >= 2:
-        print(f"\tafter evalf: {measure(x)}")
+        print(f"    after evalf: {measure(x)}")
     x = _cse_simp(x, measure=measure)
     if verbose >= 2:
-        print(f"\tafter cse_simp: {measure(x)}")
+        print(f"    after cse_simp: {measure(x)}")
     x = _sub_float_rat(x)
 
     if verbose:
-        print(f"\tfinal cost: {measure(x)}")
-        print(f"\tfinal expr: {cse_homogeneous(x)}...")
+        print(f"    final cost: {measure(x)}")
+        print(f"    final expr: {cse_homogeneous(x)}...")
 
     return x
 

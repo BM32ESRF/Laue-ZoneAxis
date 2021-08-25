@@ -196,7 +196,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
                 self.get_gnomonic_positions(),
                 dmax, nbr, tol))
             if self.experiment.verbose:
-                print(f&#34;t\tOK: {len(axis_spots_ind)} axes trouves.&#34;)
+                print(f&#34;    OK: {len(axis_spots_ind)} axes trouves.&#34;)
         else:
             phi_s, mu_s, axis_spots_ind, spots_axes_ind = _axes_args
 
@@ -334,7 +334,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
             self._image_gnom = image_gnom
 
         if self.experiment.verbose:
-            print(f&#34;\tOK: Image gnomonic caluculee.&#34;)
+            print(f&#34;    OK: Image gnomonic caluculee.&#34;)
 
         return image_gnom
 
@@ -505,7 +505,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
 
         neighbors = [self._spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
         if self.experiment.verbose:
-            print(f&#34;\tOK: il y a {len(neighbors)} voisins.&#34;)
+            print(f&#34;    OK: il y a {len(neighbors)} voisins.&#34;)
         return neighbors
 
     def get_positions(self, *, n=None, sort=None, **kwds):
@@ -863,8 +863,13 @@ class LaueDiagram(Splitable, DiagramPickleable):
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; rep = tempfile.mkdtemp()
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
+        &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.jpg&#34;))
+        &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.png&#34;))
+        &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.svg&#34;))
+        &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.pk&#34;))
+        &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.cor&#34;))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         EXT_OK = {&#34;dat&#34;, &#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;, &#34;pk&#34;, &#34;pickle&#34;, &#34;cor&#34;}
@@ -885,14 +890,23 @@ class LaueDiagram(Splitable, DiagramPickleable):
                         y=spot.get_position()[1],
                         i=spot.get_intensity()))
         elif ext in {&#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}:
-            plt = self.show(_return=True)
+            plt = self.plot_all(display=False)
             plt.savefig(filename)
         elif ext in {&#34;pk&#34;, &#34;pickle&#34;}:
             import pickle
             with open(filename, &#34;wb&#34;) as file:
                 pickle.dump(self, file)
         elif ext == &#34;cor&#34;:
-            raise NotImplementedError
+            with open(filename, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
+                file.write((&#34; &#34;.join((&#34;{:&lt;20}&#34;,)*5) + &#34;\n&#34;).format(
+                    &#34;2theta&#34;, &#34;chi&#34;, &#34;X&#34;, &#34;Y&#34;, &#34;I&#34;))
+                for spot in self:
+                    file.write((&#34; &#34;.join((&#34;{:&lt;20}&#34;,)*5) + &#34;\n&#34;).format(
+                        2*spot.get_theta_chi()[0],
+                        spot.get_theta_chi()[1],
+                        spot.get_position()[0],
+                        spot.get_position()[1],
+                        spot.get_intensity()))
 
 
     def select_spots(self, *, n=None, sort=None):
@@ -1152,9 +1166,9 @@ class LaueDiagram(Splitable, DiagramPickleable):
         ** Renvoi une jolie representation du diagramme de Laue. **
         &#34;&#34;&#34;
         return (&#34;LaueDiagram:\n&#34;
-                f&#34;\tname: {self.get_id()}\n&#34;
-                f&#34;\tnbr spots: {len(self.select_spots())}\n&#34;
-                f&#34;\tquality: {self.get_quality()}&#34;)
+                f&#34;    name: {self.get_id()}\n&#34;
+                f&#34;    nbr spots: {len(self.select_spots())}\n&#34;
+                f&#34;    quality: {self.get_quality()}&#34;)
 
     def __repr__(self):
         &#34;&#34;&#34;
@@ -1330,7 +1344,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
                 self.get_gnomonic_positions(),
                 dmax, nbr, tol))
             if self.experiment.verbose:
-                print(f&#34;t\tOK: {len(axis_spots_ind)} axes trouves.&#34;)
+                print(f&#34;    OK: {len(axis_spots_ind)} axes trouves.&#34;)
         else:
             phi_s, mu_s, axis_spots_ind, spots_axes_ind = _axes_args
 
@@ -1468,7 +1482,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
             self._image_gnom = image_gnom
 
         if self.experiment.verbose:
-            print(f&#34;\tOK: Image gnomonic caluculee.&#34;)
+            print(f&#34;    OK: Image gnomonic caluculee.&#34;)
 
         return image_gnom
 
@@ -1639,7 +1653,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
 
         neighbors = [self._spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
         if self.experiment.verbose:
-            print(f&#34;\tOK: il y a {len(neighbors)} voisins.&#34;)
+            print(f&#34;    OK: il y a {len(neighbors)} voisins.&#34;)
         return neighbors
 
     def get_positions(self, *, n=None, sort=None, **kwds):
@@ -1997,8 +2011,13 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; rep = tempfile.mkdtemp()
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
+        &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.jpg&#34;))
+        &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.png&#34;))
+        &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.svg&#34;))
+        &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.pk&#34;))
+        &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.cor&#34;))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         EXT_OK = {&#34;dat&#34;, &#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;, &#34;pk&#34;, &#34;pickle&#34;, &#34;cor&#34;}
@@ -2019,14 +2038,23 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
                         y=spot.get_position()[1],
                         i=spot.get_intensity()))
         elif ext in {&#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}:
-            plt = self.show(_return=True)
+            plt = self.plot_all(display=False)
             plt.savefig(filename)
         elif ext in {&#34;pk&#34;, &#34;pickle&#34;}:
             import pickle
             with open(filename, &#34;wb&#34;) as file:
                 pickle.dump(self, file)
         elif ext == &#34;cor&#34;:
-            raise NotImplementedError
+            with open(filename, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
+                file.write((&#34; &#34;.join((&#34;{:&lt;20}&#34;,)*5) + &#34;\n&#34;).format(
+                    &#34;2theta&#34;, &#34;chi&#34;, &#34;X&#34;, &#34;Y&#34;, &#34;I&#34;))
+                for spot in self:
+                    file.write((&#34; &#34;.join((&#34;{:&lt;20}&#34;,)*5) + &#34;\n&#34;).format(
+                        2*spot.get_theta_chi()[0],
+                        spot.get_theta_chi()[1],
+                        spot.get_position()[0],
+                        spot.get_position()[1],
+                        spot.get_intensity()))
 
 
     def select_spots(self, *, n=None, sort=None):
@@ -2286,9 +2314,9 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         ** Renvoi une jolie representation du diagramme de Laue. **
         &#34;&#34;&#34;
         return (&#34;LaueDiagram:\n&#34;
-                f&#34;\tname: {self.get_id()}\n&#34;
-                f&#34;\tnbr spots: {len(self.select_spots())}\n&#34;
-                f&#34;\tquality: {self.get_quality()}&#34;)
+                f&#34;    name: {self.get_id()}\n&#34;
+                f&#34;    nbr spots: {len(self.select_spots())}\n&#34;
+                f&#34;    quality: {self.get_quality()}&#34;)
 
     def __repr__(self):
         &#34;&#34;&#34;
@@ -2746,7 +2774,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
             self.get_gnomonic_positions(),
             dmax, nbr, tol))
         if self.experiment.verbose:
-            print(f&#34;t\tOK: {len(axis_spots_ind)} axes trouves.&#34;)
+            print(f&#34;    OK: {len(axis_spots_ind)} axes trouves.&#34;)
     else:
         phi_s, mu_s, axis_spots_ind, spots_axes_ind = _axes_args
 
@@ -2991,7 +3019,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
         self._image_gnom = image_gnom
 
     if self.experiment.verbose:
-        print(f&#34;\tOK: Image gnomonic caluculee.&#34;)
+        print(f&#34;    OK: Image gnomonic caluculee.&#34;)
 
     return image_gnom</code></pre>
 </details>
@@ -3276,7 +3304,7 @@ True
 
     neighbors = [self._spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
     if self.experiment.verbose:
-        print(f&#34;\tOK: il y a {len(neighbors)} voisins.&#34;)
+        print(f&#34;    OK: il y a {len(neighbors)} voisins.&#34;)
     return neighbors</code></pre>
 </details>
 </dd>
@@ -3875,8 +3903,13 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; rep = tempfile.mkdtemp()
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.save_file(os.path.join(rep, &quot;ge_blanc.dat&quot;))
+&gt;&gt;&gt; diag.save_file(os.path.join(rep, &quot;ge_blanc.jpg&quot;))
+&gt;&gt;&gt; diag.save_file(os.path.join(rep, &quot;ge_blanc.png&quot;))
+&gt;&gt;&gt; diag.save_file(os.path.join(rep, &quot;ge_blanc.svg&quot;))
+&gt;&gt;&gt; diag.save_file(os.path.join(rep, &quot;ge_blanc.pk&quot;))
+&gt;&gt;&gt; diag.save_file(os.path.join(rep, &quot;ge_blanc.cor&quot;))
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -3906,8 +3939,13 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
     &gt;&gt;&gt;
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; rep = tempfile.mkdtemp()
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
+    &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.jpg&#34;))
+    &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.png&#34;))
+    &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.svg&#34;))
+    &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.pk&#34;))
+    &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.cor&#34;))
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     EXT_OK = {&#34;dat&#34;, &#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;, &#34;pk&#34;, &#34;pickle&#34;, &#34;cor&#34;}
@@ -3928,14 +3966,23 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
                     y=spot.get_position()[1],
                     i=spot.get_intensity()))
     elif ext in {&#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}:
-        plt = self.show(_return=True)
+        plt = self.plot_all(display=False)
         plt.savefig(filename)
     elif ext in {&#34;pk&#34;, &#34;pickle&#34;}:
         import pickle
         with open(filename, &#34;wb&#34;) as file:
             pickle.dump(self, file)
     elif ext == &#34;cor&#34;:
-        raise NotImplementedError</code></pre>
+        with open(filename, &#34;w&#34;, encoding=&#34;utf-8&#34;) as file:
+            file.write((&#34; &#34;.join((&#34;{:&lt;20}&#34;,)*5) + &#34;\n&#34;).format(
+                &#34;2theta&#34;, &#34;chi&#34;, &#34;X&#34;, &#34;Y&#34;, &#34;I&#34;))
+            for spot in self:
+                file.write((&#34; &#34;.join((&#34;{:&lt;20}&#34;,)*5) + &#34;\n&#34;).format(
+                    2*spot.get_theta_chi()[0],
+                    spot.get_theta_chi()[1],
+                    spot.get_position()[0],
+                    spot.get_position()[1],
+                    spot.get_intensity()))</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.select_spots"><code class="name flex">

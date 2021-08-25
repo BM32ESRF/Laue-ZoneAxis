@@ -123,7 +123,7 @@ def test_geometry_dtype():
                     rtype = func(.5*np.ones(1), .5*np.ones(1), parameters, dtype=dtype).dtype.type
                 except TypeError:
                     rtype = func(.5*np.ones(1), .5*np.ones(1), dtype=dtype).dtype.type
-                _print(f"\tboucle {boucle}: {dtype.__name__}->{rtype.__name__}")
+                _print(f"    boucle {boucle}: {dtype.__name__}->{rtype.__name__}")
                 assert rtype == dtype
 
     _print("dist_cosine:")
@@ -132,7 +132,7 @@ def test_geometry_dtype():
             np.array([63.605, 59.91]), np.array([51.367, 38.546]),
             np.array([63.605, 59.91]), np.array([51.367, 38.546]),
             dtype=dtype).dtype.type
-        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        _print(f"    {dtype.__name__}->{rtype.__name__}")
         assert rtype == dtype
 
     _print("dist_euclidian:")
@@ -141,7 +141,7 @@ def test_geometry_dtype():
             np.array([0, 1]), np.array([0, 1]),
             np.array([0, 1]), np.array([1, 1]),
             dtype=dtype).dtype.type
-        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        _print(f"    {dtype.__name__}->{rtype.__name__}")
         assert rtype == dtype
 
     _print("dist_line:")
@@ -150,7 +150,7 @@ def test_geometry_dtype():
             np.array([0, np.pi/2]), np.array([1, 1]),
             np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]),
             dtype=dtype).dtype.type
-        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        _print(f"    {dtype.__name__}->{rtype.__name__}")
         assert rtype == dtype
 
     _print("hough:")
@@ -158,7 +158,7 @@ def test_geometry_dtype():
         rtype = laue.geometry.hough(
             np.array([0, 1, 2]), np.array([2, 1, 0]),
             dtype=dtype).dtype.type
-        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        _print(f"    {dtype.__name__}->{rtype.__name__}")
         assert rtype == dtype
 
     _print("hough_reduce:")
@@ -170,7 +170,7 @@ def test_geometry_dtype():
             ),
             dtype=dtype
         ).dtype.type
-        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        _print(f"    {dtype.__name__}->{rtype.__name__}")
         assert rtype == dtype
 
     _print("inter_lines:")
@@ -178,7 +178,7 @@ def test_geometry_dtype():
         rtype = laue.geometry.inter_lines(
             np.array([0, np.pi/2]), np.array([1, 1]),
             dtype=dtype).dtype.type
-        _print(f"\t{dtype.__name__}->{rtype.__name__}")
+        _print(f"    {dtype.__name__}->{rtype.__name__}")
         assert rtype == dtype
 
 def test_geometry_bij():
@@ -249,8 +249,8 @@ def test_geometry_bij():
         is_ok = np.nanmax(np.abs(res)) < 1e-3
         if not is_ok:
             _print("failed numerical")
-            _print(f"\texpr = {expr}")
-            _print(f"\tmax(abs(val)) = {np.nanmax(np.abs(res))}")
+            _print(f"    expr = {expr}")
+            _print(f"    max(abs(val)) = {np.nanmax(np.abs(res))}")
             return False
         _print("ok numerical")
         return True

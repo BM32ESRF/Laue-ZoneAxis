@@ -278,7 +278,7 @@ class ExperimentPickleable:
         state[&#34;threshold&#34;] = self.threshold
         state[&#34;font_size&#34;] = self.font_size
         state[&#34;ignore_errors&#34;] = self.ignore_errors
-        state[&#34;kwarg&#34;] = self.kwarg
+        state[&#34;kwargs&#34;] = self.kwargs
         state[&#34;kernel_font&#34;] = self.kernel_font
         state[&#34;threshold&#34;] = self.threshold
         state[&#34;kernel_dilate&#34;] = self.kernel_dilate
@@ -316,7 +316,7 @@ class ExperimentPickleable:
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; laue.Experiment(image)
         Experiment(&#39;laue/examples&#39;)
-        &gt;&gt;&gt; trans = pickle.loads(pickle.dumps(_))
+        &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
         Experiment(&#39;laue/examples&#39;)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
@@ -327,7 +327,7 @@ class ExperimentPickleable:
         self.font_size = state[&#34;font_size&#34;]
         if not hasattr(self, &#34;ignore_errors&#34;):
             self.ignore_errors = state[&#34;ignore_errors&#34;]
-        self.kwarg = state[&#34;kwarg&#34;]
+        self.kwargs = state[&#34;kwargs&#34;]
         self.kernel_font = state[&#34;kernel_font&#34;]
         self.kernel_dilate = state[&#34;kernel_dilate&#34;]
         self._mean_bg = state[&#34;mean_bg&#34;]
@@ -566,7 +566,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         state[&#34;threshold&#34;] = self.threshold
         state[&#34;font_size&#34;] = self.font_size
         state[&#34;ignore_errors&#34;] = self.ignore_errors
-        state[&#34;kwarg&#34;] = self.kwarg
+        state[&#34;kwargs&#34;] = self.kwargs
         state[&#34;kernel_font&#34;] = self.kernel_font
         state[&#34;threshold&#34;] = self.threshold
         state[&#34;kernel_dilate&#34;] = self.kernel_dilate
@@ -604,7 +604,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; laue.Experiment(image)
         Experiment(&#39;laue/examples&#39;)
-        &gt;&gt;&gt; trans = pickle.loads(pickle.dumps(_))
+        &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
         Experiment(&#39;laue/examples&#39;)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
@@ -615,7 +615,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         self.font_size = state[&#34;font_size&#34;]
         if not hasattr(self, &#34;ignore_errors&#34;):
             self.ignore_errors = state[&#34;ignore_errors&#34;]
-        self.kwarg = state[&#34;kwarg&#34;]
+        self.kwargs = state[&#34;kwargs&#34;]
         self.kernel_font = state[&#34;kernel_font&#34;]
         self.kernel_dilate = state[&#34;kernel_dilate&#34;]
         self._mean_bg = state[&#34;mean_bg&#34;]
@@ -655,7 +655,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
     state[&#34;threshold&#34;] = self.threshold
     state[&#34;font_size&#34;] = self.font_size
     state[&#34;ignore_errors&#34;] = self.ignore_errors
-    state[&#34;kwarg&#34;] = self.kwarg
+    state[&#34;kwargs&#34;] = self.kwargs
     state[&#34;kernel_font&#34;] = self.kernel_font
     state[&#34;threshold&#34;] = self.threshold
     state[&#34;kernel_dilate&#34;] = self.kernel_dilate
@@ -693,7 +693,7 @@ certains attributs sont crees ou completes.</p>
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; laue.Experiment(image)
 Experiment('laue/examples')
-&gt;&gt;&gt; trans = pickle.loads(pickle.dumps(_))
+&gt;&gt;&gt; pickle.loads(pickle.dumps(_))
 Experiment('laue/examples')
 &gt;&gt;&gt;
 </code></pre></div>
@@ -715,7 +715,7 @@ Experiment('laue/examples')
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; laue.Experiment(image)
     Experiment(&#39;laue/examples&#39;)
-    &gt;&gt;&gt; trans = pickle.loads(pickle.dumps(_))
+    &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
     Experiment(&#39;laue/examples&#39;)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
@@ -726,7 +726,7 @@ Experiment('laue/examples')
     self.font_size = state[&#34;font_size&#34;]
     if not hasattr(self, &#34;ignore_errors&#34;):
         self.ignore_errors = state[&#34;ignore_errors&#34;]
-    self.kwarg = state[&#34;kwarg&#34;]
+    self.kwargs = state[&#34;kwargs&#34;]
     self.kernel_font = state[&#34;kernel_font&#34;]
     self.kernel_dilate = state[&#34;kernel_dilate&#34;]
     self._mean_bg = state[&#34;mean_bg&#34;]

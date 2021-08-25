@@ -281,7 +281,7 @@ class ExperimentPickleable:
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> laue.Experiment(image)
         Experiment('laue/examples')
-        >>> trans = pickle.loads(pickle.dumps(_))
+        >>> pickle.loads(pickle.dumps(_))
         Experiment('laue/examples')
         >>>
         """

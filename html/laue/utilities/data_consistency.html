@@ -56,14 +56,14 @@ import threading
 import time
 
 
-__pdoc__ = {&#34;Consistency.__enter__&#34;: True}
+__pdoc__ = {&#34;Recordable.__enter__&#34;: True}
 
 
-class Consistency(threading.Thread):
+class Recordable(threading.Thread):
     &#34;&#34;&#34;
     ** Interface asynchrone gerant la persistance des donnees. **
     &#34;&#34;&#34;
-    def __init__(self, saving_file=&#34;experiment_state&#34;, compress=False, dt=60, **_kwargs):
+    def __init__(self, saving_file=&#34;experiment_state&#34;, compress=False, dt=600, **_kwargs):
         &#34;&#34;&#34;
         ** Initialise le gestionaire d&#39;enregistrement. **
 
@@ -143,7 +143,7 @@ class Consistency(threading.Thread):
         while self.is_alive():
             time.sleep(.1)
         if self.verbose:
-            print(&#34;\tthe thread is killed.&#34;)
+            print(&#34;    the thread is killed.&#34;)
 
     def run(self):
         &#34;&#34;&#34;
@@ -151,7 +151,7 @@ class Consistency(threading.Thread):
 
         Cette methode ne doit pas etre appelee directement car elle
         est bloquante. Pour l&#39;executer en tache de fond il faut invoquer
-        ``laue.utilities.data_consistency.Consistency.start``. Ou bien
+        ``laue.utilities.data_consistency.Recordable.start``. Ou bien
         l&#39;instanceier via un gestionaire de contexte.
         &#34;&#34;&#34;
         def pause(dt):
@@ -202,7 +202,7 @@ class Consistency(threading.Thread):
                     f&#34;Or il commence par {compress}.&#34;)
         self.__setstate__(state)
         if self.verbose:
-            print(&#34;\tOK: the attributes are updated&#34;)
+            print(&#34;    OK: the attributes are updated&#34;)
 
     def save_state(self):
         &#34;&#34;&#34;
@@ -220,7 +220,7 @@ class Consistency(threading.Thread):
                 f.write(b&#34;\x00&#34;)
                 pickle.dump(state, f)
         if self.verbose &gt;= 2:
-            print(&#34;\tOK: the state of the experiment is recorded.&#34;)</code></pre>
+            print(&#34;    OK: the state of the experiment is recorded.&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -232,9 +232,9 @@ class Consistency(threading.Thread):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="laue.utilities.data_consistency.Consistency"><code class="flex name class">
-<span>class <span class="ident">Consistency</span></span>
-<span>(</span><span>saving_file='experiment_state', compress=False, dt=60, **_kwargs)</span>
+<dt id="laue.utilities.data_consistency.Recordable"><code class="flex name class">
+<span>class <span class="ident">Recordable</span></span>
+<span>(</span><span>saving_file='experiment_state', compress=False, dt=600, **_kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Interface asynchrone gerant la persistance des donnees. </strong></p>
@@ -256,11 +256,11 @@ plus de CPU mais reduit un peu la taille des donnees a ecrire.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Consistency(threading.Thread):
+<pre><code class="python">class Recordable(threading.Thread):
     &#34;&#34;&#34;
     ** Interface asynchrone gerant la persistance des donnees. **
     &#34;&#34;&#34;
-    def __init__(self, saving_file=&#34;experiment_state&#34;, compress=False, dt=60, **_kwargs):
+    def __init__(self, saving_file=&#34;experiment_state&#34;, compress=False, dt=600, **_kwargs):
         &#34;&#34;&#34;
         ** Initialise le gestionaire d&#39;enregistrement. **
 
@@ -340,7 +340,7 @@ plus de CPU mais reduit un peu la taille des donnees a ecrire.</dd>
         while self.is_alive():
             time.sleep(.1)
         if self.verbose:
-            print(&#34;\tthe thread is killed.&#34;)
+            print(&#34;    the thread is killed.&#34;)
 
     def run(self):
         &#34;&#34;&#34;
@@ -348,7 +348,7 @@ plus de CPU mais reduit un peu la taille des donnees a ecrire.</dd>
 
         Cette methode ne doit pas etre appelee directement car elle
         est bloquante. Pour l&#39;executer en tache de fond il faut invoquer
-        ``laue.utilities.data_consistency.Consistency.start``. Ou bien
+        ``laue.utilities.data_consistency.Recordable.start``. Ou bien
         l&#39;instanceier via un gestionaire de contexte.
         &#34;&#34;&#34;
         def pause(dt):
@@ -399,7 +399,7 @@ plus de CPU mais reduit un peu la taille des donnees a ecrire.</dd>
                     f&#34;Or il commence par {compress}.&#34;)
         self.__setstate__(state)
         if self.verbose:
-            print(&#34;\tOK: the attributes are updated&#34;)
+            print(&#34;    OK: the attributes are updated&#34;)
 
     def save_state(self):
         &#34;&#34;&#34;
@@ -417,7 +417,7 @@ plus de CPU mais reduit un peu la taille des donnees a ecrire.</dd>
                 f.write(b&#34;\x00&#34;)
                 pickle.dump(state, f)
         if self.verbose &gt;= 2:
-            print(&#34;\tOK: the state of the experiment is recorded.&#34;)</code></pre>
+            print(&#34;    OK: the state of the experiment is recorded.&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -429,7 +429,7 @@ plus de CPU mais reduit un peu la taille des donnees a ecrire.</dd>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="laue.utilities.data_consistency.Consistency.__enter__"><code class="name flex">
+<dt id="laue.utilities.data_consistency.Recordable.__enter__"><code class="name flex">
 <span>def <span class="ident">__enter__</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -486,7 +486,7 @@ The thread says: Oh help! I'm dying!
     return self</code></pre>
 </details>
 </dd>
-<dt id="laue.utilities.data_consistency.Consistency.kill"><code class="name flex">
+<dt id="laue.utilities.data_consistency.Recordable.kill"><code class="name flex">
 <span>def <span class="ident">kill</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -505,17 +505,17 @@ The thread says: Oh help! I'm dying!
     while self.is_alive():
         time.sleep(.1)
     if self.verbose:
-        print(&#34;\tthe thread is killed.&#34;)</code></pre>
+        print(&#34;    the thread is killed.&#34;)</code></pre>
 </details>
 </dd>
-<dt id="laue.utilities.data_consistency.Consistency.run"><code class="name flex">
+<dt id="laue.utilities.data_consistency.Recordable.run"><code class="name flex">
 <span>def <span class="ident">run</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Enregistre indefiniment l'etat de l'experience. </strong></p>
 <p>Cette methode ne doit pas etre appelee directement car elle
 est bloquante. Pour l'executer en tache de fond il faut invoquer
-<code><a title="laue.utilities.data_consistency.Consistency.start" href="#laue.utilities.data_consistency.Consistency.start">Consistency.start()</a></code>. Ou bien
+<code><a title="laue.utilities.data_consistency.Recordable.start" href="#laue.utilities.data_consistency.Recordable.start">Recordable.start()</a></code>. Ou bien
 l'instanceier via un gestionaire de contexte.</p></div>
 <details class="source">
 <summary>
@@ -527,7 +527,7 @@ l'instanceier via un gestionaire de contexte.</p></div>
 
     Cette methode ne doit pas etre appelee directement car elle
     est bloquante. Pour l&#39;executer en tache de fond il faut invoquer
-    ``laue.utilities.data_consistency.Consistency.start``. Ou bien
+    ``laue.utilities.data_consistency.Recordable.start``. Ou bien
     l&#39;instanceier via un gestionaire de contexte.
     &#34;&#34;&#34;
     def pause(dt):
@@ -546,7 +546,7 @@ l'instanceier via un gestionaire de contexte.</p></div>
         print(&#34;The thread says: Oh help! I&#39;m dying!&#34;)</code></pre>
 </details>
 </dd>
-<dt id="laue.utilities.data_consistency.Consistency.save_state"><code class="name flex">
+<dt id="laue.utilities.data_consistency.Recordable.save_state"><code class="name flex">
 <span>def <span class="ident">save_state</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -571,10 +571,10 @@ l'instanceier via un gestionaire de contexte.</p></div>
             f.write(b&#34;\x00&#34;)
             pickle.dump(state, f)
     if self.verbose &gt;= 2:
-        print(&#34;\tOK: the state of the experiment is recorded.&#34;)</code></pre>
+        print(&#34;    OK: the state of the experiment is recorded.&#34;)</code></pre>
 </details>
 </dd>
-<dt id="laue.utilities.data_consistency.Consistency.start"><code class="name flex">
+<dt id="laue.utilities.data_consistency.Recordable.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -625,13 +625,13 @@ est appelee plus d'une fois sur le meme objet thread.</p></div>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="laue.utilities.data_consistency.Consistency" href="#laue.utilities.data_consistency.Consistency">Consistency</a></code></h4>
+<h4><code><a title="laue.utilities.data_consistency.Recordable" href="#laue.utilities.data_consistency.Recordable">Recordable</a></code></h4>
 <ul class="">
-<li><code><a title="laue.utilities.data_consistency.Consistency.__enter__" href="#laue.utilities.data_consistency.Consistency.__enter__">__enter__</a></code></li>
-<li><code><a title="laue.utilities.data_consistency.Consistency.kill" href="#laue.utilities.data_consistency.Consistency.kill">kill</a></code></li>
-<li><code><a title="laue.utilities.data_consistency.Consistency.run" href="#laue.utilities.data_consistency.Consistency.run">run</a></code></li>
-<li><code><a title="laue.utilities.data_consistency.Consistency.save_state" href="#laue.utilities.data_consistency.Consistency.save_state">save_state</a></code></li>
-<li><code><a title="laue.utilities.data_consistency.Consistency.start" href="#laue.utilities.data_consistency.Consistency.start">start</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Recordable.__enter__" href="#laue.utilities.data_consistency.Recordable.__enter__">__enter__</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Recordable.kill" href="#laue.utilities.data_consistency.Recordable.kill">kill</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Recordable.run" href="#laue.utilities.data_consistency.Recordable.run">run</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Recordable.save_state" href="#laue.utilities.data_consistency.Recordable.save_state">save_state</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Recordable.start" href="#laue.utilities.data_consistency.Recordable.start">start</a></code></li>
 </ul>
 </li>
 </ul>

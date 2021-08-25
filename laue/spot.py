@@ -636,11 +636,11 @@ class Spot(SpotPickleable):
         """
         x, y = self.get_position()
         return ("Spot:\n"
-                f"\tbbox: {self.get_bbox()}\n"
-                f"\tposition: x={x}, y={y}\n"
-                f"\tintensity: {self.get_intensity()}\n"
-                f"\tdistortion: {self.get_distortion()}\n"
-                f"\tquality: {self.get_quality()}\n")
+                f"    bbox: {self.get_bbox()}\n"
+                f"    position: x={x}, y={y}\n"
+                f"    intensity: {self.get_intensity()}\n"
+                f"    distortion: {self.get_distortion()}\n"
+                f"    quality: {self.get_quality()}\n")
 
     def __sub__(self, other):
         """

@@ -1123,13 +1123,13 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
 </dd>
 <dt><strong><code>**save_params</code></strong></dt>
 <dd>Les parametres fournis a l'initialisateur de gestionaire d'enregistrement.
-voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency">Consistency</a></code>.</dd>
+voir <code><a title="laue.utilities.data_consistency.Recordable" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable">Recordable</a></code>.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Experiment(ExperimentPickleable, Consistency):
+<pre><code class="python">class Experiment(ExperimentPickleable, Recordable):
     &#34;&#34;&#34;
     ** Permet de travailler sur un lot d&#39;images. **
     &#34;&#34;&#34;
@@ -1200,7 +1200,7 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
                 ycen : milieu - 150 pxl ; milieu + 150 pxl
         **save_params
             Les parametres fournis a l&#39;initialisateur de gestionaire d&#39;enregistrement.
-            voir ``laue.utilities.data_consistency.Consistency.__init__``.
+            voir ``laue.utilities.data_consistency.Recordable.__init__``.
         &#34;&#34;&#34;
         assert hasattr(images, &#34;__iter__&#34;), (&#34;&#39;images&#39; must to be iterable. &#34;
             f&#34;It can not be of type {type(images).__name__}.&#34;)
@@ -1256,7 +1256,7 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
         self._axes_iterator = None # Iterateur unique qui cede les axes de zonne de chaque diagramme.
         self._subsets_iterator = None # Iterateur unique qui cede les bouts de grains.
 
-        Consistency.__init__(self, **kwargs) # Instancie le gestionaire d&#39;enregistrement.
+        Recordable.__init__(self, **kwargs) # Instancie le gestionaire d&#39;enregistrement.
 
     def set_calibration(self, *diagrams):
         &#34;&#34;&#34;
@@ -1311,7 +1311,7 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
         if self.verbose:
             print(&#34;Calibration...&#34;)
             if self.verbose &gt;= 2:
-                print(&#34;\tPrise en compte des parametres fournis...&#34;)
+                print(&#34;    Prise en compte des parametres fournis...&#34;)
 
         # Constantes.
         PIXELSIZE_REF = {(2048, 2048): 0.079856, # Taille des pixels fonction de la camera.
@@ -1379,13 +1379,13 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
             self._calibration_parameters = given_parameters
             if self.verbose:
                 if self.verbose &gt;= 2:
-                    print(&#34;\t\tOK: Tout est fournis, il n&#39;y a rien a faire.&#34;)
-                print(f&#34;\tOK: Calibration terminee: {given_parameters}&#34;)
+                    print(&#34;        OK: Tout est fournis, il n&#39;y a rien a faire.&#34;)
+                print(f&#34;    OK: Calibration terminee: {given_parameters}&#34;)
             return self._calibration_parameters
 
         # Extraction d&#39;un diagramme interressant.
         if self.verbose &gt;= 2:
-            print(&#34;\tRecuperation des diagrammes interressants...&#34;)
+            print(&#34;    Recuperation des diagrammes interressants...&#34;)
         if not diagrams: # Si l&#39;utilisateur ne nous aide pas a trouver les bons diagrammes.
             diagrams = []
             for i, dia in enumerate(self):
@@ -1397,7 +1397,7 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
             best_diagrams = diagrams # C&#39;est un tuple et non pas une liste mais c&#39;est pas genant.
         if self.verbose &gt;= 2:
             for dia in best_diagrams:
-                print(f&#34;\t\t{dia.get_id()}&#34;)
+                print(f&#34;        {dia.get_id()}&#34;)
 
         # Vectorisation des donnees pour de bonnes perfs.
         min_size = min(
@@ -1415,14 +1415,14 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
         bounds = [(parameters_min[name], parameters_max[name]) for name in vect_labels] # Les limites des variables.
         args = (given_parameters, vect_labels, spots_position) # Les arguments en plus de la fonction de cout.
         if self.verbose &gt;= 2:
-            print(f&#34;\tcalibration des parametres {vect_labels}&#34;)
-            print(f&#34;\tbornes min: {tuple(b_min for b_min, _ in bounds)}&#34;)
-            print(f&#34;\tbornes max: {tuple(b_max for _, b_max in bounds)}&#34;)
+            print(f&#34;    calibration des parametres {vect_labels}&#34;)
+            print(f&#34;    bornes min: {tuple(b_min for b_min, _ in bounds)}&#34;)
+            print(f&#34;    bornes max: {tuple(b_max for _, b_max in bounds)}&#34;)
         
         # Recherche rapide d&#39;un minimum par descente de gradient.
         from scipy import optimize # On ne l&#39;importe que ici car on est pas sur de s&#39;en servir.
         if self.verbose &gt;= 2:
-            print(&#34;\tOptimsation globale, algo genetique...&#34;)
+            print(&#34;    Optimsation globale, algo genetique...&#34;)
         
         if multiprocessing.current_process().name == &#34;MainProcess&#34; and os.cpu_count() &gt; 4:
             attrs = [&#34;transformer&#34;, &#34;verbose&#34;]
@@ -1448,14 +1448,14 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
                 workers=1) # Pour ne pas creer de sous processus.
                 # C&#39;est plus rapide de ne pas creer de sous processus que d&#39;en faire... car cloudpickle est lent!
         if self.verbose &gt;= 2:
-            print(f&#34;\t\tOk: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+            print(f&#34;        Ok: cout final = {opt_res[&#39;fun&#39;]}&#34;)
         fit_parameters_vect = opt_res[&#34;x&#34;]
         
         # Mise en forme du resultat.
         fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
         self._calibration_parameters = {**given_parameters, **fit_parameters}
         if self.verbose:
-            print(f&#34;\tOK: set_calibration terminee: {self._calibration_parameters}&#34;)
+            print(f&#34;    OK: set_calibration terminee: {self._calibration_parameters}&#34;)
         return self._calibration_parameters
 
     def _calibration_cost(self, params_as_vect, known_params, vect_labels, spots_position):
@@ -1505,8 +1505,8 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
         cost = projection * scattering**(-4)
 
         if self.verbose &gt;= 3:
-            print(f&#34;\t\tCurrent parameters: {unknown_parameters}&#34;)
-            print(f&#34;\t\tCurrent cost: {cost}&#34;)
+            print(f&#34;        Current parameters: {unknown_parameters}&#34;)
+            print(f&#34;        Current cost: {cost}&#34;)
             if self.verbose &gt;= 4:
                 import matplotlib.pyplot as plt
                 plt.clf()
@@ -1619,12 +1619,12 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
 
                 for i, diag in enumerate(func(*func_args, **func_kwargs)):
                     if self.verbose &gt;= 2:
-                        print(f&#34;\tdiagramme num {i} extrait: &#34;
+                        print(f&#34;    diagramme num {i} extrait: &#34;
                               f&#34;(...{diag.get_id()[-20:]}) &#34;
                               f&#34;avec {len(diag)} spots&#34;)
                     yield diag
                 if self.verbose:
-                    print(&#34;\tOK: Tous les diagrammes sont extraits.&#34;)
+                    print(&#34;    OK: Tous les diagrammes sont extraits.&#34;)
             
             return decorate
 
@@ -1738,11 +1738,11 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
                 
                 for i, groups in enumerate(func(*func_args, **func_kwargs)):
                     if self.verbose &gt;= 2:
-                        print(f&#34;\tgrain du diagramme num {i} estimes: il y a {len(groups)} clusters&#34;)
+                        print(f&#34;    grain du diagramme num {i} estimes: il y a {len(groups)} clusters&#34;)
                     yield groups
 
                 if self.verbose:
-                    print(&#34;\tOK: Tous les clusters de grains sont estimes.&#34;)
+                    print(&#34;    OK: Tous les clusters de grains sont estimes.&#34;)
 
             return decorate
 
@@ -1839,11 +1839,11 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
                 
                 for i, axes in enumerate(func(*func_args, **func_kwargs)):
                     if self.verbose &gt;= 2:
-                        print(f&#34;\taxes du diagramme num {i} trouves: il y en a {len(axes)}&#34;)
+                        print(f&#34;    axes du diagramme num {i} trouves: il y en a {len(axes)}&#34;)
                     yield axes
 
                 if self.verbose:
-                    print(&#34;\tOK: Tous les axes de zone sont extraits.&#34;)
+                    print(&#34;    OK: Tous les axes de zone sont extraits.&#34;)
 
             return decorate
 
@@ -1933,7 +1933,7 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
         # map_x, map_y = map_x.astype(np.float32, copy=False), map_y.astype(np.float32, copy=False) # cv2 en a besoin.
 
         if self.verbose:
-            print(&#34;\tOK: La matrice gnomonic est calculee.&#34;)
+            print(&#34;    OK: La matrice gnomonic est calculee.&#34;)
 
         # Sauvegarde
         if psutil is not None and psutil.virtual_memory().percent &lt; 75:
@@ -1974,7 +1974,7 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
         self._mean_bg = mean_array.astype(np.uint16)
 
         if self.verbose:
-            print(&#34;\tOK: La moyenne des images est estimee.&#34;)
+            print(&#34;    OK: La moyenne des images est estimee.&#34;)
         return self._mean_bg
 
     def get_images_shape(self):
@@ -2082,10 +2082,10 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
                 for image_info in func(*func_args, **func_kwargs):
                     yield image_info
                     if self.verbose &gt;= 2:
-                        print(f&#34;\timage : (...{str(image_info)[-20:]}) cedee.&#34;)
+                        print(f&#34;    image : (...{str(image_info)[-20:]}) cedee.&#34;)
 
                 if self.verbose:
-                    print(&#34;\tOK: Toutes les images sont lues.&#34;)
+                    print(&#34;    OK: Toutes les images sont lues.&#34;)
 
             return decorate
 
@@ -2182,7 +2182,7 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
         for diag in self:
             diag._clean()
         if self.verbose:
-            print(&#34;\tOK: Le volume de donnees et minimum.&#34;)
+            print(&#34;    OK: Le volume de donnees et minimum.&#34;)
 
     def __getitem__(self, item):
         &#34;&#34;&#34;
@@ -2322,21 +2322,21 @@ voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilitie
         &#34;&#34;&#34;
         ** Retourne une jolie representation. **
         &#34;&#34;&#34;
-        addi_kwargs = &#39;\t\t\n&#39;.join(f&#39;{k}={v}&#39; for k, v in self.kwargs.items())
-        addi_print = f&#34;\n\tadditional kwargs: \n\t\t{addi_kwargs}&#34; if addi_kwargs else &#34;&#34;
+        addi_kwargs = &#39;        \n&#39;.join(f&#39;{k}={v}&#39; for k, v in self.kwargs.items())
+        addi_print = f&#34;\n    additional kwargs: \n        {addi_kwargs}&#34; if addi_kwargs else &#34;&#34;
         return (&#34;Basic Experiment:\n&#34;
-                f&#34;\tnbr reading diagrams: {len(self)}\n&#34;
-                f&#34;\tmax_space: {self.max_space} pxl\n&#34;
-                f&#34;\tthreshold: {self.threshold} impact/impact\n&#34;
-                f&#34;\tfont_size: {self.font_size} pxl\n&#34;
-                f&#34;\tignore_errors: {self.ignore_errors}\n&#34;
-                f&#34;\tverbose: {self.verbose}&#34;
+                f&#34;    nbr reading diagrams: {len(self)}\n&#34;
+                f&#34;    max_space: {self.max_space} pxl\n&#34;
+                f&#34;    threshold: {self.threshold} impact/impact\n&#34;
+                f&#34;    font_size: {self.font_size} pxl\n&#34;
+                f&#34;    ignore_errors: {self.ignore_errors}\n&#34;
+                f&#34;    verbose: {self.verbose}&#34;
                 f&#34;{addi_print}&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="laue.utilities.serialization.ExperimentPickleable" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable">ExperimentPickleable</a></li>
-<li><a title="laue.utilities.data_consistency.Consistency" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency">Consistency</a></li>
+<li><a title="laue.utilities.data_consistency.Recordable" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable">Recordable</a></li>
 <li>threading.Thread</li>
 </ul>
 <h3>Subclasses</h3>
@@ -2688,11 +2688,11 @@ Se sont aussi ceux de la fonction <code><a title="laue.diagram.LaueDiagram.find_
             
             for i, groups in enumerate(func(*func_args, **func_kwargs)):
                 if self.verbose &gt;= 2:
-                    print(f&#34;\tgrain du diagramme num {i} estimes: il y a {len(groups)} clusters&#34;)
+                    print(f&#34;    grain du diagramme num {i} estimes: il y a {len(groups)} clusters&#34;)
                 yield groups
 
             if self.verbose:
-                print(&#34;\tOK: Tous les clusters de grains sont estimes.&#34;)
+                print(&#34;    OK: Tous les clusters de grains sont estimes.&#34;)
 
         return decorate
 
@@ -2852,11 +2852,11 @@ sont de type <code><a title="laue.zone_axis.ZoneAxis" href="zone_axis.html#laue.
             
             for i, axes in enumerate(func(*func_args, **func_kwargs)):
                 if self.verbose &gt;= 2:
-                    print(f&#34;\taxes du diagramme num {i} trouves: il y en a {len(axes)}&#34;)
+                    print(f&#34;    axes du diagramme num {i} trouves: il y en a {len(axes)}&#34;)
                 yield axes
 
             if self.verbose:
-                print(&#34;\tOK: Tous les axes de zone sont extraits.&#34;)
+                print(&#34;    OK: Tous les axes de zone sont extraits.&#34;)
 
         return decorate
 
@@ -3054,12 +3054,12 @@ soient lues afin de tout renvoyer en meme temps.</li>
 
             for i, diag in enumerate(func(*func_args, **func_kwargs)):
                 if self.verbose &gt;= 2:
-                    print(f&#34;\tdiagramme num {i} extrait: &#34;
+                    print(f&#34;    diagramme num {i} extrait: &#34;
                           f&#34;(...{diag.get_id()[-20:]}) &#34;
                           f&#34;avec {len(diag)} spots&#34;)
                 yield diag
             if self.verbose:
-                print(&#34;\tOK: Tous les diagrammes sont extraits.&#34;)
+                print(&#34;    OK: Tous les diagrammes sont extraits.&#34;)
         
         return decorate
 
@@ -3203,7 +3203,7 @@ soient lues afin de tout renvoyer en meme temps.</li>
     self._mean_bg = mean_array.astype(np.uint16)
 
     if self.verbose:
-        print(&#34;\tOK: La moyenne des images est estimee.&#34;)
+        print(&#34;    OK: La moyenne des images est estimee.&#34;)
     return self._mean_bg</code></pre>
 </details>
 </dd>
@@ -3335,10 +3335,10 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
             for image_info in func(*func_args, **func_kwargs):
                 yield image_info
                 if self.verbose &gt;= 2:
-                    print(f&#34;\timage : (...{str(image_info)[-20:]}) cedee.&#34;)
+                    print(f&#34;    image : (...{str(image_info)[-20:]}) cedee.&#34;)
 
             if self.verbose:
-                print(&#34;\tOK: Toutes les images sont lues.&#34;)
+                print(&#34;    OK: Toutes les images sont lues.&#34;)
 
         return decorate
 
@@ -3555,7 +3555,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     if self.verbose:
         print(&#34;Calibration...&#34;)
         if self.verbose &gt;= 2:
-            print(&#34;\tPrise en compte des parametres fournis...&#34;)
+            print(&#34;    Prise en compte des parametres fournis...&#34;)
 
     # Constantes.
     PIXELSIZE_REF = {(2048, 2048): 0.079856, # Taille des pixels fonction de la camera.
@@ -3623,13 +3623,13 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
         self._calibration_parameters = given_parameters
         if self.verbose:
             if self.verbose &gt;= 2:
-                print(&#34;\t\tOK: Tout est fournis, il n&#39;y a rien a faire.&#34;)
-            print(f&#34;\tOK: Calibration terminee: {given_parameters}&#34;)
+                print(&#34;        OK: Tout est fournis, il n&#39;y a rien a faire.&#34;)
+            print(f&#34;    OK: Calibration terminee: {given_parameters}&#34;)
         return self._calibration_parameters
 
     # Extraction d&#39;un diagramme interressant.
     if self.verbose &gt;= 2:
-        print(&#34;\tRecuperation des diagrammes interressants...&#34;)
+        print(&#34;    Recuperation des diagrammes interressants...&#34;)
     if not diagrams: # Si l&#39;utilisateur ne nous aide pas a trouver les bons diagrammes.
         diagrams = []
         for i, dia in enumerate(self):
@@ -3641,7 +3641,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
         best_diagrams = diagrams # C&#39;est un tuple et non pas une liste mais c&#39;est pas genant.
     if self.verbose &gt;= 2:
         for dia in best_diagrams:
-            print(f&#34;\t\t{dia.get_id()}&#34;)
+            print(f&#34;        {dia.get_id()}&#34;)
 
     # Vectorisation des donnees pour de bonnes perfs.
     min_size = min(
@@ -3659,14 +3659,14 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     bounds = [(parameters_min[name], parameters_max[name]) for name in vect_labels] # Les limites des variables.
     args = (given_parameters, vect_labels, spots_position) # Les arguments en plus de la fonction de cout.
     if self.verbose &gt;= 2:
-        print(f&#34;\tcalibration des parametres {vect_labels}&#34;)
-        print(f&#34;\tbornes min: {tuple(b_min for b_min, _ in bounds)}&#34;)
-        print(f&#34;\tbornes max: {tuple(b_max for _, b_max in bounds)}&#34;)
+        print(f&#34;    calibration des parametres {vect_labels}&#34;)
+        print(f&#34;    bornes min: {tuple(b_min for b_min, _ in bounds)}&#34;)
+        print(f&#34;    bornes max: {tuple(b_max for _, b_max in bounds)}&#34;)
     
     # Recherche rapide d&#39;un minimum par descente de gradient.
     from scipy import optimize # On ne l&#39;importe que ici car on est pas sur de s&#39;en servir.
     if self.verbose &gt;= 2:
-        print(&#34;\tOptimsation globale, algo genetique...&#34;)
+        print(&#34;    Optimsation globale, algo genetique...&#34;)
     
     if multiprocessing.current_process().name == &#34;MainProcess&#34; and os.cpu_count() &gt; 4:
         attrs = [&#34;transformer&#34;, &#34;verbose&#34;]
@@ -3692,14 +3692,14 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
             workers=1) # Pour ne pas creer de sous processus.
             # C&#39;est plus rapide de ne pas creer de sous processus que d&#39;en faire... car cloudpickle est lent!
     if self.verbose &gt;= 2:
-        print(f&#34;\t\tOk: cout final = {opt_res[&#39;fun&#39;]}&#34;)
+        print(f&#34;        Ok: cout final = {opt_res[&#39;fun&#39;]}&#34;)
     fit_parameters_vect = opt_res[&#34;x&#34;]
     
     # Mise en forme du resultat.
     fit_parameters = {name: fit_parameters_vect[i] for i, name in enumerate(vect_labels)}
     self._calibration_parameters = {**given_parameters, **fit_parameters}
     if self.verbose:
-        print(f&#34;\tOK: set_calibration terminee: {self._calibration_parameters}&#34;)
+        print(f&#34;    OK: set_calibration terminee: {self._calibration_parameters}&#34;)
     return self._calibration_parameters</code></pre>
 </details>
 </dd>
@@ -3712,13 +3712,13 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
 <li><code><a title="laue.utilities.serialization.ExperimentPickleable.__setstate__" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable.__setstate__">__setstate__</a></code></li>
 </ul>
 </li>
-<li><code><b><a title="laue.utilities.data_consistency.Consistency" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency">Consistency</a></b></code>:
+<li><code><b><a title="laue.utilities.data_consistency.Recordable" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable">Recordable</a></b></code>:
 <ul class="hlist">
-<li><code><a title="laue.utilities.data_consistency.Consistency.__enter__" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.__enter__">__enter__</a></code></li>
-<li><code><a title="laue.utilities.data_consistency.Consistency.kill" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.kill">kill</a></code></li>
-<li><code><a title="laue.utilities.data_consistency.Consistency.run" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.run">run</a></code></li>
-<li><code><a title="laue.utilities.data_consistency.Consistency.save_state" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.save_state">save_state</a></code></li>
-<li><code><a title="laue.utilities.data_consistency.Consistency.start" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.start">start</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Recordable.__enter__" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable.__enter__">__enter__</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Recordable.kill" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable.kill">kill</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Recordable.run" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable.run">run</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Recordable.save_state" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable.save_state">save_state</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Recordable.start" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable.start">start</a></code></li>
 </ul>
 </li>
 </ul>
@@ -4039,7 +4039,7 @@ correspondant. Les indices commencent a 0 inclu.</dd>
 <ul class="hlist">
 <li><a title="laue.experiment.base_experiment.Experiment" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></li>
 <li><a title="laue.utilities.serialization.ExperimentPickleable" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable">ExperimentPickleable</a></li>
-<li><a title="laue.utilities.data_consistency.Consistency" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency">Consistency</a></li>
+<li><a title="laue.utilities.data_consistency.Recordable" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable">Recordable</a></li>
 <li>threading.Thread</li>
 </ul>
 <h3>Methods</h3>
@@ -4423,7 +4423,7 @@ array([[ 0,  8,  5, 10],
 <ul class="hlist">
 <li><code><b><a title="laue.experiment.base_experiment.Experiment" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></b></code>:
 <ul class="hlist">
-<li><code><a title="laue.experiment.base_experiment.Experiment.__enter__" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.__enter__">__enter__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.__enter__" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable.__enter__">__enter__</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.__getstate__" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable.__getstate__">__getstate__</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.__iter__" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.__iter__">__iter__</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.__len__" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.__len__">__len__</a></code></li>
@@ -4433,13 +4433,13 @@ array([[ 0,  8,  5, 10],
 <li><code><a title="laue.experiment.base_experiment.Experiment.get_diagrams" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.get_diagrams">get_diagrams</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.get_images_shape" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.get_images_shape">get_images_shape</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.get_mean" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.get_mean">get_mean</a></code></li>
-<li><code><a title="laue.experiment.base_experiment.Experiment.kill" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.kill">kill</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.kill" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable.kill">kill</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.read_images" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.read_images">read_images</a></code></li>
-<li><code><a title="laue.experiment.base_experiment.Experiment.run" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.run">run</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.run" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable.run">run</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.save_file" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.save_file">save_file</a></code></li>
-<li><code><a title="laue.experiment.base_experiment.Experiment.save_state" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.save_state">save_state</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.save_state" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable.save_state">save_state</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.set_calibration" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.set_calibration">set_calibration</a></code></li>
-<li><code><a title="laue.experiment.base_experiment.Experiment.start" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.start">start</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.start" href="utilities/data_consistency.html#laue.utilities.data_consistency.Recordable.start">start</a></code></li>
 </ul>
 </li>
 </ul>

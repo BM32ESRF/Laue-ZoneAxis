@@ -357,28 +357,28 @@ def simplify(x, measure, verbose=False):
     &#34;&#34;&#34;
     if verbose:
         print(f&#34;simplify: {cse_homogeneous(x)}...&#34;)
-        print(f&#34;\tbegin cost: {measure(x)}&#34;)
+        print(f&#34;    begin cost: {measure(x)}&#34;)
 
     x = _sub_float_rat(x, all_=True)
     if verbose &gt;= 2:
-        print(f&#34;\tafter float to rational: {measure(x)}&#34;)
+        print(f&#34;    after float to rational: {measure(x)}&#34;)
     x = _cse_simp(x, measure=measure)
     if verbose &gt;= 2:
-        print(f&#34;\tafter cse_simp: {measure(x)}&#34;)
+        print(f&#34;    after cse_simp: {measure(x)}&#34;)
     x = _branch_simplify(x, measure=measure)
     if verbose &gt;= 2:
-        print(f&#34;\tafter global simp: {measure(x)}&#34;)
+        print(f&#34;    after global simp: {measure(x)}&#34;)
     x = _sub_float_rat(evalf(x, n=35), all_=True)
     if verbose &gt;= 2:
-        print(f&#34;\tafter evalf: {measure(x)}&#34;)
+        print(f&#34;    after evalf: {measure(x)}&#34;)
     x = _cse_simp(x, measure=measure)
     if verbose &gt;= 2:
-        print(f&#34;\tafter cse_simp: {measure(x)}&#34;)
+        print(f&#34;    after cse_simp: {measure(x)}&#34;)
     x = _sub_float_rat(x)
 
     if verbose:
-        print(f&#34;\tfinal cost: {measure(x)}&#34;)
-        print(f&#34;\tfinal expr: {cse_homogeneous(x)}...&#34;)
+        print(f&#34;    final cost: {measure(x)}&#34;)
+        print(f&#34;    final expr: {cse_homogeneous(x)}...&#34;)
 
     return x
 
@@ -1077,28 +1077,28 @@ expressions that contain large, repeated subexpressions.</p>
     &#34;&#34;&#34;
     if verbose:
         print(f&#34;simplify: {cse_homogeneous(x)}...&#34;)
-        print(f&#34;\tbegin cost: {measure(x)}&#34;)
+        print(f&#34;    begin cost: {measure(x)}&#34;)
 
     x = _sub_float_rat(x, all_=True)
     if verbose &gt;= 2:
-        print(f&#34;\tafter float to rational: {measure(x)}&#34;)
+        print(f&#34;    after float to rational: {measure(x)}&#34;)
     x = _cse_simp(x, measure=measure)
     if verbose &gt;= 2:
-        print(f&#34;\tafter cse_simp: {measure(x)}&#34;)
+        print(f&#34;    after cse_simp: {measure(x)}&#34;)
     x = _branch_simplify(x, measure=measure)
     if verbose &gt;= 2:
-        print(f&#34;\tafter global simp: {measure(x)}&#34;)
+        print(f&#34;    after global simp: {measure(x)}&#34;)
     x = _sub_float_rat(evalf(x, n=35), all_=True)
     if verbose &gt;= 2:
-        print(f&#34;\tafter evalf: {measure(x)}&#34;)
+        print(f&#34;    after evalf: {measure(x)}&#34;)
     x = _cse_simp(x, measure=measure)
     if verbose &gt;= 2:
-        print(f&#34;\tafter cse_simp: {measure(x)}&#34;)
+        print(f&#34;    after cse_simp: {measure(x)}&#34;)
     x = _sub_float_rat(x)
 
     if verbose:
-        print(f&#34;\tfinal cost: {measure(x)}&#34;)
-        print(f&#34;\tfinal expr: {cse_homogeneous(x)}...&#34;)
+        print(f&#34;    final cost: {measure(x)}&#34;)
+        print(f&#34;    final expr: {cse_homogeneous(x)}...&#34;)
 
     return x</code></pre>
 </details>

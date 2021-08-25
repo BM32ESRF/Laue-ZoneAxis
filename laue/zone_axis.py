@@ -533,8 +533,8 @@ class ZoneAxis(ZoneAxisPickleable):
         ** Renvoie une jolie representation de l'axe. **
         """
         return ("Axe de zone:\n"
-                f"\tdiagram: {self.diagram.get_id()}\n"
-                f"\tspots: {tuple(self.spots.keys())}\n")
+                f"    diagram: {self.diagram.get_id()}\n"
+                f"    spots: {tuple(self.spots.keys())}\n")
 
     def __repr__(self):
         """

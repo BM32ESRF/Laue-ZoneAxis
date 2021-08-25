@@ -163,7 +163,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
                 self.get_gnomonic_positions(),
                 dmax, nbr, tol))
             if self.experiment.verbose:
-                print(f"t\tOK: {len(axis_spots_ind)} axes trouves.")
+                print(f"    OK: {len(axis_spots_ind)} axes trouves.")
         else:
             phi_s, mu_s, axis_spots_ind, spots_axes_ind = _axes_args
 
@@ -301,7 +301,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
             self._image_gnom = image_gnom
 
         if self.experiment.verbose:
-            print(f"\tOK: Image gnomonic caluculee.")
+            print(f"    OK: Image gnomonic caluculee.")
 
         return image_gnom
 
@@ -472,7 +472,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
 
         neighbors = [self._spots[spot_ind] for spot_ind in np.argsort(d_list)[:nbr]]
         if self.experiment.verbose:
-            print(f"\tOK: il y a {len(neighbors)} voisins.")
+            print(f"    OK: il y a {len(neighbors)} voisins.")
         return neighbors
 
     def get_positions(self, *, n=None, sort=None, **kwds):
@@ -1133,9 +1133,9 @@ class LaueDiagram(Splitable, DiagramPickleable):
         ** Renvoi une jolie representation du diagramme de Laue. **
         """
         return ("LaueDiagram:\n"
-                f"\tname: {self.get_id()}\n"
-                f"\tnbr spots: {len(self.select_spots())}\n"
-                f"\tquality: {self.get_quality()}")
+                f"    name: {self.get_id()}\n"
+                f"    nbr spots: {len(self.select_spots())}\n"
+                f"    quality: {self.get_quality()}")
 
     def __repr__(self):
         """

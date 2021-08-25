@@ -19,14 +19,14 @@ import threading
 import time
 
 
-__pdoc__ = {"Consistency.__enter__": True}
+__pdoc__ = {"Recordable.__enter__": True}
 
 
-class Consistency(threading.Thread):
+class Recordable(threading.Thread):
     """
     ** Interface asynchrone gerant la persistance des donnees. **
     """
-    def __init__(self, saving_file="experiment_state", compress=False, dt=60, **_kwargs):
+    def __init__(self, saving_file="experiment_state", compress=False, dt=600, **_kwargs):
         """
         ** Initialise le gestionaire d'enregistrement. **
 
@@ -106,7 +106,7 @@ class Consistency(threading.Thread):
         while self.is_alive():
             time.sleep(.1)
         if self.verbose:
-            print("\tthe thread is killed.")
+            print("    the thread is killed.")
 
     def run(self):
         """
@@ -114,7 +114,7 @@ class Consistency(threading.Thread):
 
         Cette methode ne doit pas etre appelee directement car elle
         est bloquante. Pour l'executer en tache de fond il faut invoquer
-        ``laue.utilities.data_consistency.Consistency.start``. Ou bien
+        ``laue.utilities.data_consistency.Recordable.start``. Ou bien
         l'instanceier via un gestionaire de contexte.
         """
         def pause(dt):
@@ -165,7 +165,7 @@ class Consistency(threading.Thread):
                     f"Or il commence par {compress}.")
         self.__setstate__(state)
         if self.verbose:
-            print("\tOK: the attributes are updated")
+            print("    OK: the attributes are updated")
 
     def save_state(self):
         """
@@ -183,4 +183,4 @@ class Consistency(threading.Thread):
                 f.write(b"\x00")
                 pickle.dump(state, f)
         if self.verbose >= 2:
-            print("\tOK: the state of the experiment is recorded.")
+            print("    OK: the state of the experiment is recorded.")
