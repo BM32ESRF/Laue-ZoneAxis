@@ -847,7 +847,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         Notes
         -----
         Les extensions prises en charge sont
-        ``.dat``, ``.jpg``, ``.svg``, ``.png``
+        ``.dat``, ``.jpg``, ``.svg``, ``.png``, ``.pk``, ``.pickle``, ``.cor``
 
         Parameters
         ----------
@@ -867,7 +867,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        EXT_OK = {&#34;dat&#34;, &#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}
+        EXT_OK = {&#34;dat&#34;, &#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;, &#34;pk&#34;, &#34;pickle&#34;, &#34;cor&#34;}
 
         assert isinstance(filename, str), \
             f&#34;&#39;filename&#39; has to be a string, not a {type(filename).__name__}.&#34;
@@ -887,6 +887,13 @@ class LaueDiagram(Splitable, DiagramPickleable):
         elif ext in {&#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}:
             plt = self.show(_return=True)
             plt.savefig(filename)
+        elif ext in {&#34;pk&#34;, &#34;pickle&#34;}:
+            import pickle
+            with open(filename, &#34;wb&#34;) as file:
+                pickle.dump(self, file)
+        elif ext == &#34;cor&#34;:
+            raise NotImplementedError
+
 
     def select_spots(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -1076,7 +1083,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         &gt;&gt;&gt; diag[0.3, 0.3]
         Spot(position=(622.09, 1656.72), quality=0.949)
         &gt;&gt;&gt; np.round(diag[0.3, 0.3].get_gnomonic(), 2)
-        array([0.25, 0.32])
+        array([0.29, 0.33])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if isinstance(item, (int, np.integer)):
@@ -1974,7 +1981,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         Notes
         -----
         Les extensions prises en charge sont
-        ``.dat``, ``.jpg``, ``.svg``, ``.png``
+        ``.dat``, ``.jpg``, ``.svg``, ``.png``, ``.pk``, ``.pickle``, ``.cor``
 
         Parameters
         ----------
@@ -1994,7 +2001,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        EXT_OK = {&#34;dat&#34;, &#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}
+        EXT_OK = {&#34;dat&#34;, &#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;, &#34;pk&#34;, &#34;pickle&#34;, &#34;cor&#34;}
 
         assert isinstance(filename, str), \
             f&#34;&#39;filename&#39; has to be a string, not a {type(filename).__name__}.&#34;
@@ -2014,6 +2021,13 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         elif ext in {&#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}:
             plt = self.show(_return=True)
             plt.savefig(filename)
+        elif ext in {&#34;pk&#34;, &#34;pickle&#34;}:
+            import pickle
+            with open(filename, &#34;wb&#34;) as file:
+                pickle.dump(self, file)
+        elif ext == &#34;cor&#34;:
+            raise NotImplementedError
+
 
     def select_spots(self, *, n=None, sort=None):
         &#34;&#34;&#34;
@@ -2203,7 +2217,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; diag[0.3, 0.3]
         Spot(position=(622.09, 1656.72), quality=0.949)
         &gt;&gt;&gt; np.round(diag[0.3, 0.3].get_gnomonic(), 2)
-        array([0.25, 0.32])
+        array([0.29, 0.33])
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if isinstance(item, (int, np.integer)):
@@ -2436,7 +2450,7 @@ Spot(position=(622.09, 1656.72), quality=0.949)
 &gt;&gt;&gt; diag[0.3, 0.3]
 Spot(position=(622.09, 1656.72), quality=0.949)
 &gt;&gt;&gt; np.round(diag[0.3, 0.3].get_gnomonic(), 2)
-array([0.25, 0.32])
+array([0.29, 0.33])
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -2492,7 +2506,7 @@ array([0.25, 0.32])
     &gt;&gt;&gt; diag[0.3, 0.3]
     Spot(position=(622.09, 1656.72), quality=0.949)
     &gt;&gt;&gt; np.round(diag[0.3, 0.3].get_gnomonic(), 2)
-    array([0.25, 0.32])
+    array([0.29, 0.33])
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     if isinstance(item, (int, np.integer)):
@@ -3847,7 +3861,7 @@ trouves sont correctes.
 <div class="desc"><p><strong> Enregistre un fichier contenant des informations. </strong></p>
 <h2 id="notes">Notes</h2>
 <p>Les extensions prises en charge sont
-<code>.dat</code>, <code>.jpg</code>, <code>.svg</code>, <code>.png</code></p>
+<code>.dat</code>, <code>.jpg</code>, <code>.svg</code>, <code>.png</code>, <code>.pk</code>, <code>.pickle</code>, <code>.cor</code></p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
@@ -3876,7 +3890,7 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
     Notes
     -----
     Les extensions prises en charge sont
-    ``.dat``, ``.jpg``, ``.svg``, ``.png``
+    ``.dat``, ``.jpg``, ``.svg``, ``.png``, ``.pk``, ``.pickle``, ``.cor``
 
     Parameters
     ----------
@@ -3896,7 +3910,7 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
     &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    EXT_OK = {&#34;dat&#34;, &#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}
+    EXT_OK = {&#34;dat&#34;, &#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;, &#34;pk&#34;, &#34;pickle&#34;, &#34;cor&#34;}
 
     assert isinstance(filename, str), \
         f&#34;&#39;filename&#39; has to be a string, not a {type(filename).__name__}.&#34;
@@ -3915,7 +3929,13 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
                     i=spot.get_intensity()))
     elif ext in {&#34;jpg&#34;, &#34;jpeg&#34;, &#34;svg&#34;, &#34;png&#34;}:
         plt = self.show(_return=True)
-        plt.savefig(filename)</code></pre>
+        plt.savefig(filename)
+    elif ext in {&#34;pk&#34;, &#34;pickle&#34;}:
+        import pickle
+        with open(filename, &#34;wb&#34;) as file:
+            pickle.dump(self, file)
+    elif ext == &#34;cor&#34;:
+        raise NotImplementedError</code></pre>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.select_spots"><code class="name flex">

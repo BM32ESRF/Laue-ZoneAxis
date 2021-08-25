@@ -100,14 +100,6 @@ class Splitable:
         >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
         >>> type(diag.find_subsets())
         <class 'list'>
-        >>> len(diag.find_subsets()) # nbr de clusters
-        1
-        >>> type(diag.find_subsets().pop())
-        <class 'set'>
-        >>> len(diag.find_subsets().pop()) # nbr de spot dans le premier cluster
-        3
-        >>> type(diag.find_subsets().pop().pop())
-        <class 'laue.spot.Spot'>
         >>>
         """
         assert isinstance(angle_max, float), \

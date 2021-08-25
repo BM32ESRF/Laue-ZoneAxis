@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>laue.utilities.data_consistency API documentation</title>
+<meta name="description" content="** Permet de gerer l&#39;enregistrement des experiences en arriere plan. **
+…" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>laue.utilities.data_consistency</code></h1>
+</header>
+<section id="section-intro">
+<h2 id="permet-de-gerer-lenregistrement-des-experiences-en-arriere-plan"><strong> Permet de gerer l'enregistrement des experiences en arriere plan. </strong></h2>
+<p>Quand on instancie une grosse experience, effectuer un traitement sur toutes
+les images peut etre tres long. Or pandant le traitement, on a plus
+acces a l'instance de l'experience. Il est donc difficile d'enregistrer
+les resultats au fur a mesure. C'est pour cela qu'on ajoute a la classe
+<code><a title="laue.experiment.base_experiment.Experiment" href="../experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></code> une interface chargee d'enregistrer
+l'etat de l'experience pour pouvoir la reprendre a tout moments.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">#!/usr/bin/env python3
+
+&#34;&#34;&#34;
+** Permet de gerer l&#39;enregistrement des experiences en arriere plan. **
+-----------------------------------------------------------------------
+
+Quand on instancie une grosse experience, effectuer un traitement sur toutes
+les images peut etre tres long. Or pandant le traitement, on a plus
+acces a l&#39;instance de l&#39;experience. Il est donc difficile d&#39;enregistrer
+les resultats au fur a mesure. C&#39;est pour cela qu&#39;on ajoute a la classe
+``laue.experiment.base_experiment.Experiment`` une interface chargee d&#39;enregistrer
+l&#39;etat de l&#39;experience pour pouvoir la reprendre a tout moments.
+&#34;&#34;&#34;
+
+import numbers
+import os
+import pickle
+import threading
+import time
+
+
+__pdoc__ = {&#34;Consistency.__enter__&#34;: True}
+
+
+class Consistency(threading.Thread):
+    &#34;&#34;&#34;
+    ** Interface asynchrone gerant la persistance des donnees. **
+    &#34;&#34;&#34;
+    def __init__(self, saving_file=&#34;experiment_state&#34;, compress=False, dt=60, **_kwargs):
+        &#34;&#34;&#34;
+        ** Initialise le gestionaire d&#39;enregistrement. **
+
+        Dans le cas ou l&#39;etat de l&#39;ancienne session de travail
+        est fournis en parametre, les element de la nouvelle experience
+        sont mis a jour.
+
+        Parameters
+        ----------
+        saving_file : str
+            Le path du fichier dans lequel sera enregistre l&#39;etat de l&#39;experience.
+        compress : boolean
+            Si True, compresse les donnees avec l&#39;algorithme gzip. Cela utilise
+            plus de CPU mais reduit un peu la taille des donnees a ecrire.
+        dt : number
+            Le temps qui separe 2 enregistrements (en secondes).
+        &#34;&#34;&#34;
+        assert isinstance(saving_file, str), f&#34;&#39;file&#39; has to be of type str, not {type(saving_file).__name__}.&#34;
+        assert isinstance(compress, bool), \
+            f&#34;&#39;compress&#39; has to be of type bool, not {type(compress).__name__}.&#34;
+        assert isinstance(dt, numbers.Number), f&#34;&#39;dt&#39; has to be a number, not a {type(dt).__name__}.&#34;
+        assert dt &gt; 0, f&#34;Le temps vaut {dt}.&#34;
+
+        self.saving_file = saving_file
+        self.compress = compress
+        self.dt = dt
+
+        self._must_die = False
+
+        threading.Thread.__init__(self)
+
+        if os.path.exists(self.saving_file):
+            self._load()
+
+    def __enter__(self):
+        &#34;&#34;&#34;
+        ** Gestionaire de contexte. **
+
+        Demarre l&#39;activite du thread.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import os, tempfile
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; saving_file = os.path.join(tempfile.mkdtemp(), &#34;state&#34;)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; with laue.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
+        ...     pass
+        ...
+        Starting the thread.
+        The thread says: I was just born.
+        Sends the thread the order to succumb...
+        Recording of the current status...
+            OK: the state of the experiment is recorded.
+        The thread says: Oh help! I&#39;m dying!
+            the thread is killed.
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.kill()
+
+    def __del__(self):
+        if self.is_alive():
+            self.kill()
+
+    def kill(self):
+        &#34;&#34;&#34;
+        ** Stop the thread activity. **
+        &#34;&#34;&#34;
+        if self.verbose:
+            print(&#34;Sends the thread the order to succumb...&#34;)
+        self._must_die = True
+        while self.is_alive():
+            time.sleep(.1)
+        if self.verbose:
+            print(&#34;\tthe thread is killed.&#34;)
+
+    def run(self):
+        &#34;&#34;&#34;
+        ** Enregistre indefiniment l&#39;etat de l&#39;experience. **
+
+        Cette methode ne doit pas etre appelee directement car elle
+        est bloquante. Pour l&#39;executer en tache de fond il faut invoquer
+        ``laue.utilities.data_consistency.Consistency.start``. Ou bien
+        l&#39;instanceier via un gestionaire de contexte.
+        &#34;&#34;&#34;
+        def pause(dt):
+            ti = time.time()
+            while not self._must_die and time.time() - ti &lt; dt:
+                time.sleep(0.01)
+
+        if self.verbose &gt;= 2:
+            print(&#34;The thread says: I was just born.&#34;)
+
+        while not self._must_die:
+            pause(self.dt)
+            self.save_state()
+
+        if self.verbose &gt;= 2:
+            print(&#34;The thread says: Oh help! I&#39;m dying!&#34;)
+
+    def start(self):
+        &#34;&#34;&#34;
+        ** Demarre l&#39;activite du thread. **
+
+        Elle doit etre appelee au maximum une fois par objet thread.
+        Elle fait en sorte que la methode run()
+        de l&#39;objet soit invoquee dans un thread de controle separe.
+
+        Cette methode declenchera une RuntimeError si elle
+        est appelee plus d&#39;une fois sur le meme objet thread.
+        &#34;&#34;&#34;
+        if self.verbose:
+            print(&#34;Starting the thread.&#34;)
+        super().start()
+
+    def _load(self):
+        &#34;&#34;&#34;
+        ** Met a jour l&#39;etat de l&#39;experience a partir du fichier. **
+        &#34;&#34;&#34;
+        if self.verbose:
+            print(&#34;Updating the current state...&#34;)
+        with open(self.saving_file, &#34;rb&#34;) as f:
+            compress = f.read(1)
+            if compress == b&#34;\x00&#34;:
+                state = pickle.load(f)
+            elif compress == b&#34;\x01&#34;:
+                from gzip import decompress
+                state = pickle.loads(decompress(f.read()))
+            else:
+                raise ValueError(r&#34;Le fichier doit commencer par b&#39;\x00&#39; ou b&#39;\x01&#39;.&#34;
+                    f&#34;Or il commence par {compress}.&#34;)
+        self.__setstate__(state)
+        if self.verbose:
+            print(&#34;\tOK: the attributes are updated&#34;)
+
+    def save_state(self):
+        &#34;&#34;&#34;
+        ** Enregistre l&#39;etat courant. **
+        &#34;&#34;&#34;
+        if self.verbose &gt;= 2:
+            print(&#34;Recording of the current status...&#34;)
+        state = self.__getstate__()
+        with open(self.saving_file, &#34;wb&#34;) as f:
+            if self.compress:
+                from gzip import compress
+                f.write(b&#34;\x01&#34;)
+                f.write(compress(pickle.dumps(state)))
+            else:
+                f.write(b&#34;\x00&#34;)
+                pickle.dump(state, f)
+        if self.verbose &gt;= 2:
+            print(&#34;\tOK: the state of the experiment is recorded.&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="laue.utilities.data_consistency.Consistency"><code class="flex name class">
+<span>class <span class="ident">Consistency</span></span>
+<span>(</span><span>saving_file='experiment_state', compress=False, dt=60, **_kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Interface asynchrone gerant la persistance des donnees. </strong></p>
+<p><strong> Initialise le gestionaire d'enregistrement. </strong></p>
+<p>Dans le cas ou l'etat de l'ancienne session de travail
+est fournis en parametre, les element de la nouvelle experience
+sont mis a jour.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>saving_file</code></strong> :&ensp;<code>str</code></dt>
+<dd>Le path du fichier dans lequel sera enregistre l'etat de l'experience.</dd>
+<dt><strong><code>compress</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>Si True, compresse les donnees avec l'algorithme gzip. Cela utilise
+plus de CPU mais reduit un peu la taille des donnees a ecrire.</dd>
+<dt><strong><code>dt</code></strong> :&ensp;<code>number</code></dt>
+<dd>Le temps qui separe 2 enregistrements (en secondes).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Consistency(threading.Thread):
+    &#34;&#34;&#34;
+    ** Interface asynchrone gerant la persistance des donnees. **
+    &#34;&#34;&#34;
+    def __init__(self, saving_file=&#34;experiment_state&#34;, compress=False, dt=60, **_kwargs):
+        &#34;&#34;&#34;
+        ** Initialise le gestionaire d&#39;enregistrement. **
+
+        Dans le cas ou l&#39;etat de l&#39;ancienne session de travail
+        est fournis en parametre, les element de la nouvelle experience
+        sont mis a jour.
+
+        Parameters
+        ----------
+        saving_file : str
+            Le path du fichier dans lequel sera enregistre l&#39;etat de l&#39;experience.
+        compress : boolean
+            Si True, compresse les donnees avec l&#39;algorithme gzip. Cela utilise
+            plus de CPU mais reduit un peu la taille des donnees a ecrire.
+        dt : number
+            Le temps qui separe 2 enregistrements (en secondes).
+        &#34;&#34;&#34;
+        assert isinstance(saving_file, str), f&#34;&#39;file&#39; has to be of type str, not {type(saving_file).__name__}.&#34;
+        assert isinstance(compress, bool), \
+            f&#34;&#39;compress&#39; has to be of type bool, not {type(compress).__name__}.&#34;
+        assert isinstance(dt, numbers.Number), f&#34;&#39;dt&#39; has to be a number, not a {type(dt).__name__}.&#34;
+        assert dt &gt; 0, f&#34;Le temps vaut {dt}.&#34;
+
+        self.saving_file = saving_file
+        self.compress = compress
+        self.dt = dt
+
+        self._must_die = False
+
+        threading.Thread.__init__(self)
+
+        if os.path.exists(self.saving_file):
+            self._load()
+
+    def __enter__(self):
+        &#34;&#34;&#34;
+        ** Gestionaire de contexte. **
+
+        Demarre l&#39;activite du thread.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import os, tempfile
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; saving_file = os.path.join(tempfile.mkdtemp(), &#34;state&#34;)
+        &gt;&gt;&gt;
+        &gt;&gt;&gt; with laue.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
+        ...     pass
+        ...
+        Starting the thread.
+        The thread says: I was just born.
+        Sends the thread the order to succumb...
+        Recording of the current status...
+            OK: the state of the experiment is recorded.
+        The thread says: Oh help! I&#39;m dying!
+            the thread is killed.
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.kill()
+
+    def __del__(self):
+        if self.is_alive():
+            self.kill()
+
+    def kill(self):
+        &#34;&#34;&#34;
+        ** Stop the thread activity. **
+        &#34;&#34;&#34;
+        if self.verbose:
+            print(&#34;Sends the thread the order to succumb...&#34;)
+        self._must_die = True
+        while self.is_alive():
+            time.sleep(.1)
+        if self.verbose:
+            print(&#34;\tthe thread is killed.&#34;)
+
+    def run(self):
+        &#34;&#34;&#34;
+        ** Enregistre indefiniment l&#39;etat de l&#39;experience. **
+
+        Cette methode ne doit pas etre appelee directement car elle
+        est bloquante. Pour l&#39;executer en tache de fond il faut invoquer
+        ``laue.utilities.data_consistency.Consistency.start``. Ou bien
+        l&#39;instanceier via un gestionaire de contexte.
+        &#34;&#34;&#34;
+        def pause(dt):
+            ti = time.time()
+            while not self._must_die and time.time() - ti &lt; dt:
+                time.sleep(0.01)
+
+        if self.verbose &gt;= 2:
+            print(&#34;The thread says: I was just born.&#34;)
+
+        while not self._must_die:
+            pause(self.dt)
+            self.save_state()
+
+        if self.verbose &gt;= 2:
+            print(&#34;The thread says: Oh help! I&#39;m dying!&#34;)
+
+    def start(self):
+        &#34;&#34;&#34;
+        ** Demarre l&#39;activite du thread. **
+
+        Elle doit etre appelee au maximum une fois par objet thread.
+        Elle fait en sorte que la methode run()
+        de l&#39;objet soit invoquee dans un thread de controle separe.
+
+        Cette methode declenchera une RuntimeError si elle
+        est appelee plus d&#39;une fois sur le meme objet thread.
+        &#34;&#34;&#34;
+        if self.verbose:
+            print(&#34;Starting the thread.&#34;)
+        super().start()
+
+    def _load(self):
+        &#34;&#34;&#34;
+        ** Met a jour l&#39;etat de l&#39;experience a partir du fichier. **
+        &#34;&#34;&#34;
+        if self.verbose:
+            print(&#34;Updating the current state...&#34;)
+        with open(self.saving_file, &#34;rb&#34;) as f:
+            compress = f.read(1)
+            if compress == b&#34;\x00&#34;:
+                state = pickle.load(f)
+            elif compress == b&#34;\x01&#34;:
+                from gzip import decompress
+                state = pickle.loads(decompress(f.read()))
+            else:
+                raise ValueError(r&#34;Le fichier doit commencer par b&#39;\x00&#39; ou b&#39;\x01&#39;.&#34;
+                    f&#34;Or il commence par {compress}.&#34;)
+        self.__setstate__(state)
+        if self.verbose:
+            print(&#34;\tOK: the attributes are updated&#34;)
+
+    def save_state(self):
+        &#34;&#34;&#34;
+        ** Enregistre l&#39;etat courant. **
+        &#34;&#34;&#34;
+        if self.verbose &gt;= 2:
+            print(&#34;Recording of the current status...&#34;)
+        state = self.__getstate__()
+        with open(self.saving_file, &#34;wb&#34;) as f:
+            if self.compress:
+                from gzip import compress
+                f.write(b&#34;\x01&#34;)
+                f.write(compress(pickle.dumps(state)))
+            else:
+                f.write(b&#34;\x00&#34;)
+                pickle.dump(state, f)
+        if self.verbose &gt;= 2:
+            print(&#34;\tOK: the state of the experiment is recorded.&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>threading.Thread</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="laue.experiment.base_experiment.Experiment" href="../experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.utilities.data_consistency.Consistency.__enter__"><code class="name flex">
+<span>def <span class="ident">__enter__</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Gestionaire de contexte. </strong></p>
+<p>Demarre l'activite du thread.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import os, tempfile
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; saving_file = os.path.join(tempfile.mkdtemp(), &quot;state&quot;)
+&gt;&gt;&gt;
+&gt;&gt;&gt; with laue.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
+...     pass
+...
+Starting the thread.
+The thread says: I was just born.
+Sends the thread the order to succumb...
+Recording of the current status...
+    OK: the state of the experiment is recorded.
+The thread says: Oh help! I'm dying!
+    the thread is killed.
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __enter__(self):
+    &#34;&#34;&#34;
+    ** Gestionaire de contexte. **
+
+    Demarre l&#39;activite du thread.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import os, tempfile
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; saving_file = os.path.join(tempfile.mkdtemp(), &#34;state&#34;)
+    &gt;&gt;&gt;
+    &gt;&gt;&gt; with laue.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
+    ...     pass
+    ...
+    Starting the thread.
+    The thread says: I was just born.
+    Sends the thread the order to succumb...
+    Recording of the current status...
+        OK: the state of the experiment is recorded.
+    The thread says: Oh help! I&#39;m dying!
+        the thread is killed.
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    self.start()
+    return self</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.data_consistency.Consistency.kill"><code class="name flex">
+<span>def <span class="ident">kill</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Stop the thread activity. </strong></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def kill(self):
+    &#34;&#34;&#34;
+    ** Stop the thread activity. **
+    &#34;&#34;&#34;
+    if self.verbose:
+        print(&#34;Sends the thread the order to succumb...&#34;)
+    self._must_die = True
+    while self.is_alive():
+        time.sleep(.1)
+    if self.verbose:
+        print(&#34;\tthe thread is killed.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.data_consistency.Consistency.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Enregistre indefiniment l'etat de l'experience. </strong></p>
+<p>Cette methode ne doit pas etre appelee directement car elle
+est bloquante. Pour l'executer en tache de fond il faut invoquer
+<code><a title="laue.utilities.data_consistency.Consistency.start" href="#laue.utilities.data_consistency.Consistency.start">Consistency.start()</a></code>. Ou bien
+l'instanceier via un gestionaire de contexte.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run(self):
+    &#34;&#34;&#34;
+    ** Enregistre indefiniment l&#39;etat de l&#39;experience. **
+
+    Cette methode ne doit pas etre appelee directement car elle
+    est bloquante. Pour l&#39;executer en tache de fond il faut invoquer
+    ``laue.utilities.data_consistency.Consistency.start``. Ou bien
+    l&#39;instanceier via un gestionaire de contexte.
+    &#34;&#34;&#34;
+    def pause(dt):
+        ti = time.time()
+        while not self._must_die and time.time() - ti &lt; dt:
+            time.sleep(0.01)
+
+    if self.verbose &gt;= 2:
+        print(&#34;The thread says: I was just born.&#34;)
+
+    while not self._must_die:
+        pause(self.dt)
+        self.save_state()
+
+    if self.verbose &gt;= 2:
+        print(&#34;The thread says: Oh help! I&#39;m dying!&#34;)</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.data_consistency.Consistency.save_state"><code class="name flex">
+<span>def <span class="ident">save_state</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Enregistre l'etat courant. </strong></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_state(self):
+    &#34;&#34;&#34;
+    ** Enregistre l&#39;etat courant. **
+    &#34;&#34;&#34;
+    if self.verbose &gt;= 2:
+        print(&#34;Recording of the current status...&#34;)
+    state = self.__getstate__()
+    with open(self.saving_file, &#34;wb&#34;) as f:
+        if self.compress:
+            from gzip import compress
+            f.write(b&#34;\x01&#34;)
+            f.write(compress(pickle.dumps(state)))
+        else:
+            f.write(b&#34;\x00&#34;)
+            pickle.dump(state, f)
+    if self.verbose &gt;= 2:
+        print(&#34;\tOK: the state of the experiment is recorded.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.data_consistency.Consistency.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Demarre l'activite du thread. </strong></p>
+<p>Elle doit etre appelee au maximum une fois par objet thread.
+Elle fait en sorte que la methode run()
+de l'objet soit invoquee dans un thread de controle separe.</p>
+<p>Cette methode declenchera une RuntimeError si elle
+est appelee plus d'une fois sur le meme objet thread.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(self):
+    &#34;&#34;&#34;
+    ** Demarre l&#39;activite du thread. **
+
+    Elle doit etre appelee au maximum une fois par objet thread.
+    Elle fait en sorte que la methode run()
+    de l&#39;objet soit invoquee dans un thread de controle separe.
+
+    Cette methode declenchera une RuntimeError si elle
+    est appelee plus d&#39;une fois sur le meme objet thread.
+    &#34;&#34;&#34;
+    if self.verbose:
+        print(&#34;Starting the thread.&#34;)
+    super().start()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#permet-de-gerer-lenregistrement-des-experiences-en-arriere-plan">Permet de gerer l'enregistrement des experiences en arriere plan.</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="laue.utilities" href="index.html">laue.utilities</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="laue.utilities.data_consistency.Consistency" href="#laue.utilities.data_consistency.Consistency">Consistency</a></code></h4>
+<ul class="">
+<li><code><a title="laue.utilities.data_consistency.Consistency.__enter__" href="#laue.utilities.data_consistency.Consistency.__enter__">__enter__</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Consistency.kill" href="#laue.utilities.data_consistency.Consistency.kill">kill</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Consistency.run" href="#laue.utilities.data_consistency.Consistency.run">run</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Consistency.save_state" href="#laue.utilities.data_consistency.Consistency.save_state">save_state</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Consistency.start" href="#laue.utilities.data_consistency.Consistency.start">start</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

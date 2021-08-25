@@ -50,12 +50,16 @@ Si le module ``numexpr`` est installe, certaines optimisations pouront etre fait
 import itertools
 import multiprocessing
 import numbers
+import os
+import pickle
 import timeit
 
 import numpy as np
 import sympy
 
+import laue
 from laue.utilities.fork_lambdify import lambdify
+from laue.utilities.multi_core import NestablePool as Pool
 
 
 __pdoc__ = {&#34;Lambdify.__getstate__&#34;: True,
@@ -78,17 +82,112 @@ def _generalize(f):
     return f_bis
 
 @_generalize
-def _sub_float_rat(x):
+def _sub_float_rat(x, all_=False):
     &#34;&#34;&#34;Remplace certain flotants par des rationels.&#34;&#34;&#34;
-    repl = {f: int(round(f)) for f in x.atoms(sympy.Float) if round(f) == round(f, 5)}
+    repl = {f: int(round(f)) for f in x.atoms(sympy.Float) if round(f) == round(f, 4)}
     x = subs(x, repl)
-    repl = True
-    while repl:
+    if not all_:
         cand_pow = [p for p in x.atoms(sympy.Pow) if isinstance(p.exp, sympy.Float)]
         cand_rat = [sympy.Rational(p.exp).limit_denominator(10) for p in cand_pow]
-        repl = {p: sympy.Pow(p.base, r) for p, r in zip(cand_pow, cand_rat) if round(p.exp, 5) == round(r, 5)}
-        x = subs(x, repl)
+        repl = {p: sympy.Pow(p.base, r) for p, r in zip(cand_pow, cand_rat) if round(p.exp, 4) == round(r, 4)}
+    else:
+        repl = {f: sympy.Rational(f).limit_denominator(10) for f in x.atoms(sympy.Float)}
+        repl = {f: v for f, v in repl.items() if round(f, 4) == round(v, 4)}
+    x = subs(x, repl)
     return x
+
+def _branch_simplify(x, measure):
+    &#34;&#34;&#34;Simplifie une simple expression sympy.&#34;&#34;&#34;
+    def main_(x, measure):
+        if not isinstance(x, sympy.Basic):
+            raise AttributeError(&#34;Works only on sympy expr&#34;)
+
+        all_cand = {x} # x.rewrite(sympy.Piecewise),  x.expand(basic=True)
+        new_cand = all_cand.copy() # Les expressions qui ne sont pas encore passes dans la moulinette.
+        for _ in range(4):
+            with Pool() as pool:
+                proc = []
+                for x_ in new_cand:
+                    proc.append(pool.apply_async(sympy.simplify, args=(x_,), kwds={&#34;measure&#34;: measure, &#34;inverse&#34;: True, &#34;rational&#34;: False}))
+                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={&#34;method&#34;: &#34;matching&#34;}))
+                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={&#34;method&#34;: &#34;fu&#34;}))
+                    proc.append(pool.apply_async(sympy.factor, args=(x_,), kwds={&#34;deep&#34;: True, &#34;fraction&#34;: False}))
+                    proc.append(pool.apply_async(sympy.radsimp, args=(x_,), kwds={&#34;max_terms&#34;: 10}))
+                    proc.append(pool.apply_async(sympy.powsimp, args=(x_,), kwds={&#34;deep&#34;: True, &#34;force&#34;: True, &#34;measure&#34;: measure}))
+                    proc.append(pool.apply_async(sympy.cancel, args=(x_,)))
+                    proc.append(pool.apply_async(sympy.sqrtdenest, args=(x_,), kwds={&#34;max_iter&#34;: 10}))
+                    proc.append(pool.apply_async(sympy.ratsimp, args=(x_,)))
+                    proc.append(pool.apply_async(sympy.logcombine, args=(x_,), kwds={&#34;force&#34;: True}))
+                moul_cand = set() # Les expressions fraichement sorties de la moulinette.
+                for p in proc:
+                    try:
+                        moul_cand.add(p.get(timeout=30))
+                    except multiprocessing.TimeoutError:
+                        pass
+                    except (TypeError, AttributeError, sympy.CoercionFailed, sympy.PolynomialError):
+                        pass
+
+            new_cand = moul_cand - all_cand # On isole les expressions nouvelles.
+            if not new_cand:
+                break
+            if len(new_cand) &gt; 10:
+                new_cand = _select(*new_cand, measure=measure, n=10)
+            all_cand |= moul_cand
+        return _select(*all_cand, measure=measure)
+
+    return _select(_generalize(main_)(x, measure), x, measure=measure)
+
+def _select(*xs, measure, n=1):
+    &#34;&#34;&#34;Selectione la meilleur expression.&#34;&#34;&#34;
+    if multiprocessing.current_process().name == &#34;MainProcess&#34;:
+        with Pool() as pool:
+            costs = pool.map(measure, xs)
+    else:
+        costs = [measure(e) for e in xs]
+    if n == 1:
+        return xs[np.argmin(costs)]
+    return {xs[r] for r in np.argsort(costs)[:n]}
+
+def _cse_simp(x, measure):
+    &#34;&#34;&#34;Simplifie independament chaque paterne issue de cse.&#34;&#34;&#34;
+    def build(defs, rvs):
+        for var, e in defs[::-1]:
+            rvs = subs(rvs, {var: e})
+        return rvs
+
+    changed = True
+    while changed:
+        changed = False
+        defs, rvs = cse_homogeneous(x)
+
+        with Pool() as pool:
+            proc = []
+            for _, e in defs:
+                proc.append(pool.apply_async(_branch_simplify, args=(e,), kwds={&#34;measure&#34;: measure}))
+            proc.append(pool.apply_async(_branch_simplify, args=(rvs,), kwds={&#34;measure&#34;: measure}))
+
+            for i, (var, e) in enumerate(defs.copy()):
+                try:
+                    e_ = proc[i].get()
+                except multiprocessing.TimeoutError:
+                    continue
+                else:
+                    if measure(e_) &lt; measure(e):
+                        changed = True
+                        defs[i] = (var, e_)
+            try:
+                rvs_ = proc[-1].get()
+            except multiprocessing.TimeoutError:
+                continue
+            else:
+                if measure(rvs_) &lt; measure(rvs):
+                    changed = True
+                    rvs = rvs_
+
+        if changed:
+            x = build(defs, rvs)
+    return x
+
 
 def cse_minimize_memory(r, e):
     &#34;&#34;&#34;
@@ -250,102 +349,32 @@ def evalf(x, n=15):
 
     if isinstance(x, (tuple, list, set)):
         return type(x)([evalf(e, n=n) for e in x])
-
-    x = basic_evalf(x, n=n)
-    x = _sub_float_rat(x)
-    return x
+    return _sub_float_rat(basic_evalf(x, n=n))
 
 def simplify(x, measure, verbose=False):
     &#34;&#34;&#34;
     ** Triture l&#39;expression pour minimiser le temps de calcul. **
     &#34;&#34;&#34;
-    def select(*xs, measure):
-        &#34;&#34;&#34;Selectione la meilleur expression.&#34;&#34;&#34;
-        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            with multiprocessing.Pool() as pool:
-                costs = pool.map(measure, xs)
-        else:
-            costs = [measure(e) for e in xs]
-        return xs[np.argmin(costs)]
-
-    @_generalize
-    def branch_simplify(x, measure):
-        &#34;&#34;&#34;Simplifie une simple expression sympy.&#34;&#34;&#34;
-        cand = {x, sympy.expand(x)}
-        new_cand = set()
-        for _ in range(4):
-            with multiprocessing.Pool() as pool:
-                proc = []
-                for x_ in cand.copy():
-                    proc.append(pool.apply_async(sympy.cancel, args=(x_,), kwds={}))
-                    proc.append(pool.apply_async(sympy.factor, args=(x_,), kwds={&#34;deep&#34;:True, &#34;fraction&#34;:False}))
-                    proc.append(pool.apply_async(sympy.factor, args=(x_,), kwds={&#34;deep&#34;:True, &#34;fraction&#34;:False, &#34;gaussian&#34;:True}))
-                    proc.append(pool.apply_async(sympy.logcombine, args=(x_,), kwds={&#34;force&#34;:True}))
-                    proc.append(pool.apply_async(sympy.powsimp, args=(x_,), kwds={&#34;deep&#34;:True, &#34;force&#34;:True, &#34;measure&#34;:measure}))
-                    proc.append(pool.apply_async(sympy.radsimp, args=(x_,), kwds={&#34;max_terms&#34;:10}))
-                    proc.append(pool.apply_async(sympy.ratsimp, args=(x_,)))
-                    proc.append(pool.apply_async(sympy.sqrtdenest, args=(x_,), kwds={&#34;max_iter&#34;:10}))
-                    proc.append(pool.apply_async(sympy.simplify, args=(x_,), kwds={&#34;measure&#34;:measure, &#34;inverse&#34;:True, &#34;rational&#34;:False}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={&#34;method&#34;:&#34;combined&#34;}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={&#34;method&#34;:&#34;fu&#34;}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={&#34;method&#34;:&#34;groebner&#34;}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={&#34;method&#34;:&#34;matching&#34;}))
-                for p in proc:
-                    try:
-                        new_cand.add(p.get(timeout=10))
-                    except multiprocessing.TimeoutError:
-                        pass
-                    except (ValueError, sympy.CoercionFailed): # 1/180 is not an integer.
-                        pass
-
-            new_cand = {select(*(new_cand | cand), measure=measure)}
-            if new_cand == cand:
-                break
-            cand = new_cand
-        return new_cand.pop()
-
-    def cse_simp(x, measure):
-        &#34;&#34;&#34;Simplifi chaque paquets sous expression de cse&#34;&#34;&#34;
-        def build(defs, rvs):
-            for var, e in defs[::-1]:
-                rvs = subs(rvs, {var: e})
-            return rvs
-
-        changed = True
-        while changed:
-            changed = False
-            defs, rvs = cse_homogeneous(x)
-            for i, (var, e) in enumerate(defs.copy()):
-                e_ = branch_simplify(e, measure=measure)
-                if e_ != e:
-                    changed = True
-                    defs[i] = (var, e_)
-            rvs_ = branch_simplify(rvs, measure=measure)
-            if rvs_ != rvs:
-                changed = True
-                rvs = rvs_
-            if changed:
-                x = build(defs, rvs)
-
-        return x
-
     if verbose:
         print(f&#34;simplify: {cse_homogeneous(x)}...&#34;)
         print(f&#34;\tbegin cost: {measure(x)}&#34;)
 
-    x = _sub_float_rat(x)
+    x = _sub_float_rat(x, all_=True)
     if verbose &gt;= 2:
         print(f&#34;\tafter float to rational: {measure(x)}&#34;)
-    x = cse_simp(x, measure=measure)
+    x = _cse_simp(x, measure=measure)
     if verbose &gt;= 2:
         print(f&#34;\tafter cse_simp: {measure(x)}&#34;)
-    x = branch_simplify(x, measure=measure)
+    x = _branch_simplify(x, measure=measure)
     if verbose &gt;= 2:
         print(f&#34;\tafter global simp: {measure(x)}&#34;)
-    x = evalf(x, n=35)
+    x = _sub_float_rat(evalf(x, n=35), all_=True)
     if verbose &gt;= 2:
         print(f&#34;\tafter evalf: {measure(x)}&#34;)
-    x = cse_simp(x, measure=measure)
+    x = _cse_simp(x, measure=measure)
+    if verbose &gt;= 2:
+        print(f&#34;\tafter cse_simp: {measure(x)}&#34;)
+    x = _sub_float_rat(x)
 
     if verbose:
         print(f&#34;\tfinal cost: {measure(x)}&#34;)
@@ -383,6 +412,7 @@ class TimeCost:
             &#34;Abs&#34;: (lambda: np.abs(self._negone)),
             &#34;Add&#34;: (lambda: self._bat + self._bat),
             &#34;And&#34;: (lambda: self._true &amp; self._true),
+            &#34;BooleanTrue&#34;: (lambda: self._one.astype(bool)),
             &#34;Equality&#34;: (lambda: self._bat == self._bat),
             &#34;GreaterThan&#34;: (lambda: self._one &gt;= self._one),
             &#34;LessThan&#34;: (lambda: self._one &lt;= self._one),
@@ -402,6 +432,7 @@ class TimeCost:
             &#34;StrictGreaterThan&#34;: (lambda: self._one &gt; self._one),
             &#34;StrictLessThan&#34;: (lambda: self._one &lt; self._one),
             &#34;Transpose&#34;: (lambda: np.transpose(self._zero)),
+            &#34;Unequality&#34;: (lambda: self._bat != self._bat),
             &#34;Xor&#34;: (lambda: (self._false|self._true) &amp; ~(self._false&amp;self._true)),
             &#34;acos&#34;: (lambda: np.arccos(self._bat)),
             &#34;acosh&#34;: (lambda: np.arccosh(self._two)),
@@ -431,15 +462,31 @@ class TimeCost:
             &#34;**2&#34;: (lambda: self._bat**2),
         }
 
+        self.load_save()
+
+    def load_save(self):
+        &#34;&#34;&#34;
+        Charge le fichier qui contient les resultats.
+        &#34;&#34;&#34;
+        dirname = os.path.join(os.path.dirname(os.path.abspath(laue.__file__)), &#34;data&#34;)
+        file = os.path.join(dirname, &#34;timecost.pickle&#34;)
+        if os.path.exists(file):
+            with open(file, &#34;rb&#34;) as f:
+                self.__setstate__(pickle.load(f))
+        else:
+            with open(file, &#34;wb&#34;) as f:
+                pickle.dump(self.__getstate__(), f)
+
     def atom_cost(self, key):
         &#34;&#34;&#34;
         Retourne le cout de l&#39;opperateur.
         &#34;&#34;&#34;
         if key in self.costs:
             return self.costs[key]
-        if key in self._tests:
-            self.costs[key] = timeit.timeit(self._tests[key], number=100)
-            return self.costs[key]
+        if hasattr(self, &#34;_tests&#34;):
+            if key in self._tests:
+                self.costs[key] = timeit.timeit(self._tests[key], number=100)
+                return self.costs[key]
         raise ValueError(f&#34;L&#39;opperation {key} est inconnue.&#34;)
 
     def branch_cost(self, branch):
@@ -452,62 +499,43 @@ class TimeCost:
         if isinstance(branch, (sympy.Add, sympy.And, sympy.MatAdd, sympy.MatMul,
                 sympy.MatPow, sympy.Mul, sympy.Nand, sympy.Nor, sympy.Or, sympy.Xor)):
             op_cost = self.atom_cost(type(branch).__name__) * (len(branch.args)-1)
-            if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-                with multiprocessing.Pool() as pool:
-                    return sum(pool.map(self.branch_cost, branch.args)) + op_cost
-            else:
-                return sum((self.branch_cost(e) for e in branch.args)) + op_cost
+            return sum((self.branch_cost(e) for e in branch.args)) + op_cost
 
         if isinstance(branch, sympy.Pow):
             if isinstance(branch.exp, sympy.Number):
-                if round(branch.exp, 5) == 2:
+                if branch.exp == 2:
                     return self.branch_cost(branch.base) + self.atom_cost(&#34;**2&#34;)
-                if round(branch.exp, 5) == .5:
+                if branch.exp == sympy.S.Half:
                     return self.branch_cost(branch.base) + self.atom_cost(&#34;sqrt&#34;)
-                if round(branch.exp, 5) == -.5:
+                if branch.exp == -sympy.S.Half:
                     return self.branch_cost(branch.base) + self.atom_cost(&#34;div&#34;) + self.atom_cost(&#34;sqrt&#34;)
-                if round(branch.exp, 5) == -1:
+                if branch.exp == -sympy.S.One:
                     return self.branch_cost(branch.base) + self.atom_cost(&#34;div&#34;)
-                if round(branch.exp, 5) == -2:
+                if branch.exp == -2:
                     return self.branch_cost(branch.base) + self.atom_cost(&#34;div&#34;) + self.atom_cost(&#34;**2&#34;)
             return self.branch_cost(branch.base) + self.branch_cost(branch.exp) + self.atom_cost(&#34;Pow&#34;)
 
         if isinstance(branch, sympy.Piecewise):
-            op_cost = self.atom_cost(sympy.Piecewise) * (len(branch.args)-1)
+            op_cost = self.atom_cost(&#34;Piecewise&#34;) * (len(branch.args)-1)
             return sum(
                 self.branch_cost(val) + sum(self.branch_cost(a) for a in cond.args)
-                for val, cond in branch.args
-                ) + op_cost
+                for val, cond in branch.args) + op_cost
 
-        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            with multiprocessing.Pool() as pool:
-                return sum(pool.map(self.branch_cost, branch.args)) + self.atom_cost(type(branch).__name__)
-        else:
-            return sum((self.branch_cost(e) for e in branch.args)) + self.atom_cost(type(branch).__name__)
+        return sum((self.branch_cost(e) for e in branch.args)) + self.atom_cost(type(branch).__name__)
 
     def __call__(self, expr):
         &#34;&#34;&#34;
         Le cout de l&#39;expression avec cse.
         &#34;&#34;&#34;
         defs, rvs = sympy.cse(expr)
-        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            with multiprocessing.Pool() as pool:
-                cost = sum(pool.map(
-                    self.branch_cost,
-                    itertools.chain(
-                        (e for var, e in defs),
-                        (e for e in rvs))
-                    )) + len(defs)*self.atom_cost(&#34;aloc&#34;)
-        else:
-            cost = (
-                sum(self.branch_cost(e) for var, e in defs)
+        return (sum(self.branch_cost(e) for var, e in defs)
               + sum(self.branch_cost(e) for e in rvs)
               + len(defs)*self.atom_cost(&#34;aloc&#34;))
-        return cost
 
     def __getstate__(self):
-        for key in self._tests:
-            self.atom_cost(key)
+        if hasattr(self, &#34;_tests&#34;):
+            for key in self._tests:
+                self.atom_cost(key)
         return self.costs
 
     def __setstate__(self, state):
@@ -584,7 +612,7 @@ class Lambdify:
 
         # Code &lt; float 64
         elif bloc == &#34;numpy&#34;:
-            code = lambdify(self.args, evalf(self._simp_expr, n=15),
+            code = lambdify(self.args, evalf(self._simp_expr),
                 cse=True, modules=&#34;numpy&#34;).__doc__.split(&#34;\n&#34;)
             code[0] = code[0].replace(&#34;_lambdifygenerated&#34;, f&#34;_{name}_numpy&#34;)
             code.insert(1, &#39;    &#34;&#34;&#34;Perform calculations in small float using the numpy module.&#34;&#34;&#34;&#39;)
@@ -610,11 +638,14 @@ class Lambdify:
 
         # Expression formelle
         elif bloc == &#34;sympy&#34;:
+            defs, rvs = cse_homogeneous(self.expr)
             code = []
             code.append(f&#34;def _{name}_sympy():&#34;)
             code.append( &#39;    &#34;&#34;&#34;Returns the tree of the sympy expression.&#34;&#34;&#34;&#39;)
             code.append(f&#34;    {&#39;, &#39;.join(self.args_name)} = symbols(&#39;{&#39; &#39;.join(self.args_name)}&#39;)&#34;)
-            code.append(f&#34;    return {self.expr}&#34;)
+            for var, expr in defs:
+                code.append(f&#34;    {var} = {expr}&#34;)
+            code.append(f&#34;    return {rvs}&#34;)
             code.append( &#34;&#34;)
 
         # Fonction principale Equivalent as self.__call__.
@@ -773,7 +804,7 @@ class Lambdify:
         &gt;&gt;&gt;
         &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
         &gt;&gt;&gt; l.__getstate__()
-        ([x, y], x + y + cos(x + y))
+        ([x, y], x + y + cos(x + y), False)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if self.expr == self._simp_expr:
@@ -790,14 +821,16 @@ class Lambdify:
         &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
         &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
         &gt;&gt;&gt;
-        &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-        &gt;&gt;&gt; l
+        &gt;&gt;&gt; Lambdify([x, y], cos(x + y) + x + y)
         Lambdify([x, y], x + y + cos(x + y))
-        &gt;&gt;&gt; pickle.loads(pickle.dumps(l))
+        &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
         Lambdify([x, y], x + y + cos(x + y))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        self.__init__(state[0], state[1], verbose=state[2], _simp_expr=state[-1])</code></pre>
+        if len(state) == 4:
+            self.__init__(state[0], state[1], verbose=state[2], _simp_expr=state[3])
+        else:
+            self.__init__(state[0], state[1], verbose=state[2])</code></pre>
 </details>
 </section>
 <section>
@@ -1042,93 +1075,26 @@ expressions that contain large, repeated subexpressions.</p>
     &#34;&#34;&#34;
     ** Triture l&#39;expression pour minimiser le temps de calcul. **
     &#34;&#34;&#34;
-    def select(*xs, measure):
-        &#34;&#34;&#34;Selectione la meilleur expression.&#34;&#34;&#34;
-        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            with multiprocessing.Pool() as pool:
-                costs = pool.map(measure, xs)
-        else:
-            costs = [measure(e) for e in xs]
-        return xs[np.argmin(costs)]
-
-    @_generalize
-    def branch_simplify(x, measure):
-        &#34;&#34;&#34;Simplifie une simple expression sympy.&#34;&#34;&#34;
-        cand = {x, sympy.expand(x)}
-        new_cand = set()
-        for _ in range(4):
-            with multiprocessing.Pool() as pool:
-                proc = []
-                for x_ in cand.copy():
-                    proc.append(pool.apply_async(sympy.cancel, args=(x_,), kwds={}))
-                    proc.append(pool.apply_async(sympy.factor, args=(x_,), kwds={&#34;deep&#34;:True, &#34;fraction&#34;:False}))
-                    proc.append(pool.apply_async(sympy.factor, args=(x_,), kwds={&#34;deep&#34;:True, &#34;fraction&#34;:False, &#34;gaussian&#34;:True}))
-                    proc.append(pool.apply_async(sympy.logcombine, args=(x_,), kwds={&#34;force&#34;:True}))
-                    proc.append(pool.apply_async(sympy.powsimp, args=(x_,), kwds={&#34;deep&#34;:True, &#34;force&#34;:True, &#34;measure&#34;:measure}))
-                    proc.append(pool.apply_async(sympy.radsimp, args=(x_,), kwds={&#34;max_terms&#34;:10}))
-                    proc.append(pool.apply_async(sympy.ratsimp, args=(x_,)))
-                    proc.append(pool.apply_async(sympy.sqrtdenest, args=(x_,), kwds={&#34;max_iter&#34;:10}))
-                    proc.append(pool.apply_async(sympy.simplify, args=(x_,), kwds={&#34;measure&#34;:measure, &#34;inverse&#34;:True, &#34;rational&#34;:False}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={&#34;method&#34;:&#34;combined&#34;}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={&#34;method&#34;:&#34;fu&#34;}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={&#34;method&#34;:&#34;groebner&#34;}))
-                    proc.append(pool.apply_async(sympy.trigsimp, args=(x_,), kwds={&#34;method&#34;:&#34;matching&#34;}))
-                for p in proc:
-                    try:
-                        new_cand.add(p.get(timeout=10))
-                    except multiprocessing.TimeoutError:
-                        pass
-                    except (ValueError, sympy.CoercionFailed): # 1/180 is not an integer.
-                        pass
-
-            new_cand = {select(*(new_cand | cand), measure=measure)}
-            if new_cand == cand:
-                break
-            cand = new_cand
-        return new_cand.pop()
-
-    def cse_simp(x, measure):
-        &#34;&#34;&#34;Simplifi chaque paquets sous expression de cse&#34;&#34;&#34;
-        def build(defs, rvs):
-            for var, e in defs[::-1]:
-                rvs = subs(rvs, {var: e})
-            return rvs
-
-        changed = True
-        while changed:
-            changed = False
-            defs, rvs = cse_homogeneous(x)
-            for i, (var, e) in enumerate(defs.copy()):
-                e_ = branch_simplify(e, measure=measure)
-                if e_ != e:
-                    changed = True
-                    defs[i] = (var, e_)
-            rvs_ = branch_simplify(rvs, measure=measure)
-            if rvs_ != rvs:
-                changed = True
-                rvs = rvs_
-            if changed:
-                x = build(defs, rvs)
-
-        return x
-
     if verbose:
         print(f&#34;simplify: {cse_homogeneous(x)}...&#34;)
         print(f&#34;\tbegin cost: {measure(x)}&#34;)
 
-    x = _sub_float_rat(x)
+    x = _sub_float_rat(x, all_=True)
     if verbose &gt;= 2:
         print(f&#34;\tafter float to rational: {measure(x)}&#34;)
-    x = cse_simp(x, measure=measure)
+    x = _cse_simp(x, measure=measure)
     if verbose &gt;= 2:
         print(f&#34;\tafter cse_simp: {measure(x)}&#34;)
-    x = branch_simplify(x, measure=measure)
+    x = _branch_simplify(x, measure=measure)
     if verbose &gt;= 2:
         print(f&#34;\tafter global simp: {measure(x)}&#34;)
-    x = evalf(x, n=35)
+    x = _sub_float_rat(evalf(x, n=35), all_=True)
     if verbose &gt;= 2:
         print(f&#34;\tafter evalf: {measure(x)}&#34;)
-    x = cse_simp(x, measure=measure)
+    x = _cse_simp(x, measure=measure)
+    if verbose &gt;= 2:
+        print(f&#34;\tafter cse_simp: {measure(x)}&#34;)
+    x = _sub_float_rat(x)
 
     if verbose:
         print(f&#34;\tfinal cost: {measure(x)}&#34;)
@@ -1231,7 +1197,7 @@ expressions that contain large, repeated subexpressions.</p>
 
         # Code &lt; float 64
         elif bloc == &#34;numpy&#34;:
-            code = lambdify(self.args, evalf(self._simp_expr, n=15),
+            code = lambdify(self.args, evalf(self._simp_expr),
                 cse=True, modules=&#34;numpy&#34;).__doc__.split(&#34;\n&#34;)
             code[0] = code[0].replace(&#34;_lambdifygenerated&#34;, f&#34;_{name}_numpy&#34;)
             code.insert(1, &#39;    &#34;&#34;&#34;Perform calculations in small float using the numpy module.&#34;&#34;&#34;&#39;)
@@ -1257,11 +1223,14 @@ expressions that contain large, repeated subexpressions.</p>
 
         # Expression formelle
         elif bloc == &#34;sympy&#34;:
+            defs, rvs = cse_homogeneous(self.expr)
             code = []
             code.append(f&#34;def _{name}_sympy():&#34;)
             code.append( &#39;    &#34;&#34;&#34;Returns the tree of the sympy expression.&#34;&#34;&#34;&#39;)
             code.append(f&#34;    {&#39;, &#39;.join(self.args_name)} = symbols(&#39;{&#39; &#39;.join(self.args_name)}&#39;)&#34;)
-            code.append(f&#34;    return {self.expr}&#34;)
+            for var, expr in defs:
+                code.append(f&#34;    {var} = {expr}&#34;)
+            code.append(f&#34;    return {rvs}&#34;)
             code.append( &#34;&#34;)
 
         # Fonction principale Equivalent as self.__call__.
@@ -1420,7 +1389,7 @@ expressions that contain large, repeated subexpressions.</p>
         &gt;&gt;&gt;
         &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
         &gt;&gt;&gt; l.__getstate__()
-        ([x, y], x + y + cos(x + y))
+        ([x, y], x + y + cos(x + y), False)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         if self.expr == self._simp_expr:
@@ -1437,14 +1406,16 @@ expressions that contain large, repeated subexpressions.</p>
         &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
         &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
         &gt;&gt;&gt;
-        &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-        &gt;&gt;&gt; l
+        &gt;&gt;&gt; Lambdify([x, y], cos(x + y) + x + y)
         Lambdify([x, y], x + y + cos(x + y))
-        &gt;&gt;&gt; pickle.loads(pickle.dumps(l))
+        &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
         Lambdify([x, y], x + y + cos(x + y))
         &gt;&gt;&gt;
         &#34;&#34;&#34;
-        self.__init__(state[0], state[1], verbose=state[2], _simp_expr=state[-1])</code></pre>
+        if len(state) == 4:
+            self.__init__(state[0], state[1], verbose=state[2], _simp_expr=state[3])
+        else:
+            self.__init__(state[0], state[1], verbose=state[2])</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -1577,7 +1548,7 @@ array([-0.46,  0.38,  1.  ,  1.38,  1.54])
 &gt;&gt;&gt;
 &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
 &gt;&gt;&gt; l.__getstate__()
-([x, y], x + y + cos(x + y))
+([x, y], x + y + cos(x + y), False)
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1595,7 +1566,7 @@ array([-0.46,  0.38,  1.  ,  1.38,  1.54])
     &gt;&gt;&gt;
     &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
     &gt;&gt;&gt; l.__getstate__()
-    ([x, y], x + y + cos(x + y))
+    ([x, y], x + y + cos(x + y), False)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     if self.expr == self._simp_expr:
@@ -1613,10 +1584,9 @@ array([-0.46,  0.38,  1.  ,  1.38,  1.54])
 &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
 &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
 &gt;&gt;&gt;
-&gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-&gt;&gt;&gt; l
+&gt;&gt;&gt; Lambdify([x, y], cos(x + y) + x + y)
 Lambdify([x, y], x + y + cos(x + y))
-&gt;&gt;&gt; pickle.loads(pickle.dumps(l))
+&gt;&gt;&gt; pickle.loads(pickle.dumps(_))
 Lambdify([x, y], x + y + cos(x + y))
 &gt;&gt;&gt;
 </code></pre></div>
@@ -1634,14 +1604,16 @@ Lambdify([x, y], x + y + cos(x + y))
     &gt;&gt;&gt; from sympy.abc import x, y; from sympy import cos
     &gt;&gt;&gt; from laue.utilities.lambdify import Lambdify
     &gt;&gt;&gt;
-    &gt;&gt;&gt; l = Lambdify([x, y], cos(x + y) + x + y)
-    &gt;&gt;&gt; l
+    &gt;&gt;&gt; Lambdify([x, y], cos(x + y) + x + y)
     Lambdify([x, y], x + y + cos(x + y))
-    &gt;&gt;&gt; pickle.loads(pickle.dumps(l))
+    &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
     Lambdify([x, y], x + y + cos(x + y))
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    self.__init__(state[0], state[1], verbose=state[2], _simp_expr=state[-1])</code></pre>
+    if len(state) == 4:
+        self.__init__(state[0], state[1], verbose=state[2], _simp_expr=state[3])
+    else:
+        self.__init__(state[0], state[1], verbose=state[2])</code></pre>
 </details>
 </dd>
 <dt id="laue.utilities.lambdify.Lambdify.__str__"><code class="name flex">
@@ -1711,7 +1683,7 @@ def _lambdifygenerated_numpy(x, y):
 
     # Code &lt; float 64
     elif bloc == &#34;numpy&#34;:
-        code = lambdify(self.args, evalf(self._simp_expr, n=15),
+        code = lambdify(self.args, evalf(self._simp_expr),
             cse=True, modules=&#34;numpy&#34;).__doc__.split(&#34;\n&#34;)
         code[0] = code[0].replace(&#34;_lambdifygenerated&#34;, f&#34;_{name}_numpy&#34;)
         code.insert(1, &#39;    &#34;&#34;&#34;Perform calculations in small float using the numpy module.&#34;&#34;&#34;&#39;)
@@ -1737,11 +1709,14 @@ def _lambdifygenerated_numpy(x, y):
 
     # Expression formelle
     elif bloc == &#34;sympy&#34;:
+        defs, rvs = cse_homogeneous(self.expr)
         code = []
         code.append(f&#34;def _{name}_sympy():&#34;)
         code.append( &#39;    &#34;&#34;&#34;Returns the tree of the sympy expression.&#34;&#34;&#34;&#39;)
         code.append(f&#34;    {&#39;, &#39;.join(self.args_name)} = symbols(&#39;{&#39; &#39;.join(self.args_name)}&#39;)&#34;)
-        code.append(f&#34;    return {self.expr}&#34;)
+        for var, expr in defs:
+            code.append(f&#34;    {var} = {expr}&#34;)
+        code.append(f&#34;    return {rvs}&#34;)
         code.append( &#34;&#34;)
 
     # Fonction principale Equivalent as self.__call__.
@@ -1834,6 +1809,7 @@ def _lambdifygenerated_numpy(x, y):
             &#34;Abs&#34;: (lambda: np.abs(self._negone)),
             &#34;Add&#34;: (lambda: self._bat + self._bat),
             &#34;And&#34;: (lambda: self._true &amp; self._true),
+            &#34;BooleanTrue&#34;: (lambda: self._one.astype(bool)),
             &#34;Equality&#34;: (lambda: self._bat == self._bat),
             &#34;GreaterThan&#34;: (lambda: self._one &gt;= self._one),
             &#34;LessThan&#34;: (lambda: self._one &lt;= self._one),
@@ -1853,6 +1829,7 @@ def _lambdifygenerated_numpy(x, y):
             &#34;StrictGreaterThan&#34;: (lambda: self._one &gt; self._one),
             &#34;StrictLessThan&#34;: (lambda: self._one &lt; self._one),
             &#34;Transpose&#34;: (lambda: np.transpose(self._zero)),
+            &#34;Unequality&#34;: (lambda: self._bat != self._bat),
             &#34;Xor&#34;: (lambda: (self._false|self._true) &amp; ~(self._false&amp;self._true)),
             &#34;acos&#34;: (lambda: np.arccos(self._bat)),
             &#34;acosh&#34;: (lambda: np.arccosh(self._two)),
@@ -1882,15 +1859,31 @@ def _lambdifygenerated_numpy(x, y):
             &#34;**2&#34;: (lambda: self._bat**2),
         }
 
+        self.load_save()
+
+    def load_save(self):
+        &#34;&#34;&#34;
+        Charge le fichier qui contient les resultats.
+        &#34;&#34;&#34;
+        dirname = os.path.join(os.path.dirname(os.path.abspath(laue.__file__)), &#34;data&#34;)
+        file = os.path.join(dirname, &#34;timecost.pickle&#34;)
+        if os.path.exists(file):
+            with open(file, &#34;rb&#34;) as f:
+                self.__setstate__(pickle.load(f))
+        else:
+            with open(file, &#34;wb&#34;) as f:
+                pickle.dump(self.__getstate__(), f)
+
     def atom_cost(self, key):
         &#34;&#34;&#34;
         Retourne le cout de l&#39;opperateur.
         &#34;&#34;&#34;
         if key in self.costs:
             return self.costs[key]
-        if key in self._tests:
-            self.costs[key] = timeit.timeit(self._tests[key], number=100)
-            return self.costs[key]
+        if hasattr(self, &#34;_tests&#34;):
+            if key in self._tests:
+                self.costs[key] = timeit.timeit(self._tests[key], number=100)
+                return self.costs[key]
         raise ValueError(f&#34;L&#39;opperation {key} est inconnue.&#34;)
 
     def branch_cost(self, branch):
@@ -1903,62 +1896,43 @@ def _lambdifygenerated_numpy(x, y):
         if isinstance(branch, (sympy.Add, sympy.And, sympy.MatAdd, sympy.MatMul,
                 sympy.MatPow, sympy.Mul, sympy.Nand, sympy.Nor, sympy.Or, sympy.Xor)):
             op_cost = self.atom_cost(type(branch).__name__) * (len(branch.args)-1)
-            if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-                with multiprocessing.Pool() as pool:
-                    return sum(pool.map(self.branch_cost, branch.args)) + op_cost
-            else:
-                return sum((self.branch_cost(e) for e in branch.args)) + op_cost
+            return sum((self.branch_cost(e) for e in branch.args)) + op_cost
 
         if isinstance(branch, sympy.Pow):
             if isinstance(branch.exp, sympy.Number):
-                if round(branch.exp, 5) == 2:
+                if branch.exp == 2:
                     return self.branch_cost(branch.base) + self.atom_cost(&#34;**2&#34;)
-                if round(branch.exp, 5) == .5:
+                if branch.exp == sympy.S.Half:
                     return self.branch_cost(branch.base) + self.atom_cost(&#34;sqrt&#34;)
-                if round(branch.exp, 5) == -.5:
+                if branch.exp == -sympy.S.Half:
                     return self.branch_cost(branch.base) + self.atom_cost(&#34;div&#34;) + self.atom_cost(&#34;sqrt&#34;)
-                if round(branch.exp, 5) == -1:
+                if branch.exp == -sympy.S.One:
                     return self.branch_cost(branch.base) + self.atom_cost(&#34;div&#34;)
-                if round(branch.exp, 5) == -2:
+                if branch.exp == -2:
                     return self.branch_cost(branch.base) + self.atom_cost(&#34;div&#34;) + self.atom_cost(&#34;**2&#34;)
             return self.branch_cost(branch.base) + self.branch_cost(branch.exp) + self.atom_cost(&#34;Pow&#34;)
 
         if isinstance(branch, sympy.Piecewise):
-            op_cost = self.atom_cost(sympy.Piecewise) * (len(branch.args)-1)
+            op_cost = self.atom_cost(&#34;Piecewise&#34;) * (len(branch.args)-1)
             return sum(
                 self.branch_cost(val) + sum(self.branch_cost(a) for a in cond.args)
-                for val, cond in branch.args
-                ) + op_cost
+                for val, cond in branch.args) + op_cost
 
-        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            with multiprocessing.Pool() as pool:
-                return sum(pool.map(self.branch_cost, branch.args)) + self.atom_cost(type(branch).__name__)
-        else:
-            return sum((self.branch_cost(e) for e in branch.args)) + self.atom_cost(type(branch).__name__)
+        return sum((self.branch_cost(e) for e in branch.args)) + self.atom_cost(type(branch).__name__)
 
     def __call__(self, expr):
         &#34;&#34;&#34;
         Le cout de l&#39;expression avec cse.
         &#34;&#34;&#34;
         defs, rvs = sympy.cse(expr)
-        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            with multiprocessing.Pool() as pool:
-                cost = sum(pool.map(
-                    self.branch_cost,
-                    itertools.chain(
-                        (e for var, e in defs),
-                        (e for e in rvs))
-                    )) + len(defs)*self.atom_cost(&#34;aloc&#34;)
-        else:
-            cost = (
-                sum(self.branch_cost(e) for var, e in defs)
+        return (sum(self.branch_cost(e) for var, e in defs)
               + sum(self.branch_cost(e) for e in rvs)
               + len(defs)*self.atom_cost(&#34;aloc&#34;))
-        return cost
 
     def __getstate__(self):
-        for key in self._tests:
-            self.atom_cost(key)
+        if hasattr(self, &#34;_tests&#34;):
+            for key in self._tests:
+                self.atom_cost(key)
         return self.costs
 
     def __setstate__(self, state):
@@ -1981,9 +1955,10 @@ def _lambdifygenerated_numpy(x, y):
     &#34;&#34;&#34;
     if key in self.costs:
         return self.costs[key]
-    if key in self._tests:
-        self.costs[key] = timeit.timeit(self._tests[key], number=100)
-        return self.costs[key]
+    if hasattr(self, &#34;_tests&#34;):
+        if key in self._tests:
+            self.costs[key] = timeit.timeit(self._tests[key], number=100)
+            return self.costs[key]
     raise ValueError(f&#34;L&#39;opperation {key} est inconnue.&#34;)</code></pre>
 </details>
 </dd>
@@ -2006,38 +1981,52 @@ def _lambdifygenerated_numpy(x, y):
     if isinstance(branch, (sympy.Add, sympy.And, sympy.MatAdd, sympy.MatMul,
             sympy.MatPow, sympy.Mul, sympy.Nand, sympy.Nor, sympy.Or, sympy.Xor)):
         op_cost = self.atom_cost(type(branch).__name__) * (len(branch.args)-1)
-        if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            with multiprocessing.Pool() as pool:
-                return sum(pool.map(self.branch_cost, branch.args)) + op_cost
-        else:
-            return sum((self.branch_cost(e) for e in branch.args)) + op_cost
+        return sum((self.branch_cost(e) for e in branch.args)) + op_cost
 
     if isinstance(branch, sympy.Pow):
         if isinstance(branch.exp, sympy.Number):
-            if round(branch.exp, 5) == 2:
+            if branch.exp == 2:
                 return self.branch_cost(branch.base) + self.atom_cost(&#34;**2&#34;)
-            if round(branch.exp, 5) == .5:
+            if branch.exp == sympy.S.Half:
                 return self.branch_cost(branch.base) + self.atom_cost(&#34;sqrt&#34;)
-            if round(branch.exp, 5) == -.5:
+            if branch.exp == -sympy.S.Half:
                 return self.branch_cost(branch.base) + self.atom_cost(&#34;div&#34;) + self.atom_cost(&#34;sqrt&#34;)
-            if round(branch.exp, 5) == -1:
+            if branch.exp == -sympy.S.One:
                 return self.branch_cost(branch.base) + self.atom_cost(&#34;div&#34;)
-            if round(branch.exp, 5) == -2:
+            if branch.exp == -2:
                 return self.branch_cost(branch.base) + self.atom_cost(&#34;div&#34;) + self.atom_cost(&#34;**2&#34;)
         return self.branch_cost(branch.base) + self.branch_cost(branch.exp) + self.atom_cost(&#34;Pow&#34;)
 
     if isinstance(branch, sympy.Piecewise):
-        op_cost = self.atom_cost(sympy.Piecewise) * (len(branch.args)-1)
+        op_cost = self.atom_cost(&#34;Piecewise&#34;) * (len(branch.args)-1)
         return sum(
             self.branch_cost(val) + sum(self.branch_cost(a) for a in cond.args)
-            for val, cond in branch.args
-            ) + op_cost
+            for val, cond in branch.args) + op_cost
 
-    if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-        with multiprocessing.Pool() as pool:
-            return sum(pool.map(self.branch_cost, branch.args)) + self.atom_cost(type(branch).__name__)
+    return sum((self.branch_cost(e) for e in branch.args)) + self.atom_cost(type(branch).__name__)</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.lambdify.TimeCost.load_save"><code class="name flex">
+<span>def <span class="ident">load_save</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Charge le fichier qui contient les resultats.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_save(self):
+    &#34;&#34;&#34;
+    Charge le fichier qui contient les resultats.
+    &#34;&#34;&#34;
+    dirname = os.path.join(os.path.dirname(os.path.abspath(laue.__file__)), &#34;data&#34;)
+    file = os.path.join(dirname, &#34;timecost.pickle&#34;)
+    if os.path.exists(file):
+        with open(file, &#34;rb&#34;) as f:
+            self.__setstate__(pickle.load(f))
     else:
-        return sum((self.branch_cost(e) for e in branch.args)) + self.atom_cost(type(branch).__name__)</code></pre>
+        with open(file, &#34;wb&#34;) as f:
+            pickle.dump(self.__getstate__(), f)</code></pre>
 </details>
 </dd>
 </dl>
@@ -2082,6 +2071,7 @@ def _lambdifygenerated_numpy(x, y):
 <ul class="">
 <li><code><a title="laue.utilities.lambdify.TimeCost.atom_cost" href="#laue.utilities.lambdify.TimeCost.atom_cost">atom_cost</a></code></li>
 <li><code><a title="laue.utilities.lambdify.TimeCost.branch_cost" href="#laue.utilities.lambdify.TimeCost.branch_cost">branch_cost</a></code></li>
+<li><code><a title="laue.utilities.lambdify.TimeCost.load_save" href="#laue.utilities.lambdify.TimeCost.load_save">load_save</a></code></li>
 </ul>
 </li>
 </ul>

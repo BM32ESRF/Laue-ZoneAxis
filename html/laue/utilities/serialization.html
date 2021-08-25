@@ -56,7 +56,9 @@ __pdoc__ = {&#34;SpotPickelable.__getstate__&#34;: True,
             &#34;DiagramPickleable.__getstate__&#34;: True,
             &#34;DiagramPickleable.__setstate__&#34;: True,
             &#34;TransformerPickleable.__getstate__&#34;: True,
-            &#34;TransformerPickleable.__setstate__&#34;: True}
+            &#34;TransformerPickleable.__setstate__&#34;: True,
+            &#34;ExperimentPickleable.__getstate__&#34;: True,
+            &#34;ExperimentPickleable.__setstate__&#34;: True}
 
 
 class SpotPickleable:
@@ -218,7 +220,7 @@ class TransformerPickleable:
     &#34;&#34;&#34;
     def __getstate__(self):
         &#34;&#34;&#34;
-        ** Recupere les fonction vecirisee et symplifiees. **
+        ** Recupere les fonction vectorisee et symplifiees. **
         &#34;&#34;&#34;
         state = {}
         state[&#34;verbose&#34;] = self.verbose
@@ -236,7 +238,7 @@ class TransformerPickleable:
 
     def __setstate__(self, state):
         &#34;&#34;&#34;
-        * Initialisateur pour pickle. **
+        ** Initialisateur pour pickle. **
 
         Examples
         --------
@@ -265,7 +267,79 @@ class ExperimentPickleable:
     &#34;&#34;&#34;
     ** Interface pour serialiser une experience. **
     &#34;&#34;&#34;
-    pass</code></pre>
+    def __getstate__(self):
+        &#34;&#34;&#34;
+        ** Recupere des informations d&#39;une experience. **
+        &#34;&#34;&#34;
+        state = {}
+
+        state[&#34;verbose&#34;] = self.verbose
+        state[&#34;max_space&#34;] = self.max_space
+        state[&#34;threshold&#34;] = self.threshold
+        state[&#34;font_size&#34;] = self.font_size
+        state[&#34;ignore_errors&#34;] = self.ignore_errors
+        state[&#34;kwarg&#34;] = self.kwarg
+        state[&#34;kernel_font&#34;] = self.kernel_font
+        state[&#34;threshold&#34;] = self.threshold
+        state[&#34;kernel_dilate&#34;] = self.kernel_dilate
+        state[&#34;threshold&#34;] = self.threshold
+        state[&#34;mean_bg&#34;] = self._mean_bg
+        state[&#34;shape&#34;] = self._shape
+        state[&#34;mean_bg&#34;] = self._mean_bg
+        state[&#34;calibration_parameters&#34;] = self._calibration_parameters
+        state[&#34;gnomonic_matrix&#34;] = self._gnomonic_matrix
+        state[&#34;saving_file&#34;] = self.saving_file
+        state[&#34;compress&#34;] = self.compress
+        state[&#34;dt&#34;] = self.dt
+
+        state[&#34;images&#34;] = None
+        state[&#34;transformer&#34;] = None
+        state[&#34;predictors&#34;] = None
+        state[&#34;images_iterator&#34;] = None
+        state[&#34;diagrams_iterator&#34;] = None
+        state[&#34;axes_iterator&#34;] = None
+        state[&#34;subsets_iterator&#34;] = None
+
+        return state
+
+    def __setstate__(self, state):
+        &#34;&#34;&#34;
+        ** Initialise partiellement l&#39;experience. **
+
+        A partir des informations presentes dans ``state``,
+        certains attributs sont crees ou completes.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import pickle
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; laue.Experiment(image)
+        Experiment(&#39;laue/examples&#39;)
+        &gt;&gt;&gt; trans = pickle.loads(pickle.dumps(_))
+        Experiment(&#39;laue/examples&#39;)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if not hasattr(self, &#34;verbose&#34;):
+            self.verbose = state[&#34;verbose&#34;]
+        self.max_space = state[&#34;max_space&#34;]
+        self.threshold = state[&#34;threshold&#34;]
+        self.font_size = state[&#34;font_size&#34;]
+        if not hasattr(self, &#34;ignore_errors&#34;):
+            self.ignore_errors = state[&#34;ignore_errors&#34;]
+        self.kwarg = state[&#34;kwarg&#34;]
+        self.kernel_font = state[&#34;kernel_font&#34;]
+        self.kernel_dilate = state[&#34;kernel_dilate&#34;]
+        self._mean_bg = state[&#34;mean_bg&#34;]
+        self._shape = state[&#34;shape&#34;]
+        self._calibration_parameters = state[&#34;calibration_parameters&#34;]
+        self._gnomonic_matrix = state[&#34;gnomonic_matrix&#34;]
+        if not hasattr(self, &#34;saving_file&#34;):
+            self.saving_file = state[&#34;saving_file&#34;]
+        if not hasattr(self, &#34;compress&#34;):
+            self.compress = state[&#34;compress&#34;]
+        if not hasattr(self, &#34;dt&#34;):
+            self.dt = state[&#34;dt&#34;]</code></pre>
 </details>
 </section>
 <section>
@@ -481,8 +555,193 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
     &#34;&#34;&#34;
     ** Interface pour serialiser une experience. **
     &#34;&#34;&#34;
-    pass</code></pre>
+    def __getstate__(self):
+        &#34;&#34;&#34;
+        ** Recupere des informations d&#39;une experience. **
+        &#34;&#34;&#34;
+        state = {}
+
+        state[&#34;verbose&#34;] = self.verbose
+        state[&#34;max_space&#34;] = self.max_space
+        state[&#34;threshold&#34;] = self.threshold
+        state[&#34;font_size&#34;] = self.font_size
+        state[&#34;ignore_errors&#34;] = self.ignore_errors
+        state[&#34;kwarg&#34;] = self.kwarg
+        state[&#34;kernel_font&#34;] = self.kernel_font
+        state[&#34;threshold&#34;] = self.threshold
+        state[&#34;kernel_dilate&#34;] = self.kernel_dilate
+        state[&#34;threshold&#34;] = self.threshold
+        state[&#34;mean_bg&#34;] = self._mean_bg
+        state[&#34;shape&#34;] = self._shape
+        state[&#34;mean_bg&#34;] = self._mean_bg
+        state[&#34;calibration_parameters&#34;] = self._calibration_parameters
+        state[&#34;gnomonic_matrix&#34;] = self._gnomonic_matrix
+        state[&#34;saving_file&#34;] = self.saving_file
+        state[&#34;compress&#34;] = self.compress
+        state[&#34;dt&#34;] = self.dt
+
+        state[&#34;images&#34;] = None
+        state[&#34;transformer&#34;] = None
+        state[&#34;predictors&#34;] = None
+        state[&#34;images_iterator&#34;] = None
+        state[&#34;diagrams_iterator&#34;] = None
+        state[&#34;axes_iterator&#34;] = None
+        state[&#34;subsets_iterator&#34;] = None
+
+        return state
+
+    def __setstate__(self, state):
+        &#34;&#34;&#34;
+        ** Initialise partiellement l&#39;experience. **
+
+        A partir des informations presentes dans ``state``,
+        certains attributs sont crees ou completes.
+
+        Examples
+        --------
+        &gt;&gt;&gt; import pickle
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+        &gt;&gt;&gt; laue.Experiment(image)
+        Experiment(&#39;laue/examples&#39;)
+        &gt;&gt;&gt; trans = pickle.loads(pickle.dumps(_))
+        Experiment(&#39;laue/examples&#39;)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if not hasattr(self, &#34;verbose&#34;):
+            self.verbose = state[&#34;verbose&#34;]
+        self.max_space = state[&#34;max_space&#34;]
+        self.threshold = state[&#34;threshold&#34;]
+        self.font_size = state[&#34;font_size&#34;]
+        if not hasattr(self, &#34;ignore_errors&#34;):
+            self.ignore_errors = state[&#34;ignore_errors&#34;]
+        self.kwarg = state[&#34;kwarg&#34;]
+        self.kernel_font = state[&#34;kernel_font&#34;]
+        self.kernel_dilate = state[&#34;kernel_dilate&#34;]
+        self._mean_bg = state[&#34;mean_bg&#34;]
+        self._shape = state[&#34;shape&#34;]
+        self._calibration_parameters = state[&#34;calibration_parameters&#34;]
+        self._gnomonic_matrix = state[&#34;gnomonic_matrix&#34;]
+        if not hasattr(self, &#34;saving_file&#34;):
+            self.saving_file = state[&#34;saving_file&#34;]
+        if not hasattr(self, &#34;compress&#34;):
+            self.compress = state[&#34;compress&#34;]
+        if not hasattr(self, &#34;dt&#34;):
+            self.dt = state[&#34;dt&#34;]</code></pre>
 </details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="laue.experiment.base_experiment.Experiment" href="../experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="laue.utilities.serialization.ExperimentPickleable.__getstate__"><code class="name flex">
+<span>def <span class="ident">__getstate__</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Recupere des informations d'une experience. </strong></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __getstate__(self):
+    &#34;&#34;&#34;
+    ** Recupere des informations d&#39;une experience. **
+    &#34;&#34;&#34;
+    state = {}
+
+    state[&#34;verbose&#34;] = self.verbose
+    state[&#34;max_space&#34;] = self.max_space
+    state[&#34;threshold&#34;] = self.threshold
+    state[&#34;font_size&#34;] = self.font_size
+    state[&#34;ignore_errors&#34;] = self.ignore_errors
+    state[&#34;kwarg&#34;] = self.kwarg
+    state[&#34;kernel_font&#34;] = self.kernel_font
+    state[&#34;threshold&#34;] = self.threshold
+    state[&#34;kernel_dilate&#34;] = self.kernel_dilate
+    state[&#34;threshold&#34;] = self.threshold
+    state[&#34;mean_bg&#34;] = self._mean_bg
+    state[&#34;shape&#34;] = self._shape
+    state[&#34;mean_bg&#34;] = self._mean_bg
+    state[&#34;calibration_parameters&#34;] = self._calibration_parameters
+    state[&#34;gnomonic_matrix&#34;] = self._gnomonic_matrix
+    state[&#34;saving_file&#34;] = self.saving_file
+    state[&#34;compress&#34;] = self.compress
+    state[&#34;dt&#34;] = self.dt
+
+    state[&#34;images&#34;] = None
+    state[&#34;transformer&#34;] = None
+    state[&#34;predictors&#34;] = None
+    state[&#34;images_iterator&#34;] = None
+    state[&#34;diagrams_iterator&#34;] = None
+    state[&#34;axes_iterator&#34;] = None
+    state[&#34;subsets_iterator&#34;] = None
+
+    return state</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.serialization.ExperimentPickleable.__setstate__"><code class="name flex">
+<span>def <span class="ident">__setstate__</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Initialise partiellement l'experience. </strong></p>
+<p>A partir des informations presentes dans <code>state</code>,
+certains attributs sont crees ou completes.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import pickle
+&gt;&gt;&gt; import laue
+&gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
+&gt;&gt;&gt; laue.Experiment(image)
+Experiment('laue/examples')
+&gt;&gt;&gt; trans = pickle.loads(pickle.dumps(_))
+Experiment('laue/examples')
+&gt;&gt;&gt;
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def __setstate__(self, state):
+    &#34;&#34;&#34;
+    ** Initialise partiellement l&#39;experience. **
+
+    A partir des informations presentes dans ``state``,
+    certains attributs sont crees ou completes.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import pickle
+    &gt;&gt;&gt; import laue
+    &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
+    &gt;&gt;&gt; laue.Experiment(image)
+    Experiment(&#39;laue/examples&#39;)
+    &gt;&gt;&gt; trans = pickle.loads(pickle.dumps(_))
+    Experiment(&#39;laue/examples&#39;)
+    &gt;&gt;&gt;
+    &#34;&#34;&#34;
+    if not hasattr(self, &#34;verbose&#34;):
+        self.verbose = state[&#34;verbose&#34;]
+    self.max_space = state[&#34;max_space&#34;]
+    self.threshold = state[&#34;threshold&#34;]
+    self.font_size = state[&#34;font_size&#34;]
+    if not hasattr(self, &#34;ignore_errors&#34;):
+        self.ignore_errors = state[&#34;ignore_errors&#34;]
+    self.kwarg = state[&#34;kwarg&#34;]
+    self.kernel_font = state[&#34;kernel_font&#34;]
+    self.kernel_dilate = state[&#34;kernel_dilate&#34;]
+    self._mean_bg = state[&#34;mean_bg&#34;]
+    self._shape = state[&#34;shape&#34;]
+    self._calibration_parameters = state[&#34;calibration_parameters&#34;]
+    self._gnomonic_matrix = state[&#34;gnomonic_matrix&#34;]
+    if not hasattr(self, &#34;saving_file&#34;):
+        self.saving_file = state[&#34;saving_file&#34;]
+    if not hasattr(self, &#34;compress&#34;):
+        self.compress = state[&#34;compress&#34;]
+    if not hasattr(self, &#34;dt&#34;):
+        self.dt = state[&#34;dt&#34;]</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="laue.utilities.serialization.SpotPickleable"><code class="flex name class">
 <span>class <span class="ident">SpotPickleable</span></span>
@@ -553,7 +812,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
     &#34;&#34;&#34;
     def __getstate__(self):
         &#34;&#34;&#34;
-        ** Recupere les fonction vecirisee et symplifiees. **
+        ** Recupere les fonction vectorisee et symplifiees. **
         &#34;&#34;&#34;
         state = {}
         state[&#34;verbose&#34;] = self.verbose
@@ -571,7 +830,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
 
     def __setstate__(self, state):
         &#34;&#34;&#34;
-        * Initialisateur pour pickle. **
+        ** Initialisateur pour pickle. **
 
         Examples
         --------
@@ -606,14 +865,14 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
 <span>def <span class="ident">__getstate__</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p><strong> Recupere les fonction vecirisee et symplifiees. </strong></p></div>
+<div class="desc"><p><strong> Recupere les fonction vectorisee et symplifiees. </strong></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def __getstate__(self):
     &#34;&#34;&#34;
-    ** Recupere les fonction vecirisee et symplifiees. **
+    ** Recupere les fonction vectorisee et symplifiees. **
     &#34;&#34;&#34;
     state = {}
     state[&#34;verbose&#34;] = self.verbose
@@ -634,9 +893,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
 <span>def <span class="ident">__setstate__</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<div class="desc"><ul>
-<li>Initialisateur pour pickle. **</li>
-</ul>
+<div class="desc"><p><strong> Initialisateur pour pickle. </strong></p>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import pickle
 &gt;&gt;&gt; from laue.core.geometry.transformer import Transformer
@@ -649,7 +906,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
 </summary>
 <pre><code class="python">def __setstate__(self, state):
     &#34;&#34;&#34;
-    * Initialisateur pour pickle. **
+    ** Initialisateur pour pickle. **
 
     Examples
     --------
@@ -830,6 +1087,10 @@ ZoneAxis(spots_ind=(9, 31, 44, 46, 55, 60, 66), identifier=4, phi=-2.6836, mu=0.
 </li>
 <li>
 <h4><code><a title="laue.utilities.serialization.ExperimentPickleable" href="#laue.utilities.serialization.ExperimentPickleable">ExperimentPickleable</a></code></h4>
+<ul class="">
+<li><code><a title="laue.utilities.serialization.ExperimentPickleable.__getstate__" href="#laue.utilities.serialization.ExperimentPickleable.__getstate__">__getstate__</a></code></li>
+<li><code><a title="laue.utilities.serialization.ExperimentPickleable.__setstate__" href="#laue.utilities.serialization.ExperimentPickleable.__setstate__">__setstate__</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="laue.utilities.serialization.SpotPickleable" href="#laue.utilities.serialization.SpotPickleable">SpotPickleable</a></code></h4>

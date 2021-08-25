@@ -814,7 +814,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         Notes
         -----
         Les extensions prises en charge sont
-        ``.dat``, ``.jpg``, ``.svg``, ``.png``
+        ``.dat``, ``.jpg``, ``.svg``, ``.png``, ``.pk``, ``.pickle``, ``.cor``
 
         Parameters
         ----------
@@ -834,7 +834,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         >>> diag.save_file(os.path.join(rep, "ge_blanc.dat"))
         >>>
         """
-        EXT_OK = {"dat", "jpg", "jpeg", "svg", "png"}
+        EXT_OK = {"dat", "jpg", "jpeg", "svg", "png", "pk", "pickle", "cor"}
 
         assert isinstance(filename, str), \
             f"'filename' has to be a string, not a {type(filename).__name__}."
@@ -854,6 +854,13 @@ class LaueDiagram(Splitable, DiagramPickleable):
         elif ext in {"jpg", "jpeg", "svg", "png"}:
             plt = self.show(_return=True)
             plt.savefig(filename)
+        elif ext in {"pk", "pickle"}:
+            import pickle
+            with open(filename, "wb") as file:
+                pickle.dump(self, file)
+        elif ext == "cor":
+            raise NotImplementedError
+
 
     def select_spots(self, *, n=None, sort=None):
         """
@@ -1043,7 +1050,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         >>> diag[0.3, 0.3]
         Spot(position=(622.09, 1656.72), quality=0.949)
         >>> np.round(diag[0.3, 0.3].get_gnomonic(), 2)
-        array([0.25, 0.32])
+        array([0.29, 0.33])
         >>>
         """
         if isinstance(item, (int, np.integer)):

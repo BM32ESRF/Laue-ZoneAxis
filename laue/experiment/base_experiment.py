@@ -25,6 +25,8 @@ except ImportError:
 from laue.diagram import LaueDiagram
 from laue.core.geometry import transformer
 from laue.spot import Spot
+from laue.utilities.serialization import ExperimentPickleable
+from laue.utilities.data_consistency import Consistency
 
 
 __pdoc__ = {"Experiment.__getitem__": True,
@@ -32,7 +34,7 @@ __pdoc__ = {"Experiment.__getitem__": True,
             "Experiment.__len__": True}
 
 
-class Experiment:
+class Experiment(ExperimentPickleable, Consistency):
     """
     ** Permet de travailler sur un lot d'images. **
     """
@@ -101,6 +103,9 @@ class Experiment:
                 xgam : -0.9 degre       ; 0.9 degre
                 xcen : milieu - 150 pxl ; milieu + 150 pxl
                 ycen : milieu - 150 pxl ; milieu + 150 pxl
+        **save_params
+            Les parametres fournis a l'initialisateur de gestionaire d'enregistrement.
+            voir ``laue.utilities.data_consistency.Consistency.__init__``.
         """
         assert hasattr(images, "__iter__"), ("'images' must to be iterable. "
             f"It can not be of type {type(images).__name__}.")
@@ -155,6 +160,8 @@ class Experiment:
         self._diagrams_iterator = None # Iterateur unique qui genere les diagrammes.
         self._axes_iterator = None # Iterateur unique qui cede les axes de zonne de chaque diagramme.
         self._subsets_iterator = None # Iterateur unique qui cede les bouts de grains.
+
+        Consistency.__init__(self, **kwargs) # Instancie le gestionaire d'enregistrement.
 
     def set_calibration(self, *diagrams):
         """

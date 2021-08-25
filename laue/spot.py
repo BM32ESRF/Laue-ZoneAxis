@@ -84,7 +84,7 @@ def distance(spot1, spot2, *, space="camera", dtype=np.float64):
     >>> distance(spot1, spot2, space="camera")
     93.99267654837415
     >>> distance(spot1, spot2, space="gnomonic")
-    0.07062177234461128
+    0.07062177234461135
     >>> distance(spot1, spot2, space="cosine")
     3.337448977380975
     >>>

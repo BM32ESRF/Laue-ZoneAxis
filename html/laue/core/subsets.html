@@ -146,14 +146,6 @@ class Splitable:
         &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
         &gt;&gt;&gt; type(diag.find_subsets())
         &lt;class &#39;list&#39;&gt;
-        &gt;&gt;&gt; len(diag.find_subsets()) # nbr de clusters
-        1
-        &gt;&gt;&gt; type(diag.find_subsets().pop())
-        &lt;class &#39;set&#39;&gt;
-        &gt;&gt;&gt; len(diag.find_subsets().pop()) # nbr de spot dans le premier cluster
-        3
-        &gt;&gt;&gt; type(diag.find_subsets().pop().pop())
-        &lt;class &#39;laue.spot.Spot&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert isinstance(angle_max, float), \
@@ -878,14 +870,6 @@ qui y sont raccrochees. Il doit prendre la forme suivante:
         &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
         &gt;&gt;&gt; type(diag.find_subsets())
         &lt;class &#39;list&#39;&gt;
-        &gt;&gt;&gt; len(diag.find_subsets()) # nbr de clusters
-        1
-        &gt;&gt;&gt; type(diag.find_subsets().pop())
-        &lt;class &#39;set&#39;&gt;
-        &gt;&gt;&gt; len(diag.find_subsets().pop()) # nbr de spot dans le premier cluster
-        3
-        &gt;&gt;&gt; type(diag.find_subsets().pop().pop())
-        &lt;class &#39;laue.spot.Spot&#39;&gt;
         &gt;&gt;&gt;
         &#34;&#34;&#34;
         assert isinstance(angle_max, float), \
@@ -1017,14 +1001,6 @@ gnomonic (en mm).</dd>
 &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
 &gt;&gt;&gt; type(diag.find_subsets())
 &lt;class 'list'&gt;
-&gt;&gt;&gt; len(diag.find_subsets()) # nbr de clusters
-1
-&gt;&gt;&gt; type(diag.find_subsets().pop())
-&lt;class 'set'&gt;
-&gt;&gt;&gt; len(diag.find_subsets().pop()) # nbr de spot dans le premier cluster
-3
-&gt;&gt;&gt; type(diag.find_subsets().pop().pop())
-&lt;class 'laue.spot.Spot'&gt;
 &gt;&gt;&gt;
 </code></pre></div>
 <details class="source">
@@ -1106,14 +1082,6 @@ gnomonic (en mm).</dd>
     &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
     &gt;&gt;&gt; type(diag.find_subsets())
     &lt;class &#39;list&#39;&gt;
-    &gt;&gt;&gt; len(diag.find_subsets()) # nbr de clusters
-    1
-    &gt;&gt;&gt; type(diag.find_subsets().pop())
-    &lt;class &#39;set&#39;&gt;
-    &gt;&gt;&gt; len(diag.find_subsets().pop()) # nbr de spot dans le premier cluster
-    3
-    &gt;&gt;&gt; type(diag.find_subsets().pop().pop())
-    &lt;class &#39;laue.spot.Spot&#39;&gt;
     &gt;&gt;&gt;
     &#34;&#34;&#34;
     assert isinstance(angle_max, float), \

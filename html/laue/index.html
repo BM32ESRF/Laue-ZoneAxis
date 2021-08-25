@@ -1121,12 +1121,15 @@ xcen : milieu - 150 pxl ; milieu + 150 pxl
 ycen : milieu - 150 pxl ; milieu + 150 pxl
 </code></pre>
 </dd>
+<dt><strong><code>**save_params</code></strong></dt>
+<dd>Les parametres fournis a l'initialisateur de gestionaire d'enregistrement.
+voir <code><a title="laue.utilities.data_consistency.Consistency" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency">Consistency</a></code>.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Experiment:
+<pre><code class="python">class Experiment(ExperimentPickleable, Consistency):
     &#34;&#34;&#34;
     ** Permet de travailler sur un lot d&#39;images. **
     &#34;&#34;&#34;
@@ -1195,6 +1198,9 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                 xgam : -0.9 degre       ; 0.9 degre
                 xcen : milieu - 150 pxl ; milieu + 150 pxl
                 ycen : milieu - 150 pxl ; milieu + 150 pxl
+        **save_params
+            Les parametres fournis a l&#39;initialisateur de gestionaire d&#39;enregistrement.
+            voir ``laue.utilities.data_consistency.Consistency.__init__``.
         &#34;&#34;&#34;
         assert hasattr(images, &#34;__iter__&#34;), (&#34;&#39;images&#39; must to be iterable. &#34;
             f&#34;It can not be of type {type(images).__name__}.&#34;)
@@ -1249,6 +1255,8 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
         self._diagrams_iterator = None # Iterateur unique qui genere les diagrammes.
         self._axes_iterator = None # Iterateur unique qui cede les axes de zonne de chaque diagramme.
         self._subsets_iterator = None # Iterateur unique qui cede les bouts de grains.
+
+        Consistency.__init__(self, **kwargs) # Instancie le gestionaire d&#39;enregistrement.
 
     def set_calibration(self, *diagrams):
         &#34;&#34;&#34;
@@ -2325,6 +2333,12 @@ ycen : milieu - 150 pxl ; milieu + 150 pxl
                 f&#34;\tverbose: {self.verbose}&#34;
                 f&#34;{addi_print}&#34;)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="laue.utilities.serialization.ExperimentPickleable" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable">ExperimentPickleable</a></li>
+<li><a title="laue.utilities.data_consistency.Consistency" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency">Consistency</a></li>
+<li>threading.Thread</li>
+</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="laue.experiment.ordered_experiment.OrderedExperiment" href="experiment/ordered_experiment.html#laue.experiment.ordered_experiment.OrderedExperiment">OrderedExperiment</a></li>
@@ -3690,6 +3704,24 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="laue.utilities.serialization.ExperimentPickleable" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable">ExperimentPickleable</a></b></code>:
+<ul class="hlist">
+<li><code><a title="laue.utilities.serialization.ExperimentPickleable.__getstate__" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable.__getstate__">__getstate__</a></code></li>
+<li><code><a title="laue.utilities.serialization.ExperimentPickleable.__setstate__" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable.__setstate__">__setstate__</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="laue.utilities.data_consistency.Consistency" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency">Consistency</a></b></code>:
+<ul class="hlist">
+<li><code><a title="laue.utilities.data_consistency.Consistency.__enter__" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.__enter__">__enter__</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Consistency.kill" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.kill">kill</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Consistency.run" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.run">run</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Consistency.save_state" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.save_state">save_state</a></code></li>
+<li><code><a title="laue.utilities.data_consistency.Consistency.start" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.start">start</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="laue.OrderedExperiment"><code class="flex name class">
 <span>class <span class="ident">OrderedExperiment</span></span>
@@ -4006,6 +4038,9 @@ correspondant. Les indices commencent a 0 inclu.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="laue.experiment.base_experiment.Experiment" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></li>
+<li><a title="laue.utilities.serialization.ExperimentPickleable" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable">ExperimentPickleable</a></li>
+<li><a title="laue.utilities.data_consistency.Consistency" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency">Consistency</a></li>
+<li>threading.Thread</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -4388,16 +4423,23 @@ array([[ 0,  8,  5, 10],
 <ul class="hlist">
 <li><code><b><a title="laue.experiment.base_experiment.Experiment" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></b></code>:
 <ul class="hlist">
+<li><code><a title="laue.experiment.base_experiment.Experiment.__enter__" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.__enter__">__enter__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.__getstate__" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable.__getstate__">__getstate__</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.__iter__" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.__iter__">__iter__</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.__len__" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.__len__">__len__</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.__setstate__" href="utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable.__setstate__">__setstate__</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.find_subsets" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.find_subsets">find_subsets</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.find_zone_axes" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.find_zone_axes">find_zone_axes</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.get_diagrams" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.get_diagrams">get_diagrams</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.get_images_shape" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.get_images_shape">get_images_shape</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.get_mean" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.get_mean">get_mean</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.kill" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.kill">kill</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.read_images" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.read_images">read_images</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.run" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.run">run</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.save_file" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.save_file">save_file</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.save_state" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.save_state">save_state</a></code></li>
 <li><code><a title="laue.experiment.base_experiment.Experiment.set_calibration" href="experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.set_calibration">set_calibration</a></code></li>
+<li><code><a title="laue.experiment.base_experiment.Experiment.start" href="utilities/data_consistency.html#laue.utilities.data_consistency.Consistency.start">start</a></code></li>
 </ul>
 </li>
 </ul>

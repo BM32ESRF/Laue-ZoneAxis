@@ -49,15 +49,15 @@ def _generalize(f):
 @_generalize
 def _sub_float_rat(x, all_=False):
     """Remplace certain flotants par des rationels."""
-    repl = {f: int(round(f)) for f in x.atoms(sympy.Float) if round(f) == round(f, 5)}
+    repl = {f: int(round(f)) for f in x.atoms(sympy.Float) if round(f) == round(f, 4)}
     x = subs(x, repl)
     if not all_:
         cand_pow = [p for p in x.atoms(sympy.Pow) if isinstance(p.exp, sympy.Float)]
         cand_rat = [sympy.Rational(p.exp).limit_denominator(10) for p in cand_pow]
-        repl = {p: sympy.Pow(p.base, r) for p, r in zip(cand_pow, cand_rat) if round(p.exp, 5) == round(r, 5)}
+        repl = {p: sympy.Pow(p.base, r) for p, r in zip(cand_pow, cand_rat) if round(p.exp, 4) == round(r, 4)}
     else:
         repl = {f: sympy.Rational(f).limit_denominator(10) for f in x.atoms(sympy.Float)}
-        repl = {f: v for f, v in repl.items() if round(f, 5) == round(v, 5)}
+        repl = {f: v for f, v in repl.items() if round(f, 4) == round(v, 4)}
     x = subs(x, repl)
     return x
 
@@ -70,7 +70,6 @@ def _branch_simplify(x, measure):
         all_cand = {x} # x.rewrite(sympy.Piecewise),  x.expand(basic=True)
         new_cand = all_cand.copy() # Les expressions qui ne sont pas encore passes dans la moulinette.
         for _ in range(4):
-            # print(f"boucle {_}, nbr={len(new_cand)}")
             with Pool() as pool:
                 proc = []
                 for x_ in new_cand:
@@ -115,7 +114,7 @@ def _select(*xs, measure, n=1):
     return {xs[r] for r in np.argsort(costs)[:n]}
 
 def _cse_simp(x, measure):
-    """Simplifi chaque paquets sous expression de cse"""
+    """Simplifie independament chaque paterne issue de cse."""
     def build(defs, rvs):
         for var, e in defs[::-1]:
             rvs = subs(rvs, {var: e})
@@ -315,10 +314,7 @@ def evalf(x, n=15):
 
     if isinstance(x, (tuple, list, set)):
         return type(x)([evalf(e, n=n) for e in x])
-
-    x = basic_evalf(x, n=n)
-    x = _sub_float_rat(x)
-    return x
+    return _sub_float_rat(basic_evalf(x, n=n))
 
 def simplify(x, measure, verbose=False):
     """
@@ -381,6 +377,7 @@ class TimeCost:
             "Abs": (lambda: np.abs(self._negone)),
             "Add": (lambda: self._bat + self._bat),
             "And": (lambda: self._true & self._true),
+            "BooleanTrue": (lambda: self._one.astype(bool)),
             "Equality": (lambda: self._bat == self._bat),
             "GreaterThan": (lambda: self._one >= self._one),
             "LessThan": (lambda: self._one <= self._one),
@@ -400,6 +397,7 @@ class TimeCost:
             "StrictGreaterThan": (lambda: self._one > self._one),
             "StrictLessThan": (lambda: self._one < self._one),
             "Transpose": (lambda: np.transpose(self._zero)),
+            "Unequality": (lambda: self._bat != self._bat),
             "Xor": (lambda: (self._false|self._true) & ~(self._false&self._true)),
             "acos": (lambda: np.arccos(self._bat)),
             "acosh": (lambda: np.arccosh(self._two)),
@@ -470,15 +468,15 @@ class TimeCost:
 
         if isinstance(branch, sympy.Pow):
             if isinstance(branch.exp, sympy.Number):
-                if round(branch.exp, 5) == 2:
+                if branch.exp == 2:
                     return self.branch_cost(branch.base) + self.atom_cost("**2")
-                if round(branch.exp, 5) == .5:
+                if branch.exp == sympy.S.Half:
                     return self.branch_cost(branch.base) + self.atom_cost("sqrt")
-                if round(branch.exp, 5) == -.5:
+                if branch.exp == -sympy.S.Half:
                     return self.branch_cost(branch.base) + self.atom_cost("div") + self.atom_cost("sqrt")
-                if round(branch.exp, 5) == -1:
+                if branch.exp == -sympy.S.One:
                     return self.branch_cost(branch.base) + self.atom_cost("div")
-                if round(branch.exp, 5) == -2:
+                if branch.exp == -2:
                     return self.branch_cost(branch.base) + self.atom_cost("div") + self.atom_cost("**2")
             return self.branch_cost(branch.base) + self.branch_cost(branch.exp) + self.atom_cost("Pow")
 
@@ -486,8 +484,7 @@ class TimeCost:
             op_cost = self.atom_cost("Piecewise") * (len(branch.args)-1)
             return sum(
                 self.branch_cost(val) + sum(self.branch_cost(a) for a in cond.args)
-                for val, cond in branch.args
-                )/len(branch.args) + op_cost
+                for val, cond in branch.args) + op_cost
 
         return sum((self.branch_cost(e) for e in branch.args)) + self.atom_cost(type(branch).__name__)
 
@@ -580,7 +577,7 @@ class Lambdify:
 
         # Code < float 64
         elif bloc == "numpy":
-            code = lambdify(self.args, evalf(self._simp_expr, n=15),
+            code = lambdify(self.args, evalf(self._simp_expr),
                 cse=True, modules="numpy").__doc__.split("\n")
             code[0] = code[0].replace("_lambdifygenerated", f"_{name}_numpy")
             code.insert(1, '    """Perform calculations in small float using the numpy module."""')
@@ -606,11 +603,14 @@ class Lambdify:
 
         # Expression formelle
         elif bloc == "sympy":
+            defs, rvs = cse_homogeneous(self.expr)
             code = []
             code.append(f"def _{name}_sympy():")
             code.append( '    """Returns the tree of the sympy expression."""')
             code.append(f"    {', '.join(self.args_name)} = symbols('{' '.join(self.args_name)}')")
-            code.append(f"    return {self.expr}")
+            for var, expr in defs:
+                code.append(f"    {var} = {expr}")
+            code.append(f"    return {rvs}")
             code.append( "")
 
         # Fonction principale Equivalent as self.__call__.
@@ -769,7 +769,7 @@ class Lambdify:
         >>>
         >>> l = Lambdify([x, y], cos(x + y) + x + y)
         >>> l.__getstate__()
-        ([x, y], x + y + cos(x + y))
+        ([x, y], x + y + cos(x + y), False)
         >>>
         """
         if self.expr == self._simp_expr:
@@ -786,11 +786,13 @@ class Lambdify:
         >>> from sympy.abc import x, y; from sympy import cos
         >>> from laue.utilities.lambdify import Lambdify
         >>>
-        >>> l = Lambdify([x, y], cos(x + y) + x + y)
-        >>> l
+        >>> Lambdify([x, y], cos(x + y) + x + y)
         Lambdify([x, y], x + y + cos(x + y))
-        >>> pickle.loads(pickle.dumps(l))
+        >>> pickle.loads(pickle.dumps(_))
         Lambdify([x, y], x + y + cos(x + y))
         >>>
         """
-        self.__init__(state[0], state[1], verbose=state[2], _simp_expr=state[-1])
+        if len(state) == 4:
+            self.__init__(state[0], state[1], verbose=state[2], _simp_expr=state[3])
+        else:
+            self.__init__(state[0], state[1], verbose=state[2])

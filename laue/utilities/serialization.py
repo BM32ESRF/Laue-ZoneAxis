@@ -21,7 +21,9 @@ __pdoc__ = {"SpotPickelable.__getstate__": True,
             "DiagramPickleable.__getstate__": True,
             "DiagramPickleable.__setstate__": True,
             "TransformerPickleable.__getstate__": True,
-            "TransformerPickleable.__setstate__": True}
+            "TransformerPickleable.__setstate__": True,
+            "ExperimentPickleable.__getstate__": True,
+            "ExperimentPickleable.__setstate__": True}
 
 
 class SpotPickleable:
@@ -183,7 +185,7 @@ class TransformerPickleable:
     """
     def __getstate__(self):
         """
-        ** Recupere les fonction vecirisee et symplifiees. **
+        ** Recupere les fonction vectorisee et symplifiees. **
         """
         state = {}
         state["verbose"] = self.verbose
@@ -201,7 +203,7 @@ class TransformerPickleable:
 
     def __setstate__(self, state):
         """
-        * Initialisateur pour pickle. **
+        ** Initialisateur pour pickle. **
 
         Examples
         --------
@@ -230,4 +232,76 @@ class ExperimentPickleable:
     """
     ** Interface pour serialiser une experience. **
     """
-    pass
+    def __getstate__(self):
+        """
+        ** Recupere des informations d'une experience. **
+        """
+        state = {}
+
+        state["verbose"] = self.verbose
+        state["max_space"] = self.max_space
+        state["threshold"] = self.threshold
+        state["font_size"] = self.font_size
+        state["ignore_errors"] = self.ignore_errors
+        state["kwarg"] = self.kwarg
+        state["kernel_font"] = self.kernel_font
+        state["threshold"] = self.threshold
+        state["kernel_dilate"] = self.kernel_dilate
+        state["threshold"] = self.threshold
+        state["mean_bg"] = self._mean_bg
+        state["shape"] = self._shape
+        state["mean_bg"] = self._mean_bg
+        state["calibration_parameters"] = self._calibration_parameters
+        state["gnomonic_matrix"] = self._gnomonic_matrix
+        state["saving_file"] = self.saving_file
+        state["compress"] = self.compress
+        state["dt"] = self.dt
+
+        state["images"] = None
+        state["transformer"] = None
+        state["predictors"] = None
+        state["images_iterator"] = None
+        state["diagrams_iterator"] = None
+        state["axes_iterator"] = None
+        state["subsets_iterator"] = None
+
+        return state
+
+    def __setstate__(self, state):
+        """
+        ** Initialise partiellement l'experience. **
+
+        A partir des informations presentes dans ``state``,
+        certains attributs sont crees ou completes.
+
+        Examples
+        --------
+        >>> import pickle
+        >>> import laue
+        >>> image = "laue/examples/ge_blanc.mccd"
+        >>> laue.Experiment(image)
+        Experiment('laue/examples')
+        >>> trans = pickle.loads(pickle.dumps(_))
+        Experiment('laue/examples')
+        >>>
+        """
+        if not hasattr(self, "verbose"):
+            self.verbose = state["verbose"]
+        self.max_space = state["max_space"]
+        self.threshold = state["threshold"]
+        self.font_size = state["font_size"]
+        if not hasattr(self, "ignore_errors"):
+            self.ignore_errors = state["ignore_errors"]
+        self.kwarg = state["kwarg"]
+        self.kernel_font = state["kernel_font"]
+        self.kernel_dilate = state["kernel_dilate"]
+        self._mean_bg = state["mean_bg"]
+        self._shape = state["shape"]
+        self._calibration_parameters = state["calibration_parameters"]
+        self._gnomonic_matrix = state["gnomonic_matrix"]
+        if not hasattr(self, "saving_file"):
+            self.saving_file = state["saving_file"]
+        if not hasattr(self, "compress"):
+            self.compress = state["compress"]
+        if not hasattr(self, "dt"):
+            self.dt = state["dt"]
