@@ -235,19 +235,13 @@ def atomic_find_zone_axes(transformer, gnomonics, dmax, nbr, tol):
 
     return angles, dists, axes_spots_ind, spots_axes_ind
 
-def _get_zone_axes_pickle(args):
+def _jump_find_zone_axes(args):
     """
     ** Help for ``LaueDiagram.find_zone_axes``. **
 
-    Alias pickalisable de ``atomic_find_zone_axes``.
+    Etale les arguments de ``atomic_find_zone_axes`` et saute la fonction si besoin.
     """
     transformer, gnomonics, dmax, nbr, tol = args
-
-    from laue.core.geometry.transformer import ind2comb
-
-    # Parsing des arguments
-    if isinstance(transformer, bytes): # Si il est serialise.
-        import cloudpickle
-        transformer = cloudpickle.loads(transformer) # On le deserialise.
-
+    if transformer is None: # Si il ne faut pas refaire les calculs
+        return {"dmax": dmax, "nbr": nbr, "tol": tol}
     return atomic_find_zone_axes(transformer, gnomonics, dmax, nbr, tol)

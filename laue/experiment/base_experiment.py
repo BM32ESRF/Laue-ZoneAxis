@@ -107,8 +107,6 @@ class Experiment(ExperimentPickleable, Recordable):
             Les parametres fournis a l'initialisateur de gestionaire d'enregistrement.
             voir ``laue.utilities.data_consistency.Recordable.__init__``.
         """
-        assert hasattr(images, "__iter__"), ("'images' must to be iterable. "
-            f"It can not be of type {type(images).__name__}.")
         assert isinstance(verbose, int), f"'verbose' has to be int, not {type(verbose).__name__}."
         
         max_space = kwargs.get("max_space", 5)
@@ -132,7 +130,8 @@ class Experiment(ExperimentPickleable, Recordable):
         if config_file is not None:
             kwargs["config_file"] = config_file
 
-        self._images = images
+        from laue.utilities.image import images_to_iter
+        self._images = images_to_iter(images)
 
         self.verbose = verbose
         self.max_space = max_space
@@ -512,9 +511,10 @@ class Experiment(ExperimentPickleable, Recordable):
                 if self.verbose:
                     print("Extraction des diagrammes...")
 
+                start_len = len(self._buff_diags)
                 for i, diag in enumerate(func(*func_args, **func_kwargs)):
                     if self.verbose >= 2:
-                        print(f"    diagramme num {i} extrait: "
+                        print(f"    diagramme num {i+start_len} extrait: "
                               f"(...{diag.get_id()[-20:]}) "
                               f"avec {len(diag)} spots")
                     yield diag
@@ -647,17 +647,21 @@ class Experiment(ExperimentPickleable, Recordable):
         @show_iterator_state
         def _subsets_extractor(self):
             if multiprocessing.current_process().name == "MainProcess":
-                from laue.core.subsets import _pickelable as atomic_find_subsets
+                from laue.core.subsets import _jump_find_subsets
                 from laue.utilities.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (
-                        diag.find_subsets(_atomic_subsets_res=args)
+                        (
+                            diag.find_subsets(_atomic_subsets_res=args)
+                            if not isinstance(args, dict) else
+                            diag.find_subsets(**args)
+                        )
                         for diag, args
                         in zip(
                             self,
                             limited_imap(pool,
-                                atomic_find_subsets,
-                                (   # transformer, gnomonics, dmax, nbr, tol
+                                _jump_find_subsets,
+                                (
                                     diag.find_subsets(**kwds, _get_args=True)
                                     for _, diag in zip(self.find_zone_axes(tense_flow=True, **kwds), self)
                                 )
@@ -752,16 +756,20 @@ class Experiment(ExperimentPickleable, Recordable):
             """
             if multiprocessing.current_process().name == "MainProcess":
                 # Parallelisation des fils.
-                from laue.core.zone_axes import _get_zone_axes_pickle
+                from laue.core.zone_axes import _jump_find_zone_axes
                 from laue.utilities.multi_core import limited_imap
                 with multiprocessing.Pool() as pool:
                     yield from (
-                        diag.find_zone_axes(_axes_args=args)
+                        (
+                            diag.find_zone_axes(_axes_args=args)
+                            if not isinstance(args, dict) else
+                            diag.find_zone_axes(**args)
+                        )
                         for diag, args
                         in zip(
                             self,
                             limited_imap(pool,
-                                _get_zone_axes_pickle,
+                                _jump_find_zone_axes,
                                 (
                                     diag.find_zone_axes(**kwds, _get_args=True)
                                     for diag in self
@@ -983,7 +991,7 @@ class Experiment(ExperimentPickleable, Recordable):
                 for image_info in func(*func_args, **func_kwargs):
                     yield image_info
                     if self.verbose >= 2:
-                        print(f"    image : (...{str(image_info)[-20:]}) cedee.")
+                        print(f"    image : {str(image_info).split('/')[-1][-40:]} cedee.")
 
                 if self.verbose:
                     print("    OK: Toutes les images sont lues.")
@@ -1007,21 +1015,9 @@ class Experiment(ExperimentPickleable, Recordable):
             """
             Premiere vraie extraction.
             """
-            # Convertion str vers generateur.
-            if isinstance(self._images, str): # Dans le cas ou une chaine de caractere
-                if os.path.isdir(self._images): # decrit l'ensemble des images.
-                    self._images = sorted(
-                        os.path.join(father, file)
-                        for father, _, files in os.walk(self._images)
-                        for file in files)
-                else:
-                    self._images = sorted(glob.iglob(self._images, recursive=True))
-            elif isinstance(self._images, (tuple, set)):
-                self._images = list(self._images)
-
             yield from self._images
 
-        @prevent_generator_size(min_size=1)
+        @prevent_generator_size(min_size=(0 if self._buff_images else 1))
         def jump_map(multi_image_iterator):
             image_num = 0
             for image_info in multi_image_iterator:

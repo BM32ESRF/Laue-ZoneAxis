@@ -93,8 +93,11 @@ class Recordable(threading.Thread):
         self.kill()
 
     def __del__(self):
-        if self.is_alive():
-            self.kill()
+        try:
+            if self.is_alive():
+                self.kill()
+        except AssertionError:
+            pass
 
     def kill(self):
         """

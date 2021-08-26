@@ -320,6 +320,8 @@ def simplify(x, measure, verbose=False):
     """
     ** Triture l'expression pour minimiser le temps de calcul. **
     """
+    return x # A changer... C'est car la suite est pas hyper robuste
+
     if verbose:
         print(f"simplify: {cse_homogeneous(x)}...")
         print(f"    begin cost: {measure(x)}")

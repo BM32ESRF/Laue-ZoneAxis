@@ -156,3 +156,29 @@ def create_image(positions, intensities=None, *, shape=None):
 
     return image
     
+def images_to_iter(images):
+    """
+    ** Converti les images en un generateur d'images. **
+
+    Parameters
+    ----------
+    images
+        Ce qui representes les images. Que ce soit le nom
+        d'un dossier, d'une image elle meme, une glob expression,
+        une liste d'image ou bien un generateur.
+    """
+    if isinstance(images, str): # Dans le cas ou une chaine de caractere
+        if os.path.isdir(images): # decrit l'ensemble des images.
+            images = sorted(
+                os.path.join(father, file)
+                for father, _, files in os.walk(images)
+                for file in files)
+        else:
+            images = sorted(glob.iglob(images, recursive=True))
+    elif isinstance(images, (tuple, set)):
+        images = list(images)
+
+    assert hasattr(images, "__iter__"), ("'images' must to be iterable. "
+        f"It can not be of type {type(images).__name__}.")
+
+    return images

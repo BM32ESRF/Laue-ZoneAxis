@@ -129,6 +129,9 @@ class DiagramPickleable:
         if self._axes:
             state["axes"] = {key: [axis.__getstate__() for axis in axes]
                 for key, axes in self._axes.items()}
+        if self._subsets:
+            state["subsets"] = {key: [{spot.get_id() for spot in subset} for subset in subsets]
+                for key, subsets in self._subsets.items()}
         if self._hkl:
             state["hkl"] = self._hkl
         return state
@@ -180,6 +183,9 @@ class DiagramPickleable:
                 axis.diagram = self
                 axis.spots = collections.OrderedDict(
                     ((ind, self[ind]) for ind in axis.spots.keys()))
+        if "subsets" in state:
+            self._subsets = {key: [{self[spot_id] for spot_id in subset} for subset in subets]
+                for key, subsets in state["subsets"].items()}
 
         self._hkl = state.get("hkl", {})
 
@@ -359,9 +365,6 @@ class ExperimentPickleable(OrderedExperimentPickleable):
         ## gestion des diagrames
         state["buff_diags"] = self._buff_diags
 
-        state["axes_iterator"] = None
-        state["subsets_iterator"] = None
-
         return state
 
     def __setstate__(self, state):
@@ -384,7 +387,7 @@ class ExperimentPickleable(OrderedExperimentPickleable):
         """
         from laue.experiment.ordered_experiment import OrderedExperiment
         if isinstance(self, OrderedExperiment):
-            state = super().__setstate__(state)
+            super().__setstate__(state)
 
         # cas simple a traiter.
         if not hasattr(self, "verbose"):
@@ -409,6 +412,8 @@ class ExperimentPickleable(OrderedExperimentPickleable):
         if not hasattr(self, "dt"):
             self.dt = state["dt"]
         self._predictors = state["predictors"]
+        self._axes_iterator = None
+        self._subsets_iterator = None
 
         # cas un peu moins triviaux.
         ## gestion des images

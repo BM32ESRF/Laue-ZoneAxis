@@ -64,6 +64,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         self._image_gnom = None # Image projete dans le plan gnomonic.
         self._sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
         self._axes = {} # Les axes de zones.
+        self._subsets = {} # Les sous ensembles.
         self._spots_set = None # L'ensemble des spots pour une recherche plus rapide.
         self._hkl = {} # Les prediction des indices hkl
 
@@ -91,7 +92,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         self._image_xy = image
 
     def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
-        _axes_args=None, _get_args=False):
+        _axes_args=None, _get_args=False, **_):
         """
         ** Cherche les axes de zone **
 
@@ -148,6 +149,8 @@ class LaueDiagram(Splitable, DiagramPickleable):
         assert dmax > 0, f"La distance doit etre strictement positive elle vaut {dmax}."
 
         if _get_args: # Si il faut seulement preparer le travail.
+            if (dmax, nbr, tol) in self._axes:
+                return None, None, dmax, nbr, tol # Pour accelerer les calculs.
             gnomonics = self.get_gnomonic_positions()
             return self.experiment.transformer, gnomonics, dmax, nbr, tol
 
@@ -157,9 +160,9 @@ class LaueDiagram(Splitable, DiagramPickleable):
         if _axes_args is None: # Si le travail n'est pas premache.
             if self.experiment.verbose:
                 print(f"Recherche des axes de {self.get_id()}...")
-            from laue.core.zone_axes import _get_zone_axes_pickle
-            phi_s, mu_s, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
-                self.find_zone_axes(dmax=dmax, nbr=nbr, tol=tol, _get_args=True))
+            from laue.core.zone_axes import atomic_find_zone_axes
+            phi_s, mu_s, axis_spots_ind, spots_axes_ind = atomic_find_zone_axes(
+                *self.find_zone_axes(dmax=dmax, nbr=nbr, tol=tol, _get_args=True))
             if self.experiment.verbose:
                 print(f"    OK: {len(axis_spots_ind)} axes trouves.")
         else:

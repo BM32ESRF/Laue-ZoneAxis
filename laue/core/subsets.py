@@ -26,7 +26,7 @@ class Splitable:
     Interface pour la classe ``laue.diagram.LaueDiagram``.
     """
     def find_subsets(self, *, angle_max=math.pi/24, spots_max=20, distance_max=.08,
-        _atomic_subsets_res=None, _get_args=False):
+        _atomic_subsets_res=None, _get_args=False, **_):
         """
         ** Recherche des spots qui appartiennent a un meme grain. **
 
@@ -116,16 +116,26 @@ class Splitable:
             "en mm dans le plan gnomonic. Elle doit etre comprise entre ]0, .3]. "
             f"Or elle vaut {distance_max}, ce qui sort de cet intervalle.")
 
-        args = _get_spots_axes(self)
-        config = dict(angle_max=angle_max,
-                      spots_max=spots_max,
-                      distance_max=distance_max)
+
         if _get_args: # Si il faut seulement preparer le travail.
-            return args, config
+            if (angle_max, spots_max, distance_max) in self._subsets:
+                return None, None, angle_max, spots_max, distance_max
+            spots_dict, axes_dict = _get_spots_axes(self)
+            return spots_dict, axes_dict, angle_max, spots_max, distance_max
+
+        if (angle_max, spots_max, distance_max) in self._subsets: # Si on a deja la solution.
+            return self._subsets[(angle_max, spots_max, distance_max)]
 
         if _atomic_subsets_res is None: # Si il faut faire les calculs.
-            _atomic_subsets_res = atomic_find_subsets(*args, **config)
-        
+            if self.experiment.verbose:
+                print(f"Recherche des sous ensembles de {self.get_id()}...")
+            _atomic_subsets_res = atomic_find_subsets(
+                *self.find_subsets(angle_max=angle_max, spots_max=spots_max,
+                    distance_max=distance_max, _get_args=True))
+            if self.experiment.verbose:
+                print(f"    OK: {len(_atomic_subsets_res)} sous-ensembles trouves.")
+
+        # Creation des sous ensembles.
         subsets = [{self[spot_id] for spot_id in subset} for subset in _atomic_subsets_res]
         return subsets
 
@@ -151,7 +161,7 @@ def _get_spots_axes(diag):
     }
     return spots, axes
 
-def atomic_find_subsets(spots_dict, axes_dict, **kwargs):
+def atomic_find_subsets(spots_dict, axes_dict, angle_max, spots_max, distance_max):
     """
     ** Fonction 'bas niveau' de separation de grains. **
 
@@ -175,8 +185,7 @@ def atomic_find_subsets(spots_dict, axes_dict, **kwargs):
     axes_dict : dict
         Une representations des axes de zone. Doit etre de la forme:
         ``{axe_ind: {"polar": (theta, dist), "quality": .7, "spots": {1, 4, 5, 6}}, ...}``
-    **kwargs
-        Doit au moins contenir les 3 champs ``angle_max``, ``spots_max`` et ``distance_max``.
+    Pour les autres arguments, se referer a ``laue.core.subsets.Splitable.find_subsets``.
 
     Returns
     -------
@@ -291,7 +300,7 @@ def atomic_find_subsets(spots_dict, axes_dict, **kwargs):
         if len(axes_id) <= 1:
             return len(axes_id)
         axes = [axes_dict[axis_id]["polar"] for axis_id in axes_id]
-        nbr_near = (distance_axis(axes, axes, weight=1) < kwargs["angle_max"]).sum()
+        nbr_near = (distance_axis(axes, axes, weight=1) < angle_max).sum()
         nbr = len(axes) - (nbr_near-len(axes))//2
         return nbr
 
@@ -307,7 +316,7 @@ def atomic_find_subsets(spots_dict, axes_dict, **kwargs):
         return excluded_bis, graph_bis
 
     # Extraction des spots.
-    spots_at_cross = sorted(spots_dict, key=count_variant_axis, reverse=True)[:kwargs["spots_max"]]
+    spots_at_cross = sorted(spots_dict, key=count_variant_axis, reverse=True)[:spots_max]
     max_cross = count_variant_axis(spots_at_cross[0])
     limit = math.sqrt(max(2**2, max_cross)) # Permet d'eviter 'ValueError: math domain error'
     spots_at_cross = [spot_id for spot_id in spots_at_cross if count_variant_axis(spot_id) >= limit]
@@ -327,7 +336,7 @@ def atomic_find_subsets(spots_dict, axes_dict, **kwargs):
                     spots_dict[spot1]["gnom"],
                     spots_dict[spot2]["gnom"],
                     space="gnomonic"
-                    ) < kwargs["distance_max"]:
+                    ) < distance_max:
                 excluded.append((spot1, spot2))
                 continue
 
@@ -341,7 +350,7 @@ def atomic_find_subsets(spots_dict, axes_dict, **kwargs):
             if axes1 and axes2 and distance_axis(
                     [axes_dict[axis_id]["polar"] for axis_id in axes1],
                     [axes_dict[axis_id]["polar"] for axis_id in axes2],
-                    weight=1).min() < kwargs["angle_max"]: # tolerance angulaire de pi/32
+                    weight=1).min() < angle_max: # tolerance angulaire de pi/32
                 excluded.append((spot1, spot2))
                 continue
 
@@ -368,8 +377,13 @@ def atomic_find_subsets(spots_dict, axes_dict, **kwargs):
     subsets = [con for con in subsets if len(con) >= 2]
     return subsets
 
-def _pickelable(args):
+def _jump_find_subsets(args):
     """
-    args = ((spots_dict, axes_dict), kwargs)
+    ** Help for ``LaueDiagram.find_subsets``. **
+
+    Etale les arguments de ``atomic_find_subsets`` et saute la fonction si besoin.
     """
-    return atomic_find_subsets(*args[0], **args[1])
+    spots_dict, axes_dict, angle_max, spots_max, distance_max = args
+    if spots_dict is None: # Si il ne faut pas refaire les calculs
+        return {"angle_max": angle_max, "spots_max": spots_max, "distance_max": distance_max}
+    return atomic_find_subsets(spots_dict, axes_dict, angle_max, spots_max, distance_max)
