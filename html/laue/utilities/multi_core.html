@@ -358,26 +358,28 @@ class RecallingIterator:
     [0, 1, 2, 3, 4]
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    def __init__(self, base_iterator, *, mother=None):
+    def __init__(self, base_iterator, *, mother=None, buff_name=None):
         &#34;&#34;&#34;
         Paremeters
         ----------
-        mother : object
-            Instance de la classe dans laquelle on met cet iterateur.
-            Si il est omis, la memoire est globale et ne sera pas netoyee
-            par le ramasse-miette. Il est conseille si possible fournir &#39;mother&#39;.
         base_iterator : iterator
             L&#39;iterateur epuisable, qui ne doit en tout et pour tout
             etre parcouru qu&#39;une seule fois.
+        mother : object (optional)
+            Instance de la classe dans laquelle on met cet iterateur.
+            Si il est omis, la memoire est globale et ne sera pas netoyee
+            par le ramasse-miette. Il est conseille si possible fournir &#39;mother&#39;.
+        buff_name : str (optional)
+            Si il est precise, c&#39;est le nom de la variable du buffer.
         &#34;&#34;&#34;
         self.mother = mother
         self.base_iterator = base_iterator
-        self.signature = hashlib.md5(id(base_iterator).to_bytes(16, &#34;big&#34;)).hexdigest()
+        signature = hashlib.md5(id(base_iterator).to_bytes(16, &#34;big&#34;)).hexdigest()
 
         self.stape = 0 # Le rang de l&#39;element suivant a ceder.
 
         # Mise en place du verrou.
-        lock_name = f&#34;_lock_{self.signature}&#34;
+        lock_name = f&#34;_lock_{signature}&#34;
         if self.mother is not None:
             if not hasattr(self.mother, lock_name):
                 setattr(self.mother, lock_name, multiprocessing.Lock())
@@ -388,7 +390,7 @@ class RecallingIterator:
             self.lock = globals()[lock_name]
 
         # Mise en place de la memoire pour reiterer.
-        buffer_name = f&#34;_buffer_{self.signature}&#34;
+        buffer_name = f&#34;_buffer_recalling_{signature}&#34; if buff_name is None else buff_name
         if self.mother is not None:
             if not hasattr(self.mother, buffer_name):
                 setattr(self.mother, buffer_name, [])
@@ -906,7 +908,7 @@ def daemon(self):
 </dd>
 <dt id="laue.utilities.multi_core.RecallingIterator"><code class="flex name class">
 <span>class <span class="ident">RecallingIterator</span></span>
-<span>(</span><span>base_iterator, *, mother=None)</span>
+<span>(</span><span>base_iterator, *, mother=None, buff_name=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Permet d'iterer plusieurs instances d'un unique generateur. </strong></p>
@@ -948,13 +950,15 @@ def daemon(self):
 &gt;&gt;&gt;
 </code></pre>
 <h2 id="paremeters">Paremeters</h2>
-<p>mother : object
+<p>base_iterator : iterator
+L'iterateur epuisable, qui ne doit en tout et pour tout
+etre parcouru qu'une seule fois.
+mother : object (optional)
 Instance de la classe dans laquelle on met cet iterateur.
 Si il est omis, la memoire est globale et ne sera pas netoyee
 par le ramasse-miette. Il est conseille si possible fournir 'mother'.
-base_iterator : iterator
-L'iterateur epuisable, qui ne doit en tout et pour tout
-etre parcouru qu'une seule fois.</p></div>
+buff_name : str (optional)
+Si il est precise, c'est le nom de la variable du buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1001,26 +1005,28 @@ etre parcouru qu'une seule fois.</p></div>
     [0, 1, 2, 3, 4]
     &gt;&gt;&gt;
     &#34;&#34;&#34;
-    def __init__(self, base_iterator, *, mother=None):
+    def __init__(self, base_iterator, *, mother=None, buff_name=None):
         &#34;&#34;&#34;
         Paremeters
         ----------
-        mother : object
-            Instance de la classe dans laquelle on met cet iterateur.
-            Si il est omis, la memoire est globale et ne sera pas netoyee
-            par le ramasse-miette. Il est conseille si possible fournir &#39;mother&#39;.
         base_iterator : iterator
             L&#39;iterateur epuisable, qui ne doit en tout et pour tout
             etre parcouru qu&#39;une seule fois.
+        mother : object (optional)
+            Instance de la classe dans laquelle on met cet iterateur.
+            Si il est omis, la memoire est globale et ne sera pas netoyee
+            par le ramasse-miette. Il est conseille si possible fournir &#39;mother&#39;.
+        buff_name : str (optional)
+            Si il est precise, c&#39;est le nom de la variable du buffer.
         &#34;&#34;&#34;
         self.mother = mother
         self.base_iterator = base_iterator
-        self.signature = hashlib.md5(id(base_iterator).to_bytes(16, &#34;big&#34;)).hexdigest()
+        signature = hashlib.md5(id(base_iterator).to_bytes(16, &#34;big&#34;)).hexdigest()
 
         self.stape = 0 # Le rang de l&#39;element suivant a ceder.
 
         # Mise en place du verrou.
-        lock_name = f&#34;_lock_{self.signature}&#34;
+        lock_name = f&#34;_lock_{signature}&#34;
         if self.mother is not None:
             if not hasattr(self.mother, lock_name):
                 setattr(self.mother, lock_name, multiprocessing.Lock())
@@ -1031,7 +1037,7 @@ etre parcouru qu'une seule fois.</p></div>
             self.lock = globals()[lock_name]
 
         # Mise en place de la memoire pour reiterer.
-        buffer_name = f&#34;_buffer_{self.signature}&#34;
+        buffer_name = f&#34;_buffer_recalling_{signature}&#34; if buff_name is None else buff_name
         if self.mother is not None:
             if not hasattr(self.mother, buffer_name):
                 setattr(self.mother, buffer_name, [])

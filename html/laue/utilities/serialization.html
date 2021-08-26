@@ -46,7 +46,10 @@ l&#39;information utile.
 &#34;&#34;&#34;
 
 import collections
+import hashlib
 import os
+
+import cloudpickle
 
 
 __pdoc__ = {&#34;SpotPickelable.__getstate__&#34;: True,
@@ -58,7 +61,8 @@ __pdoc__ = {&#34;SpotPickelable.__getstate__&#34;: True,
             &#34;TransformerPickleable.__getstate__&#34;: True,
             &#34;TransformerPickleable.__setstate__&#34;: True,
             &#34;ExperimentPickleable.__getstate__&#34;: True,
-            &#34;ExperimentPickleable.__setstate__&#34;: True}
+            &#34;ExperimentPickleable.__setstate__&#34;: True,
+            &#34;OrderedExperimentPickleable&#34;: False}
 
 
 class SpotPickleable:
@@ -263,7 +267,79 @@ class TransformerPickleable:
         if &#34;mem&#34; in state:
             self._parameters_memory = state[&#34;mem&#34;]
 
-class ExperimentPickleable:
+class OrderedExperimentPickleable:
+    &#34;&#34;&#34;
+    ** Aide a serialiser les experience organisees. **
+    &#34;&#34;&#34;
+    def __getstate__(self):
+        state = {}
+
+        try:
+            state[&#34;time&#34;] = cloudpickle.dumps(self.time)
+        except TypeError:
+            tot = self.get_shape()[0]*self.get_shape()[1]
+            state[&#34;time&#34;] = (tot, [self.time(i) for i in range(0, tot*100, tot)])
+        try:
+            state[&#34;position&#34;] = cloudpickle.dumps(self.position)
+        except TypeError:
+            state[&#34;position&#34;] = [self.position(i) for i in
+                                 range(self.get_shape()[0]*self.get_shape()[1])]
+
+        state[&#34;next_row&#34;] = self._next_row
+        state[&#34;t_min&#34;] = self._t_min
+        state[&#34;t_max&#34;] = self._t_max
+        state[&#34;x_min&#34;] = self._x_min
+        state[&#34;x_max&#34;] = self._x_max
+        state[&#34;y_min&#34;] = self._y_min
+        state[&#34;y_max&#34;] = self._y_max
+        state[&#34;t_dict&#34;] = self._t_dict
+        state[&#34;x_dict&#34;] = self._x_dict
+        state[&#34;y_dict&#34;] = self._y_dict
+        state[&#34;index&#34;] = self._index
+
+        return state
+
+    def __setstate__(self, state):
+        &#34;&#34;&#34;
+        Examples
+        --------
+        &gt;&gt;&gt; import pickle, itertools
+        &gt;&gt;&gt; import laue
+        &gt;&gt;&gt; def get_positions(i):
+        ...     i_mod = i % 3362
+        ...     return divmod(i_mod, 82)
+        ...
+        &gt;&gt;&gt; images = itertools.cycle((&#34;laue/examples/ge_blanc.mccd&#34;,))
+        &gt;&gt;&gt; laue.OrderedExperiment(images, position=get_positions)
+        Experiment(&#39;laue/examples&#39;)
+        &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
+        Experiment(&#39;laue/examples&#39;)
+        &gt;&gt;&gt;
+        &#34;&#34;&#34;
+        if not hasattr(self, &#34;time&#34;):
+            if isinstance(state[&#34;time&#34;], bytes):
+                self.time = cloudpickle.loads(state[&#34;time&#34;])
+            else:
+                self.time = lambda i: state[&#34;time&#34;][1][i//state[&#34;time&#34;][0]]
+        if not hasattr(self, &#34;position&#34;):
+            if isinstance(state[&#34;position&#34;], bytes):
+                self.position = cloudpickle.loads(state[&#34;position&#34;])
+            else:
+                self.position = lambda i: state[&#34;position&#34;][i%len(state[&#34;position&#34;])]
+
+        self._next_row = state[&#34;next_row&#34;]
+        self._t_min = state[&#34;t_min&#34;]
+        self._t_max = state[&#34;t_max&#34;]
+        self._x_min = state[&#34;x_min&#34;]
+        self._x_max = state[&#34;x_max&#34;]
+        self._y_min = state[&#34;y_min&#34;]
+        self._y_max = state[&#34;y_max&#34;]
+        self._t_dict = state[&#34;t_dict&#34;]
+        self._x_dict = state[&#34;x_dict&#34;]
+        self._y_dict = state[&#34;y_dict&#34;]
+        self._index = state[&#34;index&#34;]
+
+class ExperimentPickleable(OrderedExperimentPickleable):
     &#34;&#34;&#34;
     ** Interface pour serialiser une experience. **
     &#34;&#34;&#34;
@@ -271,8 +347,14 @@ class ExperimentPickleable:
         &#34;&#34;&#34;
         ** Recupere des informations d&#39;une experience. **
         &#34;&#34;&#34;
-        state = {}
+        # cas OrderedExperiment
+        from laue.experiment.ordered_experiment import OrderedExperiment
+        if isinstance(self, OrderedExperiment):
+            state = super().__getstate__()
+        else:
+            state = {}
 
+        # cas simples
         state[&#34;verbose&#34;] = self.verbose
         state[&#34;max_space&#34;] = self.max_space
         state[&#34;threshold&#34;] = self.threshold
@@ -283,6 +365,7 @@ class ExperimentPickleable:
         state[&#34;threshold&#34;] = self.threshold
         state[&#34;kernel_dilate&#34;] = self.kernel_dilate
         state[&#34;threshold&#34;] = self.threshold
+        state[&#34;len&#34;] = self._len
         state[&#34;mean_bg&#34;] = self._mean_bg
         state[&#34;shape&#34;] = self._shape
         state[&#34;mean_bg&#34;] = self._mean_bg
@@ -291,12 +374,26 @@ class ExperimentPickleable:
         state[&#34;saving_file&#34;] = self.saving_file
         state[&#34;compress&#34;] = self.compress
         state[&#34;dt&#34;] = self.dt
+        state[&#34;predictors&#34;] = self._predictors
 
-        state[&#34;images&#34;] = None
-        state[&#34;transformer&#34;] = None
-        state[&#34;predictors&#34;] = None
-        state[&#34;images_iterator&#34;] = None
-        state[&#34;diagrams_iterator&#34;] = None
+        # cas pas simples
+        ## gestion des &#39;noms&#39; d&#39;images
+        if isinstance(self._images, list):
+            state[&#34;images&#34;] = {
+                &#34;type&#34;: &#34;list&#34;,
+                &#34;_images&#34;: self._images,
+                &#34;_buffer&#34;: self._buff_images}
+        else: # cas ou self._image est un generateur
+            state[&#34;images&#34;] = {
+                &#34;type&#34;: &#34;generator&#34;,
+                &#34;_buffer&#34;: self._buff_images}
+
+        ## gestion transformer
+        state[&#34;transformer&#34;] = self.transformer
+
+        ## gestion des diagrames
+        state[&#34;buff_diags&#34;] = self._buff_diags
+
         state[&#34;axes_iterator&#34;] = None
         state[&#34;subsets_iterator&#34;] = None
 
@@ -320,6 +417,11 @@ class ExperimentPickleable:
         Experiment(&#39;laue/examples&#39;)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
+        from laue.experiment.ordered_experiment import OrderedExperiment
+        if isinstance(self, OrderedExperiment):
+            state = super().__setstate__(state)
+
+        # cas simple a traiter.
         if not hasattr(self, &#34;verbose&#34;):
             self.verbose = state[&#34;verbose&#34;]
         self.max_space = state[&#34;max_space&#34;]
@@ -330,6 +432,7 @@ class ExperimentPickleable:
         self.kwargs = state[&#34;kwargs&#34;]
         self.kernel_font = state[&#34;kernel_font&#34;]
         self.kernel_dilate = state[&#34;kernel_dilate&#34;]
+        self._len = state[&#34;len&#34;]
         self._mean_bg = state[&#34;mean_bg&#34;]
         self._shape = state[&#34;shape&#34;]
         self._calibration_parameters = state[&#34;calibration_parameters&#34;]
@@ -339,7 +442,38 @@ class ExperimentPickleable:
         if not hasattr(self, &#34;compress&#34;):
             self.compress = state[&#34;compress&#34;]
         if not hasattr(self, &#34;dt&#34;):
-            self.dt = state[&#34;dt&#34;]</code></pre>
+            self.dt = state[&#34;dt&#34;]
+        self._predictors = state[&#34;predictors&#34;]
+
+        # cas un peu moins triviaux.
+        ## gestion des images
+        buff = state[&#34;images&#34;][&#34;_buffer&#34;]
+        try:
+            set_buff = set(buff)
+        except TypeError:
+            set_buff = buff
+        if state[&#34;images&#34;][&#34;type&#34;] == &#34;list&#34;:
+            if hasattr(self, &#34;_images&#34;):
+                self._images = [im for im in self._images if im not in set_buff]
+            else:
+                self._images = [im for im in state[&#34;images&#34;][&#34;_images&#34;] if im not in set_buff]
+        else:
+            if hasattr(self, &#34;_images&#34;):
+                self._images = (lambda: (yield from (im for im in self._images if im not in set_buff)))()
+            else:
+                self._images = iter([])
+        self._images_iterator = None
+        self._buff_images = buff
+
+        ## gestion transformer
+        self.transformer = state[&#34;transformer&#34;]
+        self.transformer.verbose = self.verbose
+
+        ## gestion des diagrames
+        self._buff_diags = state[&#34;buff_diags&#34;]
+        for diag in self._buff_diags:
+            diag.experiment = self
+        self._diagrams_iterator = None</code></pre>
 </details>
 </section>
 <section>
@@ -551,7 +685,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ExperimentPickleable:
+<pre><code class="python">class ExperimentPickleable(OrderedExperimentPickleable):
     &#34;&#34;&#34;
     ** Interface pour serialiser une experience. **
     &#34;&#34;&#34;
@@ -559,8 +693,14 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         &#34;&#34;&#34;
         ** Recupere des informations d&#39;une experience. **
         &#34;&#34;&#34;
-        state = {}
+        # cas OrderedExperiment
+        from laue.experiment.ordered_experiment import OrderedExperiment
+        if isinstance(self, OrderedExperiment):
+            state = super().__getstate__()
+        else:
+            state = {}
 
+        # cas simples
         state[&#34;verbose&#34;] = self.verbose
         state[&#34;max_space&#34;] = self.max_space
         state[&#34;threshold&#34;] = self.threshold
@@ -571,6 +711,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         state[&#34;threshold&#34;] = self.threshold
         state[&#34;kernel_dilate&#34;] = self.kernel_dilate
         state[&#34;threshold&#34;] = self.threshold
+        state[&#34;len&#34;] = self._len
         state[&#34;mean_bg&#34;] = self._mean_bg
         state[&#34;shape&#34;] = self._shape
         state[&#34;mean_bg&#34;] = self._mean_bg
@@ -579,12 +720,26 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         state[&#34;saving_file&#34;] = self.saving_file
         state[&#34;compress&#34;] = self.compress
         state[&#34;dt&#34;] = self.dt
+        state[&#34;predictors&#34;] = self._predictors
 
-        state[&#34;images&#34;] = None
-        state[&#34;transformer&#34;] = None
-        state[&#34;predictors&#34;] = None
-        state[&#34;images_iterator&#34;] = None
-        state[&#34;diagrams_iterator&#34;] = None
+        # cas pas simples
+        ## gestion des &#39;noms&#39; d&#39;images
+        if isinstance(self._images, list):
+            state[&#34;images&#34;] = {
+                &#34;type&#34;: &#34;list&#34;,
+                &#34;_images&#34;: self._images,
+                &#34;_buffer&#34;: self._buff_images}
+        else: # cas ou self._image est un generateur
+            state[&#34;images&#34;] = {
+                &#34;type&#34;: &#34;generator&#34;,
+                &#34;_buffer&#34;: self._buff_images}
+
+        ## gestion transformer
+        state[&#34;transformer&#34;] = self.transformer
+
+        ## gestion des diagrames
+        state[&#34;buff_diags&#34;] = self._buff_diags
+
         state[&#34;axes_iterator&#34;] = None
         state[&#34;subsets_iterator&#34;] = None
 
@@ -608,6 +763,11 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         Experiment(&#39;laue/examples&#39;)
         &gt;&gt;&gt;
         &#34;&#34;&#34;
+        from laue.experiment.ordered_experiment import OrderedExperiment
+        if isinstance(self, OrderedExperiment):
+            state = super().__setstate__(state)
+
+        # cas simple a traiter.
         if not hasattr(self, &#34;verbose&#34;):
             self.verbose = state[&#34;verbose&#34;]
         self.max_space = state[&#34;max_space&#34;]
@@ -618,6 +778,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         self.kwargs = state[&#34;kwargs&#34;]
         self.kernel_font = state[&#34;kernel_font&#34;]
         self.kernel_dilate = state[&#34;kernel_dilate&#34;]
+        self._len = state[&#34;len&#34;]
         self._mean_bg = state[&#34;mean_bg&#34;]
         self._shape = state[&#34;shape&#34;]
         self._calibration_parameters = state[&#34;calibration_parameters&#34;]
@@ -627,8 +788,43 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         if not hasattr(self, &#34;compress&#34;):
             self.compress = state[&#34;compress&#34;]
         if not hasattr(self, &#34;dt&#34;):
-            self.dt = state[&#34;dt&#34;]</code></pre>
+            self.dt = state[&#34;dt&#34;]
+        self._predictors = state[&#34;predictors&#34;]
+
+        # cas un peu moins triviaux.
+        ## gestion des images
+        buff = state[&#34;images&#34;][&#34;_buffer&#34;]
+        try:
+            set_buff = set(buff)
+        except TypeError:
+            set_buff = buff
+        if state[&#34;images&#34;][&#34;type&#34;] == &#34;list&#34;:
+            if hasattr(self, &#34;_images&#34;):
+                self._images = [im for im in self._images if im not in set_buff]
+            else:
+                self._images = [im for im in state[&#34;images&#34;][&#34;_images&#34;] if im not in set_buff]
+        else:
+            if hasattr(self, &#34;_images&#34;):
+                self._images = (lambda: (yield from (im for im in self._images if im not in set_buff)))()
+            else:
+                self._images = iter([])
+        self._images_iterator = None
+        self._buff_images = buff
+
+        ## gestion transformer
+        self.transformer = state[&#34;transformer&#34;]
+        self.transformer.verbose = self.verbose
+
+        ## gestion des diagrames
+        self._buff_diags = state[&#34;buff_diags&#34;]
+        for diag in self._buff_diags:
+            diag.experiment = self
+        self._diagrams_iterator = None</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>laue.utilities.serialization.OrderedExperimentPickleable</li>
+</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="laue.experiment.base_experiment.Experiment" href="../experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></li>
@@ -648,8 +844,14 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
     &#34;&#34;&#34;
     ** Recupere des informations d&#39;une experience. **
     &#34;&#34;&#34;
-    state = {}
+    # cas OrderedExperiment
+    from laue.experiment.ordered_experiment import OrderedExperiment
+    if isinstance(self, OrderedExperiment):
+        state = super().__getstate__()
+    else:
+        state = {}
 
+    # cas simples
     state[&#34;verbose&#34;] = self.verbose
     state[&#34;max_space&#34;] = self.max_space
     state[&#34;threshold&#34;] = self.threshold
@@ -660,6 +862,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
     state[&#34;threshold&#34;] = self.threshold
     state[&#34;kernel_dilate&#34;] = self.kernel_dilate
     state[&#34;threshold&#34;] = self.threshold
+    state[&#34;len&#34;] = self._len
     state[&#34;mean_bg&#34;] = self._mean_bg
     state[&#34;shape&#34;] = self._shape
     state[&#34;mean_bg&#34;] = self._mean_bg
@@ -668,12 +871,26 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
     state[&#34;saving_file&#34;] = self.saving_file
     state[&#34;compress&#34;] = self.compress
     state[&#34;dt&#34;] = self.dt
+    state[&#34;predictors&#34;] = self._predictors
 
-    state[&#34;images&#34;] = None
-    state[&#34;transformer&#34;] = None
-    state[&#34;predictors&#34;] = None
-    state[&#34;images_iterator&#34;] = None
-    state[&#34;diagrams_iterator&#34;] = None
+    # cas pas simples
+    ## gestion des &#39;noms&#39; d&#39;images
+    if isinstance(self._images, list):
+        state[&#34;images&#34;] = {
+            &#34;type&#34;: &#34;list&#34;,
+            &#34;_images&#34;: self._images,
+            &#34;_buffer&#34;: self._buff_images}
+    else: # cas ou self._image est un generateur
+        state[&#34;images&#34;] = {
+            &#34;type&#34;: &#34;generator&#34;,
+            &#34;_buffer&#34;: self._buff_images}
+
+    ## gestion transformer
+    state[&#34;transformer&#34;] = self.transformer
+
+    ## gestion des diagrames
+    state[&#34;buff_diags&#34;] = self._buff_diags
+
     state[&#34;axes_iterator&#34;] = None
     state[&#34;subsets_iterator&#34;] = None
 
@@ -719,6 +936,11 @@ Experiment('laue/examples')
     Experiment(&#39;laue/examples&#39;)
     &gt;&gt;&gt;
     &#34;&#34;&#34;
+    from laue.experiment.ordered_experiment import OrderedExperiment
+    if isinstance(self, OrderedExperiment):
+        state = super().__setstate__(state)
+
+    # cas simple a traiter.
     if not hasattr(self, &#34;verbose&#34;):
         self.verbose = state[&#34;verbose&#34;]
     self.max_space = state[&#34;max_space&#34;]
@@ -729,6 +951,7 @@ Experiment('laue/examples')
     self.kwargs = state[&#34;kwargs&#34;]
     self.kernel_font = state[&#34;kernel_font&#34;]
     self.kernel_dilate = state[&#34;kernel_dilate&#34;]
+    self._len = state[&#34;len&#34;]
     self._mean_bg = state[&#34;mean_bg&#34;]
     self._shape = state[&#34;shape&#34;]
     self._calibration_parameters = state[&#34;calibration_parameters&#34;]
@@ -738,7 +961,38 @@ Experiment('laue/examples')
     if not hasattr(self, &#34;compress&#34;):
         self.compress = state[&#34;compress&#34;]
     if not hasattr(self, &#34;dt&#34;):
-        self.dt = state[&#34;dt&#34;]</code></pre>
+        self.dt = state[&#34;dt&#34;]
+    self._predictors = state[&#34;predictors&#34;]
+
+    # cas un peu moins triviaux.
+    ## gestion des images
+    buff = state[&#34;images&#34;][&#34;_buffer&#34;]
+    try:
+        set_buff = set(buff)
+    except TypeError:
+        set_buff = buff
+    if state[&#34;images&#34;][&#34;type&#34;] == &#34;list&#34;:
+        if hasattr(self, &#34;_images&#34;):
+            self._images = [im for im in self._images if im not in set_buff]
+        else:
+            self._images = [im for im in state[&#34;images&#34;][&#34;_images&#34;] if im not in set_buff]
+    else:
+        if hasattr(self, &#34;_images&#34;):
+            self._images = (lambda: (yield from (im for im in self._images if im not in set_buff)))()
+        else:
+            self._images = iter([])
+    self._images_iterator = None
+    self._buff_images = buff
+
+    ## gestion transformer
+    self.transformer = state[&#34;transformer&#34;]
+    self.transformer.verbose = self.verbose
+
+    ## gestion des diagrames
+    self._buff_diags = state[&#34;buff_diags&#34;]
+    for diag in self._buff_diags:
+        diag.experiment = self
+    self._diagrams_iterator = None</code></pre>
 </details>
 </dd>
 </dl>

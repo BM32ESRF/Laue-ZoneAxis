@@ -149,6 +149,7 @@ class Experiment(ExperimentPickleable, Recordable):
 
         # Declaration des attributs interne de memoire.
         self._len = None # Nombre de diagrames lues.
+        self._buff_images = [] # La liste ordonnees des references d'images.
         self._buff_diags = [] # La liste ordonnee des diagrames lus.
 
         self._mean_bg = None # Fond diffus estime par la moyenne de toutes les images.
@@ -503,17 +504,6 @@ class Experiment(ExperimentPickleable, Recordable):
                 laue_diagram._set_image(image)
             return laue_diagram
 
-        def update_len(func):
-            """
-            Tient a jour la longueur de l'experience.
-            """
-            def decorate(*func_args, **func_kwargs):
-                for i, element in enumerate(func(*func_args, **func_kwargs)):
-                    yield element
-                self._len = i + 1
-
-            return decorate
-
         def show_iterator_state(func):
             """
             Insere des commentaires.
@@ -533,7 +523,6 @@ class Experiment(ExperimentPickleable, Recordable):
             
             return decorate
 
-        @update_len
         @show_iterator_state
         def _diagram_extractor(self):
             """
@@ -557,7 +546,9 @@ class Experiment(ExperimentPickleable, Recordable):
                                     ),
                                     (name, image)
                                 )
-                                for name, image in self.read_images()
+                                for name, image in self.read_images(condition=(
+                                    lambda im_id: not any(im_id == d.get_id() for d in self._buff_diags)
+                                ))
                             )
                         )
                     )
@@ -574,7 +565,9 @@ class Experiment(ExperimentPickleable, Recordable):
                         name,
                         image
                     )
-                    for name, image in self.read_images()
+                    for name, image in self.read_images(condition=(
+                        lambda im_id: not any(im_id == d.get_id() for d in self._buff_diags)
+                    ))
                 )
         
         if self._diagrams_iterator is None:
@@ -582,8 +575,8 @@ class Experiment(ExperimentPickleable, Recordable):
 
         from laue.utilities.multi_core import RecallingIterator
         return (
-            (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
-            if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self)))
+            (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self, buff_name="_buff_diags"))
+            if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self, buff_name="_buff_diags")))
 
     def find_subsets(self, *, tense_flow=False, **kwds):
         """
@@ -758,10 +751,6 @@ class Experiment(ExperimentPickleable, Recordable):
             Premiere vraie extraction.
             """
             if multiprocessing.current_process().name == "MainProcess":
-                # Compilation et serialisation des equations.
-                self.transformer.compile(self.set_calibration(), transform="cam_to_gnomonic")
-                transformer_ser = cloudpickle.dumps(self.transformer)
-
                 # Parallelisation des fils.
                 from laue.core.zone_axes import _get_zone_axes_pickle
                 from laue.utilities.multi_core import limited_imap
@@ -773,8 +762,8 @@ class Experiment(ExperimentPickleable, Recordable):
                             self,
                             limited_imap(pool,
                                 _get_zone_axes_pickle,
-                                ( # transformer, gnomonics, dmax, nbr, tol
-                                    (transformer_ser, *diag.find_zone_axes(**kwds, _get_args=True))
+                                (
+                                    diag.find_zone_axes(**kwds, _get_args=True)
                                     for diag in self
                                 )
                             )
@@ -901,7 +890,7 @@ class Experiment(ExperimentPickleable, Recordable):
         self._shape = image.shape
         return self._shape
 
-    def read_images(self):
+    def read_images(self, condition=(lambda name: True)):
         """
         ** Cede le contenu des images. **
 
@@ -913,6 +902,13 @@ class Experiment(ExperimentPickleable, Recordable):
         ne sont pas utilises, car il n'y a pas de mecanisme de verrou.
         * A chaque appel de cette methode, l'ordre est conserve.
         * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+        Parameters
+        ----------
+        condition : callable, optional
+            Une fonction de selection qui prend en entree l'identifiant de l'image
+            et qui renvoi True si il faut lire l'image, sinon. Si il renvoi False,
+            l'image en question est sautee.
 
         Yields
         ------
@@ -994,12 +990,24 @@ class Experiment(ExperimentPickleable, Recordable):
 
             return decorate
 
+        def update_len(func):
+            """
+            Tient a jour la longueur de l'experience.
+            """
+            def decorate(*func_args, **func_kwargs):
+                for element in func(*func_args, **func_kwargs):
+                    yield element
+                self._len = len(self._buff_images)
+
+            return decorate
+
+        @update_len
         @show_iterator_state
         def _images_extractor():
             """
             Premiere vraie extraction.
             """
-            # Convertion str vers generateur
+            # Convertion str vers generateur.
             if isinstance(self._images, str): # Dans le cas ou une chaine de caractere
                 if os.path.isdir(self._images): # decrit l'ensemble des images.
                     self._images = sorted(
@@ -1008,6 +1016,8 @@ class Experiment(ExperimentPickleable, Recordable):
                         for file in files)
                 else:
                     self._images = sorted(glob.iglob(self._images, recursive=True))
+            elif isinstance(self._images, (tuple, set)):
+                self._images = list(self._images)
 
             yield from self._images
 
@@ -1015,7 +1025,11 @@ class Experiment(ExperimentPickleable, Recordable):
         def jump_map(multi_image_iterator):
             image_num = 0
             for image_info in multi_image_iterator:
-                image_name, image = read_and_check_any_image(image_info, image_num)
+                if condition(image_info):
+                    image_name, image = read_and_check_any_image(image_info, image_num)
+                else:
+                    image_name = image = None
+                    image_num += 1
                 if image is None:
                     continue
                 image_num += 1
@@ -1024,7 +1038,7 @@ class Experiment(ExperimentPickleable, Recordable):
         if self._images_iterator is None:
             self._images_iterator = iter(_images_extractor())
 
-        return jump_map(RecallingIterator(self._images_iterator, mother=self))
+        return jump_map(RecallingIterator(self._images_iterator, mother=self, buff_name="_buff_images"))
 
     def save_file(self, filename):
         """
@@ -1148,13 +1162,11 @@ class Experiment(ExperimentPickleable, Recordable):
             # Cas ou il faut extraire.
             if limit >= 0:
                 target_limit = max(limit, 2*len(self._buff_diags))
-                self._buff_diags = []
                 for i, diag in enumerate(self):
-                    self._buff_diags.append(diag)
                     if i == limit:
                         break
             else:
-                self._buff_diags = self.get_diagrams()
+                self.get_diagrams()
 
             return get_diag_list(limit=limit, ignore=ignore)
 
@@ -1210,7 +1222,7 @@ class Experiment(ExperimentPickleable, Recordable):
         -------
         int
             Renvoi le nombre de diagrames presents dans cette experience.
-            Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.
+            Si toutes les images ne sont pas lus, la valeur 0 est renvoyee.
         """
         if self._len is None:
             return 0

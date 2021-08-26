@@ -184,6 +184,7 @@ class Experiment(ExperimentPickleable, Recordable):
 
         # Declaration des attributs interne de memoire.
         self._len = None # Nombre de diagrames lues.
+        self._buff_images = [] # La liste ordonnees des references d&#39;images.
         self._buff_diags = [] # La liste ordonnee des diagrames lus.
 
         self._mean_bg = None # Fond diffus estime par la moyenne de toutes les images.
@@ -538,17 +539,6 @@ class Experiment(ExperimentPickleable, Recordable):
                 laue_diagram._set_image(image)
             return laue_diagram
 
-        def update_len(func):
-            &#34;&#34;&#34;
-            Tient a jour la longueur de l&#39;experience.
-            &#34;&#34;&#34;
-            def decorate(*func_args, **func_kwargs):
-                for i, element in enumerate(func(*func_args, **func_kwargs)):
-                    yield element
-                self._len = i + 1
-
-            return decorate
-
         def show_iterator_state(func):
             &#34;&#34;&#34;
             Insere des commentaires.
@@ -568,7 +558,6 @@ class Experiment(ExperimentPickleable, Recordable):
             
             return decorate
 
-        @update_len
         @show_iterator_state
         def _diagram_extractor(self):
             &#34;&#34;&#34;
@@ -592,7 +581,9 @@ class Experiment(ExperimentPickleable, Recordable):
                                     ),
                                     (name, image)
                                 )
-                                for name, image in self.read_images()
+                                for name, image in self.read_images(condition=(
+                                    lambda im_id: not any(im_id == d.get_id() for d in self._buff_diags)
+                                ))
                             )
                         )
                     )
@@ -609,7 +600,9 @@ class Experiment(ExperimentPickleable, Recordable):
                         name,
                         image
                     )
-                    for name, image in self.read_images()
+                    for name, image in self.read_images(condition=(
+                        lambda im_id: not any(im_id == d.get_id() for d in self._buff_diags)
+                    ))
                 )
         
         if self._diagrams_iterator is None:
@@ -617,8 +610,8 @@ class Experiment(ExperimentPickleable, Recordable):
 
         from laue.utilities.multi_core import RecallingIterator
         return (
-            (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
-            if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self)))
+            (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self, buff_name=&#34;_buff_diags&#34;))
+            if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self, buff_name=&#34;_buff_diags&#34;)))
 
     def find_subsets(self, *, tense_flow=False, **kwds):
         &#34;&#34;&#34;
@@ -793,10 +786,6 @@ class Experiment(ExperimentPickleable, Recordable):
             Premiere vraie extraction.
             &#34;&#34;&#34;
             if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-                # Compilation et serialisation des equations.
-                self.transformer.compile(self.set_calibration(), transform=&#34;cam_to_gnomonic&#34;)
-                transformer_ser = cloudpickle.dumps(self.transformer)
-
                 # Parallelisation des fils.
                 from laue.core.zone_axes import _get_zone_axes_pickle
                 from laue.utilities.multi_core import limited_imap
@@ -808,8 +797,8 @@ class Experiment(ExperimentPickleable, Recordable):
                             self,
                             limited_imap(pool,
                                 _get_zone_axes_pickle,
-                                ( # transformer, gnomonics, dmax, nbr, tol
-                                    (transformer_ser, *diag.find_zone_axes(**kwds, _get_args=True))
+                                (
+                                    diag.find_zone_axes(**kwds, _get_args=True)
                                     for diag in self
                                 )
                             )
@@ -936,7 +925,7 @@ class Experiment(ExperimentPickleable, Recordable):
         self._shape = image.shape
         return self._shape
 
-    def read_images(self):
+    def read_images(self, condition=(lambda name: True)):
         &#34;&#34;&#34;
         ** Cede le contenu des images. **
 
@@ -948,6 +937,13 @@ class Experiment(ExperimentPickleable, Recordable):
         ne sont pas utilises, car il n&#39;y a pas de mecanisme de verrou.
         * A chaque appel de cette methode, l&#39;ordre est conserve.
         * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+        Parameters
+        ----------
+        condition : callable, optional
+            Une fonction de selection qui prend en entree l&#39;identifiant de l&#39;image
+            et qui renvoi True si il faut lire l&#39;image, sinon. Si il renvoi False,
+            l&#39;image en question est sautee.
 
         Yields
         ------
@@ -1029,12 +1025,24 @@ class Experiment(ExperimentPickleable, Recordable):
 
             return decorate
 
+        def update_len(func):
+            &#34;&#34;&#34;
+            Tient a jour la longueur de l&#39;experience.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                for element in func(*func_args, **func_kwargs):
+                    yield element
+                self._len = len(self._buff_images)
+
+            return decorate
+
+        @update_len
         @show_iterator_state
         def _images_extractor():
             &#34;&#34;&#34;
             Premiere vraie extraction.
             &#34;&#34;&#34;
-            # Convertion str vers generateur
+            # Convertion str vers generateur.
             if isinstance(self._images, str): # Dans le cas ou une chaine de caractere
                 if os.path.isdir(self._images): # decrit l&#39;ensemble des images.
                     self._images = sorted(
@@ -1043,6 +1051,8 @@ class Experiment(ExperimentPickleable, Recordable):
                         for file in files)
                 else:
                     self._images = sorted(glob.iglob(self._images, recursive=True))
+            elif isinstance(self._images, (tuple, set)):
+                self._images = list(self._images)
 
             yield from self._images
 
@@ -1050,7 +1060,11 @@ class Experiment(ExperimentPickleable, Recordable):
         def jump_map(multi_image_iterator):
             image_num = 0
             for image_info in multi_image_iterator:
-                image_name, image = read_and_check_any_image(image_info, image_num)
+                if condition(image_info):
+                    image_name, image = read_and_check_any_image(image_info, image_num)
+                else:
+                    image_name = image = None
+                    image_num += 1
                 if image is None:
                     continue
                 image_num += 1
@@ -1059,7 +1073,7 @@ class Experiment(ExperimentPickleable, Recordable):
         if self._images_iterator is None:
             self._images_iterator = iter(_images_extractor())
 
-        return jump_map(RecallingIterator(self._images_iterator, mother=self))
+        return jump_map(RecallingIterator(self._images_iterator, mother=self, buff_name=&#34;_buff_images&#34;))
 
     def save_file(self, filename):
         &#34;&#34;&#34;
@@ -1183,13 +1197,11 @@ class Experiment(ExperimentPickleable, Recordable):
             # Cas ou il faut extraire.
             if limit &gt;= 0:
                 target_limit = max(limit, 2*len(self._buff_diags))
-                self._buff_diags = []
                 for i, diag in enumerate(self):
-                    self._buff_diags.append(diag)
                     if i == limit:
                         break
             else:
-                self._buff_diags = self.get_diagrams()
+                self.get_diagrams()
 
             return get_diag_list(limit=limit, ignore=ignore)
 
@@ -1245,7 +1257,7 @@ class Experiment(ExperimentPickleable, Recordable):
         -------
         int
             Renvoi le nombre de diagrames presents dans cette experience.
-            Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.
+            Si toutes les images ne sont pas lus, la valeur 0 est renvoyee.
         &#34;&#34;&#34;
         if self._len is None:
             return 0
@@ -1506,6 +1518,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
 
         # Declaration des attributs interne de memoire.
         self._len = None # Nombre de diagrames lues.
+        self._buff_images = [] # La liste ordonnees des references d&#39;images.
         self._buff_diags = [] # La liste ordonnee des diagrames lus.
 
         self._mean_bg = None # Fond diffus estime par la moyenne de toutes les images.
@@ -1860,17 +1873,6 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
                 laue_diagram._set_image(image)
             return laue_diagram
 
-        def update_len(func):
-            &#34;&#34;&#34;
-            Tient a jour la longueur de l&#39;experience.
-            &#34;&#34;&#34;
-            def decorate(*func_args, **func_kwargs):
-                for i, element in enumerate(func(*func_args, **func_kwargs)):
-                    yield element
-                self._len = i + 1
-
-            return decorate
-
         def show_iterator_state(func):
             &#34;&#34;&#34;
             Insere des commentaires.
@@ -1890,7 +1892,6 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
             
             return decorate
 
-        @update_len
         @show_iterator_state
         def _diagram_extractor(self):
             &#34;&#34;&#34;
@@ -1914,7 +1915,9 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
                                     ),
                                     (name, image)
                                 )
-                                for name, image in self.read_images()
+                                for name, image in self.read_images(condition=(
+                                    lambda im_id: not any(im_id == d.get_id() for d in self._buff_diags)
+                                ))
                             )
                         )
                     )
@@ -1931,7 +1934,9 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
                         name,
                         image
                     )
-                    for name, image in self.read_images()
+                    for name, image in self.read_images(condition=(
+                        lambda im_id: not any(im_id == d.get_id() for d in self._buff_diags)
+                    ))
                 )
         
         if self._diagrams_iterator is None:
@@ -1939,8 +1944,8 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
 
         from laue.utilities.multi_core import RecallingIterator
         return (
-            (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
-            if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self)))
+            (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self, buff_name=&#34;_buff_diags&#34;))
+            if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self, buff_name=&#34;_buff_diags&#34;)))
 
     def find_subsets(self, *, tense_flow=False, **kwds):
         &#34;&#34;&#34;
@@ -2115,10 +2120,6 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
             Premiere vraie extraction.
             &#34;&#34;&#34;
             if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-                # Compilation et serialisation des equations.
-                self.transformer.compile(self.set_calibration(), transform=&#34;cam_to_gnomonic&#34;)
-                transformer_ser = cloudpickle.dumps(self.transformer)
-
                 # Parallelisation des fils.
                 from laue.core.zone_axes import _get_zone_axes_pickle
                 from laue.utilities.multi_core import limited_imap
@@ -2130,8 +2131,8 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
                             self,
                             limited_imap(pool,
                                 _get_zone_axes_pickle,
-                                ( # transformer, gnomonics, dmax, nbr, tol
-                                    (transformer_ser, *diag.find_zone_axes(**kwds, _get_args=True))
+                                (
+                                    diag.find_zone_axes(**kwds, _get_args=True)
                                     for diag in self
                                 )
                             )
@@ -2258,7 +2259,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         self._shape = image.shape
         return self._shape
 
-    def read_images(self):
+    def read_images(self, condition=(lambda name: True)):
         &#34;&#34;&#34;
         ** Cede le contenu des images. **
 
@@ -2270,6 +2271,13 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         ne sont pas utilises, car il n&#39;y a pas de mecanisme de verrou.
         * A chaque appel de cette methode, l&#39;ordre est conserve.
         * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+        Parameters
+        ----------
+        condition : callable, optional
+            Une fonction de selection qui prend en entree l&#39;identifiant de l&#39;image
+            et qui renvoi True si il faut lire l&#39;image, sinon. Si il renvoi False,
+            l&#39;image en question est sautee.
 
         Yields
         ------
@@ -2351,12 +2359,24 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
 
             return decorate
 
+        def update_len(func):
+            &#34;&#34;&#34;
+            Tient a jour la longueur de l&#39;experience.
+            &#34;&#34;&#34;
+            def decorate(*func_args, **func_kwargs):
+                for element in func(*func_args, **func_kwargs):
+                    yield element
+                self._len = len(self._buff_images)
+
+            return decorate
+
+        @update_len
         @show_iterator_state
         def _images_extractor():
             &#34;&#34;&#34;
             Premiere vraie extraction.
             &#34;&#34;&#34;
-            # Convertion str vers generateur
+            # Convertion str vers generateur.
             if isinstance(self._images, str): # Dans le cas ou une chaine de caractere
                 if os.path.isdir(self._images): # decrit l&#39;ensemble des images.
                     self._images = sorted(
@@ -2365,6 +2385,8 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
                         for file in files)
                 else:
                     self._images = sorted(glob.iglob(self._images, recursive=True))
+            elif isinstance(self._images, (tuple, set)):
+                self._images = list(self._images)
 
             yield from self._images
 
@@ -2372,7 +2394,11 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         def jump_map(multi_image_iterator):
             image_num = 0
             for image_info in multi_image_iterator:
-                image_name, image = read_and_check_any_image(image_info, image_num)
+                if condition(image_info):
+                    image_name, image = read_and_check_any_image(image_info, image_num)
+                else:
+                    image_name = image = None
+                    image_num += 1
                 if image is None:
                     continue
                 image_num += 1
@@ -2381,7 +2407,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         if self._images_iterator is None:
             self._images_iterator = iter(_images_extractor())
 
-        return jump_map(RecallingIterator(self._images_iterator, mother=self))
+        return jump_map(RecallingIterator(self._images_iterator, mother=self, buff_name=&#34;_buff_images&#34;))
 
     def save_file(self, filename):
         &#34;&#34;&#34;
@@ -2505,13 +2531,11 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
             # Cas ou il faut extraire.
             if limit &gt;= 0:
                 target_limit = max(limit, 2*len(self._buff_diags))
-                self._buff_diags = []
                 for i, diag in enumerate(self):
-                    self._buff_diags.append(diag)
                     if i == limit:
                         break
             else:
-                self._buff_diags = self.get_diagrams()
+                self.get_diagrams()
 
             return get_diag_list(limit=limit, ignore=ignore)
 
@@ -2567,7 +2591,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         -------
         int
             Renvoi le nombre de diagrames presents dans cette experience.
-            Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.
+            Si toutes les images ne sont pas lus, la valeur 0 est renvoyee.
         &#34;&#34;&#34;
         if self._len is None:
             return 0
@@ -2598,6 +2622,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="laue.utilities.serialization.ExperimentPickleable" href="../utilities/serialization.html#laue.utilities.serialization.ExperimentPickleable">ExperimentPickleable</a></li>
+<li>laue.utilities.serialization.OrderedExperimentPickleable</li>
 <li><a title="laue.utilities.data_consistency.Recordable" href="../utilities/data_consistency.html#laue.utilities.data_consistency.Recordable">Recordable</a></li>
 <li>threading.Thread</li>
 </ul>
@@ -2716,13 +2741,11 @@ liste de diagrames ordones dans l'ordre de generation des images.</li>
         # Cas ou il faut extraire.
         if limit &gt;= 0:
             target_limit = max(limit, 2*len(self._buff_diags))
-            self._buff_diags = []
             for i, diag in enumerate(self):
-                self._buff_diags.append(diag)
                 if i == limit:
                     break
         else:
-            self._buff_diags = self.get_diagrams()
+            self.get_diagrams()
 
         return get_diag_list(limit=limit, ignore=ignore)
 
@@ -2812,7 +2835,7 @@ la methode <code><a title="laue.experiment.base_experiment.Experiment.get_diagra
 <dl>
 <dt><code>int</code></dt>
 <dd>Renvoi le nombre de diagrames presents dans cette experience.
-Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.</dd>
+Si toutes les images ne sont pas lus, la valeur 0 est renvoyee.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -2826,7 +2849,7 @@ Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.</dd>
     -------
     int
         Renvoi le nombre de diagrames presents dans cette experience.
-        Si tous les diagrames ne sont pas lus, la valeur 0 est renvoyee.
+        Si toutes les images ne sont pas lus, la valeur 0 est renvoyee.
     &#34;&#34;&#34;
     if self._len is None:
         return 0
@@ -3128,10 +3151,6 @@ sont de type <code><a title="laue.zone_axis.ZoneAxis" href="../zone_axis.html#la
         Premiere vraie extraction.
         &#34;&#34;&#34;
         if multiprocessing.current_process().name == &#34;MainProcess&#34;:
-            # Compilation et serialisation des equations.
-            self.transformer.compile(self.set_calibration(), transform=&#34;cam_to_gnomonic&#34;)
-            transformer_ser = cloudpickle.dumps(self.transformer)
-
             # Parallelisation des fils.
             from laue.core.zone_axes import _get_zone_axes_pickle
             from laue.utilities.multi_core import limited_imap
@@ -3143,8 +3162,8 @@ sont de type <code><a title="laue.zone_axis.ZoneAxis" href="../zone_axis.html#la
                         self,
                         limited_imap(pool,
                             _get_zone_axes_pickle,
-                            ( # transformer, gnomonics, dmax, nbr, tol
-                                (transformer_ser, *diag.find_zone_axes(**kwds, _get_args=True))
+                            (
+                                diag.find_zone_axes(**kwds, _get_args=True)
                                 for diag in self
                             )
                         )
@@ -3295,17 +3314,6 @@ soient lues afin de tout renvoyer en meme temps.</li>
             laue_diagram._set_image(image)
         return laue_diagram
 
-    def update_len(func):
-        &#34;&#34;&#34;
-        Tient a jour la longueur de l&#39;experience.
-        &#34;&#34;&#34;
-        def decorate(*func_args, **func_kwargs):
-            for i, element in enumerate(func(*func_args, **func_kwargs)):
-                yield element
-            self._len = i + 1
-
-        return decorate
-
     def show_iterator_state(func):
         &#34;&#34;&#34;
         Insere des commentaires.
@@ -3325,7 +3333,6 @@ soient lues afin de tout renvoyer en meme temps.</li>
         
         return decorate
 
-    @update_len
     @show_iterator_state
     def _diagram_extractor(self):
         &#34;&#34;&#34;
@@ -3349,7 +3356,9 @@ soient lues afin de tout renvoyer en meme temps.</li>
                                 ),
                                 (name, image)
                             )
-                            for name, image in self.read_images()
+                            for name, image in self.read_images(condition=(
+                                lambda im_id: not any(im_id == d.get_id() for d in self._buff_diags)
+                            ))
                         )
                     )
                 )
@@ -3366,7 +3375,9 @@ soient lues afin de tout renvoyer en meme temps.</li>
                     name,
                     image
                 )
-                for name, image in self.read_images()
+                for name, image in self.read_images(condition=(
+                    lambda im_id: not any(im_id == d.get_id() for d in self._buff_diags)
+                ))
             )
     
     if self._diagrams_iterator is None:
@@ -3374,8 +3385,8 @@ soient lues afin de tout renvoyer en meme temps.</li>
 
     from laue.utilities.multi_core import RecallingIterator
     return (
-        (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self))
-        if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self)))</code></pre>
+        (lambda x: (yield from x))(RecallingIterator(self._diagrams_iterator, mother=self, buff_name=&#34;_buff_diags&#34;))
+        if tense_flow else list(RecallingIterator(self._diagrams_iterator, mother=self, buff_name=&#34;_buff_diags&#34;)))</code></pre>
 </details>
 </dd>
 <dt id="laue.experiment.base_experiment.Experiment.get_images_shape"><code class="name flex">
@@ -3470,7 +3481,7 @@ soient lues afin de tout renvoyer en meme temps.</li>
 </details>
 </dd>
 <dt id="laue.experiment.base_experiment.Experiment.read_images"><code class="name flex">
-<span>def <span class="ident">read_images</span></span>(<span>self)</span>
+<span>def <span class="ident">read_images</span></span>(<span>self, condition=&lt;function Experiment.&lt;lambda&gt;&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Cede le contenu des images. </strong></p>
@@ -3483,6 +3494,13 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
 <li>A chaque appel de cette methode, l'ordre est conserve.</li>
 <li>Les sections critiques sont verouillees donc cette methode supporte le multithread.</li>
 </ul>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>condition</code></strong> :&ensp;<code>callable</code>, optional</dt>
+<dd>Une fonction de selection qui prend en entree l'identifiant de l'image
+et qui renvoi True si il faut lire l'image, sinon. Si il renvoi False,
+l'image en question est sautee.</dd>
+</dl>
 <h2 id="yields">Yields</h2>
 <dl>
 <dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
@@ -3511,7 +3529,7 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_images(self):
+<pre><code class="python">def read_images(self, condition=(lambda name: True)):
     &#34;&#34;&#34;
     ** Cede le contenu des images. **
 
@@ -3523,6 +3541,13 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
     ne sont pas utilises, car il n&#39;y a pas de mecanisme de verrou.
     * A chaque appel de cette methode, l&#39;ordre est conserve.
     * Les sections critiques sont verouillees donc cette methode supporte le multithread.
+
+    Parameters
+    ----------
+    condition : callable, optional
+        Une fonction de selection qui prend en entree l&#39;identifiant de l&#39;image
+        et qui renvoi True si il faut lire l&#39;image, sinon. Si il renvoi False,
+        l&#39;image en question est sautee.
 
     Yields
     ------
@@ -3604,12 +3629,24 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
 
         return decorate
 
+    def update_len(func):
+        &#34;&#34;&#34;
+        Tient a jour la longueur de l&#39;experience.
+        &#34;&#34;&#34;
+        def decorate(*func_args, **func_kwargs):
+            for element in func(*func_args, **func_kwargs):
+                yield element
+            self._len = len(self._buff_images)
+
+        return decorate
+
+    @update_len
     @show_iterator_state
     def _images_extractor():
         &#34;&#34;&#34;
         Premiere vraie extraction.
         &#34;&#34;&#34;
-        # Convertion str vers generateur
+        # Convertion str vers generateur.
         if isinstance(self._images, str): # Dans le cas ou une chaine de caractere
             if os.path.isdir(self._images): # decrit l&#39;ensemble des images.
                 self._images = sorted(
@@ -3618,6 +3655,8 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
                     for file in files)
             else:
                 self._images = sorted(glob.iglob(self._images, recursive=True))
+        elif isinstance(self._images, (tuple, set)):
+            self._images = list(self._images)
 
         yield from self._images
 
@@ -3625,7 +3664,11 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
     def jump_map(multi_image_iterator):
         image_num = 0
         for image_info in multi_image_iterator:
-            image_name, image = read_and_check_any_image(image_info, image_num)
+            if condition(image_info):
+                image_name, image = read_and_check_any_image(image_info, image_num)
+            else:
+                image_name = image = None
+                image_num += 1
             if image is None:
                 continue
             image_num += 1
@@ -3634,7 +3677,7 @@ ne sont pas utilises, car il n'y a pas de mecanisme de verrou.</li>
     if self._images_iterator is None:
         self._images_iterator = iter(_images_extractor())
 
-    return jump_map(RecallingIterator(self._images_iterator, mother=self))</code></pre>
+    return jump_map(RecallingIterator(self._images_iterator, mother=self, buff_name=&#34;_buff_images&#34;))</code></pre>
 </details>
 </dd>
 <dt id="laue.experiment.base_experiment.Experiment.save_file"><code class="name flex">

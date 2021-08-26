@@ -11,7 +11,10 @@ l'information utile.
 """
 
 import collections
+import hashlib
 import os
+
+import cloudpickle
 
 
 __pdoc__ = {"SpotPickelable.__getstate__": True,
@@ -23,7 +26,8 @@ __pdoc__ = {"SpotPickelable.__getstate__": True,
             "TransformerPickleable.__getstate__": True,
             "TransformerPickleable.__setstate__": True,
             "ExperimentPickleable.__getstate__": True,
-            "ExperimentPickleable.__setstate__": True}
+            "ExperimentPickleable.__setstate__": True,
+            "OrderedExperimentPickleable": False}
 
 
 class SpotPickleable:
@@ -228,7 +232,79 @@ class TransformerPickleable:
         if "mem" in state:
             self._parameters_memory = state["mem"]
 
-class ExperimentPickleable:
+class OrderedExperimentPickleable:
+    """
+    ** Aide a serialiser les experience organisees. **
+    """
+    def __getstate__(self):
+        state = {}
+
+        try:
+            state["time"] = cloudpickle.dumps(self.time)
+        except TypeError:
+            tot = self.get_shape()[0]*self.get_shape()[1]
+            state["time"] = (tot, [self.time(i) for i in range(0, tot*100, tot)])
+        try:
+            state["position"] = cloudpickle.dumps(self.position)
+        except TypeError:
+            state["position"] = [self.position(i) for i in
+                                 range(self.get_shape()[0]*self.get_shape()[1])]
+
+        state["next_row"] = self._next_row
+        state["t_min"] = self._t_min
+        state["t_max"] = self._t_max
+        state["x_min"] = self._x_min
+        state["x_max"] = self._x_max
+        state["y_min"] = self._y_min
+        state["y_max"] = self._y_max
+        state["t_dict"] = self._t_dict
+        state["x_dict"] = self._x_dict
+        state["y_dict"] = self._y_dict
+        state["index"] = self._index
+
+        return state
+
+    def __setstate__(self, state):
+        """
+        Examples
+        --------
+        >>> import pickle, itertools
+        >>> import laue
+        >>> def get_positions(i):
+        ...     i_mod = i % 3362
+        ...     return divmod(i_mod, 82)
+        ...
+        >>> images = itertools.cycle(("laue/examples/ge_blanc.mccd",))
+        >>> laue.OrderedExperiment(images, position=get_positions)
+        Experiment('laue/examples')
+        >>> pickle.loads(pickle.dumps(_))
+        Experiment('laue/examples')
+        >>>
+        """
+        if not hasattr(self, "time"):
+            if isinstance(state["time"], bytes):
+                self.time = cloudpickle.loads(state["time"])
+            else:
+                self.time = lambda i: state["time"][1][i//state["time"][0]]
+        if not hasattr(self, "position"):
+            if isinstance(state["position"], bytes):
+                self.position = cloudpickle.loads(state["position"])
+            else:
+                self.position = lambda i: state["position"][i%len(state["position"])]
+
+        self._next_row = state["next_row"]
+        self._t_min = state["t_min"]
+        self._t_max = state["t_max"]
+        self._x_min = state["x_min"]
+        self._x_max = state["x_max"]
+        self._y_min = state["y_min"]
+        self._y_max = state["y_max"]
+        self._t_dict = state["t_dict"]
+        self._x_dict = state["x_dict"]
+        self._y_dict = state["y_dict"]
+        self._index = state["index"]
+
+class ExperimentPickleable(OrderedExperimentPickleable):
     """
     ** Interface pour serialiser une experience. **
     """
@@ -236,8 +312,14 @@ class ExperimentPickleable:
         """
         ** Recupere des informations d'une experience. **
         """
-        state = {}
+        # cas OrderedExperiment
+        from laue.experiment.ordered_experiment import OrderedExperiment
+        if isinstance(self, OrderedExperiment):
+            state = super().__getstate__()
+        else:
+            state = {}
 
+        # cas simples
         state["verbose"] = self.verbose
         state["max_space"] = self.max_space
         state["threshold"] = self.threshold
@@ -248,6 +330,7 @@ class ExperimentPickleable:
         state["threshold"] = self.threshold
         state["kernel_dilate"] = self.kernel_dilate
         state["threshold"] = self.threshold
+        state["len"] = self._len
         state["mean_bg"] = self._mean_bg
         state["shape"] = self._shape
         state["mean_bg"] = self._mean_bg
@@ -256,12 +339,26 @@ class ExperimentPickleable:
         state["saving_file"] = self.saving_file
         state["compress"] = self.compress
         state["dt"] = self.dt
+        state["predictors"] = self._predictors
 
-        state["images"] = None
-        state["transformer"] = None
-        state["predictors"] = None
-        state["images_iterator"] = None
-        state["diagrams_iterator"] = None
+        # cas pas simples
+        ## gestion des 'noms' d'images
+        if isinstance(self._images, list):
+            state["images"] = {
+                "type": "list",
+                "_images": self._images,
+                "_buffer": self._buff_images}
+        else: # cas ou self._image est un generateur
+            state["images"] = {
+                "type": "generator",
+                "_buffer": self._buff_images}
+
+        ## gestion transformer
+        state["transformer"] = self.transformer
+
+        ## gestion des diagrames
+        state["buff_diags"] = self._buff_diags
+
         state["axes_iterator"] = None
         state["subsets_iterator"] = None
 
@@ -285,6 +382,11 @@ class ExperimentPickleable:
         Experiment('laue/examples')
         >>>
         """
+        from laue.experiment.ordered_experiment import OrderedExperiment
+        if isinstance(self, OrderedExperiment):
+            state = super().__setstate__(state)
+
+        # cas simple a traiter.
         if not hasattr(self, "verbose"):
             self.verbose = state["verbose"]
         self.max_space = state["max_space"]
@@ -295,6 +397,7 @@ class ExperimentPickleable:
         self.kwargs = state["kwargs"]
         self.kernel_font = state["kernel_font"]
         self.kernel_dilate = state["kernel_dilate"]
+        self._len = state["len"]
         self._mean_bg = state["mean_bg"]
         self._shape = state["shape"]
         self._calibration_parameters = state["calibration_parameters"]
@@ -305,3 +408,34 @@ class ExperimentPickleable:
             self.compress = state["compress"]
         if not hasattr(self, "dt"):
             self.dt = state["dt"]
+        self._predictors = state["predictors"]
+
+        # cas un peu moins triviaux.
+        ## gestion des images
+        buff = state["images"]["_buffer"]
+        try:
+            set_buff = set(buff)
+        except TypeError:
+            set_buff = buff
+        if state["images"]["type"] == "list":
+            if hasattr(self, "_images"):
+                self._images = [im for im in self._images if im not in set_buff]
+            else:
+                self._images = [im for im in state["images"]["_images"] if im not in set_buff]
+        else:
+            if hasattr(self, "_images"):
+                self._images = (lambda: (yield from (im for im in self._images if im not in set_buff)))()
+            else:
+                self._images = iter([])
+        self._images_iterator = None
+        self._buff_images = buff
+
+        ## gestion transformer
+        self.transformer = state["transformer"]
+        self.transformer.verbose = self.verbose
+
+        ## gestion des diagrames
+        self._buff_diags = state["buff_diags"]
+        for diag in self._buff_diags:
+            diag.experiment = self
+        self._diagrams_iterator = None

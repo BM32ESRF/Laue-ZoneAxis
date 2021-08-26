@@ -149,7 +149,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
 
         if _get_args: # Si il faut seulement preparer le travail.
             gnomonics = self.get_gnomonic_positions()
-            return gnomonics, dmax, nbr, tol
+            return self.experiment.transformer, gnomonics, dmax, nbr, tol
 
         if (dmax, nbr, tol) in self._axes: # Si on a deja la solution.
             return self._axes[(dmax, nbr, tol)]
@@ -159,9 +159,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
                 print(f"Recherche des axes de {self.get_id()}...")
             from laue.core.zone_axes import _get_zone_axes_pickle
             phi_s, mu_s, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
-                (self.experiment.transformer,
-                self.get_gnomonic_positions(),
-                dmax, nbr, tol))
+                self.find_zone_axes(dmax=dmax, nbr=nbr, tol=tol, _get_args=True))
             if self.experiment.verbose:
                 print(f"    OK: {len(axis_spots_ind)} axes trouves.")
         else:
@@ -874,7 +872,6 @@ class LaueDiagram(Splitable, DiagramPickleable):
                         spot.get_position()[0],
                         spot.get_position()[1],
                         spot.get_intensity()))
-
 
     def select_spots(self, *, n=None, sort=None):
         """

@@ -323,26 +323,28 @@ class RecallingIterator:
     [0, 1, 2, 3, 4]
     >>>
     """
-    def __init__(self, base_iterator, *, mother=None):
+    def __init__(self, base_iterator, *, mother=None, buff_name=None):
         """
         Paremeters
         ----------
-        mother : object
-            Instance de la classe dans laquelle on met cet iterateur.
-            Si il est omis, la memoire est globale et ne sera pas netoyee
-            par le ramasse-miette. Il est conseille si possible fournir 'mother'.
         base_iterator : iterator
             L'iterateur epuisable, qui ne doit en tout et pour tout
             etre parcouru qu'une seule fois.
+        mother : object (optional)
+            Instance de la classe dans laquelle on met cet iterateur.
+            Si il est omis, la memoire est globale et ne sera pas netoyee
+            par le ramasse-miette. Il est conseille si possible fournir 'mother'.
+        buff_name : str (optional)
+            Si il est precise, c'est le nom de la variable du buffer.
         """
         self.mother = mother
         self.base_iterator = base_iterator
-        self.signature = hashlib.md5(id(base_iterator).to_bytes(16, "big")).hexdigest()
+        signature = hashlib.md5(id(base_iterator).to_bytes(16, "big")).hexdigest()
 
         self.stape = 0 # Le rang de l'element suivant a ceder.
 
         # Mise en place du verrou.
-        lock_name = f"_lock_{self.signature}"
+        lock_name = f"_lock_{signature}"
         if self.mother is not None:
             if not hasattr(self.mother, lock_name):
                 setattr(self.mother, lock_name, multiprocessing.Lock())
@@ -353,7 +355,7 @@ class RecallingIterator:
             self.lock = globals()[lock_name]
 
         # Mise en place de la memoire pour reiterer.
-        buffer_name = f"_buffer_{self.signature}"
+        buffer_name = f"_buffer_recalling_{signature}" if buff_name is None else buff_name
         if self.mother is not None:
             if not hasattr(self.mother, buffer_name):
                 setattr(self.mother, buffer_name, [])

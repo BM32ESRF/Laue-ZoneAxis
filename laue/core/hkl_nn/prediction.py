@@ -359,3 +359,9 @@ class Predictor:
         max_ind = np.argmax(mr)
 
         return rot_mat[max_ind], mr[max_ind]
+
+    def __getstate__(self):
+        return self.model_directory
+
+    def __setstate__(self, state):
+        self.__init__(state)

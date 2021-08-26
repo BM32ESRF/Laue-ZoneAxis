@@ -2,10 +2,10 @@
 
 """
 ** Manipule un lot de simule de diagrammes. **
----------------------------------------------
+----------------------------------------------
 
 Fait la meme chose que ``laue.experiment.base_experiment.Experiment``
-a la difference que les donnees sont des donnes simulee et non pas experimentales.
+a la difference que les donnees sont des donnees simulees et non pas experimentales.
 """
 
 import itertools
