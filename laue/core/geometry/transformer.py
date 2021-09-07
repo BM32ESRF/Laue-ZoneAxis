@@ -122,7 +122,7 @@ class Transformer(TransformerPickleable, Compilator):
         Returns
         -------
         float ou np.ndarray
-            * Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
+            * Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic exprimee.s en mm.
             * shape = (2, *shape_d_entree)
 
         Examples
@@ -941,7 +941,7 @@ class Transformer(TransformerPickleable, Compilator):
         Returns
         -------
         float ou np.ndarray
-            * Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic eprimee.s en mm.
+            * Le.s coordonnee.s x puis y du.des point.s dans le plan gnomonic exprimee.s en mm.
             * shape = (2, *shape_d_entree)
 
         Examples

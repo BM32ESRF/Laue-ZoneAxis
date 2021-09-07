@@ -114,7 +114,7 @@ def _select(*xs, measure, n=1):
     return {xs[r] for r in np.argsort(costs)[:n]}
 
 def _cse_simp(x, measure):
-    """Simplifie independament chaque paterne issue de cse."""
+    """Simplifie independament chaque patern issue de cse."""
     def build(defs, rvs):
         for var, e in defs[::-1]:
             rvs = subs(rvs, {var: e})

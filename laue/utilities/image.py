@@ -174,7 +174,8 @@ def images_to_iter(images):
                 for father, _, files in os.walk(images)
                 for file in files)
         else:
-            images = sorted(glob.iglob(images, recursive=True))
+            from glob import iglob
+            images = sorted(iglob(images, recursive=True))
     elif isinstance(images, (tuple, set)):
         images = list(images)
 

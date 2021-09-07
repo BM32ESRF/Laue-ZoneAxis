@@ -9,7 +9,6 @@
 """
 
 import collections
-import glob
 import multiprocessing
 import os
 import time

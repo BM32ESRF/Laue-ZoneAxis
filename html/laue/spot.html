@@ -187,8 +187,8 @@ def distance(spot1, spot2, *, space=&#34;camera&#34;, dtype=np.float64):
 
     import laue
     if space == &#34;cosine&#34;:
-        return laue.geometry.dist_cosine(x1, y1, x2, y2, dtype=dtype)
-    return laue.geometry.dist_euclidian(x1, y1, x2, y2, dtype=dtype)
+        return laue.core.geometry.dist_cosine(x1, y1, x2, y2, dtype=dtype)
+    return laue.core.geometry.dist_euclidian(x1, y1, x2, y2, dtype=dtype)
 
 
 class Spot(SpotPickleable):
@@ -936,8 +936,8 @@ array([  0.        ,  93.99267655, 811.10892214, 484.83288558])
 
     import laue
     if space == &#34;cosine&#34;:
-        return laue.geometry.dist_cosine(x1, y1, x2, y2, dtype=dtype)
-    return laue.geometry.dist_euclidian(x1, y1, x2, y2, dtype=dtype)</code></pre>
+        return laue.core.geometry.dist_cosine(x1, y1, x2, y2, dtype=dtype)
+    return laue.core.geometry.dist_euclidian(x1, y1, x2, y2, dtype=dtype)</code></pre>
 </details>
 </dd>
 </dl>

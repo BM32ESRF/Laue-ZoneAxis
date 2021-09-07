@@ -97,6 +97,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         self._image_gnom = None # Image projete dans le plan gnomonic.
         self._sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
         self._axes = {} # Les axes de zones.
+        self._subsets = {} # Les sous ensembles.
         self._spots_set = None # L&#39;ensemble des spots pour une recherche plus rapide.
         self._hkl = {} # Les prediction des indices hkl
 
@@ -124,7 +125,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         self._image_xy = image
 
     def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
-        _axes_args=None, _get_args=False):
+        _axes_args=None, _get_args=False, **_):
         &#34;&#34;&#34;
         ** Cherche les axes de zone **
 
@@ -181,6 +182,8 @@ class LaueDiagram(Splitable, DiagramPickleable):
         assert dmax &gt; 0, f&#34;La distance doit etre strictement positive elle vaut {dmax}.&#34;
 
         if _get_args: # Si il faut seulement preparer le travail.
+            if (dmax, nbr, tol) in self._axes:
+                return None, None, dmax, nbr, tol # Pour accelerer les calculs.
             gnomonics = self.get_gnomonic_positions()
             return self.experiment.transformer, gnomonics, dmax, nbr, tol
 
@@ -190,9 +193,9 @@ class LaueDiagram(Splitable, DiagramPickleable):
         if _axes_args is None: # Si le travail n&#39;est pas premache.
             if self.experiment.verbose:
                 print(f&#34;Recherche des axes de {self.get_id()}...&#34;)
-            from laue.core.zone_axes import _get_zone_axes_pickle
-            phi_s, mu_s, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
-                self.find_zone_axes(dmax=dmax, nbr=nbr, tol=tol, _get_args=True))
+            from laue.core.zone_axes import atomic_find_zone_axes
+            phi_s, mu_s, axis_spots_ind, spots_axes_ind = atomic_find_zone_axes(
+                *self.find_zone_axes(dmax=dmax, nbr=nbr, tol=tol, _get_args=True))
             if self.experiment.verbose:
                 print(f&#34;    OK: {len(axis_spots_ind)} axes trouves.&#34;)
         else:
@@ -1242,6 +1245,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         self._image_gnom = None # Image projete dans le plan gnomonic.
         self._sorted_spots = {} # Les listes des spots tries selon un ordre particulier.
         self._axes = {} # Les axes de zones.
+        self._subsets = {} # Les sous ensembles.
         self._spots_set = None # L&#39;ensemble des spots pour une recherche plus rapide.
         self._hkl = {} # Les prediction des indices hkl
 
@@ -1269,7 +1273,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         self._image_xy = image
 
     def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
-        _axes_args=None, _get_args=False):
+        _axes_args=None, _get_args=False, **_):
         &#34;&#34;&#34;
         ** Cherche les axes de zone **
 
@@ -1326,6 +1330,8 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         assert dmax &gt; 0, f&#34;La distance doit etre strictement positive elle vaut {dmax}.&#34;
 
         if _get_args: # Si il faut seulement preparer le travail.
+            if (dmax, nbr, tol) in self._axes:
+                return None, None, dmax, nbr, tol # Pour accelerer les calculs.
             gnomonics = self.get_gnomonic_positions()
             return self.experiment.transformer, gnomonics, dmax, nbr, tol
 
@@ -1335,9 +1341,9 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         if _axes_args is None: # Si le travail n&#39;est pas premache.
             if self.experiment.verbose:
                 print(f&#34;Recherche des axes de {self.get_id()}...&#34;)
-            from laue.core.zone_axes import _get_zone_axes_pickle
-            phi_s, mu_s, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
-                self.find_zone_axes(dmax=dmax, nbr=nbr, tol=tol, _get_args=True))
+            from laue.core.zone_axes import atomic_find_zone_axes
+            phi_s, mu_s, axis_spots_ind, spots_axes_ind = atomic_find_zone_axes(
+                *self.find_zone_axes(dmax=dmax, nbr=nbr, tol=tol, _get_args=True))
             if self.experiment.verbose:
                 print(f&#34;    OK: {len(axis_spots_ind)} axes trouves.&#34;)
         else:
@@ -2652,7 +2658,7 @@ modification d'un spot sera globale.</dd>
 </details>
 </dd>
 <dt id="laue.diagram.LaueDiagram.find_zone_axes"><code class="name flex">
-<span>def <span class="ident">find_zone_axes</span></span>(<span>self, *, dmax=None, nbr=7, tol=None)</span>
+<span>def <span class="ident">find_zone_axes</span></span>(<span>self, *, dmax=None, nbr=7, tol=None, **_)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><strong> Cherche les axes de zone </strong></p>
@@ -2696,7 +2702,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def find_zone_axes(self, *, dmax=None, nbr=7, tol=None,
-    _axes_args=None, _get_args=False):
+    _axes_args=None, _get_args=False, **_):
     &#34;&#34;&#34;
     ** Cherche les axes de zone **
 
@@ -2753,6 +2759,8 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
     assert dmax &gt; 0, f&#34;La distance doit etre strictement positive elle vaut {dmax}.&#34;
 
     if _get_args: # Si il faut seulement preparer le travail.
+        if (dmax, nbr, tol) in self._axes:
+            return None, None, dmax, nbr, tol # Pour accelerer les calculs.
         gnomonics = self.get_gnomonic_positions()
         return self.experiment.transformer, gnomonics, dmax, nbr, tol
 
@@ -2762,9 +2770,9 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
     if _axes_args is None: # Si le travail n&#39;est pas premache.
         if self.experiment.verbose:
             print(f&#34;Recherche des axes de {self.get_id()}...&#34;)
-        from laue.core.zone_axes import _get_zone_axes_pickle
-        phi_s, mu_s, axis_spots_ind, spots_axes_ind = _get_zone_axes_pickle(
-            self.find_zone_axes(dmax=dmax, nbr=nbr, tol=tol, _get_args=True))
+        from laue.core.zone_axes import atomic_find_zone_axes
+        phi_s, mu_s, axis_spots_ind, spots_axes_ind = atomic_find_zone_axes(
+            *self.find_zone_axes(dmax=dmax, nbr=nbr, tol=tol, _get_args=True))
         if self.experiment.verbose:
             print(f&#34;    OK: {len(axis_spots_ind)} axes trouves.&#34;)
     else:

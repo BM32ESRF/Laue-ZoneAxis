@@ -13,6 +13,9 @@ Notes
 * Pour generer la documentation, il faut installer le module ``pip install pdoc3``.
     Il faut ensuite saisir la commande suivante:
     * ``pdoc3 laue/ -c latex_math=True --force --html``
+* Pour generer le graphe UML, il faut installee le module ``pip install pylint``
+    Il faut ensuite saisir la commande suivante:
+    * ``pyreverse -A -S -f ALL -o png -p laue/ laue/``
 * A la premiere execution, les equations sont compilees, ce qui peut metre
     plusieurs disaines de minutes. Soyez patients!
 
@@ -39,18 +42,35 @@ recuperation des diagrammes
 >>>
 """
 
-__all__ = ["Experiment", "OrderedExperiment", "geometry",
-           "atomic_pic_search", "atomic_find_zone_axes", "atomic_find_subsets"]
-__pdoc__ = {"tests": False,
-            "data": False,
-            "Experiment.__getitem__": True,
-            "Experiment.__iter__": True,
-            "Experiment.__len__": True,
-            "OrderedExperiment.__getitem__": True}
+from .core import (cam_to_gnomonic, cam_to_thetachi,
+    dist_cosine, dist_euclidian, dist_line, gnomonic_to_cam,
+    gnomonic_to_thetachi, hough, hough_reduce, inter_lines,
+    thetachi_to_cam, thetachi_to_gnomonic, Transformer,
+    comb2ind, ind2comb, atomic_pic_search, atomic_find_subsets,
+    atomic_find_zone_axes)
+from .experiment import Experiment, OrderedExperiment
+from .utilities import (Recordable, read_image, create_image,
+    images_to_iter, TimeCost, Lambdify, limited_imap,
+    pickleable_method, prevent_generator_size, reduce_object,
+    NestablePool, RecallingIterator, extract_parameters)
 
-from laue.experiment.base_experiment import Experiment
-from laue.experiment.ordered_experiment import OrderedExperiment
-from laue.core import geometry
-from laue.core.pic_search import atomic_pic_search
-from laue.core.zone_axes import atomic_find_zone_axes
-from laue.core.subsets import atomic_find_subsets
+__all__ = [
+    # laue.core
+    "cam_to_gnomonic", "cam_to_thetachi", "dist_cosine", "dist_euclidian",
+    "dist_line", "gnomonic_to_cam", "gnomonic_to_thetachi", "hough",
+    "hough_reduce", "inter_lines", "thetachi_to_cam", "thetachi_to_gnomonic",
+    "Transformer", "comb2ind", "ind2comb",
+    "atomic_pic_search", "atomic_find_subsets", "atomic_find_zone_axes",
+
+    # laue.experiment
+    "Experiment", "OrderedExperiment",
+
+    # laue.utilities
+    "Recordable", "read_image", "create_image",
+    "images_to_iter", "TimeCost", "Lambdify", "limited_imap",
+    "pickleable_method", "prevent_generator_size", "reduce_object",
+    "NestablePool", "RecallingIterator", "extract_parameters",
+   ]
+
+__pdoc__ = {"tests": False,
+            "data": False}

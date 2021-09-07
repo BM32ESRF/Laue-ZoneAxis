@@ -5,6 +5,14 @@
 -------------------------------------------------------------------------------
 """
 
+from .transformer import Transformer, comb2ind, ind2comb
+
+__all__ = [
+    "cam_to_gnomonic", "cam_to_thetachi", "dist_cosine", "dist_euclidian",
+    "dist_line", "gnomonic_to_cam", "gnomonic_to_thetachi", "hough",
+    "hough_reduce", "inter_lines", "thetachi_to_cam", "thetachi_to_gnomonic",
+    "Transformer", "comb2ind", "ind2comb"]
+
 def _global_transformer(meth_name, *args, **kwargs):
     if "global_transformer" not in globals():
         from laue.core.geometry.transformer import Transformer

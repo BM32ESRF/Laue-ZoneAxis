@@ -110,12 +110,12 @@ def test_geometry_dtype():
     parameters = extract_parameters(dd=70, bet=.0, gam=.0, pixelsize=.08, x0=1024, y0=1024)
 
     for func in [
-            laue.geometry.cam_to_gnomonic,
-            laue.geometry.gnomonic_to_cam,
-            laue.geometry.cam_to_thetachi,
-            laue.geometry.thetachi_to_cam,
-            laue.geometry.thetachi_to_gnomonic,
-            laue.geometry.gnomonic_to_thetachi]:
+            laue.core.geometry.cam_to_gnomonic,
+            laue.core.geometry.gnomonic_to_cam,
+            laue.core.geometry.cam_to_thetachi,
+            laue.core.geometry.thetachi_to_cam,
+            laue.core.geometry.thetachi_to_gnomonic,
+            laue.core.geometry.gnomonic_to_thetachi]:
         _print(f"{func.__name__}:")
         for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
             for boucle in range(3):
@@ -128,7 +128,7 @@ def test_geometry_dtype():
 
     _print("dist_cosine:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = laue.geometry.dist_cosine(
+        rtype = laue.core.geometry.dist_cosine(
             np.array([63.605, 59.91]), np.array([51.367, 38.546]),
             np.array([63.605, 59.91]), np.array([51.367, 38.546]),
             dtype=dtype).dtype.type
@@ -137,7 +137,7 @@ def test_geometry_dtype():
 
     _print("dist_euclidian:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = laue.geometry.dist_euclidian(
+        rtype = laue.core.geometry.dist_euclidian(
             np.array([0, 1]), np.array([0, 1]),
             np.array([0, 1]), np.array([1, 1]),
             dtype=dtype).dtype.type
@@ -146,7 +146,7 @@ def test_geometry_dtype():
 
     _print("dist_line:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = laue.geometry.dist_line(
+        rtype = laue.core.geometry.dist_line(
             np.array([0, np.pi/2]), np.array([1, 1]),
             np.array([0, 1, 3, 0]), np.array([0, 1, 3, 1]),
             dtype=dtype).dtype.type
@@ -155,7 +155,7 @@ def test_geometry_dtype():
 
     _print("hough:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = laue.geometry.hough(
+        rtype = laue.core.geometry.hough(
             np.array([0, 1, 2]), np.array([2, 1, 0]),
             dtype=dtype).dtype.type
         _print(f"    {dtype.__name__}->{rtype.__name__}")
@@ -163,8 +163,8 @@ def test_geometry_dtype():
 
     _print("hough_reduce:")
     for dtype in {np.float16, np.float32, np.float64}:
-        rtype = laue.geometry.hough_reduce(
-            *laue.geometry.hough(
+        rtype = laue.core.geometry.hough_reduce(
+            *laue.core.geometry.hough(
                 np.array([0, 1, 2]), np.array([2, -1, 0]),
                 dtype=dtype
             ),
@@ -175,7 +175,7 @@ def test_geometry_dtype():
 
     _print("inter_lines:")
     for dtype in {np.float16, np.float32, np.float64, (getattr(np, "float128") if hasattr(np, "float128") else np.float64)}:
-        rtype = laue.geometry.inter_lines(
+        rtype = laue.core.geometry.inter_lines(
             np.array([0, np.pi/2]), np.array([1, 1]),
             dtype=dtype).dtype.type
         _print(f"    {dtype.__name__}->{rtype.__name__}")
@@ -310,12 +310,12 @@ def test_geometry_shape():
         _print(f"shape: {shape}")
 
         for func in [
-                laue.geometry.cam_to_gnomonic,
-                laue.geometry.gnomonic_to_cam,
-                laue.geometry.cam_to_thetachi,
-                laue.geometry.thetachi_to_cam,
-                laue.geometry.thetachi_to_gnomonic,
-                laue.geometry.gnomonic_to_thetachi]:
+                laue.core.geometry.cam_to_gnomonic,
+                laue.core.geometry.gnomonic_to_cam,
+                laue.core.geometry.cam_to_thetachi,
+                laue.core.geometry.thetachi_to_cam,
+                laue.core.geometry.thetachi_to_gnomonic,
+                laue.core.geometry.gnomonic_to_thetachi]:
             try:
                 res = func(.5*np.ones(shape=shape), .5*np.ones(shape=shape), parameters)
             except TypeError:
@@ -324,21 +324,21 @@ def test_geometry_shape():
             assert res.shape == (2,) + shape
 
         for func in [
-                laue.geometry.dist_cosine,
-                laue.geometry.dist_euclidian,
-                laue.geometry.dist_line]:
+                laue.core.geometry.dist_cosine,
+                laue.core.geometry.dist_euclidian,
+                laue.core.geometry.dist_line]:
             res = func(
                 np.ones(shape=shape), np.ones(shape=shape),
                 np.zeros(shape=shape), np.zeros(shape=shape))
             _print(f"{func.__name__}(...).shape -> {res.shape}")
             assert res.shape == (*shape, *shape)
 
-        res = laue.geometry.hough(
+        res = laue.core.geometry.hough(
             rand.normal(size=shape), rand.normal(size=shape))
         _print(f"hough(...).shape -> {res.shape}")
         assert res.shape == (2,) + shape[:-1] + ((shape[-1]*(shape[-1]-1))//2,)
 
-        res = laue.geometry.inter_lines(
+        res = laue.core.geometry.inter_lines(
             rand.uniform(-np.pi, np.pi, size=shape),
             rand.uniform(0, 2, size=shape))
         _print(f"inter_lines(...).shape -> {res.shape}")

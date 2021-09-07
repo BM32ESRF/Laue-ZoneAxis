@@ -188,7 +188,34 @@ def create_image(positions, intensities=None, *, shape=None):
         image[x-l:x+l, y-l:y+l] += cost
 
     return image
-    </code></pre>
+    
+def images_to_iter(images):
+    &#34;&#34;&#34;
+    ** Converti les images en un generateur d&#39;images. **
+
+    Parameters
+    ----------
+    images
+        Ce qui representes les images. Que ce soit le nom
+        d&#39;un dossier, d&#39;une image elle meme, une glob expression,
+        une liste d&#39;image ou bien un generateur.
+    &#34;&#34;&#34;
+    if isinstance(images, str): # Dans le cas ou une chaine de caractere
+        if os.path.isdir(images): # decrit l&#39;ensemble des images.
+            images = sorted(
+                os.path.join(father, file)
+                for father, _, files in os.walk(images)
+                for file in files)
+        else:
+            from glob import iglob
+            images = sorted(iglob(images, recursive=True))
+    elif isinstance(images, (tuple, set)):
+        images = list(images)
+
+    assert hasattr(images, &#34;__iter__&#34;), (&#34;&#39;images&#39; must to be iterable. &#34;
+        f&#34;It can not be of type {type(images).__name__}.&#34;)
+
+    return images</code></pre>
 </details>
 </section>
 <section>
@@ -301,6 +328,51 @@ array([[    0,     0,     0, ...,     0,     0,     0],
         image[x-l:x+l, y-l:y+l] += cost
 
     return image</code></pre>
+</details>
+</dd>
+<dt id="laue.utilities.image.images_to_iter"><code class="name flex">
+<span>def <span class="ident">images_to_iter</span></span>(<span>images)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong> Converti les images en un generateur d'images. </strong></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>images</code></strong></dt>
+<dd>Ce qui representes les images. Que ce soit le nom
+d'un dossier, d'une image elle meme, une glob expression,
+une liste d'image ou bien un generateur.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def images_to_iter(images):
+    &#34;&#34;&#34;
+    ** Converti les images en un generateur d&#39;images. **
+
+    Parameters
+    ----------
+    images
+        Ce qui representes les images. Que ce soit le nom
+        d&#39;un dossier, d&#39;une image elle meme, une glob expression,
+        une liste d&#39;image ou bien un generateur.
+    &#34;&#34;&#34;
+    if isinstance(images, str): # Dans le cas ou une chaine de caractere
+        if os.path.isdir(images): # decrit l&#39;ensemble des images.
+            images = sorted(
+                os.path.join(father, file)
+                for father, _, files in os.walk(images)
+                for file in files)
+        else:
+            from glob import iglob
+            images = sorted(iglob(images, recursive=True))
+    elif isinstance(images, (tuple, set)):
+        images = list(images)
+
+    assert hasattr(images, &#34;__iter__&#34;), (&#34;&#39;images&#39; must to be iterable. &#34;
+        f&#34;It can not be of type {type(images).__name__}.&#34;)
+
+    return images</code></pre>
 </details>
 </dd>
 <dt id="laue.utilities.image.read_image"><code class="name flex">
@@ -446,6 +518,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="laue.utilities.image.create_image" href="#laue.utilities.image.create_image">create_image</a></code></li>
+<li><code><a title="laue.utilities.image.images_to_iter" href="#laue.utilities.image.images_to_iter">images_to_iter</a></code></li>
 <li><code><a title="laue.utilities.image.read_image" href="#laue.utilities.image.read_image">read_image</a></code></li>
 </ul>
 </li>

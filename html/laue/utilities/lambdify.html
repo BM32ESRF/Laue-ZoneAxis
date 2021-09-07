@@ -149,7 +149,7 @@ def _select(*xs, measure, n=1):
     return {xs[r] for r in np.argsort(costs)[:n]}
 
 def _cse_simp(x, measure):
-    &#34;&#34;&#34;Simplifie independament chaque paterne issue de cse.&#34;&#34;&#34;
+    &#34;&#34;&#34;Simplifie independament chaque patern issue de cse.&#34;&#34;&#34;
     def build(defs, rvs):
         for var, e in defs[::-1]:
             rvs = subs(rvs, {var: e})
@@ -355,6 +355,8 @@ def simplify(x, measure, verbose=False):
     &#34;&#34;&#34;
     ** Triture l&#39;expression pour minimiser le temps de calcul. **
     &#34;&#34;&#34;
+    return x # A changer... C&#39;est car la suite est pas hyper robuste
+
     if verbose:
         print(f&#34;simplify: {cse_homogeneous(x)}...&#34;)
         print(f&#34;    begin cost: {measure(x)}&#34;)
@@ -1075,6 +1077,8 @@ expressions that contain large, repeated subexpressions.</p>
     &#34;&#34;&#34;
     ** Triture l&#39;expression pour minimiser le temps de calcul. **
     &#34;&#34;&#34;
+    return x # A changer... C&#39;est car la suite est pas hyper robuste
+
     if verbose:
         print(f&#34;simplify: {cse_homogeneous(x)}...&#34;)
         print(f&#34;    begin cost: {measure(x)}&#34;)

@@ -19,9 +19,10 @@ def atomic_pic_search(image, kernel_font, kernel_dilate, threshold):
     Notes
     -----
     * Cette fonction n'est pas faite pour etre utilisee directement,
-    il vaut mieux s'en servir a travers ``laue.Experiment.get_diagrams``
-    ou encore via ``laue.Experiment.__iter__`` car le context
-    est mieu gere, les entrees sont plus simples et les sorties aussi.
+    il vaut mieux s'en servir a travers
+    ``laue.experiment.base_experiment.Experiment.get_diagrams``
+    ou encore via ``laue.experiment.base_experiment.Experiment.__iter__``
+    car le context est mieu gere, les entrees sont plus simples et les sorties aussi.
     * Il n'y a pas de verifications sur les entrees car elles sont faite
     dans les methodes de plus haut niveau.
     * Cette fonction n'est pas parallelisee. Par contre les methodes

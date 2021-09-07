@@ -164,6 +164,9 @@ class DiagramPickleable:
         if self._axes:
             state[&#34;axes&#34;] = {key: [axis.__getstate__() for axis in axes]
                 for key, axes in self._axes.items()}
+        if self._subsets:
+            state[&#34;subsets&#34;] = {key: [{spot.get_id() for spot in subset} for subset in subsets]
+                for key, subsets in self._subsets.items()}
         if self._hkl:
             state[&#34;hkl&#34;] = self._hkl
         return state
@@ -215,6 +218,9 @@ class DiagramPickleable:
                 axis.diagram = self
                 axis.spots = collections.OrderedDict(
                     ((ind, self[ind]) for ind in axis.spots.keys()))
+        if &#34;subsets&#34; in state:
+            self._subsets = {key: [{self[spot_id] for spot_id in subset} for subset in subets]
+                for key, subsets in state[&#34;subsets&#34;].items()}
 
         self._hkl = state.get(&#34;hkl&#34;, {})
 
@@ -394,9 +400,6 @@ class ExperimentPickleable(OrderedExperimentPickleable):
         ## gestion des diagrames
         state[&#34;buff_diags&#34;] = self._buff_diags
 
-        state[&#34;axes_iterator&#34;] = None
-        state[&#34;subsets_iterator&#34;] = None
-
         return state
 
     def __setstate__(self, state):
@@ -419,7 +422,7 @@ class ExperimentPickleable(OrderedExperimentPickleable):
         &#34;&#34;&#34;
         from laue.experiment.ordered_experiment import OrderedExperiment
         if isinstance(self, OrderedExperiment):
-            state = super().__setstate__(state)
+            super().__setstate__(state)
 
         # cas simple a traiter.
         if not hasattr(self, &#34;verbose&#34;):
@@ -444,6 +447,8 @@ class ExperimentPickleable(OrderedExperimentPickleable):
         if not hasattr(self, &#34;dt&#34;):
             self.dt = state[&#34;dt&#34;]
         self._predictors = state[&#34;predictors&#34;]
+        self._axes_iterator = None
+        self._subsets_iterator = None
 
         # cas un peu moins triviaux.
         ## gestion des images
@@ -513,6 +518,9 @@ class ExperimentPickleable(OrderedExperimentPickleable):
         if self._axes:
             state[&#34;axes&#34;] = {key: [axis.__getstate__() for axis in axes]
                 for key, axes in self._axes.items()}
+        if self._subsets:
+            state[&#34;subsets&#34;] = {key: [{spot.get_id() for spot in subset} for subset in subsets]
+                for key, subsets in self._subsets.items()}
         if self._hkl:
             state[&#34;hkl&#34;] = self._hkl
         return state
@@ -564,6 +572,9 @@ class ExperimentPickleable(OrderedExperimentPickleable):
                 axis.diagram = self
                 axis.spots = collections.OrderedDict(
                     ((ind, self[ind]) for ind in axis.spots.keys()))
+        if &#34;subsets&#34; in state:
+            self._subsets = {key: [{self[spot_id] for spot_id in subset} for subset in subets]
+                for key, subsets in state[&#34;subsets&#34;].items()}
 
         self._hkl = state.get(&#34;hkl&#34;, {})</code></pre>
 </details>
@@ -598,6 +609,9 @@ class ExperimentPickleable(OrderedExperimentPickleable):
     if self._axes:
         state[&#34;axes&#34;] = {key: [axis.__getstate__() for axis in axes]
             for key, axes in self._axes.items()}
+    if self._subsets:
+        state[&#34;subsets&#34;] = {key: [{spot.get_id() for spot in subset} for subset in subsets]
+            for key, subsets in self._subsets.items()}
     if self._hkl:
         state[&#34;hkl&#34;] = self._hkl
     return state</code></pre>
@@ -670,6 +684,9 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
             axis.diagram = self
             axis.spots = collections.OrderedDict(
                 ((ind, self[ind]) for ind in axis.spots.keys()))
+    if &#34;subsets&#34; in state:
+        self._subsets = {key: [{self[spot_id] for spot_id in subset} for subset in subets]
+            for key, subsets in state[&#34;subsets&#34;].items()}
 
     self._hkl = state.get(&#34;hkl&#34;, {})</code></pre>
 </details>
@@ -740,9 +757,6 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         ## gestion des diagrames
         state[&#34;buff_diags&#34;] = self._buff_diags
 
-        state[&#34;axes_iterator&#34;] = None
-        state[&#34;subsets_iterator&#34;] = None
-
         return state
 
     def __setstate__(self, state):
@@ -765,7 +779,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         &#34;&#34;&#34;
         from laue.experiment.ordered_experiment import OrderedExperiment
         if isinstance(self, OrderedExperiment):
-            state = super().__setstate__(state)
+            super().__setstate__(state)
 
         # cas simple a traiter.
         if not hasattr(self, &#34;verbose&#34;):
@@ -790,6 +804,8 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         if not hasattr(self, &#34;dt&#34;):
             self.dt = state[&#34;dt&#34;]
         self._predictors = state[&#34;predictors&#34;]
+        self._axes_iterator = None
+        self._subsets_iterator = None
 
         # cas un peu moins triviaux.
         ## gestion des images
@@ -891,9 +907,6 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
     ## gestion des diagrames
     state[&#34;buff_diags&#34;] = self._buff_diags
 
-    state[&#34;axes_iterator&#34;] = None
-    state[&#34;subsets_iterator&#34;] = None
-
     return state</code></pre>
 </details>
 </dd>
@@ -938,7 +951,7 @@ Experiment('laue/examples')
     &#34;&#34;&#34;
     from laue.experiment.ordered_experiment import OrderedExperiment
     if isinstance(self, OrderedExperiment):
-        state = super().__setstate__(state)
+        super().__setstate__(state)
 
     # cas simple a traiter.
     if not hasattr(self, &#34;verbose&#34;):
@@ -963,6 +976,8 @@ Experiment('laue/examples')
     if not hasattr(self, &#34;dt&#34;):
         self.dt = state[&#34;dt&#34;]
     self._predictors = state[&#34;predictors&#34;]
+    self._axes_iterator = None
+    self._subsets_iterator = None
 
     # cas un peu moins triviaux.
     ## gestion des images
