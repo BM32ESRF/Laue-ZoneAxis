@@ -97,7 +97,7 @@ class Splitable:
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = next(iter(laue.Experiment(image, config_file="laue/examples/ge_blanc.det")))
+        >>> diag = next(iter(laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")))
         >>> type(diag.find_subsets())
         <class 'list'>
         >>>
@@ -168,13 +168,13 @@ def atomic_find_subsets(spots_dict, axes_dict, angle_max, spots_max, distance_ma
     Notes
     -----
     * Cette fonction n'est pas faite pour etre utilisee directement,
-    il vaut mieux s'en servir a travers ``laue.Experiment.find_subsets``
+    il vaut mieux s'en servir a travers ``laue.experiment.base_experiment.Experiment.find_subsets``
     ou encore via ``laue.diagram.LaueDiagram.find_subsets`` car le context
     est mieu gere, les entrees sont plus simples et les sorties aussi.
     * Il n'y a pas de verifications sur les entrees car elles sont faite
     dans les methodes de plus haut niveau.
     * Cette fonction n'est pas parallelisee. Par contre la methode
-    ``laue.Experiment.find_subsets`` gere nativement le parallelisme.
+    ``laue.experiment.base_experiment.Experiment.find_subsets`` gere nativement le parallelisme.
 
     Parameters
     ----------

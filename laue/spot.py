@@ -70,7 +70,7 @@ def distance(spot1, spot2, *, space="camera", dtype=np.float64):
     >>> import laue
     >>> from laue.spot import distance
     >>> image = "laue/examples/ge_blanc.mccd"
-    >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+    >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
     >>> spot1, spot2 = diag[:2]
     >>> spot1, spot2
     (Spot(position=(1370.52, 1874.78), quality=0.573), Spot(position=(1303.63, 1808.74), quality=0.579))
@@ -217,7 +217,7 @@ class Spot(SpotPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image)[0][0]
+        >>> spot = laue.experiment.base_experiment.Experiment(image)[0][0]
         >>> spot
         Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> spot.get_bbox()
@@ -242,7 +242,7 @@ class Spot(SpotPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image)[0][0]
+        >>> spot = laue.experiment.base_experiment.Experiment(image)[0][0]
         >>> spot
         Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> round(spot.get_distortion(), 4)
@@ -265,7 +265,7 @@ class Spot(SpotPickleable):
         >>> import laue
         >>> import numpy as np
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
+        >>> spot = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
         >>> spot
         Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> type(spot.get_gnomonic())
@@ -292,7 +292,7 @@ class Spot(SpotPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>> all(spot.get_id() == i for i, spot in enumerate(diag))
         True
         >>>
@@ -314,7 +314,7 @@ class Spot(SpotPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image)[0][0]
+        >>> spot = laue.experiment.base_experiment.Experiment(image)[0][0]
         >>> spot.get_image()
         array([[  8,  10,  16,  16,   8,   5],
                [ 11,  17,  67,  76,  13,   9],
@@ -341,7 +341,7 @@ class Spot(SpotPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image)[0][0]
+        >>> spot = laue.experiment.base_experiment.Experiment(image)[0][0]
         >>> spot
         Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> spot.get_intensity()
@@ -369,7 +369,7 @@ class Spot(SpotPickleable):
         >>> import numpy as np
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image)[0][0]
+        >>> spot = laue.experiment.base_experiment.Experiment(image)[0][0]
         >>> spot
         Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> np.round(spot.get_position(), 4)
@@ -399,7 +399,7 @@ class Spot(SpotPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image)[0][0]
+        >>> spot = laue.experiment.base_experiment.Experiment(image)[0][0]
         >>> spot
         Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> round(spot.get_quality(), 2)
@@ -438,7 +438,7 @@ class Spot(SpotPickleable):
         >>> import laue
         >>> import numpy as np
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
+        >>> spot = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
         >>> spot
         Spot(position=(1370.52, 1874.78), quality=0.573)
         >>> type(spot.get_theta_chi())
@@ -472,7 +472,7 @@ class Spot(SpotPickleable):
         -------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> spot = diag.select_spots(n=1, sort="quality").pop()
         >>> type(spot.find_zone_axes())
         <class 'set'>
@@ -500,7 +500,7 @@ class Spot(SpotPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
+        >>> spot = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
         >>>
         >>> spot.plot_gnomonic(display=False)
         <AxesSubplot:title={'center':'plan gnomonic'}, xlabel='x.Gi (mm)', ylabel='y.Gj (mm)'>
@@ -542,7 +542,7 @@ class Spot(SpotPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> spot = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
+        >>> spot = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0][0]
         >>>
         >>> spot.plot_xy(display=False)
         <AxesSubplot:title={'center':'plan camera'}, xlabel='x.Ci (pxl)', ylabel='y.Cj (pxl)'>
@@ -662,7 +662,7 @@ class Spot(SpotPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>> spot1, spot2 = diag[:2]
         >>> round(spot1 - spot2)
         94

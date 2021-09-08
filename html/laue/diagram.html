@@ -160,7 +160,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; type(diag.find_zone_axes())
         &lt;class &#39;list&#39;&gt;
         &gt;&gt;&gt; type(diag.find_zone_axes().pop())
@@ -241,7 +241,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_gnomonic_positions().shape
         (2, 78)
         &gt;&gt;&gt; np.round(diag.get_gnomonic_positions(n=4, sort=&#34;quality&#34;), 2)
@@ -276,7 +276,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_id()
         &#39;laue/examples/ge_blanc.mccd&#39;
         &gt;&gt;&gt;
@@ -308,7 +308,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_image_gnomonic()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -357,7 +357,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_image_xy()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -428,7 +428,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; spot, = diag.select_spots(n=1, sort=&#34;intensity&#34;)
         &gt;&gt;&gt; spot
         Spot(position=(622.09, 1656.72), quality=0.949)
@@ -533,7 +533,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_positions().shape
         (2, 78)
         &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=&#34;quality&#34;))
@@ -562,7 +562,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = (&#34;laue/examples/ge_blanc.mccd&#34;, &#34;laue/examples/roi1_0001.mccd&#34;)
-        &gt;&gt;&gt; diag1, diag2 = laue.Experiment(images)[:2]
+        &gt;&gt;&gt; diag1, diag2 = laue.experiment.base_experiment.Experiment(images)[:2]
         &gt;&gt;&gt;
         &gt;&gt;&gt; print(f&#34;quality: {diag1.get_quality():.4f}&#34;)
         quality: 0.8344
@@ -614,7 +614,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_theta_chi().shape
         (2, 78)
         &gt;&gt;&gt; np.round(diag.get_theta_chi(n=4, sort=&#34;quality&#34;))
@@ -658,7 +658,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.plot_all(display=False)
         &lt;Figure size 640x480 with 2 Axes&gt;
         &gt;&gt;&gt;
@@ -697,7 +697,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt;
 
         Sans preciser l&#39;axe.
@@ -772,7 +772,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; diag.plot_xy(display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
@@ -864,7 +864,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; rep = tempfile.mkdtemp()
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.jpg&#34;))
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.png&#34;))
@@ -945,7 +945,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;intensity&#34;)
         [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;distortion&#34;)
@@ -1020,7 +1020,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; len(diag)
         78
@@ -1084,7 +1084,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(diag[0])
         &lt;class &#39;laue.spot.Spot&#39;&gt;
@@ -1138,7 +1138,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; for spot in diag:
         ...     pass
         ...
@@ -1154,7 +1154,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; len(diag)
         78
         &gt;&gt;&gt;
@@ -1308,7 +1308,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; type(diag.find_zone_axes())
         &lt;class &#39;list&#39;&gt;
         &gt;&gt;&gt; type(diag.find_zone_axes().pop())
@@ -1389,7 +1389,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_gnomonic_positions().shape
         (2, 78)
         &gt;&gt;&gt; np.round(diag.get_gnomonic_positions(n=4, sort=&#34;quality&#34;), 2)
@@ -1424,7 +1424,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_id()
         &#39;laue/examples/ge_blanc.mccd&#39;
         &gt;&gt;&gt;
@@ -1456,7 +1456,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_image_gnomonic()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -1505,7 +1505,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_image_xy()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -1576,7 +1576,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; spot, = diag.select_spots(n=1, sort=&#34;intensity&#34;)
         &gt;&gt;&gt; spot
         Spot(position=(622.09, 1656.72), quality=0.949)
@@ -1681,7 +1681,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; diag.get_positions().shape
         (2, 78)
         &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=&#34;quality&#34;))
@@ -1710,7 +1710,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = (&#34;laue/examples/ge_blanc.mccd&#34;, &#34;laue/examples/roi1_0001.mccd&#34;)
-        &gt;&gt;&gt; diag1, diag2 = laue.Experiment(images)[:2]
+        &gt;&gt;&gt; diag1, diag2 = laue.experiment.base_experiment.Experiment(images)[:2]
         &gt;&gt;&gt;
         &gt;&gt;&gt; print(f&#34;quality: {diag1.get_quality():.4f}&#34;)
         quality: 0.8344
@@ -1762,7 +1762,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.get_theta_chi().shape
         (2, 78)
         &gt;&gt;&gt; np.round(diag.get_theta_chi(n=4, sort=&#34;quality&#34;))
@@ -1806,7 +1806,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.plot_all(display=False)
         &lt;Figure size 640x480 with 2 Axes&gt;
         &gt;&gt;&gt;
@@ -1845,7 +1845,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt;
 
         Sans preciser l&#39;axe.
@@ -1920,7 +1920,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; diag.plot_xy(display=False)
         &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
@@ -2012,7 +2012,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; rep = tempfile.mkdtemp()
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.jpg&#34;))
         &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.png&#34;))
@@ -2093,7 +2093,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;intensity&#34;)
         [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
         &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;distortion&#34;)
@@ -2168,7 +2168,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; len(diag)
         78
@@ -2232,7 +2232,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(diag[0])
         &lt;class &#39;laue.spot.Spot&#39;&gt;
@@ -2286,7 +2286,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; for spot in diag:
         ...     pass
         ...
@@ -2302,7 +2302,7 @@ Cet objet doit heriter de <code><a title="laue.experiment.base_experiment.Experi
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; len(diag)
         78
         &gt;&gt;&gt;
@@ -2351,7 +2351,7 @@ si il est present ou pas. Ou bien l'index de ce spot.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; len(diag)
 78
@@ -2390,7 +2390,7 @@ True
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; len(diag)
     78
@@ -2465,7 +2465,7 @@ l'intervalle fournit. Comme si <code><a title="laue.diagram.LaueDiagram" href="#
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; type(diag[0])
 &lt;class 'laue.spot.Spot'&gt;
@@ -2521,7 +2521,7 @@ array([0.29, 0.33])
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; type(diag[0])
     &lt;class &#39;laue.spot.Spot&#39;&gt;
@@ -2588,7 +2588,7 @@ modification d'un spot sera globale.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
 &gt;&gt;&gt; for spot in diag:
 ...     pass
 ...
@@ -2615,7 +2615,7 @@ modification d'un spot sera globale.</dd>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
     &gt;&gt;&gt; for spot in diag:
     ...     pass
     ...
@@ -2632,7 +2632,7 @@ modification d'un spot sera globale.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
 &gt;&gt;&gt; len(diag)
 78
 &gt;&gt;&gt;
@@ -2649,7 +2649,7 @@ modification d'un spot sera globale.</dd>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
     &gt;&gt;&gt; len(diag)
     78
     &gt;&gt;&gt;
@@ -2690,7 +2690,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; type(diag.find_zone_axes())
 &lt;class 'list'&gt;
 &gt;&gt;&gt; type(diag.find_zone_axes().pop())
@@ -2737,7 +2737,7 @@ de 50 spots et 0.005 pour ceux de 600 spots.</dd>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; type(diag.find_zone_axes())
     &lt;class &#39;list&#39;&gt;
     &gt;&gt;&gt; type(diag.find_zone_axes().pop())
@@ -2823,7 +2823,7 @@ En general l'un des parametres de set_calibration.</dd>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.get_gnomonic_positions().shape
 (2, 78)
 &gt;&gt;&gt; np.round(diag.get_gnomonic_positions(n=4, sort=&quot;quality&quot;), 2)
@@ -2863,7 +2863,7 @@ array([[ 0.25,  0.08,  0.27, -0.26],
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; diag.get_gnomonic_positions().shape
     (2, 78)
     &gt;&gt;&gt; np.round(diag.get_gnomonic_positions(n=4, sort=&#34;quality&#34;), 2)
@@ -2900,7 +2900,7 @@ d'acces au fichier image qui a permis de constituer le diagramme.</li>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_id()
 'laue/examples/ge_blanc.mccd'
 &gt;&gt;&gt;
@@ -2921,7 +2921,7 @@ d'acces au fichier image qui a permis de constituer le diagramme.</li>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
     &gt;&gt;&gt; diag.get_id()
     &#39;laue/examples/ge_blanc.mccd&#39;
     &gt;&gt;&gt;
@@ -2952,7 +2952,7 @@ un appel a la fonction <code><a title="laue.experiment.base_experiment.Experimen
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.get_image_gnomonic()
 array([[0, 0, 0, ..., 0, 0, 0],
        [0, 0, 0, ..., 0, 0, 0],
@@ -2992,7 +2992,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; diag.get_image_gnomonic()
     array([[0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
@@ -3042,7 +3042,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_image_xy()
 array([[0, 0, 0, ..., 0, 0, 0],
        [0, 0, 0, ..., 0, 0, 0],
@@ -3077,7 +3077,7 @@ array([[0, 0, 0, ..., 0, 0, 0],
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
     &gt;&gt;&gt; diag.get_image_xy()
     array([[0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
@@ -3157,7 +3157,7 @@ Le premier element peut etre le spot de reference si il existe.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
 &gt;&gt;&gt; spot, = diag.select_spots(n=1, sort=&quot;intensity&quot;)
 &gt;&gt;&gt; spot
 Spot(position=(622.09, 1656.72), quality=0.949)
@@ -3226,7 +3226,7 @@ True
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
     &gt;&gt;&gt; spot, = diag.select_spots(n=1, sort=&#34;intensity&#34;)
     &gt;&gt;&gt; spot
     Spot(position=(622.09, 1656.72), quality=0.949)
@@ -3336,7 +3336,7 @@ True
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
 &gt;&gt;&gt; diag.get_positions().shape
 (2, 78)
 &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=&quot;quality&quot;))
@@ -3372,7 +3372,7 @@ array([[ 622.,  932., 1243., 1276.],
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
     &gt;&gt;&gt; diag.get_positions().shape
     (2, 78)
     &gt;&gt;&gt; np.round(diag.get_positions(n=4, sort=&#34;quality&#34;))
@@ -3406,7 +3406,7 @@ array([[ 622.,  932., 1243., 1276.],
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = (&quot;laue/examples/ge_blanc.mccd&quot;, &quot;laue/examples/roi1_0001.mccd&quot;)
-&gt;&gt;&gt; diag1, diag2 = laue.Experiment(images)[:2]
+&gt;&gt;&gt; diag1, diag2 = laue.experiment.base_experiment.Experiment(images)[:2]
 &gt;&gt;&gt;
 &gt;&gt;&gt; print(f&quot;quality: {diag1.get_quality():.4f}&quot;)
 quality: 0.8344
@@ -3435,7 +3435,7 @@ quality: 0.5153
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; images = (&#34;laue/examples/ge_blanc.mccd&#34;, &#34;laue/examples/roi1_0001.mccd&#34;)
-    &gt;&gt;&gt; diag1, diag2 = laue.Experiment(images)[:2]
+    &gt;&gt;&gt; diag1, diag2 = laue.experiment.base_experiment.Experiment(images)[:2]
     &gt;&gt;&gt;
     &gt;&gt;&gt; print(f&#34;quality: {diag1.get_quality():.4f}&#34;)
     quality: 0.8344
@@ -3492,7 +3492,7 @@ quality: 0.5153
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.get_theta_chi().shape
 (2, 78)
 &gt;&gt;&gt; np.round(diag.get_theta_chi(n=4, sort=&quot;quality&quot;))
@@ -3526,7 +3526,7 @@ array([[ 29.,  40.,  29.,  58.],
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; diag.get_theta_chi().shape
     (2, 78)
     &gt;&gt;&gt; np.round(diag.get_theta_chi(n=4, sort=&#34;quality&#34;))
@@ -3572,7 +3572,7 @@ array([[ 29.,  40.,  29.,  58.],
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.plot_all(display=False)
 &lt;Figure size 640x480 with 2 Axes&gt;
 &gt;&gt;&gt;
@@ -3602,7 +3602,7 @@ array([[ 29.,  40.,  29.,  58.],
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; diag.plot_all(display=False)
     &lt;Figure size 640x480 with 2 Axes&gt;
     &gt;&gt;&gt;
@@ -3642,7 +3642,7 @@ array([[ 29.,  40.,  29.,  58.],
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt;
 </code></pre>
 <p>Sans preciser l'axe.</p>
@@ -3677,7 +3677,7 @@ array([[ 29.,  40.,  29.,  58.],
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt;
 
     Sans preciser l&#39;axe.
@@ -3753,7 +3753,7 @@ array([[ 29.,  40.,  29.,  58.],
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; diag.plot_xy(display=False)
 &lt;AxesSubplot:title={'center':'plan camera'}, xlabel='x.Ci (pxl)', ylabel='y.Cj (pxl)'&gt;
@@ -3784,7 +3784,7 @@ array([[ 29.,  40.,  29.,  58.],
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; diag.plot_xy(display=False)
     &lt;AxesSubplot:title={&#39;center&#39;:&#39;plan camera&#39;}, xlabel=&#39;x.Ci (pxl)&#39;, ylabel=&#39;y.Cj (pxl)&#39;&gt;
@@ -3903,7 +3903,7 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; rep = tempfile.mkdtemp()
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; diag.save_file(os.path.join(rep, &quot;ge_blanc.dat&quot;))
 &gt;&gt;&gt; diag.save_file(os.path.join(rep, &quot;ge_blanc.jpg&quot;))
 &gt;&gt;&gt; diag.save_file(os.path.join(rep, &quot;ge_blanc.png&quot;))
@@ -3939,7 +3939,7 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
     &gt;&gt;&gt;
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; rep = tempfile.mkdtemp()
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.dat&#34;))
     &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.jpg&#34;))
     &gt;&gt;&gt; diag.save_file(os.path.join(rep, &#34;ge_blanc.png&#34;))
@@ -4025,7 +4025,7 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
 &gt;&gt;&gt; diag.select_spots(n=2, sort=&quot;intensity&quot;)
 [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
 &gt;&gt;&gt; diag.select_spots(n=2, sort=&quot;distortion&quot;)
@@ -4074,7 +4074,7 @@ au debut, ceux avec un gros seront en fin de chaine.</li>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
     &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;intensity&#34;)
     [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
     &gt;&gt;&gt; diag.select_spots(n=2, sort=&#34;distortion&#34;)

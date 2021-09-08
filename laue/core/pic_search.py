@@ -26,7 +26,7 @@ def atomic_pic_search(image, kernel_font, kernel_dilate, threshold):
     * Il n'y a pas de verifications sur les entrees car elles sont faite
     dans les methodes de plus haut niveau.
     * Cette fonction n'est pas parallelisee. Par contre les methodes
-    de ``laue.Experiment`` gerent nativement le parallelisme.
+    de ``laue.experiment.base_experiment.Experiment`` gerent nativement le parallelisme.
     * L'utilisation de cette fonction ne fera qu'alourdir et ralentir votre code.
 
     Parameters

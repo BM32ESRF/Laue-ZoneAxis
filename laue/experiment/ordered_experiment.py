@@ -35,9 +35,9 @@ class OrderedExperiment(Experiment):
             correspondant. Les indices commencent a 0 inclu.
 
         *args
-            Same as ``laue.Experiment.__init__``.
+            Same as ``laue.experiment.base_experiment.Experiment.__init__``.
         **kwargs
-            Same as ``laue.Experiment.__init__``.
+            Same as ``laue.experiment.base_experiment.Experiment.__init__``.
         """
         assert hasattr(position, "__call__"), "'position' has to be callable."
         assert hasattr(time, "__call__"), "'time' has to be a callable."

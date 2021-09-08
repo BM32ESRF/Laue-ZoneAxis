@@ -81,7 +81,7 @@ def distance(axis1, axis2, *, weight=.5):
     >>> from laue.zone_axis import distance
     >>> ax1, ax2 = (-2.719, 0.2432), (0.02063, 0.0799)
     >>> image = "laue/examples/ge_blanc.mccd"
-    >>> axes = laue.Experiment(image,
+    >>> axes = laue.experiment.base_experiment.Experiment(image,
     ...     config_file="laue/examples/ge_blanc.det"
     ...     )[0].find_zone_axes()[:3]
     >>>
@@ -215,7 +215,7 @@ class ZoneAxis(ZoneAxisPickleable):
         >>> import numpy as np
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
         >>>
         >>> type(axis.dist_mean())
@@ -239,7 +239,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
         True
         >>>
@@ -261,7 +261,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = diag.find_zone_axes()[0]
         >>>
         >>> phi, mu = axis.get_polar_coords()
@@ -290,7 +290,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
         >>>
         >>> 0 < min(qualities) <= max(qualities) < 1
@@ -346,7 +346,7 @@ class ZoneAxis(ZoneAxisPickleable):
         >>> import laue
         >>>
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = diag.find_zone_axes()[0]
         >>>
         >>> axis.plot_gnomonic(display=False)
@@ -394,7 +394,7 @@ class ZoneAxis(ZoneAxisPickleable):
         >>> import laue
         >>>
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = diag.find_zone_axes()[0]
         >>>
         >>> axis.plot_xy(display=False)
@@ -451,7 +451,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = diag.find_zone_axes()[0]
         >>> spot0, i_ok = diag[0], next(iter(axis.spots))
         >>> type(spot0), type(i_ok)
@@ -501,7 +501,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = diag.find_zone_axes()[0]
         >>> for spot in axis:
         ...     pass
@@ -518,7 +518,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> axis = diag.find_zone_axes()[0]
         >>> type(len(axis))
         <class 'int'>

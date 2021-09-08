@@ -74,7 +74,7 @@ class Recordable(threading.Thread):
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> saving_file = os.path.join(tempfile.mkdtemp(), "state")
         >>>
-        >>> with laue.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
+        >>> with laue.experiment.base_experiment.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
         ...     pass
         ...
         Starting the thread.

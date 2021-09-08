@@ -200,7 +200,7 @@ class Experiment(ExperimentPickleable, Recordable):
         -------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
+        >>> experiment = laue.experiment.base_experiment.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
         >>> parameters = experiment.set_calibration()
         >>> sorted(parameters.keys())
         ['dd', 'pixelsize', 'xbet', 'xcen', 'xgam', 'ycen']
@@ -479,7 +479,7 @@ class Experiment(ExperimentPickleable, Recordable):
         --------
         >>> import laue
         >>> images = "laue/examples/*.mccd"
-        >>> experiment = laue.Experiment(images)
+        >>> experiment = laue.experiment.base_experiment.Experiment(images)
         >>>
         >>> diagrams = experiment.get_diagrams()
         >>> type(diagrams)
@@ -615,7 +615,7 @@ class Experiment(ExperimentPickleable, Recordable):
         --------
         >>> import laue
         >>> images = "laue/examples/*.mccd"
-        >>> experiment = laue.Experiment(images, config_file="laue/examples/ge_blanc.det")
+        >>> experiment = laue.experiment.base_experiment.Experiment(images, config_file="laue/examples/ge_blanc.det")
         >>>
         >>> type(experiment.find_subsets())
         <class 'list'>
@@ -718,7 +718,7 @@ class Experiment(ExperimentPickleable, Recordable):
         --------
         >>> import laue
         >>> images = "laue/examples/*.mccd"
-        >>> experiment = laue.Experiment(images, config_file="laue/examples/ge_blanc.det")
+        >>> experiment = laue.experiment.base_experiment.Experiment(images, config_file="laue/examples/ge_blanc.det")
         >>>
         >>> type(experiment.find_zone_axes())
         <class 'list'>
@@ -937,7 +937,7 @@ class Experiment(ExperimentPickleable, Recordable):
         --------
         >>> import laue
         >>> images = "laue/examples/*.mccd"
-        >>> for image in laue.Experiment(images):
+        >>> for image in laue.experiment.base_experiment.Experiment(images):
         ...     pass
         ...
         >>>
@@ -1058,7 +1058,7 @@ class Experiment(ExperimentPickleable, Recordable):
         >>>
         >>> images = ["laue/examples/ge_blanc.mccd"]
         >>> rep = tempfile.mkdtemp()
-        >>> expe = laue.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
+        >>> expe = laue.experiment.base_experiment.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
         >>> expe.save_file(os.path.join(rep, "fit.det"))
         """
         assert isinstance(filename, str), \
@@ -1125,16 +1125,16 @@ class Experiment(ExperimentPickleable, Recordable):
         >>> import laue
         >>> images = "laue/examples/*.mccd"
         >>>
-        >>> type(laue.Experiment(images)[0])
+        >>> type(laue.experiment.base_experiment.Experiment(images)[0])
         <class 'laue.diagram.LaueDiagram'>
-        >>> type(laue.Experiment(images)[-1])
+        >>> type(laue.experiment.base_experiment.Experiment(images)[-1])
         <class 'laue.diagram.LaueDiagram'>
         >>>
-        >>> type(laue.Experiment(images)[:])
+        >>> type(laue.experiment.base_experiment.Experiment(images)[:])
         <class 'list'>
-        >>> len(laue.Experiment(images)[:])
+        >>> len(laue.experiment.base_experiment.Experiment(images)[:])
         2
-        >>> laue.Experiment(images)[2:]
+        >>> laue.experiment.base_experiment.Experiment(images)[2:]
         []
         >>>
         """
@@ -1198,7 +1198,7 @@ class Experiment(ExperimentPickleable, Recordable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> experiment = laue.Experiment(image)
+        >>> experiment = laue.experiment.base_experiment.Experiment(image)
         >>>
         >>> for diag in experiment:
         ...     pass # Allows to process each diagram as it is ready.

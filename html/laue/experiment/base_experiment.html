@@ -235,7 +235,7 @@ class Experiment(ExperimentPickleable, Recordable):
         -------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
+        &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
         &gt;&gt;&gt; parameters = experiment.set_calibration()
         &gt;&gt;&gt; sorted(parameters.keys())
         [&#39;dd&#39;, &#39;pixelsize&#39;, &#39;xbet&#39;, &#39;xcen&#39;, &#39;xgam&#39;, &#39;ycen&#39;]
@@ -514,7 +514,7 @@ class Experiment(ExperimentPickleable, Recordable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(images)
+        &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images)
         &gt;&gt;&gt;
         &gt;&gt;&gt; diagrams = experiment.get_diagrams()
         &gt;&gt;&gt; type(diagrams)
@@ -650,7 +650,7 @@ class Experiment(ExperimentPickleable, Recordable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+        &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(experiment.find_subsets())
         &lt;class &#39;list&#39;&gt;
@@ -753,7 +753,7 @@ class Experiment(ExperimentPickleable, Recordable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+        &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(experiment.find_zone_axes())
         &lt;class &#39;list&#39;&gt;
@@ -972,7 +972,7 @@ class Experiment(ExperimentPickleable, Recordable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-        &gt;&gt;&gt; for image in laue.Experiment(images):
+        &gt;&gt;&gt; for image in laue.experiment.base_experiment.Experiment(images):
         ...     pass
         ...
         &gt;&gt;&gt;
@@ -1093,7 +1093,7 @@ class Experiment(ExperimentPickleable, Recordable):
         &gt;&gt;&gt;
         &gt;&gt;&gt; images = [&#34;laue/examples/ge_blanc.mccd&#34;]
         &gt;&gt;&gt; rep = tempfile.mkdtemp()
-        &gt;&gt;&gt; expe = laue.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
+        &gt;&gt;&gt; expe = laue.experiment.base_experiment.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
         &gt;&gt;&gt; expe.save_file(os.path.join(rep, &#34;fit.det&#34;))
         &#34;&#34;&#34;
         assert isinstance(filename, str), \
@@ -1160,16 +1160,16 @@ class Experiment(ExperimentPickleable, Recordable):
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
         &gt;&gt;&gt;
-        &gt;&gt;&gt; type(laue.Experiment(images)[0])
+        &gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[0])
         &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
-        &gt;&gt;&gt; type(laue.Experiment(images)[-1])
+        &gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[-1])
         &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
         &gt;&gt;&gt;
-        &gt;&gt;&gt; type(laue.Experiment(images)[:])
+        &gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[:])
         &lt;class &#39;list&#39;&gt;
-        &gt;&gt;&gt; len(laue.Experiment(images)[:])
+        &gt;&gt;&gt; len(laue.experiment.base_experiment.Experiment(images)[:])
         2
-        &gt;&gt;&gt; laue.Experiment(images)[2:]
+        &gt;&gt;&gt; laue.experiment.base_experiment.Experiment(images)[2:]
         []
         &gt;&gt;&gt;
         &#34;&#34;&#34;
@@ -1233,7 +1233,7 @@ class Experiment(ExperimentPickleable, Recordable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(image)
+        &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(image)
         &gt;&gt;&gt;
         &gt;&gt;&gt; for diag in experiment:
         ...     pass # Allows to process each diagram as it is ready.
@@ -1565,7 +1565,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         -------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
+        &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
         &gt;&gt;&gt; parameters = experiment.set_calibration()
         &gt;&gt;&gt; sorted(parameters.keys())
         [&#39;dd&#39;, &#39;pixelsize&#39;, &#39;xbet&#39;, &#39;xcen&#39;, &#39;xgam&#39;, &#39;ycen&#39;]
@@ -1844,7 +1844,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(images)
+        &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images)
         &gt;&gt;&gt;
         &gt;&gt;&gt; diagrams = experiment.get_diagrams()
         &gt;&gt;&gt; type(diagrams)
@@ -1980,7 +1980,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+        &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(experiment.find_subsets())
         &lt;class &#39;list&#39;&gt;
@@ -2083,7 +2083,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+        &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(experiment.find_zone_axes())
         &lt;class &#39;list&#39;&gt;
@@ -2302,7 +2302,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-        &gt;&gt;&gt; for image in laue.Experiment(images):
+        &gt;&gt;&gt; for image in laue.experiment.base_experiment.Experiment(images):
         ...     pass
         ...
         &gt;&gt;&gt;
@@ -2423,7 +2423,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         &gt;&gt;&gt;
         &gt;&gt;&gt; images = [&#34;laue/examples/ge_blanc.mccd&#34;]
         &gt;&gt;&gt; rep = tempfile.mkdtemp()
-        &gt;&gt;&gt; expe = laue.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
+        &gt;&gt;&gt; expe = laue.experiment.base_experiment.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
         &gt;&gt;&gt; expe.save_file(os.path.join(rep, &#34;fit.det&#34;))
         &#34;&#34;&#34;
         assert isinstance(filename, str), \
@@ -2490,16 +2490,16 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
         &gt;&gt;&gt;
-        &gt;&gt;&gt; type(laue.Experiment(images)[0])
+        &gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[0])
         &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
-        &gt;&gt;&gt; type(laue.Experiment(images)[-1])
+        &gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[-1])
         &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
         &gt;&gt;&gt;
-        &gt;&gt;&gt; type(laue.Experiment(images)[:])
+        &gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[:])
         &lt;class &#39;list&#39;&gt;
-        &gt;&gt;&gt; len(laue.Experiment(images)[:])
+        &gt;&gt;&gt; len(laue.experiment.base_experiment.Experiment(images)[:])
         2
-        &gt;&gt;&gt; laue.Experiment(images)[2:]
+        &gt;&gt;&gt; laue.experiment.base_experiment.Experiment(images)[2:]
         []
         &gt;&gt;&gt;
         &#34;&#34;&#34;
@@ -2563,7 +2563,7 @@ voir <code><a title="laue.utilities.data_consistency.Recordable" href="../utilit
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; experiment = laue.Experiment(image)
+        &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(image)
         &gt;&gt;&gt;
         &gt;&gt;&gt; for diag in experiment:
         ...     pass # Allows to process each diagram as it is ready.
@@ -2656,16 +2656,16 @@ liste de diagrames ordones dans l'ordre de generation des images.</li>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
 &gt;&gt;&gt;
-&gt;&gt;&gt; type(laue.Experiment(images)[0])
+&gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[0])
 &lt;class 'laue.diagram.LaueDiagram'&gt;
-&gt;&gt;&gt; type(laue.Experiment(images)[-1])
+&gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[-1])
 &lt;class 'laue.diagram.LaueDiagram'&gt;
 &gt;&gt;&gt;
-&gt;&gt;&gt; type(laue.Experiment(images)[:])
+&gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[:])
 &lt;class 'list'&gt;
-&gt;&gt;&gt; len(laue.Experiment(images)[:])
+&gt;&gt;&gt; len(laue.experiment.base_experiment.Experiment(images)[:])
 2
-&gt;&gt;&gt; laue.Experiment(images)[2:]
+&gt;&gt;&gt; laue.experiment.base_experiment.Experiment(images)[2:]
 []
 &gt;&gt;&gt;
 </code></pre></div>
@@ -2700,16 +2700,16 @@ liste de diagrames ordones dans l'ordre de generation des images.</li>
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
     &gt;&gt;&gt;
-    &gt;&gt;&gt; type(laue.Experiment(images)[0])
+    &gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[0])
     &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
-    &gt;&gt;&gt; type(laue.Experiment(images)[-1])
+    &gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[-1])
     &lt;class &#39;laue.diagram.LaueDiagram&#39;&gt;
     &gt;&gt;&gt;
-    &gt;&gt;&gt; type(laue.Experiment(images)[:])
+    &gt;&gt;&gt; type(laue.experiment.base_experiment.Experiment(images)[:])
     &lt;class &#39;list&#39;&gt;
-    &gt;&gt;&gt; len(laue.Experiment(images)[:])
+    &gt;&gt;&gt; len(laue.experiment.base_experiment.Experiment(images)[:])
     2
-    &gt;&gt;&gt; laue.Experiment(images)[2:]
+    &gt;&gt;&gt; laue.experiment.base_experiment.Experiment(images)[2:]
     []
     &gt;&gt;&gt;
     &#34;&#34;&#34;
@@ -2775,7 +2775,7 @@ la methode <code><a title="laue.experiment.base_experiment.Experiment.get_diagra
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; experiment = laue.Experiment(image)
+&gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(image)
 &gt;&gt;&gt;
 &gt;&gt;&gt; for diag in experiment:
 ...     pass # Allows to process each diagram as it is ready.
@@ -2805,7 +2805,7 @@ la methode <code><a title="laue.experiment.base_experiment.Experiment.get_diagra
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; experiment = laue.Experiment(image)
+    &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(image)
     &gt;&gt;&gt;
     &gt;&gt;&gt; for diag in experiment:
     ...     pass # Allows to process each diagram as it is ready.
@@ -2892,7 +2892,7 @@ Se sont aussi ceux de la fonction <code><a title="laue.diagram.LaueDiagram.find_
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
-&gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&quot;laue/examples/ge_blanc.det&quot;)
+&gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images, config_file=&quot;laue/examples/ge_blanc.det&quot;)
 &gt;&gt;&gt;
 &gt;&gt;&gt; type(experiment.find_subsets())
 &lt;class 'list'&gt;
@@ -2944,7 +2944,7 @@ Se sont aussi ceux de la fonction <code><a title="laue.diagram.LaueDiagram.find_
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-    &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+    &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
     &gt;&gt;&gt;
     &gt;&gt;&gt; type(experiment.find_subsets())
     &lt;class &#39;list&#39;&gt;
@@ -3055,7 +3055,7 @@ sont de type <code><a title="laue.zone_axis.ZoneAxis" href="../zone_axis.html#la
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
-&gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&quot;laue/examples/ge_blanc.det&quot;)
+&gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images, config_file=&quot;laue/examples/ge_blanc.det&quot;)
 &gt;&gt;&gt;
 &gt;&gt;&gt; type(experiment.find_zone_axes())
 &lt;class 'list'&gt;
@@ -3110,7 +3110,7 @@ sont de type <code><a title="laue.zone_axis.ZoneAxis" href="../zone_axis.html#la
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-    &gt;&gt;&gt; experiment = laue.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
+    &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images, config_file=&#34;laue/examples/ge_blanc.det&#34;)
     &gt;&gt;&gt;
     &gt;&gt;&gt; type(experiment.find_zone_axes())
     &lt;class &#39;list&#39;&gt;
@@ -3235,7 +3235,7 @@ soient lues afin de tout renvoyer en meme temps.</li>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
-&gt;&gt;&gt; experiment = laue.Experiment(images)
+&gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images)
 &gt;&gt;&gt;
 &gt;&gt;&gt; diagrams = experiment.get_diagrams()
 &gt;&gt;&gt; type(diagrams)
@@ -3290,7 +3290,7 @@ soient lues afin de tout renvoyer en meme temps.</li>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-    &gt;&gt;&gt; experiment = laue.Experiment(images)
+    &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(images)
     &gt;&gt;&gt;
     &gt;&gt;&gt; diagrams = experiment.get_diagrams()
     &gt;&gt;&gt; type(diagrams)
@@ -3520,7 +3520,7 @@ l'image en question est sautee.</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; images = &quot;laue/examples/*.mccd&quot;
-&gt;&gt;&gt; for image in laue.Experiment(images):
+&gt;&gt;&gt; for image in laue.experiment.base_experiment.Experiment(images):
 ...     pass
 ...
 &gt;&gt;&gt;
@@ -3569,7 +3569,7 @@ l'image en question est sautee.</dd>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; images = &#34;laue/examples/*.mccd&#34;
-    &gt;&gt;&gt; for image in laue.Experiment(images):
+    &gt;&gt;&gt; for image in laue.experiment.base_experiment.Experiment(images):
     ...     pass
     ...
     &gt;&gt;&gt;
@@ -3691,7 +3691,7 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
 &gt;&gt;&gt;
 &gt;&gt;&gt; images = [&quot;laue/examples/ge_blanc.mccd&quot;]
 &gt;&gt;&gt; rep = tempfile.mkdtemp()
-&gt;&gt;&gt; expe = laue.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
+&gt;&gt;&gt; expe = laue.experiment.base_experiment.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
 &gt;&gt;&gt; expe.save_file(os.path.join(rep, &quot;fit.det&quot;))
 </code></pre></div>
 <details class="source">
@@ -3721,7 +3721,7 @@ Si un fichier du meme nom existe deja, il est ecrase.</dd>
     &gt;&gt;&gt;
     &gt;&gt;&gt; images = [&#34;laue/examples/ge_blanc.mccd&#34;]
     &gt;&gt;&gt; rep = tempfile.mkdtemp()
-    &gt;&gt;&gt; expe = laue.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
+    &gt;&gt;&gt; expe = laue.experiment.base_experiment.Experiment(images, dd=71.5, x0=938.5, y0=1078.1)
     &gt;&gt;&gt; expe.save_file(os.path.join(rep, &#34;fit.det&#34;))
     &#34;&#34;&#34;
     assert isinstance(filename, str), \
@@ -3785,7 +3785,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
 <h2 id="example">Example</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
+&gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
 &gt;&gt;&gt; parameters = experiment.set_calibration()
 &gt;&gt;&gt; sorted(parameters.keys())
 ['dd', 'pixelsize', 'xbet', 'xcen', 'xgam', 'ycen']
@@ -3833,7 +3833,7 @@ Les clefs sont les suivantes: "dd", "xcen", "ycen", "xbet", "xgam" and "pixelsiz
     -------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; experiment = laue.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
+    &gt;&gt;&gt; experiment = laue.experiment.base_experiment.Experiment(image, dd_min=69.5, dd_max=71.5, xbet=0.008)
     &gt;&gt;&gt; parameters = experiment.set_calibration()
     &gt;&gt;&gt; sorted(parameters.keys())
     [&#39;dd&#39;, &#39;pixelsize&#39;, &#39;xbet&#39;, &#39;xcen&#39;, &#39;xgam&#39;, &#39;ycen&#39;]

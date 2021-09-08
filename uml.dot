@@ -1,0 +1,41 @@
+digraph "classes" {
+charset="utf-8"
+rankdir=BT
+"Compilator" [label="{Compilator|\l|get_fct_cam_to_gnomonic()\lget_fct_cam_to_thetachi()\lget_fct_dist_cosine()\lget_fct_dist_euclidian()\lget_fct_dist_line()\lget_fct_gnomonic_to_cam()\lget_fct_gnomonic_to_thetachi()\lget_fct_hough()\lget_fct_inter_line()\lget_fct_thetachi_to_cam()\lget_fct_thetachi_to_gnomonic()\lload()\lsave()\l}", shape="record", style=filled, fillcolor=gray];
+"DiagramPickleable" [label="{DiagramPickleable|\l|__getstate__()\l__setstate__(state)\l}", shape="record", style=filled, fillcolor="#D8FFD8"];
+"Equations" [label="{Equations|ci, cj, ck : Vector\ldd : Symbol\lgi, gj, gk : Vector\lpixelsize : Symbol\lrot_camera\lrot_gnom : Matrix\lrx, ry, rz : Matrix\lu_i : Vector\l|get_expr_cam_to_uf(x_cam, y_cam)\lget_expr_gnomonic_to_uq(x_gnom, y_gnom)\lget_expr_thetachi_to_uf(theta, chi)\lget_expr_uf_to_cam(uf_x, uf_y, uf_z)\lget_expr_uf_to_thetachi(uf_x, uf_y, uf_z)\lget_expr_uf_to_uq(uf_x, uf_y, uf_z)\lget_expr_uq_to_gnomonic(uq_x, uq_y, uq_z)\lget_expr_uq_to_uf(uq_x, uq_y, uq_z)\l}", shape="record", style=filled, fillcolor=gray];
+"Experiment" [label="{Experiment|images : iterable\lfont_size : int\lignore_errors : bool\lmax_space : int\lthreshold : float\l\ltransformer : Transformer\ldiagrams : list of LaueDiagram|__getitem__(item)\l__iter__()\l__len__()\l__repr__()\l__str__()\lfind_subsets()\lfind_zone_axes()\lget_diagrams()\lget_images_shape()\lget_mean()\lread_images(condition)\lsave_file(filename)\lset_calibration()\l}", shape="record", style=filled, fillcolor=pink];
+"ExperimentPickleable" [label="{ExperimentPickleable|\l|__getstate__()\l__setstate__(state)\l}", shape="record", style=filled, fillcolor="#D8FFD8"];
+"LaueDiagram" [label="{LaueDiagram|experiment : Experiment\l|__contains__(spot)\l__getitem__(item)\l__hash__()\l__iter__()\l__len__()\l__repr__()\l__str__()\lfind_zone_axes()\lget_gnomonic_positions()\lget_id()\lget_image_gnomonic()\lget_image_xy()\lget_neighbors(spot)\lget_positions()\lget_quality()\lget_theta_chi()\lplot_all()\lplot_gnomonic(axe_pyplot)\lplot_xy(axe_pyplot)\lpredict_hkl()\lsave_file(filename)\lselect_spots()\l}", shape="record", style=filled, fillcolor=pink];
+"OrderedExperiment" [label="{OrderedExperiment|position : callable\ltime : callable\l|__getitem__(item)\lget_index()\lget_shape()\l}", shape="record", style=filled, fillcolor=pink];
+"OrderedExperimentPickleable" [label="{OrderedExperimentPickleable|\l|__getstate__()\l__setstate__(state)\l}", shape="record", style=filled, fillcolor="#D8FFD8"];
+"Recordable" [label="{Recordable|compress : bool\ldt : int\lsaving_file : str\l|__del__()\l__enter__()\l__exit__(exc_type, exc_value, traceback)\lkill()\lrun()\lsave_state()\lstart()\l}", shape="record", style=filled, fillcolor="#A0E0FF"];
+"Splitable" [label="{Splitable|\l|find_subsets()\l}", shape="record"];
+"Spot" [label="{Spot|diagram : LaueDiagram\laxes : list of Axis\l|__hash__()\l__repr__()\l__str__()\l__sub__(other)\lfind_zone_axes()\lget_bbox()\lget_distortion()\lget_gnomonic()\lget_id()\lget_image()\lget_intensity()\lget_position()\lget_quality()\lget_theta_chi()\lplot_gnomonic(axe_pyplot)\lplot_xy(axe_pyplot)\lpredict_hkl()\l}", shape="record", style=filled, fillcolor=pink];
+"SpotPickleable" [label="{SpotPickleable|\l|__getstate__()\l__setstate__(state)\l}", shape="record", style=filled, fillcolor="#D8FFD8"];
+"Thread" [label="{Thread|\l|is_alive()\ljoin(timeout)\lstart()\l}", shape="record", style=filled, fillcolor="#A0E0FF"];
+"Transformer" [label="{Transformer|\l|cam_to_gnomonic(pxl_x, pxl_y, parameters)\lcam_to_thetachi(pxl_x, pxl_y, parameters)\lcompile(parameters)\ldist_cosine(theta_1, chi_1, theta_2, chi_2)\ldist_euclidian(x1, y1, x2, y2)\ldist_line(phi_vect, mu_vect, x_vect, y_vect)\lgnomonic_to_cam(gnom_x, gnom_y, parameters)\lgnomonic_to_thetachi(gnom_x, gnom_y)\lhough(x_vect, y_vect)\lhough_reduce(phi_vect, mu_vect)\linter_lines(phi_vect, mu_vect)\lthetachi_to_cam(theta, chi, parameters)\lthetachi_to_gnomonic(theta, chi)\l}", shape="record", style=filled, fillcolor=gray];
+"TransformerPickleable" [label="{TransformerPickleable|\l|__getstate__()\l__setstate__(state)\l}", shape="record", style=filled, fillcolor="#D8FFD8"];
+"ZoneAxis" [label="{ZoneAxis|diagram : LaueDiagram\lspots : OrderedDict of Spot\l|__contains__(spot)\l__hash__()\l__iter__()\l__len__()\l__repr__()\l__str__()\ldist_mean()\lget_id()\lget_polar_coords()\lget_quality()\lplot_gnomonic(axe_pyplot)\lplot_xy(axe_pyplot)\l}", shape="record", style=filled, fillcolor=pink];
+"ZoneAxisPickleable" [label="{ZoneAxisPickleable|\l|__getstate__()\l__setstate__(state)\l}", shape="record", style=filled, fillcolor="#D8FFD8"];
+
+"Compilator" -> "Equations" [arrowhead="empty", arrowtail="none"];
+"Experiment" -> "ExperimentPickleable" [arrowhead="empty", arrowtail="none"];
+"Experiment" -> "Recordable" [arrowhead="empty", arrowtail="none"];
+"ExperimentPickleable" -> "OrderedExperimentPickleable" [arrowhead="empty", arrowtail="none"];
+"LaueDiagram" -> "DiagramPickleable" [arrowhead="empty", arrowtail="none"];
+"LaueDiagram" -> "Splitable" [arrowhead="empty", arrowtail="none"];
+"OrderedExperiment" -> "Experiment" [arrowhead="empty", arrowtail="none"];
+"Recordable" -> "Thread" [arrowhead="empty", arrowtail="none"];
+"Spot" -> "SpotPickleable" [arrowhead="empty", arrowtail="none"];
+"Transformer" -> "Compilator" [arrowhead="empty", arrowtail="none"];
+"Transformer" -> "TransformerPickleable" [arrowhead="empty", arrowtail="none"];
+"ZoneAxis" -> "ZoneAxisPickleable" [arrowhead="empty", arrowtail="none"];
+
+"Transformer" -> "Experiment" [arrowhead="diamond", arrowtail="none", style="solid"];
+"LaueDiagram" -> "Experiment" [arrowhead="diamond", arrowtail="none", style="solid"];
+"Spot" -> "LaueDiagram" [arrowhead="diamond", arrowtail="none", style="solid"];
+"ZoneAxis" -> "LaueDiagram" [arrowhead="diamond", arrowtail="none", style="solid"];
+"Spot" -> "ZoneAxis" [arrowhead="diamond", arrowtail="none", style="solid"];
+"ZoneAxis" -> "Spot" [arrowhead="diamond", arrowtail="none", style="solid"];
+}

@@ -143,7 +143,7 @@ class Splitable:
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = next(iter(laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
         &gt;&gt;&gt; type(diag.find_subsets())
         &lt;class &#39;list&#39;&gt;
         &gt;&gt;&gt;
@@ -214,13 +214,13 @@ def atomic_find_subsets(spots_dict, axes_dict, angle_max, spots_max, distance_ma
     Notes
     -----
     * Cette fonction n&#39;est pas faite pour etre utilisee directement,
-    il vaut mieux s&#39;en servir a travers ``laue.Experiment.find_subsets``
+    il vaut mieux s&#39;en servir a travers ``laue.experiment.base_experiment.Experiment.find_subsets``
     ou encore via ``laue.diagram.LaueDiagram.find_subsets`` car le context
     est mieu gere, les entrees sont plus simples et les sorties aussi.
     * Il n&#39;y a pas de verifications sur les entrees car elles sont faite
     dans les methodes de plus haut niveau.
     * Cette fonction n&#39;est pas parallelisee. Par contre la methode
-    ``laue.Experiment.find_subsets`` gere nativement le parallelisme.
+    ``laue.experiment.base_experiment.Experiment.find_subsets`` gere nativement le parallelisme.
 
     Parameters
     ----------
@@ -450,13 +450,13 @@ def _jump_find_subsets(args):
 <h2 id="notes">Notes</h2>
 <ul>
 <li>Cette fonction n'est pas faite pour etre utilisee directement,
-il vaut mieux s'en servir a travers <code><a title="laue.Experiment.find_subsets" href="../index.html#laue.Experiment.find_subsets">Experiment.find_subsets()</a></code>
+il vaut mieux s'en servir a travers <code><a title="laue.experiment.base_experiment.Experiment.find_subsets" href="../experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.find_subsets">Experiment.find_subsets()</a></code>
 ou encore via <code><a title="laue.diagram.LaueDiagram.find_subsets" href="#laue.core.subsets.Splitable.find_subsets">Splitable.find_subsets()</a></code> car le context
 est mieu gere, les entrees sont plus simples et les sorties aussi.</li>
 <li>Il n'y a pas de verifications sur les entrees car elles sont faite
 dans les methodes de plus haut niveau.</li>
 <li>Cette fonction n'est pas parallelisee. Par contre la methode
-<code><a title="laue.Experiment.find_subsets" href="../index.html#laue.Experiment.find_subsets">Experiment.find_subsets()</a></code> gere nativement le parallelisme.</li>
+<code><a title="laue.experiment.base_experiment.Experiment.find_subsets" href="../experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.find_subsets">Experiment.find_subsets()</a></code> gere nativement le parallelisme.</li>
 </ul>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -579,13 +579,13 @@ qui y sont raccrochees. Il doit prendre la forme suivante:
     Notes
     -----
     * Cette fonction n&#39;est pas faite pour etre utilisee directement,
-    il vaut mieux s&#39;en servir a travers ``laue.Experiment.find_subsets``
+    il vaut mieux s&#39;en servir a travers ``laue.experiment.base_experiment.Experiment.find_subsets``
     ou encore via ``laue.diagram.LaueDiagram.find_subsets`` car le context
     est mieu gere, les entrees sont plus simples et les sorties aussi.
     * Il n&#39;y a pas de verifications sur les entrees car elles sont faite
     dans les methodes de plus haut niveau.
     * Cette fonction n&#39;est pas parallelisee. Par contre la methode
-    ``laue.Experiment.find_subsets`` gere nativement le parallelisme.
+    ``laue.experiment.base_experiment.Experiment.find_subsets`` gere nativement le parallelisme.
 
     Parameters
     ----------
@@ -879,7 +879,7 @@ qui y sont raccrochees. Il doit prendre la forme suivante:
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+        &gt;&gt;&gt; diag = next(iter(laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
         &gt;&gt;&gt; type(diag.find_subsets())
         &lt;class &#39;list&#39;&gt;
         &gt;&gt;&gt;
@@ -1020,7 +1020,7 @@ gnomonic (en mm).</dd>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
+&gt;&gt;&gt; diag = next(iter(laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)))
 &gt;&gt;&gt; type(diag.find_subsets())
 &lt;class 'list'&gt;
 &gt;&gt;&gt;
@@ -1101,7 +1101,7 @@ gnomonic (en mm).</dd>
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = next(iter(laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
+    &gt;&gt;&gt; diag = next(iter(laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)))
     &gt;&gt;&gt; type(diag.find_subsets())
     &lt;class &#39;list&#39;&gt;
     &gt;&gt;&gt;

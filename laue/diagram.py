@@ -127,7 +127,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> type(diag.find_zone_axes())
         <class 'list'>
         >>> type(diag.find_zone_axes().pop())
@@ -208,7 +208,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         >>> import numpy as np
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> diag.get_gnomonic_positions().shape
         (2, 78)
         >>> np.round(diag.get_gnomonic_positions(n=4, sort="quality"), 2)
@@ -243,7 +243,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>> diag.get_id()
         'laue/examples/ge_blanc.mccd'
         >>>
@@ -275,7 +275,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> diag.get_image_gnomonic()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -324,7 +324,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>> diag.get_image_xy()
         array([[0, 0, 0, ..., 0, 0, 0],
                [0, 0, 0, ..., 0, 0, 0],
@@ -395,7 +395,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>> spot, = diag.select_spots(n=1, sort="intensity")
         >>> spot
         Spot(position=(622.09, 1656.72), quality=0.949)
@@ -500,7 +500,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         >>> import numpy as np
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>> diag.get_positions().shape
         (2, 78)
         >>> np.round(diag.get_positions(n=4, sort="quality"))
@@ -529,7 +529,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> images = ("laue/examples/ge_blanc.mccd", "laue/examples/roi1_0001.mccd")
-        >>> diag1, diag2 = laue.Experiment(images)[:2]
+        >>> diag1, diag2 = laue.experiment.base_experiment.Experiment(images)[:2]
         >>>
         >>> print(f"quality: {diag1.get_quality():.4f}")
         quality: 0.8344
@@ -581,7 +581,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         >>> import numpy as np
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> diag.get_theta_chi().shape
         (2, 78)
         >>> np.round(diag.get_theta_chi(n=4, sort="quality"))
@@ -625,7 +625,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> diag.plot_all(display=False)
         <Figure size 640x480 with 2 Axes>
         >>>
@@ -664,7 +664,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>>
 
         Sans preciser l'axe.
@@ -739,7 +739,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>>
         >>> diag.plot_xy(display=False)
         <AxesSubplot:title={'center':'plan camera'}, xlabel='x.Ci (pxl)', ylabel='y.Cj (pxl)'>
@@ -831,7 +831,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         >>>
         >>> image = "laue/examples/ge_blanc.mccd"
         >>> rep = tempfile.mkdtemp()
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>> diag.save_file(os.path.join(rep, "ge_blanc.dat"))
         >>> diag.save_file(os.path.join(rep, "ge_blanc.jpg"))
         >>> diag.save_file(os.path.join(rep, "ge_blanc.png"))
@@ -912,7 +912,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>> diag.select_spots(n=2, sort="intensity")
         [Spot(position=(622.09, 1656.72), quality=0.949), Spot(position=(932.05, 1214.49), quality=0.940)]
         >>> diag.select_spots(n=2, sort="distortion")
@@ -987,7 +987,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>>
         >>> len(diag)
         78
@@ -1051,7 +1051,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         >>> import numpy as np
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image, config_file="laue/examples/ge_blanc.det")[0]
         >>>
         >>> type(diag[0])
         <class 'laue.spot.Spot'>
@@ -1105,7 +1105,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>> for spot in diag:
         ...     pass
         ...
@@ -1121,7 +1121,7 @@ class LaueDiagram(Splitable, DiagramPickleable):
         --------
         >>> import laue
         >>> image = "laue/examples/ge_blanc.mccd"
-        >>> diag = laue.Experiment(image)[0]
+        >>> diag = laue.experiment.base_experiment.Experiment(image)[0]
         >>> len(diag)
         78
         >>>

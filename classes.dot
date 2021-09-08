@@ -1,0 +1,41 @@
+digraph "classes" {
+charset="utf-8"
+rankdir=BT
+"Compilator"            [shape="record", style=filled, fillcolor=gray];
+"DiagramPickleable"     [shape="record", style=filled, fillcolor="#D8FFD8"];
+"Equations"             [shape="record", style=filled, fillcolor=gray];
+"Experiment"            [shape="record", style=filled, fillcolor=pink];
+"ExperimentPickleable"  [shape="record", style=filled, fillcolor="#D8FFD8"];
+"LaueDiagram"           [shape="record", style=filled, fillcolor=pink];
+"OrderedExperiment"     [shape="record", style=filled, fillcolor=pink];
+"OrderedExperimentPickleable" [shape="record", style=filled, fillcolor="#D8FFD8"];
+"Recordable"            [shape="record", style=filled, fillcolor="#A0E0FF"];
+"Splitable"             [shape="record"];
+"Spot"                  [shape="record", style=filled, fillcolor=pink];
+"SpotPickleable"        [shape="record", style=filled, fillcolor="#D8FFD8"];
+"Thread"                [shape="record", style=filled, fillcolor="#A0E0FF"];
+"Transformer"           [shape="record", style=filled, fillcolor=gray];
+"TransformerPickleable" [shape="record", style=filled, fillcolor="#D8FFD8"];
+"ZoneAxis"              [shape="record", style=filled, fillcolor=pink];
+"ZoneAxisPickleable"    [shape="record", style=filled, fillcolor="#D8FFD8"];
+
+"Compilator" -> "Equations" [arrowhead="empty", arrowtail="none"];
+"Experiment" -> "ExperimentPickleable" [arrowhead="empty", arrowtail="none"];
+"Experiment" -> "Recordable" [arrowhead="empty", arrowtail="none"];
+"ExperimentPickleable" -> "OrderedExperimentPickleable" [arrowhead="empty", arrowtail="none"];
+"LaueDiagram" -> "DiagramPickleable" [arrowhead="empty", arrowtail="none"];
+"LaueDiagram" -> "Splitable" [arrowhead="empty", arrowtail="none"];
+"OrderedExperiment" -> "Experiment" [arrowhead="empty", arrowtail="none"];
+"Recordable" -> "Thread" [arrowhead="empty", arrowtail="none"];
+"Spot" -> "SpotPickleable" [arrowhead="empty", arrowtail="none"];
+"Transformer" -> "Compilator" [arrowhead="empty", arrowtail="none"];
+"Transformer" -> "TransformerPickleable" [arrowhead="empty", arrowtail="none"];
+"ZoneAxis" -> "ZoneAxisPickleable" [arrowhead="empty", arrowtail="none"];
+
+"Transformer" -> "Experiment" [arrowhead="diamond", arrowtail="none", style="solid"];
+"LaueDiagram" -> "Experiment" [arrowhead="diamond", arrowtail="none", style="solid"];
+"Spot" -> "LaueDiagram" [arrowhead="diamond", arrowtail="none", style="solid"];
+"ZoneAxis" -> "LaueDiagram" [arrowhead="diamond", arrowtail="none", style="solid"];
+"Spot" -> "ZoneAxis" [arrowhead="diamond", arrowtail="none", style="solid"];
+"ZoneAxis" -> "Spot" [arrowhead="diamond", arrowtail="none", style="solid"];
+}

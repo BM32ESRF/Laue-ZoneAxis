@@ -111,7 +111,7 @@ class Recordable(threading.Thread):
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; saving_file = os.path.join(tempfile.mkdtemp(), &#34;state&#34;)
         &gt;&gt;&gt;
-        &gt;&gt;&gt; with laue.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
+        &gt;&gt;&gt; with laue.experiment.base_experiment.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
         ...     pass
         ...
         Starting the thread.
@@ -311,7 +311,7 @@ plus de CPU mais reduit un peu la taille des donnees a ecrire.</dd>
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
         &gt;&gt;&gt; saving_file = os.path.join(tempfile.mkdtemp(), &#34;state&#34;)
         &gt;&gt;&gt;
-        &gt;&gt;&gt; with laue.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
+        &gt;&gt;&gt; with laue.experiment.base_experiment.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
         ...     pass
         ...
         Starting the thread.
@@ -447,7 +447,7 @@ plus de CPU mais reduit un peu la taille des donnees a ecrire.</dd>
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
 &gt;&gt;&gt; saving_file = os.path.join(tempfile.mkdtemp(), &quot;state&quot;)
 &gt;&gt;&gt;
-&gt;&gt;&gt; with laue.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
+&gt;&gt;&gt; with laue.experiment.base_experiment.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
 ...     pass
 ...
 Starting the thread.
@@ -476,7 +476,7 @@ The thread says: Oh help! I'm dying!
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
     &gt;&gt;&gt; saving_file = os.path.join(tempfile.mkdtemp(), &#34;state&#34;)
     &gt;&gt;&gt;
-    &gt;&gt;&gt; with laue.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
+    &gt;&gt;&gt; with laue.experiment.base_experiment.Experiment(image, saving_file=saving_file, verbose=2) as experiment:
     ...     pass
     ...
     Starting the thread.

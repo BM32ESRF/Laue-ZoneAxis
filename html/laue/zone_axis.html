@@ -117,7 +117,7 @@ def distance(axis1, axis2, *, weight=.5):
     &gt;&gt;&gt; from laue.zone_axis import distance
     &gt;&gt;&gt; ax1, ax2 = (-2.719, 0.2432), (0.02063, 0.0799)
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; axes = laue.Experiment(image,
+    &gt;&gt;&gt; axes = laue.experiment.base_experiment.Experiment(image,
     ...     config_file=&#34;laue/examples/ge_blanc.det&#34;
     ...     )[0].find_zone_axes()[:3]
     &gt;&gt;&gt;
@@ -251,7 +251,7 @@ class ZoneAxis(ZoneAxisPickleable):
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(axis.dist_mean())
@@ -275,7 +275,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
         True
         &gt;&gt;&gt;
@@ -297,7 +297,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; phi, mu = axis.get_polar_coords()
@@ -326,7 +326,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
         &gt;&gt;&gt;
         &gt;&gt;&gt; 0 &lt; min(qualities) &lt;= max(qualities) &lt; 1
@@ -382,7 +382,7 @@ class ZoneAxis(ZoneAxisPickleable):
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; axis.plot_gnomonic(display=False)
@@ -430,7 +430,7 @@ class ZoneAxis(ZoneAxisPickleable):
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; axis.plot_xy(display=False)
@@ -487,7 +487,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt; spot0, i_ok = diag[0], next(iter(axis.spots))
         &gt;&gt;&gt; type(spot0), type(i_ok)
@@ -537,7 +537,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt; for spot in axis:
         ...     pass
@@ -554,7 +554,7 @@ class ZoneAxis(ZoneAxisPickleable):
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt; type(len(axis))
         &lt;class &#39;int&#39;&gt;
@@ -648,7 +648,7 @@ du cluster a l'axe isole est renvoye.</li>
 &gt;&gt;&gt; from laue.zone_axis import distance
 &gt;&gt;&gt; ax1, ax2 = (-2.719, 0.2432), (0.02063, 0.0799)
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; axes = laue.Experiment(image,
+&gt;&gt;&gt; axes = laue.experiment.base_experiment.Experiment(image,
 ...     config_file=&quot;laue/examples/ge_blanc.det&quot;
 ...     )[0].find_zone_axes()[:3]
 &gt;&gt;&gt;
@@ -721,7 +721,7 @@ du cluster a l'axe isole est renvoye.</li>
     &gt;&gt;&gt; from laue.zone_axis import distance
     &gt;&gt;&gt; ax1, ax2 = (-2.719, 0.2432), (0.02063, 0.0799)
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; axes = laue.Experiment(image,
+    &gt;&gt;&gt; axes = laue.experiment.base_experiment.Experiment(image,
     ...     config_file=&#34;laue/examples/ge_blanc.det&#34;
     ...     )[0].find_zone_axes()[:3]
     &gt;&gt;&gt;
@@ -894,7 +894,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt; import numpy as np
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; type(axis.dist_mean())
@@ -918,7 +918,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
         True
         &gt;&gt;&gt;
@@ -940,7 +940,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; phi, mu = axis.get_polar_coords()
@@ -969,7 +969,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
         &gt;&gt;&gt;
         &gt;&gt;&gt; 0 &lt; min(qualities) &lt;= max(qualities) &lt; 1
@@ -1025,7 +1025,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; axis.plot_gnomonic(display=False)
@@ -1073,7 +1073,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt;
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt;
         &gt;&gt;&gt; axis.plot_xy(display=False)
@@ -1130,7 +1130,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt; spot0, i_ok = diag[0], next(iter(axis.spots))
         &gt;&gt;&gt; type(spot0), type(i_ok)
@@ -1180,7 +1180,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt; for spot in axis:
         ...     pass
@@ -1197,7 +1197,7 @@ sein d'un diagramme mais pas forcement au sein d'une experience.</dd>
         --------
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
         &gt;&gt;&gt; type(len(axis))
         &lt;class &#39;int&#39;&gt;
@@ -1251,7 +1251,7 @@ au sein de <code><a title="laue.diagram.LaueDiagram" href="diagram.html#laue.dia
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
 &gt;&gt;&gt; spot0, i_ok = diag[0], next(iter(axis.spots))
 &gt;&gt;&gt; type(spot0), type(i_ok)
@@ -1291,7 +1291,7 @@ True
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
     &gt;&gt;&gt; spot0, i_ok = diag[0], next(iter(axis.spots))
     &gt;&gt;&gt; type(spot0), type(i_ok)
@@ -1357,7 +1357,7 @@ True
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
 &gt;&gt;&gt; for spot in axis:
 ...     pass
@@ -1381,7 +1381,7 @@ True
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
     &gt;&gt;&gt; for spot in axis:
     ...     pass
@@ -1399,7 +1399,7 @@ True
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
 &gt;&gt;&gt; type(len(axis))
 &lt;class 'int'&gt;
@@ -1419,7 +1419,7 @@ True
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
     &gt;&gt;&gt; type(len(axis))
     &lt;class &#39;int&#39;&gt;
@@ -1444,7 +1444,7 @@ True
 <pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; type(axis.dist_mean())
@@ -1469,7 +1469,7 @@ True
     &gt;&gt;&gt; import numpy as np
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; type(axis.dist_mean())
@@ -1493,7 +1493,7 @@ allant de [0, nbr_axes[.</p>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
 True
 &gt;&gt;&gt;
@@ -1513,7 +1513,7 @@ True
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; all(axes.get_id() == i for i, axes in enumerate(diag.find_zone_axes()))
     True
     &gt;&gt;&gt;
@@ -1536,7 +1536,7 @@ True
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; phi, mu = axis.get_polar_coords()
@@ -1565,7 +1565,7 @@ True
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; phi, mu = axis.get_polar_coords()
@@ -1601,7 +1601,7 @@ et la proximite des spots lies a cet axe.<ul>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
 &gt;&gt;&gt;
 &gt;&gt;&gt; 0 &lt; min(qualities) &lt;= max(qualities) &lt; 1
@@ -1629,7 +1629,7 @@ True
     --------
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; qualities = [axis.get_quality() for axis in diag.find_zone_axes()]
     &gt;&gt;&gt;
     &gt;&gt;&gt; 0 &lt; min(qualities) &lt;= max(qualities) &lt; 1
@@ -1686,7 +1686,7 @@ True
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; axis.plot_gnomonic(display=False)
@@ -1719,7 +1719,7 @@ True
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt;
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; axis.plot_gnomonic(display=False)
@@ -1768,7 +1768,7 @@ True
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt;
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
 &gt;&gt;&gt;
 &gt;&gt;&gt; axis.plot_xy(display=False)
@@ -1801,7 +1801,7 @@ True
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt;
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; axis = diag.find_zone_axes()[0]
     &gt;&gt;&gt;
     &gt;&gt;&gt; axis.plot_xy(display=False)

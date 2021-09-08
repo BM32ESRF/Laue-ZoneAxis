@@ -20,15 +20,15 @@ def atomic_find_zone_axes(transformer, gnomonics, dmax, nbr, tol):
     Notes
     -----
     * Cette fonction n'est pas faite pour etre utilisee directement,
-    il vaut mieux s'en servir a travers ``laue.Experiment.find_zone_axes``
+    il vaut mieux s'en servir a travers ``laue.experiment.base_experiment.Experiment.find_zone_axes``
     ou encore via ``laue.diagram.LaueDiagram.find_zone_axes`` car le context
     est mieu gere, les entrees sont plus simples et les sorties aussi.
     * Il n'y a pas de verifications sur les entrees car elles sont faite
     dans les methodes de plus haut niveau.
     * Cette fonction n'est pas parallelisee. Par contre la methode
-    ``laue.Experiment.find_zone_axes`` gere nativement le parallelisme.
+    ``laue.experiment.base_experiment.Experiment.find_zone_axes`` gere nativement le parallelisme.
     * La seule raison d'utiliser cette fonction, c'est si le pic_search
-    utilise n'est pas celui de ``laue.Experiment``. Sinon, l'utilisation
+    utilise n'est pas celui de ``laue.experiment.base_experiment.Experiment``. Sinon, l'utilisation
     de cette fonction ne fera qu'alourdir et ralentir votre code.
 
     Parameters
@@ -37,7 +37,7 @@ def atomic_find_zone_axes(transformer, gnomonics, dmax, nbr, tol):
         Instance d'un objet capable de gerer formellement
         la transformee de hough. (Cet argument n'est pas present
         si on utilise les methodes ci dessus car il fait partie
-        d'une ``laue.Experiment``.)
+        d'une ``laue.experiment.base_experiment.Experiment``.)
     gnomonics : np.ndarray
         Les positions des spots en coordonnees gnomonic.
         Il faut que ``x_gnomonic = gnomonic[0]``

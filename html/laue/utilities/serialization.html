@@ -91,7 +91,7 @@ class SpotPickleable:
         &gt;&gt;&gt; import pickle
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
+        &gt;&gt;&gt; spot = laue.experiment.base_experiment.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
         Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; pickle.loads(pickle.dumps(spot))
@@ -130,7 +130,7 @@ class ZoneAxisPickleable:
         &gt;&gt;&gt; import pickle
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
         &gt;&gt;&gt; axis
         ZoneAxis(spots_ind=(9, 31, 44, 46, 55, 60, 66), identifier=4, phi=-2.6836, mu=0.1541)
@@ -180,7 +180,7 @@ class DiagramPickleable:
         &gt;&gt;&gt; import pickle
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; diag
         LaueDiagram(name=&#39;laue/examples/ge_blanc.mccd&#39;)
         &gt;&gt;&gt; pickle.loads(pickle.dumps(diag))
@@ -414,7 +414,7 @@ class ExperimentPickleable(OrderedExperimentPickleable):
         &gt;&gt;&gt; import pickle
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; laue.Experiment(image)
+        &gt;&gt;&gt; laue.experiment.base_experiment.Experiment(image)
         Experiment(&#39;laue/examples&#39;)
         &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
         Experiment(&#39;laue/examples&#39;)
@@ -534,7 +534,7 @@ class ExperimentPickleable(OrderedExperimentPickleable):
         &gt;&gt;&gt; import pickle
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
         &gt;&gt;&gt; diag
         LaueDiagram(name=&#39;laue/examples/ge_blanc.mccd&#39;)
         &gt;&gt;&gt; pickle.loads(pickle.dumps(diag))
@@ -626,7 +626,7 @@ class ExperimentPickleable(OrderedExperimentPickleable):
 <pre><code class="language-python-repl">&gt;&gt;&gt; import pickle
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
 &gt;&gt;&gt; diag
 LaueDiagram(name='laue/examples/ge_blanc.mccd')
 &gt;&gt;&gt; pickle.loads(pickle.dumps(diag))
@@ -646,7 +646,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
     &gt;&gt;&gt; import pickle
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image)[0]
     &gt;&gt;&gt; diag
     LaueDiagram(name=&#39;laue/examples/ge_blanc.mccd&#39;)
     &gt;&gt;&gt; pickle.loads(pickle.dumps(diag))
@@ -771,7 +771,7 @@ LaueDiagram(name='laue/examples/ge_blanc.mccd')
         &gt;&gt;&gt; import pickle
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; laue.Experiment(image)
+        &gt;&gt;&gt; laue.experiment.base_experiment.Experiment(image)
         Experiment(&#39;laue/examples&#39;)
         &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
         Experiment(&#39;laue/examples&#39;)
@@ -921,7 +921,7 @@ certains attributs sont crees ou completes.</p>
 <pre><code class="language-python-repl">&gt;&gt;&gt; import pickle
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; laue.Experiment(image)
+&gt;&gt;&gt; laue.experiment.base_experiment.Experiment(image)
 Experiment('laue/examples')
 &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
 Experiment('laue/examples')
@@ -943,7 +943,7 @@ Experiment('laue/examples')
     &gt;&gt;&gt; import pickle
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; laue.Experiment(image)
+    &gt;&gt;&gt; laue.experiment.base_experiment.Experiment(image)
     Experiment(&#39;laue/examples&#39;)
     &gt;&gt;&gt; pickle.loads(pickle.dumps(_))
     Experiment(&#39;laue/examples&#39;)
@@ -1047,7 +1047,7 @@ Experiment('laue/examples')
         &gt;&gt;&gt; import pickle
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; spot = laue.Experiment(image)[0][0]
+        &gt;&gt;&gt; spot = laue.experiment.base_experiment.Experiment(image)[0][0]
         &gt;&gt;&gt; spot
         Spot(position=(1370.52, 1874.78), quality=0.573)
         &gt;&gt;&gt; pickle.loads(pickle.dumps(spot))
@@ -1237,7 +1237,7 @@ Experiment('laue/examples')
         &gt;&gt;&gt; import pickle
         &gt;&gt;&gt; import laue
         &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-        &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+        &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
         &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
         &gt;&gt;&gt; axis
         ZoneAxis(spots_ind=(9, 31, 44, 46, 55, 60, 66), identifier=4, phi=-2.6836, mu=0.1541)
@@ -1290,7 +1290,7 @@ Experiment('laue/examples')
 <pre><code class="language-python-repl">&gt;&gt;&gt; import pickle
 &gt;&gt;&gt; import laue
 &gt;&gt;&gt; image = &quot;laue/examples/ge_blanc.mccd&quot;
-&gt;&gt;&gt; diag = laue.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
+&gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&quot;laue/examples/ge_blanc.det&quot;)[0]
 &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
 &gt;&gt;&gt; axis
 ZoneAxis(spots_ind=(9, 31, 44, 46, 55, 60, 66), identifier=4, phi=-2.6836, mu=0.1541)
@@ -1311,7 +1311,7 @@ ZoneAxis(spots_ind=(9, 31, 44, 46, 55, 60, 66), identifier=4, phi=-2.6836, mu=0.
     &gt;&gt;&gt; import pickle
     &gt;&gt;&gt; import laue
     &gt;&gt;&gt; image = &#34;laue/examples/ge_blanc.mccd&#34;
-    &gt;&gt;&gt; diag = laue.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
+    &gt;&gt;&gt; diag = laue.experiment.base_experiment.Experiment(image, config_file=&#34;laue/examples/ge_blanc.det&#34;)[0]
     &gt;&gt;&gt; axis = sorted(diag.find_zone_axes(), key=lambda a: len(a)-a.get_quality())[0]
     &gt;&gt;&gt; axis
     ZoneAxis(spots_ind=(9, 31, 44, 46, 55, 60, 66), identifier=4, phi=-2.6836, mu=0.1541)

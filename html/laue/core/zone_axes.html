@@ -52,15 +52,15 @@ def atomic_find_zone_axes(transformer, gnomonics, dmax, nbr, tol):
     Notes
     -----
     * Cette fonction n&#39;est pas faite pour etre utilisee directement,
-    il vaut mieux s&#39;en servir a travers ``laue.Experiment.find_zone_axes``
+    il vaut mieux s&#39;en servir a travers ``laue.experiment.base_experiment.Experiment.find_zone_axes``
     ou encore via ``laue.diagram.LaueDiagram.find_zone_axes`` car le context
     est mieu gere, les entrees sont plus simples et les sorties aussi.
     * Il n&#39;y a pas de verifications sur les entrees car elles sont faite
     dans les methodes de plus haut niveau.
     * Cette fonction n&#39;est pas parallelisee. Par contre la methode
-    ``laue.Experiment.find_zone_axes`` gere nativement le parallelisme.
+    ``laue.experiment.base_experiment.Experiment.find_zone_axes`` gere nativement le parallelisme.
     * La seule raison d&#39;utiliser cette fonction, c&#39;est si le pic_search
-    utilise n&#39;est pas celui de ``laue.Experiment``. Sinon, l&#39;utilisation
+    utilise n&#39;est pas celui de ``laue.experiment.base_experiment.Experiment``. Sinon, l&#39;utilisation
     de cette fonction ne fera qu&#39;alourdir et ralentir votre code.
 
     Parameters
@@ -69,7 +69,7 @@ def atomic_find_zone_axes(transformer, gnomonics, dmax, nbr, tol):
         Instance d&#39;un objet capable de gerer formellement
         la transformee de hough. (Cet argument n&#39;est pas present
         si on utilise les methodes ci dessus car il fait partie
-        d&#39;une ``laue.Experiment``.)
+        d&#39;une ``laue.experiment.base_experiment.Experiment``.)
     gnomonics : np.ndarray
         Les positions des spots en coordonnees gnomonic.
         Il faut que ``x_gnomonic = gnomonic[0]``
@@ -294,15 +294,15 @@ def _jump_find_zone_axes(args):
 <h2 id="notes">Notes</h2>
 <ul>
 <li>Cette fonction n'est pas faite pour etre utilisee directement,
-il vaut mieux s'en servir a travers <code><a title="laue.Experiment.find_zone_axes" href="../index.html#laue.Experiment.find_zone_axes">Experiment.find_zone_axes()</a></code>
+il vaut mieux s'en servir a travers <code><a title="laue.experiment.base_experiment.Experiment.find_zone_axes" href="../experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.find_zone_axes">Experiment.find_zone_axes()</a></code>
 ou encore via <code><a title="laue.diagram.LaueDiagram.find_zone_axes" href="../diagram.html#laue.diagram.LaueDiagram.find_zone_axes">LaueDiagram.find_zone_axes()</a></code> car le context
 est mieu gere, les entrees sont plus simples et les sorties aussi.</li>
 <li>Il n'y a pas de verifications sur les entrees car elles sont faite
 dans les methodes de plus haut niveau.</li>
 <li>Cette fonction n'est pas parallelisee. Par contre la methode
-<code><a title="laue.Experiment.find_zone_axes" href="../index.html#laue.Experiment.find_zone_axes">Experiment.find_zone_axes()</a></code> gere nativement le parallelisme.</li>
+<code><a title="laue.experiment.base_experiment.Experiment.find_zone_axes" href="../experiment/base_experiment.html#laue.experiment.base_experiment.Experiment.find_zone_axes">Experiment.find_zone_axes()</a></code> gere nativement le parallelisme.</li>
 <li>La seule raison d'utiliser cette fonction, c'est si le pic_search
-utilise n'est pas celui de <code><a title="laue.Experiment" href="../index.html#laue.Experiment">Experiment</a></code>. Sinon, l'utilisation
+utilise n'est pas celui de <code><a title="laue.experiment.base_experiment.Experiment" href="../experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></code>. Sinon, l'utilisation
 de cette fonction ne fera qu'alourdir et ralentir votre code.</li>
 </ul>
 <h2 id="parameters">Parameters</h2>
@@ -311,7 +311,7 @@ de cette fonction ne fera qu'alourdir et ralentir votre code.</li>
 <dd>Instance d'un objet capable de gerer formellement
 la transformee de hough. (Cet argument n'est pas present
 si on utilise les methodes ci dessus car il fait partie
-d'une <code><a title="laue.Experiment" href="../index.html#laue.Experiment">Experiment</a></code>.)</dd>
+d'une <code><a title="laue.experiment.base_experiment.Experiment" href="../experiment/base_experiment.html#laue.experiment.base_experiment.Experiment">Experiment</a></code>.)</dd>
 <dt><strong><code>gnomonics</code></strong> :&ensp;<code>np.ndarray</code></dt>
 <dd>Les positions des spots en coordonnees gnomonic.
 Il faut que <code>x_gnomonic = gnomonic[0]</code>
@@ -426,15 +426,15 @@ set()
     Notes
     -----
     * Cette fonction n&#39;est pas faite pour etre utilisee directement,
-    il vaut mieux s&#39;en servir a travers ``laue.Experiment.find_zone_axes``
+    il vaut mieux s&#39;en servir a travers ``laue.experiment.base_experiment.Experiment.find_zone_axes``
     ou encore via ``laue.diagram.LaueDiagram.find_zone_axes`` car le context
     est mieu gere, les entrees sont plus simples et les sorties aussi.
     * Il n&#39;y a pas de verifications sur les entrees car elles sont faite
     dans les methodes de plus haut niveau.
     * Cette fonction n&#39;est pas parallelisee. Par contre la methode
-    ``laue.Experiment.find_zone_axes`` gere nativement le parallelisme.
+    ``laue.experiment.base_experiment.Experiment.find_zone_axes`` gere nativement le parallelisme.
     * La seule raison d&#39;utiliser cette fonction, c&#39;est si le pic_search
-    utilise n&#39;est pas celui de ``laue.Experiment``. Sinon, l&#39;utilisation
+    utilise n&#39;est pas celui de ``laue.experiment.base_experiment.Experiment``. Sinon, l&#39;utilisation
     de cette fonction ne fera qu&#39;alourdir et ralentir votre code.
 
     Parameters
@@ -443,7 +443,7 @@ set()
         Instance d&#39;un objet capable de gerer formellement
         la transformee de hough. (Cet argument n&#39;est pas present
         si on utilise les methodes ci dessus car il fait partie
-        d&#39;une ``laue.Experiment``.)
+        d&#39;une ``laue.experiment.base_experiment.Experiment``.)
     gnomonics : np.ndarray
         Les positions des spots en coordonnees gnomonic.
         Il faut que ``x_gnomonic = gnomonic[0]``
